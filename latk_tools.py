@@ -1,4 +1,5 @@
-# ~ ~ ~ animation ~ ~ ~ 
+import re
+
 def keyTransform(_obj, _frame):
     #_obj.location = _pos
     #_obj.rotation_quaternion = _rot
@@ -11,7 +12,6 @@ def keyTransform(_obj, _frame):
 def keyMatrix(_obj, _frame):
     _obj.keyframe_insert(data_path="matrix_world", frame=_frame) 
 
-# ~ ~ ~ general ~ ~ ~
 def select(target=None):
     if not target:
         target=bpy.context.selected_objects;
@@ -137,7 +137,18 @@ def moveShot(start, end, x, y, z):
                     layer.frames[currentFrame].strokes[i].points[j].co.y += y
                     layer.frames[currentFrame].strokes[i].points[j].co.z += z
 
-# ~ ~ ~ grease pencil ~ ~ ~
+def alignCamera():
+    original_type = bpy.context.area.type
+    print("Current context: " + original_type)
+    bpy.context.area.type = "VIEW_3D"
+    #~
+    # strokes, points, frame
+    bpy.ops.view3d.camera_to_view()
+    #~
+    #bpy.context.area.type = "CONSOLE"
+    bpy.context.area.type = original_type
+
+# ~ ~ ~ ~ ~ ~ grease pencil ~ ~ ~ ~ ~ ~
 def getActiveGp(_name="GPencil"):
     try:
         pencil = bpy.context.scene.grease_pencil
@@ -283,17 +294,6 @@ def deleteSelected(target="strokes"):
     #~
     # strokes, points, frame
     bpy.ops.gpencil.delete(type=target.upper())
-    #~
-    #bpy.context.area.type = "CONSOLE"
-    bpy.context.area.type = original_type
-
-def alignCamera():
-    original_type = bpy.context.area.type
-    print("Current context: " + original_type)
-    bpy.context.area.type = "VIEW_3D"
-    #~
-    # strokes, points, frame
-    bpy.ops.view3d.camera_to_view()
     #~
     #bpy.context.area.type = "CONSOLE"
     bpy.context.area.type = original_type
