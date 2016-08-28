@@ -24,7 +24,8 @@ import re
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
 
-# ~ ~ ~ animation ~ ~ ~ 
+import re
+
 def keyTransform(_obj, _frame):
     #_obj.location = _pos
     #_obj.rotation_quaternion = _rot
@@ -37,7 +38,6 @@ def keyTransform(_obj, _frame):
 def keyMatrix(_obj, _frame):
     _obj.keyframe_insert(data_path="matrix_world", frame=_frame) 
 
-# ~ ~ ~ general ~ ~ ~
 def select(target=None):
     if not target:
         target=bpy.context.selected_objects;
@@ -163,7 +163,18 @@ def moveShot(start, end, x, y, z):
                     layer.frames[currentFrame].strokes[i].points[j].co.y += y
                     layer.frames[currentFrame].strokes[i].points[j].co.z += z
 
-# ~ ~ ~ grease pencil ~ ~ ~
+def alignCamera():
+    original_type = bpy.context.area.type
+    print("Current context: " + original_type)
+    bpy.context.area.type = "VIEW_3D"
+    #~
+    # strokes, points, frame
+    bpy.ops.view3d.camera_to_view()
+    #~
+    #bpy.context.area.type = "CONSOLE"
+    bpy.context.area.type = original_type
+
+# ~ ~ ~ ~ ~ ~ grease pencil ~ ~ ~ ~ ~ ~
 def getActiveGp(_name="GPencil"):
     try:
         pencil = bpy.context.scene.grease_pencil
@@ -309,17 +320,6 @@ def deleteSelected(target="strokes"):
     #~
     # strokes, points, frame
     bpy.ops.gpencil.delete(type=target.upper())
-    #~
-    #bpy.context.area.type = "CONSOLE"
-    bpy.context.area.type = original_type
-
-def alignCamera():
-    original_type = bpy.context.area.type
-    print("Current context: " + original_type)
-    bpy.context.area.type = "VIEW_3D"
-    #~
-    # strokes, points, frame
-    bpy.ops.view3d.camera_to_view()
     #~
     #bpy.context.area.type = "CONSOLE"
     bpy.context.area.type = original_type
@@ -531,7 +531,7 @@ def gpMesh(_extrude=0.1, _subd=1, _bakeMesh=False, _animateFrames=True, _remesh=
     start = bpy.context.scene.frame_start
     end = bpy.context.scene.frame_end + 1
     #~
-    goToFrame(1)
+    #goToFrame(1)
     #TODO: option for multiple GP blocks
     for a in range(0, 1):#len(bpy.data.grease_pencil)):
         pencil = bpy.context.scene.grease_pencil#bpy.data.grease_pencil[a]
@@ -545,9 +545,6 @@ def gpMesh(_extrude=0.1, _subd=1, _bakeMesh=False, _animateFrames=True, _remesh=
                     scnobs.link(crv_ob)
                     #~
                     stroke_points = pencil.layers[b].frames[c].strokes[i].points
-                    if (layer.parent):
-                        for i in range(0, len(stroke_points)):
-                            stroke_points[i].co = layer.parent.matrix_local * Vector((9,9,9))#stroke_points[i].co)
                     data_list = [ (point.co.x, point.co.y, point.co.z) for point in stroke_points ]
                     points_to_add = len(data_list)-1
                     #~  
@@ -560,6 +557,10 @@ def gpMesh(_extrude=0.1, _subd=1, _bakeMesh=False, _animateFrames=True, _remesh=
                     spline.bezier_points.foreach_set("co", flat_list)
                     #~
                     for point in spline.bezier_points:
+                        # * * * * * * * * * * * * * *
+                        if (layer.parent):
+                            point.co = (layer.parent.matrix_world.inverted() * Vector(point.co)) - layer.parent.location
+                        # * * * * * * * * * * * * * *                         
                         point.handle_left = point.handle_right = point.co
                         #point.handle_left_type="AUTO"
                         #point.handle_right_type="AUTO"
@@ -600,17 +601,7 @@ def gpMesh(_extrude=0.1, _subd=1, _bakeMesh=False, _animateFrames=True, _remesh=
                         frameList.append(crv_ob)
                     if (layer.parent):
                         index = len(frameList)-1
-                        #setOrigin(frameList[index], layer.parent.location)
-                        #frameList[index].location = (0,0,0)
-                        #frameList[index].transform(layer.parent.matrix_world.inverted())
-                        #frameList[index].parent = layer.parent
-                        #bpy.ops.object.select_all(action='DESELECT')
-                        #bpy.data.objects[frameList[index.name].select = True
-                        #bpy.ops.transform.translate = value((10,0,0))
-                        #frameList[index].data.transform(mathutils.Matrix.Translation(-layer.parent.location))
-                        #frameList[index].location += layer.parent.location
-                        #bpy.context.scene.update()
-                        #frameList[index].location = layer.parent.location
+                        frameList[index].parent = layer.parent
                         #~
                     bpy.context.scene.update()
                     #~
