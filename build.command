@@ -15,14 +15,6 @@ cd $DIR
 rm $BUILD_TARGET
 touch $BUILD_TARGET
 
-FILE_NAMES=( "latk_main.py" "latk_tools.py" "latk_rw.py" "latk_mesh.py" )
-
-#for i in "${FILE_NAMES[@]}"
-#do
-	#:
-	#cat $i > lightning_artist.py
-#done
-
-cat ${FILE_NAMES[0]} ${FILE_NAMES[1]} ${FILE_NAMES[2]} ${FILE_NAMES[3]} > $BUILD_TARGET
+cat "latk_main.py" "latk_tools.py" "latk_rw.py" "latk_mesh.py" "latk_test.py" > $BUILD_TARGET
 
 cp $BUILD_TARGET "${HOME}/Library/Application Support/Blender/2.77/scripts/addons/"
