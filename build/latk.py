@@ -652,25 +652,27 @@ def gpMesh(_extrude=0.0125, _subd=0, _bakeMesh=True, _animateFrames=True, _minDi
                 bpy.context.object.modifiers["Solidify"].thickness = _extrude * 2
                 bpy.context.object.modifiers["Solidify"].offset = 0
                 #~
+                # *** IMPORTANT: baking at this stage is a tremendous speed boost later.
                 if (_bakeMesh==True):
                     meshObj = applyModifiers(crv_ob)
                     #~
                     # TODO fix vertex colors
                     #colorVertices(meshObj, strokeColor, True)                        
                     #~    
-                    if (_subd > 0):
-                        bpy.ops.object.modifier_add(type='SUBSURF')
-                        bpy.context.object.modifiers["Subsurf"].levels = _subd
-                        bpy.context.object.modifiers["Subsurf"].render_levels = _subd
-                        try:
-                            bpy.context.object.modifiers["Subsurf"].use_opensubdiv = 1 # GPU if supported
-                        except:
-                            pass
-                    #~
-                    if (_decimate < 1.0):
-                        bpy.ops.object.modifier_add(type='DECIMATE')
-                        bpy.context.object.modifiers["Decimate"].ratio = 0.01  
-                    #~  
+                if (_subd > 0):
+                    bpy.ops.object.modifier_add(type='SUBSURF')
+                    bpy.context.object.modifiers["Subsurf"].levels = _subd
+                    bpy.context.object.modifiers["Subsurf"].render_levels = _subd
+                    try:
+                        bpy.context.object.modifiers["Subsurf"].use_opensubdiv = 1 # GPU if supported
+                    except:
+                        pass
+                #~
+                if (_decimate < 1.0):
+                    bpy.ops.object.modifier_add(type='DECIMATE')
+                    bpy.context.object.modifiers["Decimate"].ratio = 0.01  
+                #~  
+                if (_bakeMesh==True):
                     if (_remesh==True):
                         meshObj = remesher(meshObj)
                     else:
