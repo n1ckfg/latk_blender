@@ -60,7 +60,10 @@ def gpMesh(_extrude=0.0125, _subd=1, _bakeMesh=True, _animateFrames=True, _minDi
                         bpy.ops.object.modifier_add(type='SUBSURF')
                         bpy.context.object.modifiers["Subsurf"].levels = _subd
                         bpy.context.object.modifiers["Subsurf"].render_levels = _subd
-                        bpy.context.object.modifiers["Subsurf"].use_opensubdiv = 1 # GPU--important
+                        try:
+                            bpy.context.object.modifiers["Subsurf"].use_opensubdiv = 1 # GPU if supported
+                        except:
+                        	pass
                     #~
                     if (_decimate < 1.0):
                         bpy.ops.object.modifier_add(type='DECIMATE')
