@@ -55,7 +55,7 @@ def matchName(_name):
             returns.append(obj)
     return returns
 
-def deleteName(_name):
+def deleteName(_name="crv"):
     for i, _n in enumerate(matchName(_name)):
         try:
             delete(_n)

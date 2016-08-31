@@ -81,7 +81,7 @@ def matchName(_name):
             returns.append(obj)
     return returns
 
-def deleteName(_name):
+def deleteName(_name="crv"):
     for i, _n in enumerate(matchName(_name)):
         try:
             delete(_n)
@@ -594,7 +594,7 @@ from math import sqrt
 def getDistance(v1, v2):
     return sqrt( (v1[0] - v2[0])**2 + (v1[1] - v2[1])**2 + (v1[2] - v2[2])**2)
 
-def gpMesh(_extrude=0.025, _subd=0, _bakeMesh=False, _animateFrames=True, _remesh=False, _minDistance=0.01):
+def gpMesh(_extrude=0.015, _subd=-1, _bakeMesh=True, _animateFrames=True, _minDistance=0.0001, _remesh=False):
     scnobs = bpy.context.scene.objects
     start = bpy.context.scene.frame_start
     end = bpy.context.scene.frame_end + 1
@@ -655,24 +655,42 @@ def gpMesh(_extrude=0.025, _subd=0, _bakeMesh=False, _animateFrames=True, _remes
                     bpy.context.object.modifiers["Solidify"].thickness = _extrude * 2
                     bpy.context.object.modifiers["Solidify"].offset = 0
                     #~
-                    if (_subd > 0):
+                    if (_subd > -1):
                         bpy.ops.object.modifier_add(type='SUBSURF')
                         bpy.context.object.modifiers["Subsurf"].levels = _subd
                         bpy.context.object.modifiers["Subsurf"].render_levels = _subd
                         bpy.context.object.modifiers["Subsurf"].use_opensubdiv = 1
                     #~
-                    if (_remesh==True):
-                        bpy.ops.object.modifier_add(type="REMESH")
-                        bpy.context.object.modifiers["Remesh"].mode = "SMOOTH" #sharp, smooth, blocks
-                        bpy.context.object.modifiers["Remesh"].octree_depth = 6
-                        bpy.context.object.modifiers["Remesh"].threshold = 0.1                       
-                    #~
                     if (_bakeMesh==True):
+                        '''
                         mesh = crv_ob.to_mesh(scene = bpy.context.scene, apply_modifiers = True, settings = 'PREVIEW')
                         meshObj = bpy.data.objects.new(crv_ob.name + "_mesh", mesh)
                         bpy.context.scene.objects.link(meshObj)
+                        bpy.context.scene.objects.active = meshObj
+                        '''
+                        meshObj = applyModifiers(crv_ob)
+                        #~
+                        '''
+                        original_type = bpy.context.area.type
+                        print("Current context: " + original_type)
+                        bpy.context.area.type = "VIEW_3D"
+                        #~
+                        bpy.ops.mesh.remove_doubles()
+                        bpy.ops.mesh.dissolve_degenerate()
+                        #~
+                        bpy.context.area.type = original_type
+                        '''
+                        #~
                         # TODO fix vertex colors
                         #colorVertices(meshObj, strokeColor, True)                        
+                        #~
+                        if (_remesh==True):
+                            bpy.ops.object.modifier_add(type="REMESH")
+                            bpy.context.object.modifiers["Remesh"].mode = "BLOCKS" #sharp, smooth, blocks
+                            bpy.context.object.modifiers["Remesh"].octree_depth = 6
+                            bpy.context.object.modifiers["Remesh"].threshold = _minDistance
+                            meshObj = applyModifiers(meshObj)                       
+                        #~
                         delete(crv_ob)
                         frameList.append(meshObj)
                     else:
@@ -698,6 +716,13 @@ def gpMesh(_extrude=0.025, _subd=0, _bakeMesh=False, _animateFrames=True, _remes
                             #else:
                             elif (c != len(layer.frames)-1):
                                 hideFrame(frameList[i], j, True)                            
+
+def applyModifiers(obj):
+    mesh = obj.to_mesh(scene = bpy.context.scene, apply_modifiers=True, settings = 'PREVIEW')
+    meshObj = bpy.data.objects.new(obj.name + "_mesh", mesh)
+    bpy.context.scene.objects.link(meshObj)
+    bpy.context.scene.objects.active = meshObj
+    return meshObj
 
 def getGeometryCenter(obj):
     sumWCoord = [0,0,0]
@@ -857,6 +882,8 @@ def makeGpCurve(_type="PATH"):
 
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
+
+dn = deleteName
 
 def crv():
     deleteName("crv")
