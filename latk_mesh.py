@@ -7,7 +7,7 @@
 # http://blender.stackexchange.com/questions/6750/poly-bezier-curve-from-a-list-of-coordinates
 # http://blender.stackexchange.com/questions/7047/apply-transforms-to-linked-objects
 
-def gpMesh(_extrude=0.0125, _subd=1, _bakeMesh=True, _animateFrames=True, _minDistance=0.001, _remesh=False):
+def gpMesh(_extrude=0.0125, _subd=1, _bakeMesh=True, _animateFrames=True, _minDistance=0.0001, _decimate=0.02, _remesh=False):
     scnobs = bpy.context.scene.objects
     start = bpy.context.scene.frame_start
     end = bpy.context.scene.frame_end + 1
@@ -22,11 +22,11 @@ def gpMesh(_extrude=0.0125, _subd=1, _bakeMesh=True, _animateFrames=True, _minDi
             layer = pencil.layers[b]
             for c in range(0, len(layer.frames)):
                 frameList = []
-                for i, stroke in enumerate(layer.frames[c].strokes):
-                    stroke_points = pencil.layers[b].frames[c].strokes[i].points
+                for stroke in layer.frames[c].strokes:
+                    stroke_points = stroke.points
                     coordsOrig = [ (point.co.x, point.co.y, point.co.z) for point in stroke_points ]
                     coords = []
-                    if (_minDistance > 0):
+                    if (_minDistance > 0.0):
                         for pp in range(0, len(coordsOrig)):
                             if (pp > 0 and getDistance(coordsOrig[pp], coordsOrig[pp-1]) >= _minDistance):
                                 coords.append(coordsOrig[pp])
@@ -43,8 +43,7 @@ def gpMesh(_extrude=0.0125, _subd=1, _bakeMesh=True, _animateFrames=True, _minDi
                     crv_ob.data.extrude = _extrude
                     strokeColor = (0.5,0.5,0.5)
                     try:
-                        print("reading color: " + str(pencil.layers[b].frames[c].strokes[i].color.color))
-                        strokeColor = pencil.layers[b].frames[c].strokes[i].color.color
+                        strokeColor = stroke.color.color
                     except:
                         strokeColor = (0.5,0.5,0.5)
                         print ("error reading color")
@@ -63,6 +62,10 @@ def gpMesh(_extrude=0.0125, _subd=1, _bakeMesh=True, _animateFrames=True, _minDi
                         bpy.context.object.modifiers["Subsurf"].render_levels = _subd
                         bpy.context.object.modifiers["Subsurf"].use_opensubdiv = 1 # GPU--important
                     #~
+                    if (_decimate < 1.0):
+                        bpy.ops.object.modifier_add(type='DECIMATE')
+                        bpy.context.object.modifiers["Decimate"].ratio = 0.01
+                    #~	
                     if (_bakeMesh==True):
                         '''
                         mesh = crv_ob.to_mesh(scene = bpy.context.scene, apply_modifiers = True, settings = 'PREVIEW')

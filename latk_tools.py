@@ -45,9 +45,10 @@ def delete(_obj):
         mesh = bpy.data.meshes[_obj.name]
         mesh.user_clear()
         bpy.data.meshes.remove(mesh)
-        print("Success: removed " + _obj.name + " mesh from memory")
+        #print("Success: removed " + _obj.name + " mesh from memory")
     except:
-        print("Error: " + _obj.name + " not a mesh, or mesh is still in memory.")
+        pass
+        #print("Error: " + _obj.name + " not a mesh, or mesh is still in memory.")
     bpy.ops.object.select_all(action='DESELECT')
     bpy.data.objects[_obj.name].select = True
     bpy.ops.object.delete()   
