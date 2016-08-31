@@ -608,7 +608,7 @@ wb = writeBrushStrokes
 # http://blender.stackexchange.com/questions/6750/poly-bezier-curve-from-a-list-of-coordinates
 # http://blender.stackexchange.com/questions/7047/apply-transforms-to-linked-objects
 
-def gpMesh(_extrude=0.0125, _subd=0, _bakeMesh=True, _animateFrames=True, _minDistance=0.001, _decimate=0.02, _remesh=False):
+def gpMesh(_extrude=0.0125, _subd=0, _bakeMesh=True, _useColors=True, _animateFrames=True, _minDistance=0.001, _decimate=0.02, _remesh=False):
     start = bpy.context.scene.frame_start
     end = bpy.context.scene.frame_end + 1
     #~
@@ -638,11 +638,12 @@ def gpMesh(_extrude=0.0125, _subd=0, _bakeMesh=True, _animateFrames=True, _minDi
                 crv_ob = makeCurve(coords, layer.parent)
                 crv_ob.data.extrude = _extrude
                 strokeColor = (0.5,0.5,0.5)
-                #try:
-                    #strokeColor = stroke.color.color
-                #except:
-                    #strokeColor = (0.5,0.5,0.5)
-                    #print ("error reading color")
+                if (_useColors==True):
+                    try:
+                        strokeColor = stroke.color.color
+                    except:
+                        strokeColor = (0.5,0.5,0.5)
+                        print ("error reading color")
                 mat = bpy.data.materials.new("new_mtl")
                 crv_ob.data.materials.append(mat)
                 crv_ob.data.materials[0].diffuse_color = strokeColor
@@ -670,7 +671,7 @@ def gpMesh(_extrude=0.0125, _subd=0, _bakeMesh=True, _animateFrames=True, _minDi
                 #~
                 if (_decimate < 1.0):
                     bpy.ops.object.modifier_add(type='DECIMATE')
-                    bpy.context.object.modifiers["Decimate"].ratio = 0.01  
+                    bpy.context.object.modifiers["Decimate"].ratio = _decimate  
                 #~  
                 if (_bakeMesh==True):
                     if (_remesh==True):
