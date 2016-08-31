@@ -589,7 +589,12 @@ wb = writeBrushStrokes
 # http://blender.stackexchange.com/questions/6750/poly-bezier-curve-from-a-list-of-coordinates
 # http://blender.stackexchange.com/questions/7047/apply-transforms-to-linked-objects
 
-def gpMesh(_extrude=0.025, _subd=0, _bakeMesh=False, _animateFrames=True, _remesh=False):
+from math import sqrt
+
+def getDistance(v1, v2):
+    return sqrt( (v1[0] - v2[0])**2 + (v1[1] - v2[1])**2 + (v1[2] - v2[2])**2)
+
+def gpMesh(_extrude=0.025, _subd=0, _bakeMesh=False, _animateFrames=True, _remesh=False, _minDistance=0.05):
     scnobs = bpy.context.scene.objects
     start = bpy.context.scene.frame_start
     end = bpy.context.scene.frame_end + 1
@@ -608,7 +613,13 @@ def gpMesh(_extrude=0.025, _subd=0, _bakeMesh=False, _animateFrames=True, _remes
                     scnobs.link(crv_ob)
                     #~
                     stroke_points = pencil.layers[b].frames[c].strokes[i].points
-                    data_list = [ (point.co.x, point.co.y, point.co.z) for point in stroke_points ]
+                    temp_data_list = [ (point.co.x, point.co.y, point.co.z) for point in stroke_points ]
+                    #~
+                    data_list = []
+                    for pp in range(0, len(temp_data_list)):
+                        if (pp > 0 and getDistance(temp_data_list[pp], temp_data_list[pp-1]) >= _minDistance):
+                            data_list.append(temp_data_list[pp])
+                    #~
                     points_to_add = len(data_list)-1
                     #~  
                     flat_list = []
