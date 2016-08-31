@@ -70,6 +70,9 @@ def delete(_obj):
     bpy.ops.object.delete()
     #bpy.ops.object.mode_set(mode=oldMode)
 
+def refresh():
+    bpy.context.scene.update()
+
 def matchName(_name):
     returns = []
     for i in range(0, len(bpy.context.scene.objects)):
@@ -108,6 +111,11 @@ def bakeFrames():
         except:
             print ("Frame " + str(i) + " already exists.")
 
+def getStartEnd():
+    start = bpy.context.scene.frame_start
+    end = bpy.context.scene.frame_end + 1
+    return start, end
+
 def copyFrame(source, dest):
     scene = bpy.context.scene
     gp = scene.grease_pencil
@@ -127,8 +135,11 @@ def copyFrame(source, dest):
             strokeDest.points[l].co = strokeSource.points[l].co
 
 def goToFrame(_index):
+    origFrame = bpy.context.scene.frame_current
     bpy.context.scene.frame_current = _index
     bpy.context.scene.frame_set(_index)
+    refresh()
+    print("Moved from frame " + str(origFrame) + " to " + str(_index))
     return bpy.context.scene.frame_current
 
 def hideFrame(_obj, _frame, _hide):
@@ -256,6 +267,46 @@ def changeColor():
             createPoint(newStroke, j, points[j].co)
     print(str(len(strokes)) + " changed to " + palette.colors.active.name)
 
+def deleteFromAllFrames():
+    origStrokes = []
+    frame = getActiveFrame()
+    for stroke in frame.strokes:
+        addToOrig = False
+        for point in stroke.points:
+            if (point.select):
+               addToOrig = True
+               break
+        if (addToOrig == True):
+           origStrokes.append(stroke) 
+    print("Checking for " + str(len(origStrokes)) + " selected strokes.")
+    #~    
+    allStrokes = getAllStrokes()
+    deleteList = []
+    numPlaces = 5
+    for allStroke in allStrokes:
+        doDelete = False
+        for origStroke in origStrokes:
+            if (len(allStroke.points) == len(origStroke.points)):
+                for i in range(0, len(allStroke.points)):
+                    if (roundVal(allStroke.points[i].co.x, numPlaces) == roundVal(origStroke.points[i].co.x, numPlaces) and roundVal(allStroke.points[i].co.y, numPlaces) == roundVal(origStroke.points[i].co.y, numPlaces) and roundVal(allStroke.points[i].co.z, numPlaces) == roundVal(origStroke.points[i].co.z, numPlaces)):
+                        doDelete = True
+                    else:
+                        doDelete = False
+                        break
+        if (doDelete):
+            deleteList.append(allStroke)
+    #~
+    print(str(len(deleteList)) + " strokes listed for deletion.")
+    for stroke in deleteList:
+        stroke.select = True
+    layer = getActiveLayer()
+    start, end = getStartEnd()
+    for i in range(start, end):
+        goToFrame(i)    
+        for j in range(0, len(layer.frames)):
+            setActiveFrame(j)
+            deleteSelected()
+
 def getAllLayers():
     gp = getActiveGp()
     print("Got " + str(len(gp.layers)) + " layers.")
@@ -278,6 +329,17 @@ def getActiveFrame():
     layer = gp.layers.active
     frame = layer.active_frame
     return frame
+
+# gp not timeline
+def setActiveFrame(index):
+    layer = getActiveLayer()
+    if index < len(layer.frames):
+        layer.active_frame = layer.frames[index]
+        refresh()
+        print("Moved to layer frame " + str(index))
+    else:
+        print("Outside of layer range")
+    return layer.active_frame
 
 def getAllStrokes(active=False):
     returns = []
@@ -331,6 +393,7 @@ c = changeColor
 a = alignCamera
 s = select
 d = delete
+df = deleteFromAllFrames
 
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -526,7 +589,7 @@ wb = writeBrushStrokes
 # http://blender.stackexchange.com/questions/6750/poly-bezier-curve-from-a-list-of-coordinates
 # http://blender.stackexchange.com/questions/7047/apply-transforms-to-linked-objects
 
-def gpMesh(_extrude=0.1, _subd=1, _bakeMesh=False, _animateFrames=True, _remesh=False):
+def gpMesh(_extrude=0.025, _subd=0, _bakeMesh=False, _animateFrames=True, _remesh=False):
     scnobs = bpy.context.scene.objects
     start = bpy.context.scene.frame_start
     end = bpy.context.scene.frame_end + 1
@@ -580,12 +643,16 @@ def gpMesh(_extrude=0.1, _subd=1, _bakeMesh=False, _animateFrames=True, _remesh=
                     bpy.ops.object.modifier_add(type='SOLIDIFY')
                     bpy.context.object.modifiers["Solidify"].thickness = _extrude * 2
                     bpy.context.object.modifiers["Solidify"].offset = 0
-                    bpy.ops.object.modifier_add(type='SUBSURF')
-                    bpy.context.object.modifiers["Subsurf"].levels = _subd
-                    bpy.context.object.modifiers["Subsurf"].render_levels = _subd
+                    #~
+                    if (_subd > 0):
+                        bpy.ops.object.modifier_add(type='SUBSURF')
+                        bpy.context.object.modifiers["Subsurf"].levels = _subd
+                        bpy.context.object.modifiers["Subsurf"].render_levels = _subd
+                        bpy.context.object.modifiers["Subsurf"].use_opensubdiv = 1
+                    #~
                     if (_remesh==True):
                         bpy.ops.object.modifier_add(type="REMESH")
-                        bpy.context.object.modifiers["Remesh"].mode = "BLOCKS" #sharp, smooth, blocks
+                        bpy.context.object.modifiers["Remesh"].mode = "SMOOTH" #sharp, smooth, blocks
                         bpy.context.object.modifiers["Remesh"].octree_depth = 6
                         bpy.context.object.modifiers["Remesh"].threshold = 0.1                       
                     #~

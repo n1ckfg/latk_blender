@@ -7,7 +7,7 @@
 # http://blender.stackexchange.com/questions/6750/poly-bezier-curve-from-a-list-of-coordinates
 # http://blender.stackexchange.com/questions/7047/apply-transforms-to-linked-objects
 
-def gpMesh(_extrude=0.1, _subd=1, _bakeMesh=False, _animateFrames=True, _remesh=False):
+def gpMesh(_extrude=0.025, _subd=0, _bakeMesh=False, _animateFrames=True, _remesh=False):
     scnobs = bpy.context.scene.objects
     start = bpy.context.scene.frame_start
     end = bpy.context.scene.frame_end + 1
@@ -61,12 +61,16 @@ def gpMesh(_extrude=0.1, _subd=1, _bakeMesh=False, _animateFrames=True, _remesh=
                     bpy.ops.object.modifier_add(type='SOLIDIFY')
                     bpy.context.object.modifiers["Solidify"].thickness = _extrude * 2
                     bpy.context.object.modifiers["Solidify"].offset = 0
-                    bpy.ops.object.modifier_add(type='SUBSURF')
-                    bpy.context.object.modifiers["Subsurf"].levels = _subd
-                    bpy.context.object.modifiers["Subsurf"].render_levels = _subd
+                    #~
+                    if (_subd > 0):
+                        bpy.ops.object.modifier_add(type='SUBSURF')
+                        bpy.context.object.modifiers["Subsurf"].levels = _subd
+                        bpy.context.object.modifiers["Subsurf"].render_levels = _subd
+                        bpy.context.object.modifiers["Subsurf"].use_opensubdiv = 1
+                    #~
                     if (_remesh==True):
                         bpy.ops.object.modifier_add(type="REMESH")
-                        bpy.context.object.modifiers["Remesh"].mode = "BLOCKS" #sharp, smooth, blocks
+                        bpy.context.object.modifiers["Remesh"].mode = "SMOOTH" #sharp, smooth, blocks
                         bpy.context.object.modifiers["Remesh"].octree_depth = 6
                         bpy.context.object.modifiers["Remesh"].threshold = 0.1                       
                     #~
