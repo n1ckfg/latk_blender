@@ -7,7 +7,7 @@
 # http://blender.stackexchange.com/questions/6750/poly-bezier-curve-from-a-list-of-coordinates
 # http://blender.stackexchange.com/questions/7047/apply-transforms-to-linked-objects
 
-def gpMesh(_extrude=0.015, _subd=-1, _bakeMesh=True, _animateFrames=True, _minDistance=0.0001, _remesh=False):
+def gpMesh(_extrude=0.0125, _subd=1, _bakeMesh=True, _animateFrames=True, _minDistance=0.001, _remesh=False):
     scnobs = bpy.context.scene.objects
     start = bpy.context.scene.frame_start
     end = bpy.context.scene.frame_end + 1
@@ -15,50 +15,39 @@ def gpMesh(_extrude=0.015, _subd=-1, _bakeMesh=True, _animateFrames=True, _minDi
     #goToFrame(1)
     #TODO: option for multiple GP blocks
     for a in range(0, 1):#len(bpy.data.grease_pencil)):
-        pencil = bpy.context.scene.grease_pencil#bpy.data.grease_pencil[a]
+        #pencil = bpy.context.scene.grease_pencil#bpy.data.grease_pencil[a]
+        pencil = getActiveGp()
         #~
         for b in range(0, len(pencil.layers)):
             layer = pencil.layers[b]
             for c in range(0, len(layer.frames)):
                 frameList = []
                 for i, stroke in enumerate(layer.frames[c].strokes):
-                    crv, crv_ob = make_basic_curve()
-                    scnobs.link(crv_ob)
-                    #~
                     stroke_points = pencil.layers[b].frames[c].strokes[i].points
-                    temp_data_list = [ (point.co.x, point.co.y, point.co.z) for point in stroke_points ]
+                    coordsOrig = [ (point.co.x, point.co.y, point.co.z) for point in stroke_points ]
+                    coords = []
+                    if (_minDistance > 0):
+                        for pp in range(0, len(coordsOrig)):
+                            if (pp > 0 and getDistance(coordsOrig[pp], coordsOrig[pp-1]) >= _minDistance):
+                                coords.append(coordsOrig[pp])
+                    else:
+                        coords = coordsOrig
+                    # * * * * * * * * * * * * * *
+                    # TODO fix parenting. Here's where the initial transform corrections go.
+                    #if (layer.parent):
+                        #for coord in coords:
+                            #coord = layer.parent.matrix_world * Vector(coord)
+                    # * * * * * * * * * * * * * *                         
                     #~
-                    data_list = []
-                    for pp in range(0, len(temp_data_list)):
-                        if (pp > 0 and getDistance(temp_data_list[pp], temp_data_list[pp-1]) >= _minDistance):
-                            data_list.append(temp_data_list[pp])
-                    #~
-                    points_to_add = len(data_list)-1
-                    #~  
-                    flat_list = []
-                    for point in data_list: 
-                        flat_list.extend(point)
-                    #~
-                    spline = crv.splines.new(type="BEZIER")
-                    spline.bezier_points.add(points_to_add)
-                    spline.bezier_points.foreach_set("co", flat_list)
-                    #~
-                    for point in spline.bezier_points:
-                        # * * * * * * * * * * * * * *
-                        if (layer.parent):
-                            point.co = (layer.parent.matrix_world.inverted() * Vector(point.co)) - layer.parent.location
-                        # * * * * * * * * * * * * * *                         
-                        point.handle_left = point.handle_right = point.co
-                        #point.handle_left_type="AUTO"
-                        #point.handle_right_type="AUTO"
-                    #~
+                    crv_ob = makeCurve(coords, layer.parent)
                     crv_ob.data.extrude = _extrude
                     strokeColor = (0.5,0.5,0.5)
-                    #try:
-                        #strokeColor = pencil.layers[b].frames[c].strokes[i].color.color
-                    #except:
-                        #strokeColor = (0.5,0.5,0.5)
-                        #print ("error reading color")
+                    try:
+                        print("reading color: " + str(pencil.layers[b].frames[c].strokes[i].color.color))
+                        strokeColor = pencil.layers[b].frames[c].strokes[i].color.color
+                    except:
+                        strokeColor = (0.5,0.5,0.5)
+                        print ("error reading color")
                     mat = bpy.data.materials.new("new_mtl")
                     crv_ob.data.materials.append(mat)
                     crv_ob.data.materials[0].diffuse_color = strokeColor
@@ -68,11 +57,11 @@ def gpMesh(_extrude=0.015, _subd=-1, _bakeMesh=True, _animateFrames=True, _minDi
                     bpy.context.object.modifiers["Solidify"].thickness = _extrude * 2
                     bpy.context.object.modifiers["Solidify"].offset = 0
                     #~
-                    if (_subd > -1):
+                    if (_subd > 0):
                         bpy.ops.object.modifier_add(type='SUBSURF')
                         bpy.context.object.modifiers["Subsurf"].levels = _subd
                         bpy.context.object.modifiers["Subsurf"].render_levels = _subd
-                        bpy.context.object.modifiers["Subsurf"].use_opensubdiv = 1
+                        bpy.context.object.modifiers["Subsurf"].use_opensubdiv = 1 # GPU--important
                     #~
                     if (_bakeMesh==True):
                         '''
@@ -98,23 +87,20 @@ def gpMesh(_extrude=0.015, _subd=-1, _bakeMesh=True, _animateFrames=True, _minDi
                         #colorVertices(meshObj, strokeColor, True)                        
                         #~
                         if (_remesh==True):
-                            bpy.ops.object.modifier_add(type="REMESH")
-                            bpy.context.object.modifiers["Remesh"].mode = "SMOOTH" #sharp, smooth, blocks
-                            bpy.context.object.modifiers["Remesh"].octree_depth = 6
-                            bpy.context.object.modifiers["Remesh"].use_smooth_shade = 1
-                            bpy.context.object.modifiers["Remesh"].threshold = _minDistance
-                            meshObj = applyModifiers(meshObj)                       
+                            meshObj = remesher(meshObj)                   
                         #~
-                        delete(crv_ob)
+                        #delete(crv_ob) # should now already be deleted
                         frameList.append(meshObj)
                     else:
                         frameList.append(crv_ob)
-                    if (layer.parent):
-                        index = len(frameList)-1
-                        frameList[index].parent = layer.parent
-                        #~
+                    # * * * * * * * * * * * * * *
+                    # TODO fix parenting. Here's where the output gets parented to the layer's parent.
+                    #if (layer.parent):
+                        #index = len(frameList)-1
+                        #frameList[index].parent = layer.parent
+                    # * * * * * * * * * * * * * *
                     #bpy.context.scene.update()
-                    #~
+                #~
                 for i in range(0, len(frameList)):
                     print(frameList[i])
                     if (_animateFrames==True):
@@ -129,13 +115,25 @@ def gpMesh(_extrude=0.015, _subd=-1, _bakeMesh=True, _animateFrames=True, _minDi
                                 #keyTransform(frameList[i], j) 
                             #else:
                             elif (c != len(layer.frames)-1):
-                                hideFrame(frameList[i], j, True)                            
+                                hideFrame(frameList[i], j, True)
+
+def remesher(obj, mode="blocks", octree=6, threshold=0.0001, smoothShade=False):
+        #fixContext()
+        bpy.context.scene.objects.active = obj
+        bpy.ops.object.modifier_add(type="REMESH")
+        bpy.context.object.modifiers["Remesh"].mode = mode.upper() #sharp, smooth, blocks
+        bpy.context.object.modifiers["Remesh"].octree_depth = octree
+        bpy.context.object.modifiers["Remesh"].use_smooth_shade = int(smoothShade)
+        bpy.context.object.modifiers["Remesh"].threshold = threshold
+        return applyModifiers(obj)     
 
 def applyModifiers(obj):
     mesh = obj.to_mesh(scene = bpy.context.scene, apply_modifiers=True, settings = 'PREVIEW')
     meshObj = bpy.data.objects.new(obj.name + "_mesh", mesh)
     bpy.context.scene.objects.link(meshObj)
     bpy.context.scene.objects.active = meshObj
+    meshObj.matrix_world = obj.matrix_world
+    delete(obj)
     return meshObj
 
 def getGeometryCenter(obj):
@@ -227,12 +225,39 @@ def matchWithParent(_child, _parent, _index):
         _child.parent = _parent
         keyTransform(_child, _index)   
 
+def makeCurve(coords, parent=None):
+    # http://blender.stackexchange.com/questions/6750/poly-bezier-curve-from-a-list-of-coordinates
+    # create the curve datablock
+    curveData = bpy.data.curves.new('crv', type='CURVE')
+    curveData.dimensions = '3D'
+    curveData.resolution_u = 2
+    #~
+    # map coords to spline
+    polyline = curveData.splines.new('NURBS')
+    polyline.points.add(len(coords))
+    for i, coord in enumerate(coords):
+        x,y,z = coord
+        polyline.points[i].co = (x, y, z, 1)
+    #~
+    # create object
+    crv_ob = bpy.data.objects.new('crv_ob', curveData)
+    if (parent != None):
+        crv_ob.location = (parent.location) #object origin  
+    #~
+    # attach to scene and validate context
+    scn = bpy.context.scene
+    scn.objects.link(crv_ob)
+    scn.objects.active = crv_ob
+    crv_ob.select = True
+    return crv_ob
+
+'''
+# old attempts
 def make_basic_curve():
     crv = bpy.data.curves.new("crv", type="CURVE")
     crv_ob = bpy.data.objects.new("crv_ob", crv)
     return crv, crv_ob
 
-'''
 def makePolyLine(objname, curvename, cList):  
     curvedata = bpy.data.curves.new(name=curvename, type='CURVE')  
     curvedata.dimensions = '3D'  
@@ -293,8 +318,7 @@ def makeGpCurve(_type="PATH"):
 
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
-
-dn = deleteName
+# shortcuts
 
 def crv():
     deleteName("crv")
@@ -311,6 +335,8 @@ def crvAbcFat():
 def crvAbcThin():
     deleteName("crv")
     gpMesh(0.005, 0, True, True)
+
+dn = deleteName
 
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
 # * * * * * * * * * * * * * * * * * * * * * * * * * *

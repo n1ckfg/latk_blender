@@ -38,12 +38,20 @@ def moveTo(x, y, z, target=None):
 '''
 
 def delete(_obj):
-    #oldMode = bpy.context.mode
-    #bpy.ops.object.mode_set(mode='OBJECT')
+    #if not target:
+        #target = s()
+    #for _obj in target:
+    try:
+        mesh = bpy.data.meshes[_obj.name]
+        mesh.user_clear()
+        bpy.data.meshes.remove(mesh)
+        print("Success: removed " + _obj.name + " mesh from memory")
+    except:
+        print("Error: " + _obj.name + " not a mesh, or mesh is still in memory.")
     bpy.ops.object.select_all(action='DESELECT')
     bpy.data.objects[_obj.name].select = True
-    bpy.ops.object.delete()
-    #bpy.ops.object.mode_set(mode=oldMode)
+    bpy.ops.object.delete()   
+    print("Deleted " + _obj.name)     
 
 def refresh():
     bpy.context.scene.update()
@@ -148,6 +156,9 @@ def moveShot(start, end, x, y, z):
                     layer.frames[currentFrame].strokes[i].points[j].co.x += x
                     layer.frames[currentFrame].strokes[i].points[j].co.y += y
                     layer.frames[currentFrame].strokes[i].points[j].co.z += z
+
+def fixContext():
+    bpy.context.area.type = "VIEW_3D"
 
 def alignCamera():
     original_type = bpy.context.area.type
@@ -363,6 +374,10 @@ def deleteSelected(target="strokes"):
 
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
+# shortcuts
+
+def ss():
+    return select()[0]
 
 c = changeColor
 a = alignCamera
