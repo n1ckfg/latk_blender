@@ -1,5 +1,6 @@
-import re
-
+def getDistance(v1, v2):
+    return sqrt( (v1[0] - v2[0])**2 + (v1[1] - v2[1])**2 + (v1[2] - v2[2])**2)
+    
 def keyTransform(_obj, _frame):
     #_obj.location = _pos
     #_obj.rotation_quaternion = _rot
@@ -7,7 +8,7 @@ def keyTransform(_obj, _frame):
     _obj.keyframe_insert(data_path="location", frame=_frame) 
     _obj.keyframe_insert(data_path="rotation_euler", frame=_frame) 
     _obj.keyframe_insert(data_path="scale", frame=_frame)
-    bpy.context.scene.update()
+    #bpy.context.scene.update()
 
 def keyMatrix(_obj, _frame):
     _obj.keyframe_insert(data_path="matrix_world", frame=_frame) 

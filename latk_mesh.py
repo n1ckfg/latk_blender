@@ -7,11 +7,6 @@
 # http://blender.stackexchange.com/questions/6750/poly-bezier-curve-from-a-list-of-coordinates
 # http://blender.stackexchange.com/questions/7047/apply-transforms-to-linked-objects
 
-from math import sqrt
-
-def getDistance(v1, v2):
-    return sqrt( (v1[0] - v2[0])**2 + (v1[1] - v2[1])**2 + (v1[2] - v2[2])**2)
-
 def gpMesh(_extrude=0.015, _subd=-1, _bakeMesh=True, _animateFrames=True, _minDistance=0.0001, _remesh=False):
     scnobs = bpy.context.scene.objects
     start = bpy.context.scene.frame_start
@@ -58,12 +53,12 @@ def gpMesh(_extrude=0.015, _subd=-1, _bakeMesh=True, _animateFrames=True, _minDi
                         #point.handle_right_type="AUTO"
                     #~
                     crv_ob.data.extrude = _extrude
-                    strokeColor = (0,0,0)
-                    try:
-                        strokeColor = pencil.layers[b].frames[c].strokes[i].color.color
-                    except:
-                        strokeColor = (0,0,0)
-                        print ("error reading color")
+                    strokeColor = (0.5,0.5,0.5)
+                    #try:
+                        #strokeColor = pencil.layers[b].frames[c].strokes[i].color.color
+                    #except:
+                        #strokeColor = (0.5,0.5,0.5)
+                        #print ("error reading color")
                     mat = bpy.data.materials.new("new_mtl")
                     crv_ob.data.materials.append(mat)
                     crv_ob.data.materials[0].diffuse_color = strokeColor
@@ -104,7 +99,7 @@ def gpMesh(_extrude=0.015, _subd=-1, _bakeMesh=True, _animateFrames=True, _minDi
                         #~
                         if (_remesh==True):
                             bpy.ops.object.modifier_add(type="REMESH")
-                            bpy.context.object.modifiers["Remesh"].mode = "BLOCKS" #sharp, smooth, blocks
+                            bpy.context.object.modifiers["Remesh"].mode = "SHARP" #sharp, smooth, blocks
                             bpy.context.object.modifiers["Remesh"].octree_depth = 6
                             bpy.context.object.modifiers["Remesh"].threshold = _minDistance
                             meshObj = applyModifiers(meshObj)                       
@@ -117,7 +112,7 @@ def gpMesh(_extrude=0.015, _subd=-1, _bakeMesh=True, _animateFrames=True, _minDi
                         index = len(frameList)-1
                         frameList[index].parent = layer.parent
                         #~
-                    bpy.context.scene.update()
+                    #bpy.context.scene.update()
                     #~
                 for i in range(0, len(frameList)):
                     print(frameList[i])
@@ -212,7 +207,7 @@ def setOrigin(target, point):
     bpy.context.scene.objects.active = target
     bpy.context.scene.cursor_location = point
     bpy.ops.object.origin_set(type='ORIGIN_CURSOR')
-    bpy.context.scene.update()
+    #bpy.context.scene.update()
 
 def matchWithParent(_child, _parent, _index):
     if (_parent):
@@ -227,12 +222,9 @@ def matchWithParent(_child, _parent, _index):
         _child.location = loc
         #_child.rotation_quaternion = rot
         _child.scale = scale
-        bpy.context.scene.update()
+        #bpy.context.scene.update()
         _child.parent = _parent
         keyTransform(_child, _index)   
-
-def getDistance(v1, v2):
-    return sqrt((v1[0] - v2[0])**2 + (v1[1] - v2[1])**2 + (v1[2] - v2[2])**2)
 
 def make_basic_curve():
     crv = bpy.data.curves.new("crv", type="CURVE")
@@ -283,7 +275,7 @@ def exporter():
         for i in range(0, len(bpy.data.objects)):
             if (bpy.data.objects[i].hide == False):
                 bpy.data.objects[i].select = True
-        bpy.context.scene.update()
+        #bpy.context.scene.update()
         bpy.ops.export_scene.obj(filepath="/Users/nick/Desktop/test" + str(j) + ".obj", use_selection=True)
 
 # crashes        

@@ -17,6 +17,7 @@ def unregister():
 
 import bpy
 from mathutils import *
+from math import sqrt
 import json
 import re
 
