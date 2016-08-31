@@ -79,7 +79,7 @@ def delete(_obj):
     bpy.ops.object.select_all(action='DESELECT')
     bpy.data.objects[_obj.name].select = True
     bpy.ops.object.delete()   
-    print("Deleted " + _obj.name)     
+    #print("Deleted " + _obj.name)     
 
 def refresh():
     bpy.context.scene.update()
@@ -608,55 +608,56 @@ wb = writeBrushStrokes
 # http://blender.stackexchange.com/questions/6750/poly-bezier-curve-from-a-list-of-coordinates
 # http://blender.stackexchange.com/questions/7047/apply-transforms-to-linked-objects
 
-def gpMesh(_extrude=0.0125, _subd=1, _bakeMesh=True, _animateFrames=True, _minDistance=0.0001, _decimate=0.02, _remesh=False):
-    scnobs = bpy.context.scene.objects
+def gpMesh(_extrude=0.0125, _subd=0, _bakeMesh=True, _animateFrames=True, _minDistance=0.001, _decimate=0.02, _remesh=False):
     start = bpy.context.scene.frame_start
     end = bpy.context.scene.frame_end + 1
     #~
-    #goToFrame(1)
-    #TODO: option for multiple GP blocks
-    for a in range(0, 1):#len(bpy.data.grease_pencil)):
-        #pencil = bpy.context.scene.grease_pencil#bpy.data.grease_pencil[a]
-        pencil = getActiveGp()
-        #~
-        for b in range(0, len(pencil.layers)):
-            layer = pencil.layers[b]
-            for c in range(0, len(layer.frames)):
-                frameList = []
-                for stroke in layer.frames[c].strokes:
-                    stroke_points = stroke.points
-                    coordsOrig = [ (point.co.x, point.co.y, point.co.z) for point in stroke_points ]
-                    coords = []
-                    if (_minDistance > 0.0):
-                        for pp in range(0, len(coordsOrig)):
-                            if (pp > 0 and getDistance(coordsOrig[pp], coordsOrig[pp-1]) >= _minDistance):
-                                coords.append(coordsOrig[pp])
-                    else:
-                        coords = coordsOrig
-                    # * * * * * * * * * * * * * *
-                    # TODO fix parenting. Here's where the initial transform corrections go.
-                    #if (layer.parent):
-                        #for coord in coords:
-                            #coord = layer.parent.matrix_world * Vector(coord)
-                    # * * * * * * * * * * * * * *                         
+    pencil = getActiveGp()
+    #~
+    for b in range(0, len(pencil.layers)):
+        layer = pencil.layers[b]
+        for c in range(0, len(layer.frames)):
+            frameList = []
+            for stroke in layer.frames[c].strokes:
+                stroke_points = stroke.points
+                coordsOrig = [ (point.co.x, point.co.y, point.co.z) for point in stroke_points ]
+                coords = []
+                if (_minDistance > 0.0):
+                    for pp in range(0, len(coordsOrig)):
+                        if (pp > 0 and getDistance(coordsOrig[pp], coordsOrig[pp-1]) >= _minDistance):
+                            coords.append(coordsOrig[pp])
+                else:
+                    coords = coordsOrig
+                # * * * * * * * * * * * * * *
+                # TODO fix parenting. Here's where the initial transform corrections go.
+                #if (layer.parent):
+                    #for coord in coords:
+                        #coord = layer.parent.matrix_world * Vector(coord)
+                # * * * * * * * * * * * * * *                         
+                #~
+                crv_ob = makeCurve(coords, layer.parent)
+                crv_ob.data.extrude = _extrude
+                strokeColor = (0.5,0.5,0.5)
+                #try:
+                    #strokeColor = stroke.color.color
+                #except:
+                    #strokeColor = (0.5,0.5,0.5)
+                    #print ("error reading color")
+                mat = bpy.data.materials.new("new_mtl")
+                crv_ob.data.materials.append(mat)
+                crv_ob.data.materials[0].diffuse_color = strokeColor
+                #~
+                bpy.context.scene.objects.active = crv_ob
+                bpy.ops.object.modifier_add(type='SOLIDIFY')
+                bpy.context.object.modifiers["Solidify"].thickness = _extrude * 2
+                bpy.context.object.modifiers["Solidify"].offset = 0
+                #~
+                if (_bakeMesh==True):
+                    meshObj = applyModifiers(crv_ob)
                     #~
-                    crv_ob = makeCurve(coords, layer.parent)
-                    crv_ob.data.extrude = _extrude
-                    strokeColor = (0.5,0.5,0.5)
-                    try:
-                        strokeColor = stroke.color.color
-                    except:
-                        strokeColor = (0.5,0.5,0.5)
-                        print ("error reading color")
-                    mat = bpy.data.materials.new("new_mtl")
-                    crv_ob.data.materials.append(mat)
-                    crv_ob.data.materials[0].diffuse_color = strokeColor
-                    #~
-                    bpy.context.scene.objects.active = crv_ob
-                    bpy.ops.object.modifier_add(type='SOLIDIFY')
-                    bpy.context.object.modifiers["Solidify"].thickness = _extrude * 2
-                    bpy.context.object.modifiers["Solidify"].offset = 0
-                    #~
+                    # TODO fix vertex colors
+                    #colorVertices(meshObj, strokeColor, True)                        
+                    #~    
                     if (_subd > 0):
                         bpy.ops.object.modifier_add(type='SUBSURF')
                         bpy.context.object.modifiers["Subsurf"].levels = _subd
@@ -664,67 +665,44 @@ def gpMesh(_extrude=0.0125, _subd=1, _bakeMesh=True, _animateFrames=True, _minDi
                         try:
                             bpy.context.object.modifiers["Subsurf"].use_opensubdiv = 1 # GPU if supported
                         except:
-                        	pass
+                            pass
                     #~
                     if (_decimate < 1.0):
                         bpy.ops.object.modifier_add(type='DECIMATE')
-                        bpy.context.object.modifiers["Decimate"].ratio = 0.01
-                    #~	
-                    if (_bakeMesh==True):
-                        '''
-                        mesh = crv_ob.to_mesh(scene = bpy.context.scene, apply_modifiers = True, settings = 'PREVIEW')
-                        meshObj = bpy.data.objects.new(crv_ob.name + "_mesh", mesh)
-                        bpy.context.scene.objects.link(meshObj)
-                        bpy.context.scene.objects.active = meshObj
-                        '''
-                        meshObj = applyModifiers(crv_ob)
-                        #~
-                        '''
-                        original_type = bpy.context.area.type
-                        print("Current context: " + original_type)
-                        bpy.context.area.type = "VIEW_3D"
-                        #~
-                        bpy.ops.mesh.remove_doubles()
-                        bpy.ops.mesh.dissolve_degenerate()
-                        #~
-                        bpy.context.area.type = original_type
-                        '''
-                        #~
-                        # TODO fix vertex colors
-                        #colorVertices(meshObj, strokeColor, True)                        
-                        #~
-                        if (_remesh==True):
-                            meshObj = remesher(meshObj)                   
-                        #~
-                        #delete(crv_ob) # should now already be deleted
-                        frameList.append(meshObj)
+                        bpy.context.object.modifiers["Decimate"].ratio = 0.01  
+                    #~  
+                    if (_remesh==True):
+                        meshObj = remesher(meshObj)
                     else:
-                        frameList.append(crv_ob)
-                    # * * * * * * * * * * * * * *
-                    # TODO fix parenting. Here's where the output gets parented to the layer's parent.
-                    #if (layer.parent):
-                        #index = len(frameList)-1
-                        #frameList[index].parent = layer.parent
-                    # * * * * * * * * * * * * * *
-                    #bpy.context.scene.update()
-                #~
-                for i in range(0, len(frameList)):
-                    print(frameList[i])
-                    if (_animateFrames==True):
-                        hideFrame(frameList[i], 0, True)
-                        for j in range(start, end):
-                            if (j == layer.frames[c].frame_number):
-                                hideFrame(frameList[i], j, False)
-                                keyTransform(frameList[i], j) 
-                                #matchWithParent(frameList[i], layer.parent, j) 
-                            elif (c < len(layer.frames)-1 and j > layer.frames[c].frame_number and j < layer.frames[c+1].frame_number):
-                                hideFrame(frameList[i], j, False)
-                                #keyTransform(frameList[i], j) 
-                            #else:
-                            elif (c != len(layer.frames)-1):
-                                hideFrame(frameList[i], j, True)
+                        meshObj = applyModifiers(meshObj)                   
+                    #~
+                    frameList.append(meshObj)
+                else:
+                    frameList.append(crv_ob)
+                # * * * * * * * * * * * * * *
+                # TODO fix parenting. Here's where the output gets parented to the layer's parent.
+                #if (layer.parent):
+                    #index = len(frameList)-1
+                    #frameList[index].parent = layer.parent
+                # * * * * * * * * * * * * * *
+            #~
+            for i in range(0, len(frameList)):
+                print(frameList[i])
+                if (_animateFrames==True):
+                    hideFrame(frameList[i], 0, True)
+                    for j in range(start, end):
+                        if (j == layer.frames[c].frame_number):
+                            hideFrame(frameList[i], j, False)
+                            keyTransform(frameList[i], j) 
+                            #matchWithParent(frameList[i], layer.parent, j) 
+                        elif (c < len(layer.frames)-1 and j > layer.frames[c].frame_number and j < layer.frames[c+1].frame_number):
+                            hideFrame(frameList[i], j, False)
+                            #keyTransform(frameList[i], j) 
+                        #else:
+                        elif (c != len(layer.frames)-1):
+                            hideFrame(frameList[i], j, True)
 
-def remesher(obj, mode="blocks", octree=6, threshold=0.0001, smoothShade=False):
+def remesher(obj, bake=True, mode="blocks", octree=6, threshold=0.0001, smoothShade=False):
         #fixContext()
         bpy.context.scene.objects.active = obj
         bpy.ops.object.modifier_add(type="REMESH")
@@ -732,7 +710,10 @@ def remesher(obj, mode="blocks", octree=6, threshold=0.0001, smoothShade=False):
         bpy.context.object.modifiers["Remesh"].octree_depth = octree
         bpy.context.object.modifiers["Remesh"].use_smooth_shade = int(smoothShade)
         bpy.context.object.modifiers["Remesh"].threshold = threshold
-        return applyModifiers(obj)     
+        if (bake==True):
+            return applyModifiers(obj)     
+        else:
+            return obj
 
 def applyModifiers(obj):
     mesh = obj.to_mesh(scene = bpy.context.scene, apply_modifiers=True, settings = 'PREVIEW')

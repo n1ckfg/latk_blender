@@ -52,7 +52,7 @@ def delete(_obj):
     bpy.ops.object.select_all(action='DESELECT')
     bpy.data.objects[_obj.name].select = True
     bpy.ops.object.delete()   
-    print("Deleted " + _obj.name)     
+    #print("Deleted " + _obj.name)     
 
 def refresh():
     bpy.context.scene.update()
