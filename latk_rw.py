@@ -171,6 +171,7 @@ def readBrushStrokes(url=None):
 
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
+# shortcuts
 
 rb = readBrushStrokes
 wb = writeBrushStrokes

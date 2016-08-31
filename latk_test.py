@@ -12,7 +12,7 @@ def testStroke():
     createPoint(stroke, 1, (100,100,0))
 
 def testJson():
-    readFilePath = "/Users/nick/Projects/LightningArtist/LightningArtistJS/animations/"
+    readFilePath = "/Users/nick/Projects/animations/"
     readFileName = "new_test.json"
     with open(readFilePath + readFileName) as data_file:    
         data = json.load(data_file)
@@ -22,10 +22,10 @@ def testJson():
 
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
+# shortcuts
+
+# * * * * * * * * * * * * * * * * * * * * * * * * * *
+# * * * * * * * * * * * * * * * * * * * * * * * * * *
+# * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 # END
-
-# * * * * * * * * * * * * * * * * * * * * * * * * * *
-# * * * * * * * * * * * * * * * * * * * * * * * * * *
-# * * * * * * * * * * * * * * * * * * * * * * * * * *
-
