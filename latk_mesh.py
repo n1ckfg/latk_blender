@@ -99,8 +99,9 @@ def gpMesh(_extrude=0.015, _subd=-1, _bakeMesh=True, _animateFrames=True, _minDi
                         #~
                         if (_remesh==True):
                             bpy.ops.object.modifier_add(type="REMESH")
-                            bpy.context.object.modifiers["Remesh"].mode = "SHARP" #sharp, smooth, blocks
+                            bpy.context.object.modifiers["Remesh"].mode = "SMOOTH" #sharp, smooth, blocks
                             bpy.context.object.modifiers["Remesh"].octree_depth = 6
+                            bpy.context.object.modifiers["Remesh"].use_smooth_shade = 1
                             bpy.context.object.modifiers["Remesh"].threshold = _minDistance
                             meshObj = applyModifiers(meshObj)                       
                         #~
