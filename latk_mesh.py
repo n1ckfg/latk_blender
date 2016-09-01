@@ -34,9 +34,9 @@ def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False
                 # * * * * * * * * * * * * * *
                 # TODO fix parenting. Here's where the initial transform corrections go.
                 #if (layer.parent):
-                	#origParent = layer.parent
-                	#print(layer.parent.name)
-                	#layer.parent = None
+                    #origParent = layer.parent
+                    #print(layer.parent.name)
+                    #layer.parent = None
                     #for coord in coords:
                         #coord = layer.matrix_inverse * Vector(coord)
                 # * * * * * * * * * * * * * *                         
@@ -218,7 +218,7 @@ def matchWithParent(_child, _parent, _index):
         _child.parent = _parent
         keyTransform(_child, _index)   
 
-def makeCurve(coords, resolution=2, thickness=0.1, bevelResolution=1, simplify=True, curveType="bezier", parent=None):
+def makeCurve(coords, resolution=2, thickness=0.1, bevelResolution=1, curveType="bezier", parent=None):
     # http://blender.stackexchange.com/questions/12201/bezier-spline-with-python-adds-unwanted-point
     # http://blender.stackexchange.com/questions/6750/poly-bezier-curve-from-a-list-of-coordinates
     # create the curve datablock
@@ -341,6 +341,24 @@ def makeGpCurve(_type="PATH"):
     #~
     #bpy.context.area.type = "CONSOLE"
     bpy.context.area.type = original_type
+
+def randomMetaballs():
+    # http://blenderscripting.blogspot.com/2012/09/tripping-metaballs-python.html
+    scene = bpy.context.scene
+    #~
+    # add metaball object
+    mball = bpy.data.metaballs.new("MetaBall")
+    obj = bpy.data.objects.new("MetaBallObject", mball)
+    scene.objects.link(obj)
+    #~
+    mball.resolution = 0.2   # View resolution
+    mball.render_resolution = 0.02
+    #~
+    for i in range(20):
+        coordinate = tuple(random.uniform(-4,4) for i in range(3))
+        element = mball.elements.new()
+        element.co = coordinate
+        element.radius = 2.0
 
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
