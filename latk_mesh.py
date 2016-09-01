@@ -7,7 +7,7 @@
 # http://blender.stackexchange.com/questions/6750/poly-bezier-curve-from-a-list-of-coordinates
 # http://blender.stackexchange.com/questions/7047/apply-transforms-to-linked-objects
 
-def gpMesh(_thickness=0.0125, _resolution=2, _bevelResolution=1, _bakeMesh=False, _useModifiers=False, _useColors=True, _animateFrames=True, _minDistance=0.001, _subd=1, _decimate=0.02):
+def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False, _curveType="nurbs", _useModifiers=False, _useColors=False, _animateFrames=True, _minDistance = 0.0001, _subd=1, _decimate=0.02):
     start = bpy.context.scene.frame_start
     end = bpy.context.scene.frame_end + 1
     #~
@@ -34,7 +34,7 @@ def gpMesh(_thickness=0.0125, _resolution=2, _bevelResolution=1, _bakeMesh=False
                         #coord = layer.parent.matrix_world * Vector(coord)
                 # * * * * * * * * * * * * * *                         
                 #~
-                crv_ob = makeCurve(coords=coords, resolution=_resolution, thickness=_thickness, bevelResolution=_bevelResolution, parent=layer.parent)
+                crv_ob = makeCurve(coords=coords, curveType=_curveType, resolution=_resolution, thickness=_thickness, bevelResolution=_bevelResolution, parent=layer.parent)
                 #crv_ob.data.extrude = _extrude
                 strokeColor = (0.5,0.5,0.5)
                 if (_useColors==True):
@@ -210,9 +210,31 @@ def matchWithParent(_child, _parent, _index):
         _child.parent = _parent
         keyTransform(_child, _index)   
 
-def makeCurve(coords, resolution=2, thickness=0.1, bevelResolution=1, curveType="BEZIER", parent=None):
+def makeCurve(coords, resolution=2, thickness=0.1, bevelResolution=1, simplify=True, curveType="bezier", parent=None):
+    # http://blender.stackexchange.com/questions/12201/bezier-spline-with-python-adds-unwanted-point
     # http://blender.stackexchange.com/questions/6750/poly-bezier-curve-from-a-list-of-coordinates
     # create the curve datablock
+    # https://svn.blender.org/svnroot/bf-extensions/trunk/py/scripts/addons/curve_simplify.py
+    '''
+    options = [
+        0,    # smooth mode
+        0,    # output mode
+        0,    # k_thresh
+        5,    # pointsNr
+        0.0,  # error
+        5,    # degreeOut
+        0.0]  # dis_error
+    if (simplify==True):
+        coordsToVec = []
+        for coord in coords:
+            coordsToVec.append(Vector(coord))
+        coordsToVec = simplypoly(coordsToVec, options)
+        print(coordsToVec)
+        #coords = []
+        #for vec in coordsToVec:
+            #coords.append((vec.x, vec.y, vec.z))
+    '''
+    #~
     curveData = bpy.data.curves.new('crv', type='CURVE')
     curveData.dimensions = '3D'
     curveData.fill_mode = 'FULL'
@@ -221,17 +243,18 @@ def makeCurve(coords, resolution=2, thickness=0.1, bevelResolution=1, curveType=
     curveData.bevel_resolution = bevelResolution
     #~
     # map coords to spline
+    curveType=curveType.upper()
     polyline = curveData.splines.new(curveType)
     if (curveType=="NURBS"):
-        polyline.points.add(len(coords))
+        polyline.points.add(len(coords)-1)
         for i, coord in enumerate(coords):
                 x,y,z = coord
                 polyline.points[i].co = (x, y, z, 1)    
     elif (curveType=="BEZIER"):
-        polyline.bezier_points.add(len(coords))
+        polyline.bezier_points.add(len(coords)-1)
+        #polyline.bezier_points.foreach_set("co", unpack_list(coords))
         for i, coord in enumerate(coords):
-            x,y,z = coord
-            polyline.bezier_points[i].co = (x, y, z)
+            polyline.bezier_points[i].co = coord   
             polyline.bezier_points[i].handle_left = polyline.bezier_points[i].handle_right = polyline.bezier_points[i].co
     #~
     # create object
