@@ -37,6 +37,7 @@ def moveTo(x, y, z, target=None):
         bpy.ops.transform.location = str((x, y, z))
 '''
 
+'''
 def delete(_obj, clearMemory=False):
     bpy.ops.object.mode_set(mode = 'OBJECT')
     #if not target:
@@ -49,7 +50,16 @@ def delete(_obj, clearMemory=False):
     bpy.ops.object.select_all(action='DESELECT')
     bpy.data.objects[_obj.name].select = True
     bpy.ops.object.delete()   
-    #print("Deleted " + _obj.name)     
+    #print("Deleted " + _obj.name)  
+'''
+
+def delete(_obj):
+    #oldMode = bpy.context.mode
+    #bpy.ops.object.mode_set(mode='OBJECT')
+    bpy.ops.object.select_all(action='DESELECT')
+    bpy.data.objects[_obj.name].select = True
+    bpy.ops.object.delete()
+    #bpy.ops.object.mode_set(mode=oldMode)   
 
 def refresh():
     bpy.context.scene.update()
