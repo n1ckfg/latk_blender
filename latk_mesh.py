@@ -377,7 +377,7 @@ def gpMeshPreview():
 
 def gpMeshFinal():
     # mesh curves slower but nicer
-    gpMesh(_resolution=2, _bevelResolution=2, _bakeMesh=True)
+    gpMesh(_resolution=1, _bevelResolution=1, _bakeMesh=True)
 
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
