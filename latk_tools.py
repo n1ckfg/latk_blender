@@ -1,6 +1,34 @@
 def getDistance(v1, v2):
     return sqrt( (v1[0] - v2[0])**2 + (v1[1] - v2[1])**2 + (v1[2] - v2[2])**2)
     
+def makeParent(target=None, unParent=False, fixTransforms=True):
+    if not target:
+        target = s()
+    if (unParent==True):
+        for obj in target:
+            if (obj.parent != None):
+                bpy.context.scene.objects.active=obj
+                if (fixTransforms==True):
+                    bpy.ops.object.parent_clear(type='CLEAR_KEEP_TRANSFORM')
+                else:
+                    bpy.ops.object.parent_clear()
+    else:
+        # http://blender.stackexchange.com/questions/9200/make-object-a-a-parent-of-object-b-via-python
+        for i in range(0, len(target)-1):
+            target[i].select=True
+        bpy.context.scene.objects.active = target[len(target)-1] # last object will be the parent
+        original_type = bpy.context.area.type
+        print("Current context: " + original_type)
+        bpy.context.area.type = "VIEW_3D"
+        #~
+        if (fixTransforms==True):
+            bpy.ops.object.parent_set(type='OBJECT', xmirror=False, keep_transform=False) 
+        else:   
+            bpy.ops.object.parent_set(type='OBJECT', xmirror=False, keep_transform=True) 
+        #~
+        bpy.context.area.type = original_type 
+        print("Parent is " + target[len(target)-1].name)   
+
 def keyTransform(_obj, _frame):
     #_obj.location = _pos
     #_obj.rotation_quaternion = _rot
@@ -384,6 +412,9 @@ def deleteSelected(target="strokes"):
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 # shortcuts
+
+def up():
+    makeParent(unParent=True)
 
 def ss():
     return select()[0]

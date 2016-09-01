@@ -31,6 +31,34 @@ import random
 def getDistance(v1, v2):
     return sqrt( (v1[0] - v2[0])**2 + (v1[1] - v2[1])**2 + (v1[2] - v2[2])**2)
     
+def makeParent(target=None, unParent=False, fixTransforms=True):
+    if not target:
+        target = s()
+    if (unParent==True):
+        for obj in target:
+            if (obj.parent != None):
+                bpy.context.scene.objects.active=obj
+                if (fixTransforms==True):
+                    bpy.ops.object.parent_clear(type='CLEAR_KEEP_TRANSFORM')
+                else:
+                    bpy.ops.object.parent_clear()
+    else:
+        # http://blender.stackexchange.com/questions/9200/make-object-a-a-parent-of-object-b-via-python
+        for i in range(0, len(target)-1):
+            target[i].select=True
+        bpy.context.scene.objects.active = target[len(target)-1] # last object will be the parent
+        original_type = bpy.context.area.type
+        print("Current context: " + original_type)
+        bpy.context.area.type = "VIEW_3D"
+        #~
+        if (fixTransforms==True):
+            bpy.ops.object.parent_set(type='OBJECT', xmirror=False, keep_transform=False) 
+        else:   
+            bpy.ops.object.parent_set(type='OBJECT', xmirror=False, keep_transform=True) 
+        #~
+        bpy.context.area.type = original_type 
+        print("Parent is " + target[len(target)-1].name)   
+
 def keyTransform(_obj, _frame):
     #_obj.location = _pos
     #_obj.rotation_quaternion = _rot
@@ -415,6 +443,9 @@ def deleteSelected(target="strokes"):
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 # shortcuts
 
+def up():
+    makeParent(unParent=True)
+
 def ss():
     return select()[0]
 
@@ -621,7 +652,7 @@ wb = writeBrushStrokes
 # http://blender.stackexchange.com/questions/7047/apply-transforms-to-linked-objects
 
 def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False, _decimate = 0.1, _curveType="nurbs", _useColors=True, _animateFrames=True):
-    #origParent = None
+    origParent = None
     start = bpy.context.scene.frame_start
     end = bpy.context.scene.frame_end + 1
     #~
@@ -646,8 +677,9 @@ def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False
                 '''
                 # * * * * * * * * * * * * * *
                 # TODO fix parenting. Here's where the initial transform corrections go.
-                #if (layer.parent):
-                    #origParent = layer.parent
+                if (layer.parent):
+                    origParent = layer.parent
+                    layer.parent = None
                     #print(layer.parent.name)
                     #layer.parent = None
                     #for coord in coords:
@@ -701,6 +733,9 @@ def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False
                     #index = len(frameList)-1
                     #layer.parent = origParent
                     #frameList[index].parent = layer.parent
+                if (origParent != None):
+                    makeParent([frameList[len(frameList)-1], origParent])
+                    layer.parent = origParent
                 # * * * * * * * * * * * * * *
                 bpy.ops.object.select_all(action='DESELECT')
             #~
@@ -976,6 +1011,9 @@ def randomMetaballs():
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 # shortcuts
+def gp():
+    dn()
+    gpMesh()
 
 def gpMeshPreview():
     # mesh curves faster but messier

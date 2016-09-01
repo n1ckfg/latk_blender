@@ -8,7 +8,7 @@
 # http://blender.stackexchange.com/questions/7047/apply-transforms-to-linked-objects
 
 def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False, _decimate = 0.1, _curveType="nurbs", _useColors=True, _animateFrames=True):
-    #origParent = None
+    origParent = None
     start = bpy.context.scene.frame_start
     end = bpy.context.scene.frame_end + 1
     #~
@@ -33,8 +33,9 @@ def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False
                 '''
                 # * * * * * * * * * * * * * *
                 # TODO fix parenting. Here's where the initial transform corrections go.
-                #if (layer.parent):
-                    #origParent = layer.parent
+                if (layer.parent):
+                    origParent = layer.parent
+                    layer.parent = None
                     #print(layer.parent.name)
                     #layer.parent = None
                     #for coord in coords:
@@ -88,6 +89,9 @@ def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False
                     #index = len(frameList)-1
                     #layer.parent = origParent
                     #frameList[index].parent = layer.parent
+                if (origParent != None):
+                    makeParent([frameList[len(frameList)-1], origParent])
+                    layer.parent = origParent
                 # * * * * * * * * * * * * * *
                 bpy.ops.object.select_all(action='DESELECT')
             #~
@@ -363,6 +367,9 @@ def randomMetaballs():
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 # shortcuts
+def gp():
+    dn()
+    gpMesh()
 
 def gpMeshPreview():
     # mesh curves faster but messier
