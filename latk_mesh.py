@@ -7,7 +7,7 @@
 # http://blender.stackexchange.com/questions/6750/poly-bezier-curve-from-a-list-of-coordinates
 # http://blender.stackexchange.com/questions/7047/apply-transforms-to-linked-objects
 
-def gpMesh(_thickness=0.0125, _resolution=2, _bevelResolution=1, _decimate = 0.1, _bakeMesh=True, _curveType="bezier", _useColors=False, _animateFrames=True):
+def gpMesh(_thickness=0.0125, _resolution=2, _bevelResolution=1, _decimate = 0.2, _bakeMesh=False, _curveType="nurbs", _useColors=False, _animateFrames=True):
     start = bpy.context.scene.frame_start
     end = bpy.context.scene.frame_end + 1
     #~
@@ -68,13 +68,14 @@ def gpMesh(_thickness=0.0125, _resolution=2, _bevelResolution=1, _decimate = 0.1
                     #except:
                         #pass
                 #~  
+                if (_decimate < 1.0):
+                    bpy.ops.object.modifier_add(type='DECIMATE')
+                    bpy.context.object.modifiers["Decimate"].ratio = _decimate     
+                #~
                 if (_bakeMesh==True):
-                    if (_decimate < 1.0):
-                    	bpy.ops.object.modifier_add(type='DECIMATE')
-                    	bpy.context.object.modifiers["Decimate"].ratio = _decimate                            
                     meshObj = applyModifiers(crv_ob)
-                        #if (_bakeMesh==True):
-                            #meshObj = applyModifiers(meshObj)
+                    #if (_bakeMesh==True):
+                        #meshObj = applyModifiers(meshObj)
                     frameList.append(meshObj)
                 else:
                     frameList.append(crv_ob)
@@ -340,21 +341,13 @@ def makeGpCurve(_type="PATH"):
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 # shortcuts
 
-def crv():
-    deleteName("crv")
-    gpMesh(0.005, 0, False, True)  
+def gpMeshPreview():
+	# generate curves at lowest settings and don't decimate.
+    gpMesh(_resolution=1, _bevelResolution=0, _decimate=1.0)
 
-def crvStill():
-    deleteName("crv")
-    gpMesh(0.005, 0, False, False)
-
-def crvAbcFat():
-    deleteName("crv")
-    gpMesh(0.05,0, True, True)
-
-def crvAbcThin():
-    deleteName("crv")
-    gpMesh(0.005, 0, True, True)
+def gpMeshFinal():
+	# generate nicer curves, then clean them up.
+    gpMesh(_resolution=3, _bevelResolution=3, _decimate=0.1)
 
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
