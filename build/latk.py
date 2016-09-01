@@ -66,6 +66,7 @@ def moveTo(x, y, z, target=None):
         bpy.ops.transform.location = str((x, y, z))
 '''
 
+'''
 def delete(_obj, clearMemory=False):
     bpy.ops.object.mode_set(mode = 'OBJECT')
     #if not target:
@@ -78,7 +79,16 @@ def delete(_obj, clearMemory=False):
     bpy.ops.object.select_all(action='DESELECT')
     bpy.data.objects[_obj.name].select = True
     bpy.ops.object.delete()   
-    #print("Deleted " + _obj.name)     
+    #print("Deleted " + _obj.name)  
+'''
+
+def delete(_obj):
+    #oldMode = bpy.context.mode
+    #bpy.ops.object.mode_set(mode='OBJECT')
+    bpy.ops.object.select_all(action='DESELECT')
+    bpy.data.objects[_obj.name].select = True
+    bpy.ops.object.delete()
+    #bpy.ops.object.mode_set(mode=oldMode)   
 
 def refresh():
     bpy.context.scene.update()
@@ -609,11 +619,13 @@ wb = writeBrushStrokes
 # http://blender.stackexchange.com/questions/6750/poly-bezier-curve-from-a-list-of-coordinates
 # http://blender.stackexchange.com/questions/7047/apply-transforms-to-linked-objects
 
-def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False, _decimate = 0.1, _curveType="nurbs", _useColors=False, _animateFrames=True):
+def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False, _decimate = 0.1, _curveType="nurbs", _useColors=True, _animateFrames=True):
+    #origParent = None
     start = bpy.context.scene.frame_start
     end = bpy.context.scene.frame_end + 1
     #~
     pencil = getActiveGp()
+    palette = getActivePalette()
     #~
     for b in range(0, len(pencil.layers)):
         layer = pencil.layers[b]
@@ -634,18 +646,24 @@ def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False
                 # * * * * * * * * * * * * * *
                 # TODO fix parenting. Here's where the initial transform corrections go.
                 #if (layer.parent):
+                	#origParent = layer.parent
+                	#print(layer.parent.name)
+                	#layer.parent = None
                     #for coord in coords:
-                        #coord = layer.parent.matrix_world * Vector(coord)
+                        #coord = layer.matrix_inverse * Vector(coord)
                 # * * * * * * * * * * * * * *                         
                 #~
                 crv_ob = makeCurve(coords=coords, curveType=_curveType, resolution=_resolution, thickness=_thickness, bevelResolution=_bevelResolution, parent=layer.parent)
                 strokeColor = (0.5,0.5,0.5)
                 if (_useColors==True):
+                    '''
                     try:
                         strokeColor = stroke.color.color
                     except:
                         strokeColor = (0.5,0.5,0.5)
                         print ("error reading color")
+                    '''
+                    strokeColor = palette.colors[stroke.colorname].color
                 mat = bpy.data.materials.new("new_mtl")
                 crv_ob.data.materials.append(mat)
                 crv_ob.data.materials[0].diffuse_color = strokeColor
@@ -678,10 +696,12 @@ def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False
                     frameList.append(crv_ob)    
                 # * * * * * * * * * * * * * *
                 # TODO fix parenting. Here's where the output gets parented to the layer's parent.
-                #if (layer.parent):
+                #if (origParent != None):
                     #index = len(frameList)-1
+                    #layer.parent = origParent
                     #frameList[index].parent = layer.parent
                 # * * * * * * * * * * * * * *
+                bpy.ops.object.select_all(action='DESELECT')
             #~
             for i in range(0, len(frameList)):
                 print(frameList[i])
