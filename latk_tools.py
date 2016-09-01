@@ -37,18 +37,15 @@ def moveTo(x, y, z, target=None):
         bpy.ops.transform.location = str((x, y, z))
 '''
 
-def delete(_obj):
+def delete(_obj, clearMemory=False):
+    bpy.ops.object.mode_set(mode = 'OBJECT')
     #if not target:
         #target = s()
     #for _obj in target:
-    try:
+    if (clearMemory==True):
         mesh = bpy.data.meshes[_obj.name]
         mesh.user_clear()
         bpy.data.meshes.remove(mesh)
-        #print("Success: removed " + _obj.name + " mesh from memory")
-    except:
-        pass
-        #print("Error: " + _obj.name + " not a mesh, or mesh is still in memory.")
     bpy.ops.object.select_all(action='DESELECT')
     bpy.data.objects[_obj.name].select = True
     bpy.ops.object.delete()   
@@ -66,11 +63,12 @@ def matchName(_name):
     return returns
 
 def deleteName(_name="crv"):
-    for i, _n in enumerate(matchName(_name)):
+    target = matchName(_name)
+    for obj in target:
         try:
-            delete(_n)
+            delete(obj)
         except:
-            print("error deleting " + _n)
+            print("error deleting " + obj.name)
 
 def roundVal(a, b):
     formatter = "{0:." + str(b) + "f}"
@@ -385,6 +383,7 @@ a = alignCamera
 s = select
 d = delete
 df = deleteFromAllFrames
+dn = deleteName
 
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
 # * * * * * * * * * * * * * * * * * * * * * * * * * *

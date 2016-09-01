@@ -64,18 +64,15 @@ def moveTo(x, y, z, target=None):
         bpy.ops.transform.location = str((x, y, z))
 '''
 
-def delete(_obj):
+def delete(_obj, clearMemory=False):
+    bpy.ops.object.mode_set(mode = 'OBJECT')
     #if not target:
         #target = s()
     #for _obj in target:
-    try:
+    if (clearMemory==True):
         mesh = bpy.data.meshes[_obj.name]
         mesh.user_clear()
         bpy.data.meshes.remove(mesh)
-        #print("Success: removed " + _obj.name + " mesh from memory")
-    except:
-        pass
-        #print("Error: " + _obj.name + " not a mesh, or mesh is still in memory.")
     bpy.ops.object.select_all(action='DESELECT')
     bpy.data.objects[_obj.name].select = True
     bpy.ops.object.delete()   
@@ -93,11 +90,12 @@ def matchName(_name):
     return returns
 
 def deleteName(_name="crv"):
-    for i, _n in enumerate(matchName(_name)):
+    target = matchName(_name)
+    for obj in target:
         try:
-            delete(_n)
+            delete(obj)
         except:
-            print("error deleting " + _n)
+            print("error deleting " + obj.name)
 
 def roundVal(a, b):
     formatter = "{0:." + str(b) + "f}"
@@ -412,6 +410,7 @@ a = alignCamera
 s = select
 d = delete
 df = deleteFromAllFrames
+dn = deleteName
 
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -608,7 +607,7 @@ wb = writeBrushStrokes
 # http://blender.stackexchange.com/questions/6750/poly-bezier-curve-from-a-list-of-coordinates
 # http://blender.stackexchange.com/questions/7047/apply-transforms-to-linked-objects
 
-def gpMesh(_extrude=0.0125, _subd=0, _bakeMesh=True, _useColors=True, _animateFrames=True, _minDistance=0.001, _decimate=0.02, _remesh=False):
+def gpMesh(_thickness=0.0125, _resolution=2, _bevelResolution=1, _bakeMesh=False, _useModifiers=False, _useColors=True, _animateFrames=True, _minDistance=0.001, _subd=1, _decimate=0.02):
     start = bpy.context.scene.frame_start
     end = bpy.context.scene.frame_end + 1
     #~
@@ -635,8 +634,8 @@ def gpMesh(_extrude=0.0125, _subd=0, _bakeMesh=True, _useColors=True, _animateFr
                         #coord = layer.parent.matrix_world * Vector(coord)
                 # * * * * * * * * * * * * * *                         
                 #~
-                crv_ob = makeCurve(coords, layer.parent)
-                crv_ob.data.extrude = _extrude
+                crv_ob = makeCurve(coords=coords, resolution=_resolution, thickness=_thickness, bevelResolution=_bevelResolution, parent=layer.parent)
+                #crv_ob.data.extrude = _extrude
                 strokeColor = (0.5,0.5,0.5)
                 if (_useColors==True):
                     try:
@@ -647,38 +646,33 @@ def gpMesh(_extrude=0.0125, _subd=0, _bakeMesh=True, _useColors=True, _animateFr
                 mat = bpy.data.materials.new("new_mtl")
                 crv_ob.data.materials.append(mat)
                 crv_ob.data.materials[0].diffuse_color = strokeColor
-                #~
+                # TODO fix vertex colors
+                #colorVertices(meshObj, strokeColor, True)                        
+                #~   
                 bpy.context.scene.objects.active = crv_ob
-                bpy.ops.object.modifier_add(type='SOLIDIFY')
-                bpy.context.object.modifiers["Solidify"].thickness = _extrude * 2
-                bpy.context.object.modifiers["Solidify"].offset = 0
                 #~
-                # *** IMPORTANT: baking at this stage is a tremendous speed boost later.
-                if (_bakeMesh==True):
-                    meshObj = applyModifiers(crv_ob)
+                if (_useModifiers):
+                    # solidify replaced by curve bevel
+                    #bpy.ops.object.modifier_add(type='SOLIDIFY')
+                    #bpy.context.object.modifiers["Solidify"].thickness = _extrude * 2
+                    #bpy.context.object.modifiers["Solidify"].offset = 0
                     #~
-                    # TODO fix vertex colors
-                    #colorVertices(meshObj, strokeColor, True)                        
-                    #~    
-                if (_subd > 0):
-                    bpy.ops.object.modifier_add(type='SUBSURF')
-                    bpy.context.object.modifiers["Subsurf"].levels = _subd
-                    bpy.context.object.modifiers["Subsurf"].render_levels = _subd
-                    try:
-                        bpy.context.object.modifiers["Subsurf"].use_opensubdiv = 1 # GPU if supported
-                    except:
-                        pass
-                #~
-                if (_decimate < 1.0):
-                    bpy.ops.object.modifier_add(type='DECIMATE')
-                    bpy.context.object.modifiers["Decimate"].ratio = _decimate  
-                #~  
-                if (_bakeMesh==True):
-                    if (_remesh==True):
-                        meshObj = remesher(meshObj)
-                    else:
-                        meshObj = applyModifiers(meshObj)                   
+                    # *** IMPORTANT: huge speed hit here.
+                    if (_subd > 0):
+                        bpy.ops.object.modifier_add(type='SUBSURF')
+                        bpy.context.object.modifiers["Subsurf"].levels = _subd
+                        bpy.context.object.modifiers["Subsurf"].render_levels = _subd
+                        try:
+                            bpy.context.object.modifiers["Subsurf"].use_opensubdiv = 1 # GPU if supported
+                        except:
+                            pass
                     #~
+                    if (_decimate < 1.0):
+                        bpy.ops.object.modifier_add(type='DECIMATE')
+                        bpy.context.object.modifiers["Decimate"].ratio = _decimate  
+                    #~  
+                if (_bakeMesh==True):
+                    meshObj = applyModifiers(crv_ob)       
                     frameList.append(meshObj)
                 else:
                     frameList.append(crv_ob)
@@ -816,24 +810,34 @@ def matchWithParent(_child, _parent, _index):
         _child.parent = _parent
         keyTransform(_child, _index)   
 
-def makeCurve(coords, parent=None):
+def makeCurve(coords, resolution=2, thickness=0.1, bevelResolution=1, curveType="BEZIER", parent=None):
     # http://blender.stackexchange.com/questions/6750/poly-bezier-curve-from-a-list-of-coordinates
     # create the curve datablock
     curveData = bpy.data.curves.new('crv', type='CURVE')
     curveData.dimensions = '3D'
-    curveData.resolution_u = 2
+    curveData.fill_mode = 'FULL'
+    curveData.resolution_u = resolution
+    curveData.bevel_depth = thickness
+    curveData.bevel_resolution = bevelResolution
     #~
     # map coords to spline
-    polyline = curveData.splines.new('NURBS')
-    polyline.points.add(len(coords))
-    for i, coord in enumerate(coords):
-        x,y,z = coord
-        polyline.points[i].co = (x, y, z, 1)
+    polyline = curveData.splines.new(curveType)
+    if (curveType=="NURBS"):
+        polyline.points.add(len(coords))
+        for i, coord in enumerate(coords):
+                x,y,z = coord
+                polyline.points[i].co = (x, y, z, 1)    
+    elif (curveType=="BEZIER"):
+        polyline.bezier_points.add(len(coords))
+        for i, coord in enumerate(coords):
+            x,y,z = coord
+            polyline.bezier_points[i].co = (x, y, z)
+            polyline.bezier_points[i].handle_left = polyline.bezier_points[i].handle_right = polyline.bezier_points[i].co
     #~
     # create object
     crv_ob = bpy.data.objects.new('crv_ob', curveData)
-    if (parent != None):
-        crv_ob.location = (parent.location) #object origin  
+    #if (parent != None):
+        #crv_ob.location = (parent.location) #object origin  
     #~
     # attach to scene and validate context
     scn = bpy.context.scene
@@ -926,8 +930,6 @@ def crvAbcFat():
 def crvAbcThin():
     deleteName("crv")
     gpMesh(0.005, 0, True, True)
-
-dn = deleteName
 
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
