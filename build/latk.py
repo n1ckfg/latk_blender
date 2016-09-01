@@ -609,7 +609,10 @@ wb = writeBrushStrokes
 # http://blender.stackexchange.com/questions/6750/poly-bezier-curve-from-a-list-of-coordinates
 # http://blender.stackexchange.com/questions/7047/apply-transforms-to-linked-objects
 
-def gpMesh(_thickness=0.0125, _resolution=2, _bevelResolution=1, _decimate = 0.2, _bakeMesh=False, _curveType="nurbs", _useColors=False, _animateFrames=True):
+def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _decimate = 1.0, _bakeMesh=False, _curveType="nurbs", _useColors=False, _animateFrames=True):
+    doDecimate = False
+    if (_decimate < 1.0):
+        doDecimate = True
     start = bpy.context.scene.frame_start
     end = bpy.context.scene.frame_end + 1
     #~
@@ -639,7 +642,6 @@ def gpMesh(_thickness=0.0125, _resolution=2, _bevelResolution=1, _decimate = 0.2
                 # * * * * * * * * * * * * * *                         
                 #~
                 crv_ob = makeCurve(coords=coords, curveType=_curveType, resolution=_resolution, thickness=_thickness, bevelResolution=_bevelResolution, parent=layer.parent)
-                #crv_ob.data.extrude = _extrude
                 strokeColor = (0.5,0.5,0.5)
                 if (_useColors==True):
                     try:
@@ -670,17 +672,24 @@ def gpMesh(_thickness=0.0125, _resolution=2, _bevelResolution=1, _decimate = 0.2
                     #except:
                         #pass
                 #~  
-                if (_decimate < 1.0):
+                if (doDecimate==True):
                     bpy.ops.object.modifier_add(type='DECIMATE')
                     bpy.context.object.modifiers["Decimate"].ratio = _decimate     
-                #~
-                if (_bakeMesh==True):
                     meshObj = applyModifiers(crv_ob)
-                    #if (_bakeMesh==True):
-                        #meshObj = applyModifiers(meshObj)
+                    frameList.append(meshObj)    
+                else:
+                    frameList.append(crv_ob)    
+                #~
+                '''
+                if (_bakeMesh==True):
+                    if (doDecimate==True):
+                        meshObj = applyModifiers(meshObj)
+                    else:
+                        meshObj = applyModifiers(crv_ob)
                     frameList.append(meshObj)
                 else:
                     frameList.append(crv_ob)
+                '''
                 # * * * * * * * * * * * * * *
                 # TODO fix parenting. Here's where the output gets parented to the layer's parent.
                 #if (layer.parent):
@@ -944,12 +953,10 @@ def makeGpCurve(_type="PATH"):
 # shortcuts
 
 def gpMeshPreview():
-	# generate curves at lowest settings and don't decimate.
-    gpMesh(_resolution=1, _bevelResolution=0, _decimate=1.0)
+    gpMesh(_resolution=1, _bevelResolution=0)
 
 def gpMeshFinal():
-	# generate nicer curves, then clean them up.
-    gpMesh(_resolution=3, _bevelResolution=3, _decimate=0.1)
+    gpMesh(_resolution=1, _bevelResolution=0, _decimate=0.1)
 
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
