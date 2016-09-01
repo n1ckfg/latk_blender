@@ -351,10 +351,12 @@ def makeGpCurve(_type="PATH"):
 # shortcuts
 
 def gpMeshPreview():
-    gpMesh(_resolution=1, _bevelResolution=0)
+    # mesh curves faster but messier
+    gpMesh(_resolution=1, _bevelResolution=0, _decimate=1.0)
 
 def gpMeshFinal():
-    gpMesh(_resolution=1, _bevelResolution=0, _decimate=0.1)
+    # mesh curves slower but nicer
+    gpMesh(_resolution=2, _bevelResolution=2, _decimate=0.1)
 
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
