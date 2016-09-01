@@ -7,7 +7,7 @@
 # http://blender.stackexchange.com/questions/6750/poly-bezier-curve-from-a-list-of-coordinates
 # http://blender.stackexchange.com/questions/7047/apply-transforms-to-linked-objects
 
-def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False, _curveType="nurbs", _useModifiers=False, _useColors=False, _animateFrames=True, _minDistance = 0.0001, _subd=1, _decimate=0.02):
+def gpMesh(_thickness=0.0125, _resolution=2, _bevelResolution=1, _decimate = 0.1, _bakeMesh=True, _curveType="bezier", _useColors=False, _animateFrames=True):
     start = bpy.context.scene.frame_start
     end = bpy.context.scene.frame_end + 1
     #~
@@ -19,7 +19,8 @@ def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False
             frameList = []
             for stroke in layer.frames[c].strokes:
                 stroke_points = stroke.points
-                coordsOrig = [ (point.co.x, point.co.y, point.co.z) for point in stroke_points ]
+                coords = [ (point.co.x, point.co.y, point.co.z) for point in stroke_points ]
+                '''
                 coords = []
                 if (_minDistance > 0.0):
                     for pp in range(0, len(coordsOrig)):
@@ -27,6 +28,7 @@ def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False
                             coords.append(coordsOrig[pp])
                 else:
                     coords = coordsOrig
+                '''
                 # * * * * * * * * * * * * * *
                 # TODO fix parenting. Here's where the initial transform corrections go.
                 #if (layer.parent):
@@ -51,28 +53,28 @@ def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False
                 #~   
                 bpy.context.scene.objects.active = crv_ob
                 #~
-                if (_useModifiers):
-                    # solidify replaced by curve bevel
-                    #bpy.ops.object.modifier_add(type='SOLIDIFY')
-                    #bpy.context.object.modifiers["Solidify"].thickness = _extrude * 2
-                    #bpy.context.object.modifiers["Solidify"].offset = 0
-                    #~
-                    # *** IMPORTANT: huge speed hit here.
-                    if (_subd > 0):
-                        bpy.ops.object.modifier_add(type='SUBSURF')
-                        bpy.context.object.modifiers["Subsurf"].levels = _subd
-                        bpy.context.object.modifiers["Subsurf"].render_levels = _subd
-                        try:
-                            bpy.context.object.modifiers["Subsurf"].use_opensubdiv = 1 # GPU if supported
-                        except:
-                            pass
-                    #~
-                    if (_decimate < 1.0):
-                        bpy.ops.object.modifier_add(type='DECIMATE')
-                        bpy.context.object.modifiers["Decimate"].ratio = _decimate  
-                    #~  
+                # solidify replaced by curve bevel
+                #bpy.ops.object.modifier_add(type='SOLIDIFY')
+                #bpy.context.object.modifiers["Solidify"].thickness = _extrude * 2
+                #bpy.context.object.modifiers["Solidify"].offset = 0
+                #~
+                # *** IMPORTANT: huge speed hit here.
+                #if (_subd > 0):
+                    #bpy.ops.object.modifier_add(type='SUBSURF')
+                    #bpy.context.object.modifiers["Subsurf"].levels = _subd
+                    #bpy.context.object.modifiers["Subsurf"].render_levels = _subd
+                    #try:
+                        #bpy.context.object.modifiers["Subsurf"].use_opensubdiv = 1 # GPU if supported
+                    #except:
+                        #pass
+                #~  
                 if (_bakeMesh==True):
-                    meshObj = applyModifiers(crv_ob)       
+                    if (_decimate < 1.0):
+                    	bpy.ops.object.modifier_add(type='DECIMATE')
+                    	bpy.context.object.modifiers["Decimate"].ratio = _decimate                            
+                    meshObj = applyModifiers(crv_ob)
+                        #if (_bakeMesh==True):
+                            #meshObj = applyModifiers(meshObj)
                     frameList.append(meshObj)
                 else:
                     frameList.append(crv_ob)
