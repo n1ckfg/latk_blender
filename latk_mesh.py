@@ -7,7 +7,7 @@
 # http://blender.stackexchange.com/questions/6750/poly-bezier-curve-from-a-list-of-coordinates
 # http://blender.stackexchange.com/questions/7047/apply-transforms-to-linked-objects
 
-def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _decimate = 1.0, _bakeMesh=False, _curveType="nurbs", _useColors=False, _animateFrames=True):
+def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _decimate = 0.1, _bakeMesh=False, _curveType="nurbs", _useColors=False, _animateFrames=True):
     doDecimate = False
     if (_decimate < 1.0):
         doDecimate = True
