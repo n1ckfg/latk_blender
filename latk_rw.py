@@ -173,6 +173,9 @@ def readBrushStrokes(url=None):
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 # shortcuts
 
+def rbUnity(fileName):
+    readBrushStrokes("C:\\Users\\nick\\Documents\\GitHub\\LightningArtist\\latkUnity\\latkVive\\Assets\\" + fileName)
+
 rb = readBrushStrokes
 wb = writeBrushStrokes
 

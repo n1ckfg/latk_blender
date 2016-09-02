@@ -635,6 +635,9 @@ def readBrushStrokes(url=None):
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 # shortcuts
 
+def rbUnity(fileName):
+    readBrushStrokes("C:\\Users\\nick\\Documents\\GitHub\\LightningArtist\\latkUnity\\latkVive\\Assets\\" + fileName)
+
 rb = readBrushStrokes
 wb = writeBrushStrokes
 
@@ -651,7 +654,7 @@ wb = writeBrushStrokes
 # http://blender.stackexchange.com/questions/6750/poly-bezier-curve-from-a-list-of-coordinates
 # http://blender.stackexchange.com/questions/7047/apply-transforms-to-linked-objects
 
-def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False, _decimate = 0.1, _curveType="nurbs", _useColors=True, _animateFrames=True):
+def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False, _decimate = 0.1, _curveType="nurbs", _useColors=True, _animateFrames=True, _remesh=False):
     origParent = None
     start = bpy.context.scene.frame_start
     end = bpy.context.scene.frame_end + 1
@@ -720,10 +723,14 @@ def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False
                     #except:
                         #pass
                 #~  
-                if (_bakeMesh==True):
+                if (_bakeMesh==True or _remesh==True):
                     bpy.ops.object.modifier_add(type='DECIMATE')
                     bpy.context.object.modifiers["Decimate"].ratio = _decimate     
                     meshObj = applyModifiers(crv_ob)
+                    #~
+                    if (_remesh==True):
+                        meshObj = remesher(meshObj)
+                    #~
                     frameList.append(meshObj)    
                 else:
                     frameList.append(crv_ob)    
