@@ -655,6 +655,7 @@ wb = writeBrushStrokes
 # http://blender.stackexchange.com/questions/7047/apply-transforms-to-linked-objects
 
 def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False, _decimate = 0.1, _curveType="nurbs", _useColors=True, _animateFrames=True, _solidify=False, _subd=0, _remesh=False):
+    totalStrokes = str(len(getAllStrokes()))
     origParent = None
     start = bpy.context.scene.frame_start
     end = bpy.context.scene.frame_end + 1
@@ -748,7 +749,7 @@ def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False
                 bpy.ops.object.select_all(action='DESELECT')
             #~
             for i in range(0, len(frameList)):
-                print(frameList[i])
+                print(frameList[i].name + " of " + totalStrokes + " total")
                 if (_animateFrames==True):
                     hideFrame(frameList[i], 0, True)
                     for j in range(start, end):
