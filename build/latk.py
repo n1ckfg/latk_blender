@@ -654,7 +654,7 @@ wb = writeBrushStrokes
 # http://blender.stackexchange.com/questions/6750/poly-bezier-curve-from-a-list-of-coordinates
 # http://blender.stackexchange.com/questions/7047/apply-transforms-to-linked-objects
 
-def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False, _decimate = 0.1, _curveType="nurbs", _useColors=True, _animateFrames=True, _remesh=False):
+def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False, _decimate = 0.1, _curveType="nurbs", _useColors=True, _animateFrames=True, _solidify=False, _subd=0, _remesh=False):
     origParent = None
     start = bpy.context.scene.frame_start
     end = bpy.context.scene.frame_end + 1
@@ -709,19 +709,20 @@ def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False
                 bpy.context.scene.objects.active = crv_ob
                 #~
                 # solidify replaced by curve bevel
-                #bpy.ops.object.modifier_add(type='SOLIDIFY')
-                #bpy.context.object.modifiers["Solidify"].thickness = _extrude * 2
-                #bpy.context.object.modifiers["Solidify"].offset = 0
+                if (_solidify==True):
+                    bpy.ops.object.modifier_add(type='SOLIDIFY')
+                    bpy.context.object.modifiers["Solidify"].thickness = _extrude * 2
+                    bpy.context.object.modifiers["Solidify"].offset = 0
                 #~
-                # *** huge speed hit here.
-                #if (_subd > 0):
-                    #bpy.ops.object.modifier_add(type='SUBSURF')
-                    #bpy.context.object.modifiers["Subsurf"].levels = _subd
-                    #bpy.context.object.modifiers["Subsurf"].render_levels = _subd
-                    #try:
-                        #bpy.context.object.modifiers["Subsurf"].use_opensubdiv = 1 # GPU if supported
-                    #except:
-                        #pass
+                # *** careful, huge speed hit here.
+                if (_subd > 0):
+                    bpy.ops.object.modifier_add(type='SUBSURF')
+                    bpy.context.object.modifiers["Subsurf"].levels = _subd
+                    bpy.context.object.modifiers["Subsurf"].render_levels = _subd
+                    try:
+                        bpy.context.object.modifiers["Subsurf"].use_opensubdiv = 1 # GPU if supported
+                    except:
+                        pass
                 #~  
                 if (_bakeMesh==True or _remesh==True):
                     bpy.ops.object.modifier_add(type='DECIMATE')
@@ -1020,7 +1021,7 @@ def randomMetaballs():
 # shortcuts
 def gp():
     dn()
-    gpMesh()
+    gpMeshPreview()
 
 def gpMeshPreview():
     # mesh curves faster but messier
