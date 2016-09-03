@@ -654,7 +654,7 @@ wb = writeBrushStrokes
 # http://blender.stackexchange.com/questions/6750/poly-bezier-curve-from-a-list-of-coordinates
 # http://blender.stackexchange.com/questions/7047/apply-transforms-to-linked-objects
 
-def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False, _decimate = 0.1, _curveType="nurbs", _useColors=True, _animateFrames=True, _solidify=False, _subd=0, _remesh=False):
+def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False, _decimate = 0.1, _curveType="nurbs", _useColors=True, _vertexColors=False, _animateFrames=True, _solidify=False, _subd=0, _remesh=False):
     totalStrokes = str(len(getAllStrokes()))
     origParent = None
     start = bpy.context.scene.frame_start
@@ -704,8 +704,7 @@ def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False
                 mat = bpy.data.materials.new("new_mtl")
                 crv_ob.data.materials.append(mat)
                 crv_ob.data.materials[0].diffuse_color = strokeColor
-                # TODO fix vertex colors
-                #colorVertices(meshObj, strokeColor, True)                        
+                # TODO can you store vertex colors on a curve?                        
                 #~   
                 bpy.context.scene.objects.active = crv_ob
                 #~
@@ -729,6 +728,8 @@ def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False
                     bpy.ops.object.modifier_add(type='DECIMATE')
                     bpy.context.object.modifiers["Decimate"].ratio = _decimate     
                     meshObj = applyModifiers(crv_ob)
+                    #if (_vertexColors==True):
+                    	#colorVertices(meshObj, strokeColor, True)
                     #~
                     if (_remesh==True):
                         meshObj = remesher(meshObj)
@@ -811,16 +812,49 @@ def centerOrigin(obj):
         vert.co[2] -= newLoc[2] - oldLoc[2]
     obj.location = newLoc
 
-# http://blender.stackexchange.com/questions/6084/use-python-to-add-multiple-colors-to-a-nurbs-curve
-# http://blender.stackexchange.com/questions/5668/add-nodes-to-material-with-python
-def colorVertices(obj, color=(1,0,0), newMaterial=True):
+def colorVertices(obj, color=(1,0,0), makeMaterial=True, vertexPaintMode=False):
+    # start in object mode
+    mesh = obj.data
+    #~
+    if not mesh.vertex_colors:
+        mesh.vertex_colors.new()
+    #~
+    """
+    let us assume for sake of brevity that there is now 
+    a vertex color map called  'Col'    
+    """
+    #~
+    #color_layer = mesh.vertex_colors["Col"]
+    #~
+    # or you could avoid using the color_layer name
+    color_layer = mesh.vertex_colors.active  
+    #~
+    i = 0
+    for poly in mesh.polygons:
+        for idx in poly.loop_indices:
+            #rgb = [random.random() for i in range(3)]
+            color_layer.data[i].color = color #rgb
+            i += 1
+    #~
+    if (makeMaterial==True):
+    	colorVertexCyclesMat(obj)
+    #~
+    # set to vertex paint mode to see the result
+    if (vertexPaintMode==True):
+    	bpy.ops.object.mode_set(mode='VERTEX_PAINT')
+
+#def colorVertexCyclesMat(obj, color=(1,0,0), newMaterial=True):
+def colorVertexCyclesMat(obj):
+    # http://blender.stackexchange.com/questions/6084/use-python-to-add-multiple-colors-to-a-nurbs-curve
+    # http://blender.stackexchange.com/questions/5668/add-nodes-to-material-with-python
+    # this will fail if you don't have Cycles Render enabled
     mesh = obj.data 
     #~    
-    if len(mesh.vertex_colors) == 0:
-        bpy.ops.mesh.vertex_color_add()
+    #if len(mesh.vertex_colors) == 0:
+        #bpy.ops.mesh.vertex_color_add()
     #~
-    if (newMaterial==True):
-        obj.active_material = bpy.data.materials.new('material')
+    #if (newMaterial==True):
+    obj.active_material = bpy.data.materials.new('material')
     obj.active_material.use_vertex_color_paint = True
     #~
     obj.active_material.use_nodes = True
@@ -831,12 +865,12 @@ def colorVertices(obj, color=(1,0,0), newMaterial=True):
     obj.active_material.node_tree.links.new(material_output.inputs[0], nodeAttr.outputs[0])
     #~
     #loop through each vertex
-    num_verts = len(mesh.vertices)
-    for vert_i in range(num_verts):
-        colorVertex(obj, vert_i, color)
-        print("Finished vertex: " + str(vert_i) + "/" + str(num_verts))
+    #num_verts = len(mesh.vertices)
+    #for vert_i in range(num_verts):
+        #colorVertex(obj, vert_i, color)
+        #print("Finished vertex: " + str(vert_i) + "/" + str(num_verts))
 
-def colorVertex(obj, vert, color=[1,0,0]):
+def colorVertexAlt(obj, vert, color=[1,0,0]):
     mesh = obj.data 
     scn = bpy.context.scene
     #check if our mesh already has Vertex Colors, and if not add some... (first we need to make sure it's the active object)
@@ -1027,6 +1061,12 @@ def gp():
 def gpMeshPreview():
     # mesh curves faster but messier
     gpMesh(_resolution=1, _bevelResolution=0)
+
+def gpMeshCubes():
+    gpMesh(_resolution=1, _bevelResolution=0, _bakeMesh=True, _remesh=True)
+
+def gpMeshColor():
+    gpMesh(_resolution=1, _bevelResolution=0, _bakeMesh=True, _vertexColors=True)
 
 def gpMeshFinal():
     # mesh curves slower but nicer
