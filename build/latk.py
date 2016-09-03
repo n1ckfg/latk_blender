@@ -704,7 +704,7 @@ def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False
                 mat = bpy.data.materials.new("new_mtl")
                 crv_ob.data.materials.append(mat)
                 crv_ob.data.materials[0].diffuse_color = strokeColor
-                # TODO can you store vertex colors on a curve?                        
+                # TODO can you store vertex colors in a curve?
                 #~   
                 bpy.context.scene.objects.active = crv_ob
                 #~
@@ -728,12 +728,12 @@ def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False
                     bpy.ops.object.modifier_add(type='DECIMATE')
                     bpy.context.object.modifiers["Decimate"].ratio = _decimate     
                     meshObj = applyModifiers(crv_ob)
-                    #if (_vertexColors==True):
-                    	#colorVertices(meshObj, strokeColor, True)
                     #~
                     if (_remesh==True):
                         meshObj = remesher(meshObj)
                     #~
+                    if (_vertexColors==True):
+                    	colorVertices(meshObj, strokeColor)                        
                     frameList.append(meshObj)    
                 else:
                     frameList.append(crv_ob)    
@@ -812,7 +812,7 @@ def centerOrigin(obj):
         vert.co[2] -= newLoc[2] - oldLoc[2]
     obj.location = newLoc
 
-def colorVertices(obj, color=(1,0,0), makeMaterial=True, vertexPaintMode=False):
+def colorVertices(obj, color=(1,0,0), makeMaterial=False):
     # start in object mode
     mesh = obj.data
     #~
@@ -837,11 +837,11 @@ def colorVertices(obj, color=(1,0,0), makeMaterial=True, vertexPaintMode=False):
             i += 1
     #~
     if (makeMaterial==True):
-    	colorVertexCyclesMat(obj)
+        colorVertexCyclesMat(obj)
     #~
     # set to vertex paint mode to see the result
-    if (vertexPaintMode==True):
-    	bpy.ops.object.mode_set(mode='VERTEX_PAINT')
+    #if (vertexPaintMode==True):
+        #bpy.ops.object.mode_set(mode='VERTEX_PAINT')
 
 #def colorVertexCyclesMat(obj, color=(1,0,0), newMaterial=True):
 def colorVertexCyclesMat(obj):
@@ -1062,15 +1062,15 @@ def gpMeshPreview():
     # mesh curves faster but messier
     gpMesh(_resolution=1, _bevelResolution=0)
 
+def gpMeshFinal():
+    # mesh curves slower but nicer
+    gpMesh(_resolution=1, _bevelResolution=1, _bakeMesh=True)
+
 def gpMeshCubes():
     gpMesh(_resolution=1, _bevelResolution=0, _bakeMesh=True, _remesh=True)
 
 def gpMeshColor():
     gpMesh(_resolution=1, _bevelResolution=0, _bakeMesh=True, _vertexColors=True)
-
-def gpMeshFinal():
-    # mesh curves slower but nicer
-    gpMesh(_resolution=1, _bevelResolution=1, _bakeMesh=True)
 
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
