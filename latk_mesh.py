@@ -7,7 +7,7 @@
 # http://blender.stackexchange.com/questions/6750/poly-bezier-curve-from-a-list-of-coordinates
 # http://blender.stackexchange.com/questions/7047/apply-transforms-to-linked-objects
 
-def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False, _decimate = 0.1, _curveType="nurbs", _useColors=True, _vertexColors=False, _animateFrames=True, _solidify=False, _subd=0, _remesh=False):
+def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False, _decimate = 0.1, _curveType="nurbs", _useColors=True, _vertexColors=False, _animateFrames=True, _solidify=False, _subd=0, _remesh=False, _consolidateMtl=True):
     totalStrokes = str(len(getAllStrokes()))
     origParent = None
     start = bpy.context.scene.frame_start
@@ -117,6 +117,9 @@ def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False
                         #else:
                         elif (c != len(layer.frames)-1):
                             hideFrame(frameList[i], j, True)
+            #~
+            if (_consolidateMtl==True):
+                consolidateMtl()
 
 def remesher(obj, bake=True, mode="blocks", octree=6, threshold=0.0001, smoothShade=False):
         #fixContext()

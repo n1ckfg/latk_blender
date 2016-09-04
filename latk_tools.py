@@ -290,6 +290,53 @@ def changeColor():
             createPoint(newStroke, j, points[j].co)
     print(str(len(strokes)) + " changed to " + palette.colors.active.name)
 
+'''
+def pasteToNewLayer():
+    frame = getActiveFrame()
+    oldStrokes = getSelectedStrokes()
+    #~
+    for oldStroke in oldStrokes:
+        newStroke = frame.strokes.new(oldStroke.color_name)
+        newStroke.draw_mode = "3DSPACE" # either of ("SCREEN", "3DSPACE", "2DSPACE", "2DIMAGE")
+        newStroke.line_width = oldStroke.line_width
+        newStroke.points = oldStroke.points
+        #newStroke.points.add(len(oldStroke.points))
+        #for j in range(0, len(oldStroke.points)):
+            #createPoint(newStroke, j, points[j].co)
+'''
+
+def searchMtl(color=None, name="crv"):
+    returns = []
+    if not color:
+        color = getActiveColor().color
+    curves = matchName(name)
+    for curve in curves:
+        if (compareTuple(curve.data.materials[0].diffuse_color, color)):
+            returns.append(curve)
+    print ("found: " + str(returns))
+    return returns
+
+def compareTuple(t1, t2, numPlaces=5):
+    if (roundVal(t1[0], numPlaces) == roundVal(t2[0], numPlaces) and roundVal(t1[1], numPlaces) == roundVal(t2[1], numPlaces) and roundVal(t1[2], numPlaces) == roundVal(t2[2], numPlaces)):
+        return True
+    else:
+        return False
+
+def changeMtl(color=(1,1,0), searchColor=None, name="crv"):
+    if not searchColor:
+        searchColor = getActiveColor().color       
+    curves = searchMtl(color=searchColor, name=name)
+    print("changed: " + str(curves))
+    for curve in curves:
+        curve.data.materials[0].diffuse_color = color
+
+def consolidateMtl(name="crv"):
+    palette = getActivePalette()
+    for color in palette.colors:
+        curves = searchMtl(color=color.color, name=name)
+        for i in range(1, len(curves)):
+            curves[i].data.materials[0] = curves[0].data.materials[0]
+
 def deleteFromAllFrames():
     origStrokes = []
     frame = getActiveFrame()
