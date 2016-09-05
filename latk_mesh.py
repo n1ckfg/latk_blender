@@ -118,8 +118,8 @@ def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False
                         elif (c != len(layer.frames)-1):
                             hideFrame(frameList[i], j, True)
             #~
-            if (_consolidateMtl==True):
-                consolidateMtl()
+    if (_consolidateMtl==True):
+        consolidateMtl()
 
 def remesher(obj, bake=True, mode="blocks", octree=6, threshold=0.0001, smoothShade=False):
         #fixContext()
