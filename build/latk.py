@@ -496,12 +496,15 @@ def up():
 def ss():
     return select()[0]
 
+def dn():
+    deleteName(_name="crv_ob")
+    deleteName(_name="caps_ob")
+
 c = changeColor
 a = alignCamera
 s = select
 d = delete
 df = deleteFromAllFrames
-dn = deleteName
 
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -701,7 +704,7 @@ wb = writeBrushStrokes
 # http://blender.stackexchange.com/questions/6750/poly-bezier-curve-from-a-list-of-coordinates
 # http://blender.stackexchange.com/questions/7047/apply-transforms-to-linked-objects
 
-def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False, _decimate = 0.1, _curveType="nurbs", _useColors=True, _vertexColors=False, _animateFrames=True, _solidify=False, _subd=0, _remesh=False, _consolidateMtl=True):
+def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False, _decimate = 0.1, _curveType="nurbs", _useColors=True, _vertexColors=False, _animateFrames=True, _solidify=False, _subd=0, _remesh=False, _consolidateMtl=True, _caps=True):
     totalStrokes = str(len(getAllStrokes()))
     origParent = None
     start = bpy.context.scene.frame_start
@@ -709,6 +712,16 @@ def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False
     #~
     pencil = getActiveGp()
     palette = getActivePalette()
+    #~
+    capsObj = None
+    if (_caps==True):
+        if (_curveType=="nurbs"):
+            bpy.ops.curve.primitive_nurbs_circle_add(radius=_thickness)
+        else:
+            bpy.ops.curve.primitive_bezier_circle_add(radius=_thickness)
+        capsObj = ss()
+        capsObj.name="caps_ob"
+        capsObj.data.resolution_u = _bevelResolution
     #~
     for b in range(0, len(pencil.layers)):
         layer = pencil.layers[b]
@@ -737,7 +750,7 @@ def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False
                         #coord = layer.matrix_inverse * Vector(coord)
                 # * * * * * * * * * * * * * *                         
                 #~
-                crv_ob = makeCurve(coords=coords, curveType=_curveType, resolution=_resolution, thickness=_thickness, bevelResolution=_bevelResolution, parent=layer.parent)
+                crv_ob = makeCurve(coords=coords, curveType=_curveType, resolution=_resolution, thickness=_thickness, bevelResolution=_bevelResolution, parent=layer.parent, capsObj=capsObj)
                 strokeColor = (0.5,0.5,0.5)
                 if (_useColors==True):
                     '''
@@ -959,7 +972,7 @@ def matchWithParent(_child, _parent, _index):
         _child.parent = _parent
         keyTransform(_child, _index)   
 
-def makeCurve(coords, resolution=2, thickness=0.1, bevelResolution=1, curveType="bezier", parent=None):
+def makeCurve(coords, resolution=2, thickness=0.1, bevelResolution=1, curveType="bezier", parent=None, capsObj=None):
     # http://blender.stackexchange.com/questions/12201/bezier-spline-with-python-adds-unwanted-point
     # http://blender.stackexchange.com/questions/6750/poly-bezier-curve-from-a-list-of-coordinates
     # create the curve datablock
@@ -990,6 +1003,10 @@ def makeCurve(coords, resolution=2, thickness=0.1, bevelResolution=1, curveType=
     curveData.resolution_u = resolution
     curveData.bevel_depth = thickness
     curveData.bevel_resolution = bevelResolution
+    #~
+    if (capsObj != None):
+        curveData.bevel_object = capsObj
+        curveData.use_fill_caps = True
     #~
     # map coords to spline
     curveType=curveType.upper()

@@ -466,12 +466,15 @@ def up():
 def ss():
     return select()[0]
 
+def dn():
+    deleteName(_name="crv_ob")
+    deleteName(_name="caps_ob")
+
 c = changeColor
 a = alignCamera
 s = select
 d = delete
 df = deleteFromAllFrames
-dn = deleteName
 
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
