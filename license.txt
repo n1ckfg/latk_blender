@@ -1,7 +1,6 @@
 The LightningArtist Toolkit was developed with support from:
    Canada Council on the Arts
    Eyebeam Art + Technology Center
-   Google Creative Lab
    Ontario Arts Council
    Toronto Arts Council
    
