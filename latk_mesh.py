@@ -7,7 +7,7 @@
 # http://blender.stackexchange.com/questions/6750/poly-bezier-curve-from-a-list-of-coordinates
 # http://blender.stackexchange.com/questions/7047/apply-transforms-to-linked-objects
 
-def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False, _decimate = 0.1, _curveType="nurbs", _useColors=True, _vertexColors=False, _animateFrames=True, _solidify=False, _subd=0, _remesh=False, _consolidateMtl=True, _caps=False, _joinMeshes=False):
+def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False, _decimate = 0.1, _curveType="nurbs", _useColors=True, _vertexColors=False, _animateFrames=True, _solidify=False, _subd=0, _remesh=False, _consolidateMtl=True, _caps=False, _joinMesh=False):
     totalStrokes = str(len(getAllStrokes()))
     origParent = None
     start = bpy.context.scene.frame_start
@@ -130,11 +130,19 @@ def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False
                                 hideFrame(frameList[i], j, True)
                 #~
                 # TODO: make more effective; right now it will only join strokes next in order
-                if (_joinMeshes==True):
+                if (_bakeMesh==True and _joinMesh==True):
                     for j in range(start, end):
                         goToFrame(j)
                         for i in range(1, len(frameList)):
-                            if (frameList[i].hide == False and frameList[i-1].hide == False and frameList[i].data.materials[0].diffuse_color == frameList[i-1].data.materials[0].diffuse_color):
+                            colorsMatch=False
+                            numPlaces = 5
+                            color1 = frameList[i].data.materials[0].diffuse_color
+                            color2 = frameList[i-1].data.materials[0].diffuse_color
+                            #~
+                            if (roundVal(color1[0], numPlaces) == roundVal(color2[0], numPlaces) and roundVal(color1[1], numPlaces) == roundVal(color2[1], numPlaces) and roundVal(color1[2], numPlaces) == roundVal(color2[2], numPlaces)):
+                                colorsMatch = True
+                            #~    
+                            if (frameList[i].hide == False and frameList[i-1].hide == False and colorsMatch == True):
                                 try:
                                     bpy.ops.object.select_all(action='DESELECT')
                                     bpy.context.scene.objects.active = frameList[i]
@@ -143,6 +151,7 @@ def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False
                                     frameList[i].select =True
                                     frameList[i-1].select =True
                                     bpy.ops.object.join()
+                                    #bpy.context.scene.objects.unlink(frameList[i-1])
                                 except:
                                     pass
         #~
@@ -459,6 +468,10 @@ def gpMeshCubes():
 
 def gpMeshColor():
     gpMesh(_resolution=1, _bevelResolution=0, _bakeMesh=True, _vertexColors=True)
+
+def gpJoinTest():
+    dn()
+    gpMesh(_bakeMesh=True, _joinMesh=True)
 
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
