@@ -7,7 +7,7 @@
 # http://blender.stackexchange.com/questions/6750/poly-bezier-curve-from-a-list-of-coordinates
 # http://blender.stackexchange.com/questions/7047/apply-transforms-to-linked-objects
 
-def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False, _decimate = 0.1, _curveType="nurbs", _useColors=True, _vertexColors=False, _animateFrames=True, _solidify=False, _subd=0, _remesh=False, _consolidateMtl=True, _caps=False):
+def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False, _decimate = 0.1, _curveType="nurbs", _useColors=True, _vertexColors=False, _animateFrames=True, _solidify=False, _subd=0, _remesh=False, _consolidateMtl=True, _caps=False, _joinMeshes=False):
     totalStrokes = str(len(getAllStrokes()))
     origParent = None
     start = bpy.context.scene.frame_start
@@ -28,106 +28,124 @@ def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False
     #~
     for b in range(0, len(pencil.layers)):
         layer = pencil.layers[b]
-        for c in range(0, len(layer.frames)):
-            frameList = []
-            for stroke in layer.frames[c].strokes:
-                stroke_points = stroke.points
-                coords = [ (point.co.x, point.co.y, point.co.z) for point in stroke_points ]
-                '''
-                coords = []
-                if (_minDistance > 0.0):
-                    for pp in range(0, len(coordsOrig)):
-                        if (pp > 0 and getDistance(coordsOrig[pp], coordsOrig[pp-1]) >= _minDistance):
-                            coords.append(coordsOrig[pp])
-                else:
-                    coords = coordsOrig
-                '''
-                # * * * * * * * * * * * * * *
-                # TODO fix parenting. Here's where the initial transform corrections go.
-                if (layer.parent):
-                    origParent = layer.parent
-                    layer.parent = None
-                    #print(layer.parent.name)
-                    #layer.parent = None
-                    #for coord in coords:
-                        #coord = layer.matrix_inverse * Vector(coord)
-                # * * * * * * * * * * * * * *                         
-                #~
-                crv_ob = makeCurve(coords=coords, curveType=_curveType, resolution=_resolution, thickness=_thickness, bevelResolution=_bevelResolution, parent=layer.parent, capsObj=capsObj)
-                strokeColor = (0.5,0.5,0.5)
-                if (_useColors==True):
+        if (layer.lock==False):
+            for c in range(0, len(layer.frames)):
+                frameList = []
+                for stroke in layer.frames[c].strokes:
+                    stroke_points = stroke.points
+                    coords = [ (point.co.x, point.co.y, point.co.z) for point in stroke_points ]
                     '''
-                    try:
-                        strokeColor = stroke.color.color
-                    except:
-                        strokeColor = (0.5,0.5,0.5)
-                        print ("error reading color")
+                    coords = []
+                    if (_minDistance > 0.0):
+                        for pp in range(0, len(coordsOrig)):
+                            if (pp > 0 and getDistance(coordsOrig[pp], coordsOrig[pp-1]) >= _minDistance):
+                                coords.append(coordsOrig[pp])
+                    else:
+                        coords = coordsOrig
                     '''
-                    strokeColor = palette.colors[stroke.colorname].color
-                mat = bpy.data.materials.new("new_mtl")
-                crv_ob.data.materials.append(mat)
-                crv_ob.data.materials[0].diffuse_color = strokeColor
-                # TODO can you store vertex colors in a curve?
-                #~   
-                bpy.context.scene.objects.active = crv_ob
-                #~
-                # solidify replaced by curve bevel
-                if (_solidify==True):
-                    bpy.ops.object.modifier_add(type='SOLIDIFY')
-                    bpy.context.object.modifiers["Solidify"].thickness = _extrude * 2
-                    bpy.context.object.modifiers["Solidify"].offset = 0
-                #~
-                # *** careful, huge speed hit here.
-                if (_subd > 0):
-                    bpy.ops.object.modifier_add(type='SUBSURF')
-                    bpy.context.object.modifiers["Subsurf"].levels = _subd
-                    bpy.context.object.modifiers["Subsurf"].render_levels = _subd
-                    try:
-                        bpy.context.object.modifiers["Subsurf"].use_opensubdiv = 1 # GPU if supported
-                    except:
-                        pass
-                #~  
-                if (_bakeMesh==True or _remesh==True):
-                    bpy.ops.object.modifier_add(type='DECIMATE')
-                    bpy.context.object.modifiers["Decimate"].ratio = _decimate     
-                    meshObj = applyModifiers(crv_ob)
+                    # * * * * * * * * * * * * * *
+                    # TODO fix parenting. Here's where the initial transform corrections go.
+                    if (layer.parent):
+                        origParent = layer.parent
+                        layer.parent = None
+                        #print(layer.parent.name)
+                        #layer.parent = None
+                        #for coord in coords:
+                            #coord = layer.matrix_inverse * Vector(coord)
+                    # * * * * * * * * * * * * * *                         
                     #~
-                    if (_remesh==True):
-                        meshObj = remesher(meshObj)
+                    crv_ob = makeCurve(coords=coords, curveType=_curveType, resolution=_resolution, thickness=_thickness, bevelResolution=_bevelResolution, parent=layer.parent, capsObj=capsObj)
+                    strokeColor = (0.5,0.5,0.5)
+                    if (_useColors==True):
+                        '''
+                        try:
+                            strokeColor = stroke.color.color
+                        except:
+                            strokeColor = (0.5,0.5,0.5)
+                            print ("error reading color")
+                        '''
+                        strokeColor = palette.colors[stroke.colorname].color
+                    mat = bpy.data.materials.new("new_mtl")
+                    crv_ob.data.materials.append(mat)
+                    crv_ob.data.materials[0].diffuse_color = strokeColor
+                    # TODO can you store vertex colors in a curve?
+                    #~   
+                    bpy.context.scene.objects.active = crv_ob
                     #~
-                    if (_vertexColors==True):
-                    	colorVertices(meshObj, strokeColor)                        
-                    frameList.append(meshObj)    
-                else:
-                    frameList.append(crv_ob)    
-                # * * * * * * * * * * * * * *
-                # TODO fix parenting. Here's where the output gets parented to the layer's parent.
-                #if (origParent != None):
-                    #index = len(frameList)-1
-                    #layer.parent = origParent
-                    #frameList[index].parent = layer.parent
-                if (origParent != None):
-                    makeParent([frameList[len(frameList)-1], origParent])
-                    layer.parent = origParent
-                # * * * * * * * * * * * * * *
-                bpy.ops.object.select_all(action='DESELECT')
-            #~
-            for i in range(0, len(frameList)):
-                print(frameList[i].name + " of " + totalStrokes + " total")
-                if (_animateFrames==True):
-                    hideFrame(frameList[i], 0, True)
+                    # solidify replaced by curve bevel
+                    if (_solidify==True):
+                        bpy.ops.object.modifier_add(type='SOLIDIFY')
+                        bpy.context.object.modifiers["Solidify"].thickness = _extrude * 2
+                        bpy.context.object.modifiers["Solidify"].offset = 0
+                    #~
+                    # *** careful, huge speed hit here.
+                    if (_subd > 0):
+                        bpy.ops.object.modifier_add(type='SUBSURF')
+                        bpy.context.object.modifiers["Subsurf"].levels = _subd
+                        bpy.context.object.modifiers["Subsurf"].render_levels = _subd
+                        try:
+                            bpy.context.object.modifiers["Subsurf"].use_opensubdiv = 1 # GPU if supported
+                        except:
+                            pass
+                    #~  
+                    if (_bakeMesh==True or _remesh==True):
+                        bpy.ops.object.modifier_add(type='DECIMATE')
+                        bpy.context.object.modifiers["Decimate"].ratio = _decimate     
+                        meshObj = applyModifiers(crv_ob)
+                        #~
+                        if (_remesh==True):
+                            meshObj = remesher(meshObj)
+                        #~
+                        if (_vertexColors==True):
+                        	colorVertices(meshObj, strokeColor)                        
+                        frameList.append(meshObj)    
+                    else:
+                        frameList.append(crv_ob)    
+                    # * * * * * * * * * * * * * *
+                    # TODO fix parenting. Here's where the output gets parented to the layer's parent.
+                    #if (origParent != None):
+                        #index = len(frameList)-1
+                        #layer.parent = origParent
+                        #frameList[index].parent = layer.parent
+                    if (origParent != None):
+                        makeParent([frameList[len(frameList)-1], origParent])
+                        layer.parent = origParent
+                    # * * * * * * * * * * * * * *
+                    bpy.ops.object.select_all(action='DESELECT')
+                #~
+                for i in range(0, len(frameList)):
+                    print(frameList[i].name + " of " + totalStrokes + " total")
+                    if (_animateFrames==True):
+                        hideFrame(frameList[i], 0, True)
+                        for j in range(start, end):
+                            if (j == layer.frames[c].frame_number):
+                                hideFrame(frameList[i], j, False)
+                                keyTransform(frameList[i], j) 
+                                #matchWithParent(frameList[i], layer.parent, j) 
+                            elif (c < len(layer.frames)-1 and j > layer.frames[c].frame_number and j < layer.frames[c+1].frame_number):
+                                hideFrame(frameList[i], j, False)
+                                #keyTransform(frameList[i], j) 
+                            #else:
+                            elif (c != len(layer.frames)-1):
+                                hideFrame(frameList[i], j, True)
+                #~
+                # TODO: make more effective; right now it will only join strokes next in order
+                if (_joinMeshes==True):
                     for j in range(start, end):
-                        if (j == layer.frames[c].frame_number):
-                            hideFrame(frameList[i], j, False)
-                            keyTransform(frameList[i], j) 
-                            #matchWithParent(frameList[i], layer.parent, j) 
-                        elif (c < len(layer.frames)-1 and j > layer.frames[c].frame_number and j < layer.frames[c+1].frame_number):
-                            hideFrame(frameList[i], j, False)
-                            #keyTransform(frameList[i], j) 
-                        #else:
-                        elif (c != len(layer.frames)-1):
-                            hideFrame(frameList[i], j, True)
-            #~
+                        goToFrame(j)
+                        for i in range(1, len(frameList)):
+                            if (frameList[i].hide == False and frameList[i-1].hide == False and frameList[i].data.materials[0].diffuse_color == frameList[i-1].data.materials[0].diffuse_color):
+                                try:
+                                    bpy.ops.object.select_all(action='DESELECT')
+                                    bpy.context.scene.objects.active = frameList[i]
+                                    #print("****** " + str(bpy.context.scene.objects.active))
+                                    #bpy.context.scene.objects.active.select = True
+                                    frameList[i].select =True
+                                    frameList[i-1].select =True
+                                    bpy.ops.object.join()
+                                except:
+                                    pass
+        #~
     if (_consolidateMtl==True):
         consolidateMtl()
 
