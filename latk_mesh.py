@@ -128,33 +128,40 @@ def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False
                             #else:
                             elif (c != len(layer.frames)-1):
                                 hideFrame(frameList[i], j, True)
-                #~
-                # TODO: make more effective; right now it will only join strokes next in order
-                if (_bakeMesh==True and _joinMesh==True):
-                    for j in range(start, end):
-                        goToFrame(j)
-                        for i in range(1, len(frameList)):
-                            colorsMatch=False
-                            numPlaces = 5
-                            color1 = frameList[i].data.materials[0].diffuse_color
-                            color2 = frameList[i-1].data.materials[0].diffuse_color
                             #~
-                            if (roundVal(color1[0], numPlaces) == roundVal(color2[0], numPlaces) and roundVal(color1[1], numPlaces) == roundVal(color2[1], numPlaces) and roundVal(color1[2], numPlaces) == roundVal(color2[2], numPlaces)):
-                                colorsMatch = True
-                            #~    
-                            if (frameList[i].hide == False and frameList[i-1].hide == False and colorsMatch == True):
-                                try:
-                                    bpy.ops.object.select_all(action='DESELECT')
-                                    bpy.context.scene.objects.active = frameList[i]
-                                    #print("****** " + str(bpy.context.scene.objects.active))
-                                    #bpy.context.scene.objects.active.select = True
-                                    frameList[i].select =True
-                                    frameList[i-1].select =True
-                                    bpy.ops.object.join()
-                                    #bpy.context.scene.objects.unlink(frameList[i-1])
-                                except:
-                                    pass
-        #~
+                if (_joinMesh==True):
+                    for j in range(start, end):
+                        if (_animateFrames==True):
+                            goToFrame(j)
+                        for pc in range(0, len(palette.colors)): 
+                            strokesToJoin = []
+                            #~
+                            for i in range(0, len(frameList)):
+                                colorsMatch=False
+                                numPlaces = 5
+                                color1 = frameList[i].data.materials[0].diffuse_color
+                                color2 = palette.colors[pc].color
+                                #~
+                                if (roundVal(color1[0], numPlaces) == roundVal(color2[0], numPlaces) and roundVal(color1[1], numPlaces) == roundVal(color2[1], numPlaces) and roundVal(color1[2], numPlaces) == roundVal(color2[2], numPlaces)):
+                                    colorsMatch = True
+                                    #print("match " + str(color1) + " " + str(color2))
+                                #~    
+                                if (frameList[i].hide == False and colorsMatch == True):
+                                    strokesToJoin.append(frameList[i])
+                                #~
+                                for sj in range(1, len(strokesToJoin)):
+                                    try:
+                                        bpy.ops.object.select_all(action='DESELECT')
+                                        bpy.context.scene.objects.active = strokesToJoin[sj]
+                                        #print("****** " + str(bpy.context.scene.objects.active))
+                                        #bpy.context.scene.objects.active.select = True
+                                        strokesToJoin[sj].select =True
+                                        strokesToJoin[sj-1].select =True
+                                        bpy.ops.object.join()
+                                        #bpy.context.scene.objects.unlink(strokesToJoin[sj-1])
+                                    except:
+                                        pass
+    #~
     if (_consolidateMtl==True):
         consolidateMtl()
 
@@ -468,6 +475,9 @@ def gpMeshCubes():
 
 def gpMeshColor():
     gpMesh(_resolution=1, _bevelResolution=0, _bakeMesh=True, _vertexColors=True)
+
+def gpMeshBackground():
+	gpMesh(_animateFrames=False)
 
 def gpJoinTest():
     dn()

@@ -17,17 +17,17 @@ def makeParent(target=None, unParent=False, fixTransforms=True):
         for i in range(0, len(target)-1):
             target[i].select=True
         bpy.context.scene.objects.active = target[len(target)-1] # last object will be the parent
-        original_type = bpy.context.area.type
-        print("Current context: " + original_type)
-        bpy.context.area.type = "VIEW_3D"
+        #original_type = bpy.context.area.type
+        #print("Current context: " + original_type)
+        #bpy.context.area.type = "VIEW_3D"
         #~
         if (fixTransforms==True):
             bpy.ops.object.parent_set(type='OBJECT', xmirror=False, keep_transform=False) 
         else:   
             bpy.ops.object.parent_set(type='OBJECT', xmirror=False, keep_transform=True) 
         #~
-        bpy.context.area.type = original_type 
-        print("Parent is " + target[len(target)-1].name)   
+        #bpy.context.area.type = original_type 
+        #print("Parent is " + target[len(target)-1].name)   
 
 def keyTransform(_obj, _frame):
     #_obj.location = _pos
