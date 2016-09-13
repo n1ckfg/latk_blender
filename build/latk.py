@@ -1205,7 +1205,7 @@ def gpMeshColor():
     gpMesh(_resolution=1, _bevelResolution=0, _bakeMesh=True, _vertexColors=True)
 
 def gpMeshBackground():
-    gpMesh(_animateFrames=False)
+    gpMesh(_animateFrames=False, _bakeMesh=True, _thickness=0.008)
 
 def gpJoinTest():
     dn()
