@@ -1,6 +1,30 @@
 def getDistance(v1, v2):
     return sqrt( (v1[0] - v2[0])**2 + (v1[1] - v2[1])**2 + (v1[2] - v2[2])**2)
     
+def joinObjects(target=None):
+    if not target:
+        target = s()
+    for i in range(1, len(target)):
+        try:
+            bpy.ops.object.select_all(action='DESELECT')
+            bpy.context.scene.objects.active = target[i]
+            #print("****** " + str(bpy.context.scene.objects.active))
+            #bpy.context.scene.objects.active.select = True
+            target[i].select =True
+            target[i-1].select =True
+            bpy.ops.object.join()
+            #bpy.context.scene.objects.unlink(strokesToJoin[sj-1])
+        except:
+            pass
+    return target[len(target)-1]
+
+def parentMultiple(target, root):
+    bpy.context.scene.objects.active = root # last object will be the parent
+    bpy.ops.object.select_all(action='DESELECT')
+    for obj in target:
+        obj.select = True
+    bpy.ops.object.parent_set(type='OBJECT', xmirror=False, keep_transform=True) 
+
 def makeParent(target=None, unParent=False, fixTransforms=True):
     if not target:
         target = s()
@@ -519,6 +543,7 @@ c = changeColor
 a = alignCamera
 s = select
 d = delete
+j = joinObjects
 df = deleteFromAllFrames
 
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
