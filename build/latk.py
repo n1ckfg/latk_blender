@@ -184,6 +184,23 @@ def copyFrame(source, dest):
         for l in range(0, len(strokeSource.points)):
             strokeDest.points[l].co = strokeSource.points[l].co
 
+def createStrokes(strokes, palette):
+    frame = getActiveFrame()
+    if (frame == None):
+        frame = getActiveLayer().frames.new(bpy.context.scene.frame_current)
+    #~
+    for strokeSource in strokes:
+        strokeColor = (0,0,0)
+        try:
+            strokeColor = createColor(strokeSource.color.color)
+        except:
+            pass
+        strokeDest = frame.strokes.new(getActiveColor().name)        
+        strokeDest.draw_mode = '3DSPACE'
+        strokeDest.points.add(len(strokeSource.points))
+        for l in range(0, len(strokeSource.points)):
+            strokeDest.points[l].co = strokeSource.points[l].co 
+
 def goToFrame(_index):
     origFrame = bpy.context.scene.frame_current
     bpy.context.scene.frame_current = _index
