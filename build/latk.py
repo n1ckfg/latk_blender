@@ -896,6 +896,7 @@ def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False
                             elif (c != len(layer.frames)-1):
                                 hideFrame(frameList[i], j, True)
                             #~
+                '''
                 if (_joinMesh==True):
                     for j in range(start, end):
                         if (_animateFrames==True):
@@ -931,9 +932,21 @@ def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False
                                     #bpy.context.scene.objects.unlink(strokesToJoin[sj-1])
                                 except:
                                     pass
+                '''
     #~
     if (_consolidateMtl==True):
         consolidateMtl()
+    #~
+    if (_joinMesh==True):
+        for i in range(start,end):
+            goToFrame(i)
+            strokesToJoin = []
+            target = matchName("crv")
+            for obj in target:
+                if (obj.hide==False):
+                    strokesToJoin.append(obj)
+            joinObjects(strokesToJoin)
+
 
 def remesher(obj, bake=True, mode="blocks", octree=6, threshold=0.0001, smoothShade=False):
         #fixContext()
