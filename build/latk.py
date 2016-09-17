@@ -961,7 +961,7 @@ def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False
     if (_consolidateMtl==True):
         consolidateMtl()
     #~
-    if (_joinMesh==True and _bakeMesh=True):
+    if (_joinMesh==True and _bakeMesh==True):
         for i in range(start,end):
             goToFrame(i)
             strokesToJoin = []
