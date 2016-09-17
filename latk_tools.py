@@ -1,6 +1,7 @@
 def getDistance(v1, v2):
     return sqrt( (v1[0] - v2[0])**2 + (v1[1] - v2[1])**2 + (v1[2] - v2[2])**2)
     
+'''
 def joinObjects(target=None):
     if not target:
         target = s()
@@ -17,7 +18,25 @@ def joinObjects(target=None):
         except:
             pass
     return target[len(target)-1]
+'''
 
+def joinObjects(target=None):
+    if not target:
+        target = s()
+    #~
+    bpy.ops.object.select_all(action='DESELECT')
+    target[0].select = True
+    bpy.context.scene.objects.active = target[0]
+    for i in range(1, len(target)):
+        #print("****** " + str(bpy.context.scene.objects.active))
+        #bpy.context.scene.objects.active.select = True
+        target[i].select =True
+        #bpy.ops.object.join()
+        #bpy.context.scene.objects.unlink(strokesToJoin[sj-1])
+    #~
+    bpy.ops.object.join()
+    return target[0]
+    
 def parentMultiple(target, root):
     bpy.context.scene.objects.active = root # last object will be the parent
     bpy.ops.object.select_all(action='DESELECT')

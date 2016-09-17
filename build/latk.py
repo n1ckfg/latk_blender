@@ -31,6 +31,7 @@ import random
 def getDistance(v1, v2):
     return sqrt( (v1[0] - v2[0])**2 + (v1[1] - v2[1])**2 + (v1[2] - v2[2])**2)
     
+'''
 def joinObjects(target=None):
     if not target:
         target = s()
@@ -47,7 +48,25 @@ def joinObjects(target=None):
         except:
             pass
     return target[len(target)-1]
+'''
 
+def joinObjects(target=None):
+    if not target:
+        target = s()
+    #~
+    bpy.ops.object.select_all(action='DESELECT')
+    target[0].select = True
+    bpy.context.scene.objects.active = target[0]
+    for i in range(1, len(target)):
+        #print("****** " + str(bpy.context.scene.objects.active))
+        #bpy.context.scene.objects.active.select = True
+        target[i].select =True
+        #bpy.ops.object.join()
+        #bpy.context.scene.objects.unlink(strokesToJoin[sj-1])
+    #~
+    bpy.ops.object.join()
+    return target[0]
+    
 def parentMultiple(target, root):
     bpy.context.scene.objects.active = root # last object will be the parent
     bpy.ops.object.select_all(action='DESELECT')
@@ -783,6 +802,8 @@ def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False
     pencil = getActiveGp()
     palette = getActivePalette()
     #~
+    strokesToJoinAll = []
+    #~
     capsObj = None
     if (_caps==True):
         if (_curveType=="nurbs"):
@@ -881,6 +902,9 @@ def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False
                     bpy.ops.object.select_all(action='DESELECT')
                 #~
                 for i in range(0, len(frameList)):
+                    #~
+                    strokesToJoinAll.append(frameList[i])
+                    #~
                     print(frameList[i].name + " of " + totalStrokes + " total")
                     if (_animateFrames==True):
                         hideFrame(frameList[i], 0, True)
@@ -937,16 +961,14 @@ def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False
     if (_consolidateMtl==True):
         consolidateMtl()
     #~
-    if (_joinMesh==True):
+    if (_joinMesh==True and _bakeMesh=True):
         for i in range(start,end):
             goToFrame(i)
             strokesToJoin = []
-            target = matchName("crv")
-            for obj in target:
-                if (obj.hide==False):
-                    strokesToJoin.append(obj)
+            for j in range(0, len(strokesToJoinAll)):
+                if (strokesToJoinAll[j].hide==False):
+                    strokesToJoin.append(strokesToJoinAll[j])
             joinObjects(strokesToJoin)
-
 
 def remesher(obj, bake=True, mode="blocks", octree=6, threshold=0.0001, smoothShade=False):
         #fixContext()

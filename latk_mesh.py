@@ -16,6 +16,8 @@ def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False
     pencil = getActiveGp()
     palette = getActivePalette()
     #~
+    strokesToJoinAll = []
+    #~
     capsObj = None
     if (_caps==True):
         if (_curveType=="nurbs"):
@@ -114,6 +116,9 @@ def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False
                     bpy.ops.object.select_all(action='DESELECT')
                 #~
                 for i in range(0, len(frameList)):
+                    #~
+                    strokesToJoinAll.append(frameList[i])
+                    #~
                     print(frameList[i].name + " of " + totalStrokes + " total")
                     if (_animateFrames==True):
                         hideFrame(frameList[i], 0, True)
@@ -170,16 +175,14 @@ def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False
     if (_consolidateMtl==True):
         consolidateMtl()
     #~
-    if (_joinMesh==True):
+    if (_joinMesh==True and _bakeMesh=True):
         for i in range(start,end):
             goToFrame(i)
             strokesToJoin = []
-            target = matchName("crv")
-            for obj in target:
-                if (obj.hide==False):
-                    strokesToJoin.append(obj)
+            for j in range(0, len(strokesToJoinAll)):
+                if (strokesToJoinAll[j].hide==False):
+                    strokesToJoin.append(strokesToJoinAll[j])
             joinObjects(strokesToJoin)
-
 
 def remesher(obj, bake=True, mode="blocks", octree=6, threshold=0.0001, smoothShade=False):
         #fixContext()
