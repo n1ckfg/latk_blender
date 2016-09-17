@@ -182,7 +182,10 @@ def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False
             for j in range(0, len(strokesToJoinAll)):
                 if (strokesToJoinAll[j].hide==False):
                     strokesToJoin.append(strokesToJoinAll[j])
-            joinObjects(strokesToJoin)
+            try:
+                joinObjects(strokesToJoin)
+            except:
+                pass
 
 def remesher(obj, bake=True, mode="blocks", octree=6, threshold=0.0001, smoothShade=False):
         #fixContext()

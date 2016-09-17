@@ -28,6 +28,31 @@ import random
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
 
+def distributeStrokes(step=1):
+    palette = getActivePalette()
+    strokes = getAllStrokes()
+    layer = getActiveLayer()
+    strokesToBuild = []
+    for i in range(0, len(strokes)):
+        goToFrame(i+1)
+        try:
+            layer.frames.new(bpy.context.scene.frame_current)
+        except:
+            pass
+        layer.active_frame = layer.frames[i+1]
+        '''
+        strokesToBuild.append(strokes[i])
+        for l in range(0, len(strokesToBuild)):    
+            strokeDest = getActiveFrame().strokes.new(palette.colors[0].name)
+            strokeDest.draw_mode = '3DSPACE'
+            strokeDest.points.add(len(strokesToBuild[l].points))
+            for m in range(0, len(strokesToBuild[l].points)):
+                strokeDest.points[m].co = strokesToBuild[l].points[m].co 
+                strokeDest.points[m].pressure = 1
+                strokeDest.points[m].strength = 1
+        '''
+        copyFrame(0, i+1)
+
 def getDistance(v1, v2):
     return sqrt( (v1[0] - v2[0])**2 + (v1[1] - v2[1])**2 + (v1[2] - v2[2])**2)
     
@@ -209,25 +234,29 @@ def getStartEnd():
     end = bpy.context.scene.frame_end + 1
     return start, end
 
-def copyFrame(source, dest):
+def copyFrame(source, dest, limit=None):
     scene = bpy.context.scene
     gp = scene.grease_pencil
     layer = gp.layers[0]    
     #.
     frameSource = layer.frames[source]
     frameDest = layer.frames[dest]
-    for j in range(0, len(frameSource.strokes)):
+    if not limit:
+        limit = len(frameSource.strokes)
+    for j in range(0, limit):
         scene.frame_set(source)
         strokeSource = frameSource.strokes[j]
         scene.frame_set(dest)
-        strokeDest = frameDest.strokes.new()
+        strokeDest = frameDest.strokes.new(getActiveColor().name)
         # either of ('SCREEN', '3DSPACE', '2DSPACE', '2DIMAGE')
         strokeDest.draw_mode = '3DSPACE'
         strokeDest.points.add(len(strokeSource.points))
         for l in range(0, len(strokeSource.points)):
             strokeDest.points[l].co = strokeSource.points[l].co
 
-def createStrokes(strokes, palette):
+def createStrokes(strokes, palette=None):
+    if (palette == None):
+        palette = getActivePalette()
     frame = getActiveFrame()
     if (frame == None):
         frame = getActiveLayer().frames.new(bpy.context.scene.frame_current)
@@ -243,6 +272,8 @@ def createStrokes(strokes, palette):
         strokeDest.points.add(len(strokeSource.points))
         for l in range(0, len(strokeSource.points)):
             strokeDest.points[l].co = strokeSource.points[l].co 
+            strokeDest.points[l].pressure = 1
+            strokeDest.points[l].strength = 1
 
 def goToFrame(_index):
     origFrame = bpy.context.scene.frame_current
@@ -968,7 +999,10 @@ def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False
             for j in range(0, len(strokesToJoinAll)):
                 if (strokesToJoinAll[j].hide==False):
                     strokesToJoin.append(strokesToJoinAll[j])
-            joinObjects(strokesToJoin)
+            try:
+                joinObjects(strokesToJoin)
+            except:
+                pass
 
 def remesher(obj, bake=True, mode="blocks", octree=6, threshold=0.0001, smoothShade=False):
         #fixContext()
