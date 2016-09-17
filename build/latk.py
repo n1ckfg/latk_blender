@@ -33,6 +33,7 @@ def distributeStrokes(step=1):
     strokes = getAllStrokes()
     layer = getActiveLayer()
     strokesToBuild = []
+    counter = 1
     for i in range(0, len(strokes)):
         goToFrame(i+1)
         try:
@@ -51,7 +52,16 @@ def distributeStrokes(step=1):
                 strokeDest.points[m].pressure = 1
                 strokeDest.points[m].strength = 1
         '''
-        copyFrame(0, i+1)
+        copyFrame(0, i+1, counter)
+        counter += step
+        if (counter > len(strokes)-1):
+            counter = len(strokes)-1
+
+def writeOnStrokes(step=1):
+    gp = getActiveGp()
+    for i in range(0, len(gp.layers)):
+        gp.layers.active_index = i
+        distributeStrokes(step)
 
 def getDistance(v1, v2):
     return sqrt( (v1[0] - v2[0])**2 + (v1[1] - v2[1])**2 + (v1[2] - v2[2])**2)
@@ -236,8 +246,7 @@ def getStartEnd():
 
 def copyFrame(source, dest, limit=None):
     scene = bpy.context.scene
-    gp = scene.grease_pencil
-    layer = gp.layers[0]    
+    layer = getActiveLayer()  
     #.
     frameSource = layer.frames[source]
     frameDest = layer.frames[dest]
@@ -247,7 +256,7 @@ def copyFrame(source, dest, limit=None):
         scene.frame_set(source)
         strokeSource = frameSource.strokes[j]
         scene.frame_set(dest)
-        strokeDest = frameDest.strokes.new(getActiveColor().name)
+        strokeDest = frameDest.strokes.new(strokeSource.color.name)
         # either of ('SCREEN', '3DSPACE', '2DSPACE', '2DIMAGE')
         strokeDest.draw_mode = '3DSPACE'
         strokeDest.points.add(len(strokeSource.points))
