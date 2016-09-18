@@ -28,6 +28,48 @@ import random
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
 
+def deleteDuplicateStrokes(fromAllFrames = False):
+    strokes = getSelectedStrokes()
+    checkPoints = []
+    for i in range(0, len(strokes)):
+        checkPoints.append(sumPoints(strokes[i]))
+    for i in range(0, len(strokes)):
+        for j in range(i+1, len(strokes)):
+            try:
+                if (checkPoints[i] == checkPoints[j]):
+                    bpy.ops.object.select_all(action='DESELECT')
+                    strokes[i].select = True
+                    deleteSelected()
+            except:
+                pass
+
+def sumPoints(stroke):
+    x = 0
+    y = 0
+    z = 0
+    for point in stroke.points:
+        co = point.co
+        x += co[0]
+        y += co[1]
+        z += co[2]
+    return roundVal(x + y + z, 5)
+
+def deleteUnbakedCurves(nameMesh="crv_ob_mesh", nameCurve="crv"):
+    target = matchName(nameMesh)
+    for i in range(0, len(target)):
+        target[i].name = "mesh_" + str(i)
+    dn(nameCurve)
+
+def deleteUnparentedCurves(name="crv"):
+    target = matchName(name)
+    toDelete = []
+    for i in range(0, len(target)):
+        if (target[i].parent==None):
+            toDelete.append(target[i])
+    print(str(len(toDelete)) + " objects selected for deletion.")
+    for i in range(0, len(toDelete)):
+        delete(toDelete[i])
+
 def distributeStrokes(step=1):
     palette = getActivePalette()
     strokes = getAllStrokes()
@@ -62,6 +104,17 @@ def writeOnStrokes(step=1):
     for i in range(0, len(gp.layers)):
         gp.layers.active_index = i
         distributeStrokes(step)
+
+def writeOnMesh(step=1, name="crv"):
+    target = matchName(name)
+    for i in range (0, len(target), step):
+        if (i > len(target)-1):
+            i = len(target)-1
+        for j in range(i, (i+1)*step):
+            if (j > len(target)-1):
+                j = len(target)-1
+            hideFrame(target[j], 0, True)
+            hideFrame(target[j], len(target)-j, False)
 
 def getDistance(v1, v2):
     return sqrt( (v1[0] - v2[0])**2 + (v1[1] - v2[1])**2 + (v1[2] - v2[2])**2)
@@ -472,7 +525,7 @@ def consolidateMtl(name="crv"):
         for i in range(1, len(curves)):
             curves[i].data.materials[0] = curves[0].data.materials[0]
 
-def deleteFromAllFrames():
+def deleteFromAllFrames(protectOriginal=False):
     origStrokes = []
     frame = getActiveFrame()
     for stroke in frame.strokes:
@@ -504,6 +557,11 @@ def deleteFromAllFrames():
     print(str(len(deleteList)) + " strokes listed for deletion.")
     for stroke in deleteList:
         stroke.select = True
+    #~
+    if (protectOriginal == True):
+    	for origStroke in origStrokes:
+    		origStroke.select = False
+    #~
     layer = getActiveLayer()
     start, end = getStartEnd()
     for i in range(start, end):
