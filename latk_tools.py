@@ -4,9 +4,9 @@ def deleteDuplicateStrokes(fromAllFrames = False):
     for i in range(0, len(strokes)):
         checkPoints.append(sumPoints(strokes[i]))
     for i in range(0, len(strokes)):
-        for j in range(i+1, len(strokes)):
+        for j in range(0, len(strokes)):
             try:
-                if (checkPoints[i] == checkPoints[j]):
+                if ( j != i and checkPoints[i] == checkPoints[j]):
                     bpy.ops.object.select_all(action='DESELECT')
                     strokes[i].select = True
                     deleteSelected()
@@ -24,11 +24,11 @@ def sumPoints(stroke):
         z += co[2]
     return roundVal(x + y + z, 5)
 
-def deleteUnbakedCurves(nameMesh="crv_ob_mesh", nameCurve="crv"):
+def renameCurves(name="mesh", nameMesh="crv_ob_mesh", nameCurve="crv"):
     target = matchName(nameMesh)
     for i in range(0, len(target)):
-        target[i].name = "mesh_" + str(i)
-    dn(nameCurve)
+        target[i].name = name + "_" + str(i)
+    #dn(nameCurve)
 
 def deleteUnparentedCurves(name="crv"):
     target = matchName(name)
@@ -495,7 +495,7 @@ def consolidateMtl(name="crv"):
         for i in range(1, len(curves)):
             curves[i].data.materials[0] = curves[0].data.materials[0]
 
-def deleteFromAllFrames(protectOriginal=False):
+def deleteFromAllFrames():
     origStrokes = []
     frame = getActiveFrame()
     for stroke in frame.strokes:
@@ -527,11 +527,6 @@ def deleteFromAllFrames(protectOriginal=False):
     print(str(len(deleteList)) + " strokes listed for deletion.")
     for stroke in deleteList:
         stroke.select = True
-    #~
-    if (protectOriginal == True):
-    	for origStroke in origStrokes:
-    		origStroke.select = False
-    #~
     layer = getActiveLayer()
     start, end = getStartEnd()
     for i in range(start, end):

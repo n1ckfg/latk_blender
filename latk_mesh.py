@@ -7,7 +7,7 @@
 # http://blender.stackexchange.com/questions/6750/poly-bezier-curve-from-a-list-of-coordinates
 # http://blender.stackexchange.com/questions/7047/apply-transforms-to-linked-objects
 
-def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False, _decimate = 0.1, _curveType="nurbs", _useColors=True, _vertexColors=False, _animateFrames=True, _solidify=False, _subd=0, _remesh=False, _consolidateMtl=True, _caps=False, _joinMesh=False):
+def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False, _decimate = 0.1, _curveType="nurbs", _useColors=True, _singleFrame=False, _vertexColors=False, _animateFrames=True, _solidify=False, _subd=0, _remesh=False, _consolidateMtl=True, _caps=False, _joinMesh=False):
     totalStrokes = str(len(getAllStrokes()))
     origParent = None
     start = bpy.context.scene.frame_start
@@ -31,7 +31,12 @@ def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False
     for b in range(0, len(pencil.layers)):
         layer = pencil.layers[b]
         if (layer.lock==False):
-            for c in range(0, len(layer.frames)):
+            rangeStart = 0
+            rangeEnd = len(layer.frames)
+            if (_singleFrame==True):
+                rangeStart = getActiveFrameNum(layer)
+                rangeEnd = rangeStart + 1
+            for c in range(rangeStart, rangeEnd):
                 frameList = []
                 for stroke in layer.frames[c].strokes:
                     stroke_points = stroke.points
@@ -134,6 +139,21 @@ def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False
                             elif (c != len(layer.frames)-1):
                                 hideFrame(frameList[i], j, True)
                             #~
+                #~
+                #~
+                if (_consolidateMtl==True):
+                    consolidateMtl()
+                #~
+                if (_joinMesh==True and _bakeMesh==True):
+                    strokesToJoin = []
+                    for i in range(0, len(frameList)):
+                        if (frameList[i].hide==False):
+                            strokesToJoin.append(frameList[i])
+                    try:
+                    	joinObjects(strokesToJoin)
+                    except:
+                    	pass
+                #~                                
                 '''
                 if (_joinMesh==True):
                     for j in range(start, end):
@@ -171,6 +191,7 @@ def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False
                                 except:
                                     pass
                 '''
+    '''
     #~
     if (_consolidateMtl==True):
         consolidateMtl()
@@ -186,6 +207,17 @@ def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False
                 joinObjects(strokesToJoin)
             except:
                 pass
+    '''
+
+def getActiveFrameNum(layer=None):
+    # assumes layer can have only one active frame
+    if not layer:
+        layer = getActiveLayer()
+    returns = -1
+    for i in range(0, len(layer.frames)):
+        if (layer.frames[i] == layer.active_frame):
+            returns = i
+    return returns
 
 def remesher(obj, bake=True, mode="blocks", octree=6, threshold=0.0001, smoothShade=False):
         #fixContext()
@@ -480,6 +512,10 @@ def randomMetaballs():
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 # shortcuts
+def mf():
+    dn()
+    gpMesh(_resolution=1, _bevelResolution=0, _singleFrame=True)
+
 def gp():
     dn()
     gpMeshPreview()
