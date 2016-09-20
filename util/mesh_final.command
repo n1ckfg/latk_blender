@@ -10,5 +10,5 @@ DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 
 cd $DIR
 
-/Applications/blender/blender.app/Contents/MacOS/blender $TARGET --background --python mesh_preview.py
+/Applications/blender/blender.app/Contents/MacOS/blender $TARGET --background --python mesh_final.py
 
