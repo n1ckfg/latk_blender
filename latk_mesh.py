@@ -106,7 +106,7 @@ def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False
                         # + + + + + + +
                         if (palette.colors[stroke.colorname].fill_alpha > 0.001):
                             fill_ob = createFill(stroke.points)
-                            bpy.ops.object.join()
+                            joinObjects([meshObj, fill_ob])
                         # + + + + + + +
                         #~
                         if (_vertexColors==True):
@@ -580,6 +580,10 @@ def mf():
 def gp():
     dn()
     gpMeshPreview()
+
+def gb():
+    dn()
+    gpMesh(_bakeMesh=True)
 
 def gpMeshPreview():
     # mesh curves faster but messier
