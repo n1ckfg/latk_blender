@@ -563,7 +563,8 @@ def createFill(inputVerts):
     '''
     bm.faces.new( (vertex1, vertex2, vertex3, vertex4) )
     '''
-    bm.faces.new(verts)
+    if (len(verts) > 2):
+        bm.faces.new(verts)
     #~
     # Finish up, write the bmesh back to the mesh
     bm.to_mesh(me)
