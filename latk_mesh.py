@@ -72,10 +72,6 @@ def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False
                             print ("error reading color")
                         '''
                         strokeColor = palette.colors[stroke.colorname].color
-                    # + + + + + + +
-                    if (palette.colors[stroke.colorname].fill_alpha > 0.001):
-                        fill_ob = createFill(stroke.points)
-                    # + + + + + + +
                     mat = bpy.data.materials.new("new_mtl")
                     crv_ob.data.materials.append(mat)
                     crv_ob.data.materials[0].diffuse_color = strokeColor
@@ -107,8 +103,15 @@ def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False
                         if (_remesh==True):
                             meshObj = remesher(meshObj)
                         #~
+                        # + + + + + + +
+                        if (palette.colors[stroke.colorname].fill_alpha > 0.001):
+                            fill_ob = createFill(stroke.points)
+                            bpy.ops.object.join()
+                        # + + + + + + +
+                        #~
                         if (_vertexColors==True):
-                            colorVertices(meshObj, strokeColor)                        
+                            colorVertices(meshObj, strokeColor) 
+                        #~                                                   
                         frameList.append(meshObj)    
                     else:
                         frameList.append(crv_ob)    
@@ -154,9 +157,9 @@ def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False
                         if (frameList[i].hide==False):
                             strokesToJoin.append(frameList[i])
                     try:
-                    	joinObjects(strokesToJoin)
+                        joinObjects(strokesToJoin)
                     except:
-                    	pass
+                        pass
                 #~                                
                 '''
                 if (_joinMesh==True):
@@ -564,6 +567,8 @@ def createFill(inputVerts):
     #~
     # Finish up, write the bmesh back to the mesh
     bm.to_mesh(me)
+    #~
+    return ob
 
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
