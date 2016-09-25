@@ -952,6 +952,10 @@ def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False
                             print ("error reading color")
                         '''
                         strokeColor = palette.colors[stroke.colorname].color
+                    # + + + + + + +
+                    if (palette.colors[stroke.colorname].fill_alpha > 0.001):
+                        fill_ob = createFill(stroke.points)
+                    # + + + + + + +
                     mat = bpy.data.materials.new("new_mtl")
                     crv_ob.data.materials.append(mat)
                     crv_ob.data.materials[0].diffuse_color = strokeColor
