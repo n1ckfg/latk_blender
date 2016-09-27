@@ -888,6 +888,9 @@ wb = writeBrushStrokes
 # http://blender.stackexchange.com/questions/7047/apply-transforms-to-linked-objects
 
 def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False, _decimate = 0.1, _curveType="nurbs", _useColors=True, _singleFrame=False, _vertexColors=False, _animateFrames=True, _solidify=False, _subd=0, _remesh=False, _consolidateMtl=True, _caps=False, _joinMesh=False):
+    if (_joinMesh==True):
+    	_bakeMesh=True
+    #~
     totalStrokes = str(len(getAllStrokes()))
     origParent = None
     start = bpy.context.scene.frame_start
@@ -1465,6 +1468,10 @@ def gp():
 def gb():
     dn()
     gpMesh(_bakeMesh=True)
+
+def gj():
+	dn()
+	gpMesh(_joinMesh=True)
 
 def gpMeshPreview():
     # mesh curves faster but messier
