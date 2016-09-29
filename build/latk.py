@@ -293,9 +293,20 @@ def bakeFrames():
         except:
             print ("Frame " + str(i) + " already exists.")
 
-def getStartEnd():
+def getStartEnd(pad=True):
     start = bpy.context.scene.frame_start
-    end = bpy.context.scene.frame_end + 1
+    end = None
+    if (pad==True):
+        end = bpy.context.scene.frame_end + 1
+    else:
+        end = bpy.context.scene.frame_end
+    return start, end
+
+def setStartEnd(start, end, pad=True):
+    if (pad==True):
+        end += 1
+    bpy.context.scene.frame_start = start
+    bpy.context.scene.frame_end = end
     return start, end
 
 def copyFrame(source, dest, limit=None):
