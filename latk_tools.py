@@ -1,7 +1,38 @@
-def getFileName():
-	name = bpy.path.basename(bpy.context.blend_data.filepath)
-	name = name[:-6]
-	return name
+def deselect():
+    bpy.ops.object.select_all(action='DESELECT')
+
+def makeGroup(name="myGroup", newGroup=True):
+    if (newGroup==True):
+        bpy.ops.group.create(name=name)
+    else:
+        bpy.ops.group_link(group=name)
+
+def removeGroup(name="myGroup", allGroups=False):
+    if (allGroups==False):
+        group = bpy.data.groups[name]
+        #for group in bpy.data.groups:
+            #if group.users == 1 and len(group.users_dupli_group) == 0: # EDIT
+        group.user_clear()
+        bpy.data.groups.remove(group) 
+    else:
+        for group in bpy.data.groups:
+            group.user_clear()
+            bpy.data.groups.remove(group)            
+
+def saveFile(name):
+    bpy.ops.wm.save_as_mainfile(filepath=getFilePath() + name + ".blend")
+
+def getFilePath(stripFileName=True):
+    name = bpy.context.blend_data.filepath
+    if (stripFileName==True):
+        name = name[:-len(getFileName(stripExtension=False))]
+    return name
+
+def getFileName(stripExtension=True):
+    name = bpy.path.basename(bpy.context.blend_data.filepath)
+    if (stripExtension==True):
+        name = name[:-6]
+    return name
 
 def deleteDuplicateStrokes(fromAllFrames = False):
     strokes = getSelectedStrokes()

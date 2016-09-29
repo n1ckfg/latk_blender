@@ -7,11 +7,15 @@
 # http://blender.stackexchange.com/questions/6750/poly-bezier-curve-from-a-list-of-coordinates
 # http://blender.stackexchange.com/questions/7047/apply-transforms-to-linked-objects
 
-def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False, _decimate = 0.1, _curveType="nurbs", _useColors=True, _singleFrame=False, _vertexColors=False, _animateFrames=True, _solidify=False, _subd=0, _remesh=False, _consolidateMtl=True, _caps=False, _joinMesh=False):
+def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False, _decimate = 0.1, _curveType="nurbs", _useColors=True, _saveLayers=False, _singleFrame=False, _vertexColors=False, _animateFrames=True, _solidify=False, _subd=0, _remesh=False, _consolidateMtl=True, _caps=False, _joinMesh=False):
     if (_joinMesh==True):
-    	_bakeMesh=True
+        _bakeMesh=True
+    if (_saveLayers==True):
+        dn()
+    origFileName = getFileName()
     #~
     totalStrokes = str(len(getAllStrokes()))
+    totalCounter = 0
     origParent = None
     start = bpy.context.scene.frame_start
     end = bpy.context.scene.frame_end + 1
@@ -134,7 +138,8 @@ def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False
                     #~
                     strokesToJoinAll.append(frameList[i])
                     #~
-                    print(frameList[i].name + " of " + totalStrokes + " total")
+                    totalCounter += 1
+                    print(frameList[i].name + " | " + str(totalCounter) + " of " + totalStrokes + " total")
                     if (_animateFrames==True):
                         hideFrame(frameList[i], 0, True)
                         for j in range(start, end):
@@ -201,6 +206,15 @@ def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False
                                 except:
                                     pass
                 '''
+            if (_saveLayers==True):
+                deselect()
+                target = matchName("crv")
+                for i in range(0, len(target)):
+                    target[i].select = True
+                makeGroup(layer.info)
+                saveFile(origFileName + "_layer" + str(b) + "_" + layer.info)
+                removeGroup(layer.info, allGroups=True)
+                dn()
     '''
     #~
     if (_consolidateMtl==True):
@@ -218,6 +232,8 @@ def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False
             except:
                 pass
     '''
+    if (_caps==True):
+        delete(capsObj)
 
 def getActiveFrameNum(layer=None):
     # assumes layer can have only one active frame
@@ -590,8 +606,8 @@ def gb():
     gpMesh(_bakeMesh=True)
 
 def gj():
-	dn()
-	gpMesh(_joinMesh=True)
+    dn()
+    gpMesh(_joinMesh=True)
 
 def gpMeshPreview():
     # mesh curves faster but messier
