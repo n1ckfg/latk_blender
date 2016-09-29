@@ -1,3 +1,8 @@
+def getFileName():
+	name = bpy.path.basename(bpy.context.blend_data.filepath)
+	name = name[:-6]
+	return name
+
 def deleteDuplicateStrokes(fromAllFrames = False):
     strokes = getSelectedStrokes()
     checkPoints = []
