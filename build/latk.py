@@ -55,6 +55,17 @@ def removeGroup(name="myGroup", allGroups=False):
             group.user_clear()
             bpy.data.groups.remove(group)            
 
+def removeObj(name="myObj", allObjs=False):
+    if (allObjs==False):
+        obj = bpy.data.objects[name]
+        obj.user_clear()
+        bpy.data.objects.remove(obj) 
+    else:
+        for obj in bpy.data.objects:
+            obj.user_clear()
+            bpy.data.objects.remove(obj)  
+    refresh()
+
 def saveFile(name, format=True):
     if (format==True):
         name = getFilePath() + name + ".blend"
@@ -202,6 +213,16 @@ def joinObjects(target=None):
         #bpy.context.scene.objects.unlink(strokesToJoin[sj-1])
     #~
     bpy.ops.object.join()
+    for i in range(1, len(target)):
+        try:
+            removeObj(target[i].name)
+        except:
+            pass
+        #try:
+            #target[i].select = True
+        #except:
+            #pass
+    #~
     gc.collect()
     return target[0]
     
