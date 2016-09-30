@@ -971,6 +971,7 @@ def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False
                 rangeStart = getActiveFrameNum(layer)
                 rangeEnd = rangeStart + 1
             for c in range(rangeStart, rangeEnd):
+            	print("frame " + str(c) + " of " + str(rangeEnd))
                 frameList = []
                 for stroke in layer.frames[c].strokes:
                     stroke_points = stroke.points
@@ -1140,7 +1141,7 @@ def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False
                     target[i].select = True
                 makeGroup(layer.info)
                 saveFile(origFileName + "_layer" + str(b) + "_" + layer.info)
-                removeGroup(layer.info)
+                removeGroup(layer.info, allGroups=True)
                 dn()
     '''
     #~
