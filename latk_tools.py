@@ -1,6 +1,9 @@
 def deselect():
     bpy.ops.object.select_all(action='DESELECT')
 
+def selectAll():
+    bpy.ops.object.select_all(action='SELECT')
+
 def makeGroup(name="myGroup", newGroup=True):
     if (newGroup==True):
         bpy.ops.group.create(name=name)
@@ -148,13 +151,13 @@ def joinObjects(target=None):
     if not target:
         target = s()
     #~
-    bpy.ops.object.select_all(action='DESELECT')
+    bpy.ops.object.select_all(action='DESELECT') 
     target[0].select = True
     bpy.context.scene.objects.active = target[0]
     for i in range(1, len(target)):
         #print("****** " + str(bpy.context.scene.objects.active))
         #bpy.context.scene.objects.active.select = True
-        target[i].select =True
+        target[i].select = True
         #bpy.ops.object.join()
         #bpy.context.scene.objects.unlink(strokesToJoin[sj-1])
     #~
@@ -359,7 +362,7 @@ def goToFrame(_index):
     bpy.context.scene.frame_current = _index
     bpy.context.scene.frame_set(_index)
     refresh()
-    print("Moved from frame " + str(origFrame) + " to " + str(_index))
+    print("Moved from timeline frame " + str(origFrame) + " to " + str(_index))
     return bpy.context.scene.frame_current
 
 def hideFrame(_obj, _frame, _hide):

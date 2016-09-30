@@ -32,6 +32,9 @@ import bmesh
 def deselect():
     bpy.ops.object.select_all(action='DESELECT')
 
+def selectAll():
+    bpy.ops.object.select_all(action='SELECT')
+
 def makeGroup(name="myGroup", newGroup=True):
     if (newGroup==True):
         bpy.ops.group.create(name=name)
@@ -179,13 +182,13 @@ def joinObjects(target=None):
     if not target:
         target = s()
     #~
-    bpy.ops.object.select_all(action='DESELECT')
+    bpy.ops.object.select_all(action='DESELECT') 
     target[0].select = True
     bpy.context.scene.objects.active = target[0]
     for i in range(1, len(target)):
         #print("****** " + str(bpy.context.scene.objects.active))
         #bpy.context.scene.objects.active.select = True
-        target[i].select =True
+        target[i].select = True
         #bpy.ops.object.join()
         #bpy.context.scene.objects.unlink(strokesToJoin[sj-1])
     #~
@@ -390,7 +393,7 @@ def goToFrame(_index):
     bpy.context.scene.frame_current = _index
     bpy.context.scene.frame_set(_index)
     refresh()
-    print("Moved from frame " + str(origFrame) + " to " + str(_index))
+    print("Moved from timeline frame " + str(origFrame) + " to " + str(_index))
     return bpy.context.scene.frame_current
 
 def hideFrame(_obj, _frame, _hide):
@@ -935,7 +938,7 @@ wb = writeBrushStrokes
 # http://blender.stackexchange.com/questions/7047/apply-transforms-to-linked-objects
 
 def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False, _decimate = 0.1, _curveType="nurbs", _useColors=True, _saveLayers=False, _singleFrame=False, _vertexColors=False, _animateFrames=True, _solidify=False, _subd=0, _remesh=False, _consolidateMtl=True, _caps=False, _joinMesh=False):
-    if (_joinMesh==True):
+    if (_joinMesh==True or _remesh==True):
         _bakeMesh=True
     if (_saveLayers==True):
         dn()
@@ -950,7 +953,7 @@ def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False
     pencil = getActiveGp()
     palette = getActivePalette()
     #~
-    strokesToJoinAll = []
+    #strokesToJoinAll = []
     #~
     capsObj = None
     if (_caps==True):
@@ -971,7 +974,7 @@ def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False
                 rangeStart = getActiveFrameNum(layer)
                 rangeEnd = rangeStart + 1
             for c in range(rangeStart, rangeEnd):
-                print("*** frame " + str(c) + " of " + str(rangeEnd))
+                print("\n" + "*** gp layer " + str(b+1) + " of " + str(len(pencil.layers)) + " | gp frame " + str(c+1) + " of " + str(rangeEnd) + " ***")
                 frameList = []
                 for stroke in layer.frames[c].strokes:
                     stroke_points = stroke.points
@@ -1030,7 +1033,7 @@ def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False
                         except:
                             pass
                     #~  
-                    if (_bakeMesh==True or _remesh==True):
+                    if (_bakeMesh==True): #or _remesh==True):
                         bpy.ops.object.modifier_add(type='DECIMATE')
                         bpy.context.object.modifiers["Decimate"].ratio = _decimate     
                         meshObj = applyModifiers(crv_ob)
@@ -1064,7 +1067,7 @@ def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False
                 #~
                 for i in range(0, len(frameList)):
                     #~
-                    strokesToJoinAll.append(frameList[i])
+                    #strokesToJoinAll.append(frameList[i])
                     #~
                     totalCounter += 1
                     print(frameList[i].name + " | " + str(totalCounter) + " of " + totalStrokes + " total")
@@ -1073,7 +1076,7 @@ def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False
                         for j in range(start, end):
                             if (j == layer.frames[c].frame_number):
                                 hideFrame(frameList[i], j, False)
-                                keyTransform(frameList[i], j) 
+                                keyTransform(frameList[i], j)
                                 #matchWithParent(frameList[i], layer.parent, j) 
                             elif (c < len(layer.frames)-1 and j > layer.frames[c].frame_number and j < layer.frames[c+1].frame_number):
                                 hideFrame(frameList[i], j, False)
@@ -1086,16 +1089,26 @@ def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False
                 #~
                 if (_consolidateMtl==True):
                     consolidateMtl()
-                #~
-                if (_joinMesh==True and _bakeMesh==True):
-                    strokesToJoin = []
-                    for i in range(0, len(frameList)):
-                        if (frameList[i].hide==False):
-                            strokesToJoin.append(frameList[i])
-                    try:
-                        joinObjects(strokesToJoin)
-                    except:
-                        pass
+                    #~
+                if (_joinMesh==True): #and _bakeMesh==True):
+                    #print("* checking " + str(len(frameList)) + " strokes...")
+                    #strokesToJoin = []
+                    #try:
+                    target = matchName("crv")
+                    for i in range(start, end):
+                        strokesToJoin = []
+                        if (i == layer.frames[c].frame_number):
+                            goToFrame(i)
+                            for j in range(0, len(target)):
+                                if (target[j].hide==False):
+                                    strokesToJoin.append(target[j])
+                        if (len(strokesToJoin) > 1):
+                            print("~ ~ ~ ~ ~ ~ ~ ~ ~")
+                            print("* joining " + str(len(strokesToJoin))  + " strokes")
+                            joinObjects(strokesToJoin)
+                            print("~ ~ ~ ~ ~ ~ ~ ~ ~")
+                #except:
+                    #pass
                 #~                                
                 '''
                 if (_joinMesh==True):
