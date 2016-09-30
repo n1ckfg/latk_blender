@@ -24,6 +24,8 @@ from bpy_extras.io_utils import unpack_list
 #from curve_simplify import *
 import random
 import bmesh
+import sys
+import gc
 
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -53,8 +55,15 @@ def removeGroup(name="myGroup", allGroups=False):
             group.user_clear()
             bpy.data.groups.remove(group)            
 
-def saveFile(name):
-    bpy.ops.wm.save_as_mainfile(filepath=getFilePath() + name + ".blend")
+def saveFile(name, format=True):
+    if (format==True):
+        name = getFilePath() + name + ".blend"
+    bpy.ops.wm.save_as_mainfile(filepath=name)
+
+def openFile(name, format=True):
+    if (format==True):
+        name = getFilePath() + name + ".blend"
+    bpy.ops.wm.open_mainfile(filepath=name)
 
 def getFilePath(stripFileName=True):
     name = bpy.context.blend_data.filepath
@@ -193,6 +202,7 @@ def joinObjects(target=None):
         #bpy.context.scene.objects.unlink(strokesToJoin[sj-1])
     #~
     bpy.ops.object.join()
+    gc.collect()
     return target[0]
     
 def parentMultiple(target, root):
@@ -288,6 +298,7 @@ def delete(_obj):
     bpy.ops.object.select_all(action='DESELECT')
     bpy.data.objects[_obj.name].select = True
     bpy.ops.object.delete()
+    gc.collect()
     #bpy.ops.object.mode_set(mode=oldMode)   
 
 def refresh():
@@ -967,6 +978,7 @@ def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False
     #~
     for b in range(0, len(pencil.layers)):
         layer = pencil.layers[b]
+        url = origFileName + "_layer" + str(b) + "_" + layer.info
         if (layer.lock==False):
             rangeStart = 0
             rangeEnd = len(layer.frames)
@@ -1107,6 +1119,9 @@ def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False
                             print("* joining " + str(len(strokesToJoin))  + " strokes")
                             joinObjects(strokesToJoin)
                             print("~ ~ ~ ~ ~ ~ ~ ~ ~")
+                    #if (_saveLayers==True):
+                        #saveFile(url)
+                        #openFile(url)
                 #except:
                     #pass
                 #~                                
@@ -1153,7 +1168,10 @@ def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False
                 for i in range(0, len(target)):
                     target[i].select = True
                 makeGroup(layer.info)
-                saveFile(origFileName + "_layer" + str(b) + "_" + layer.info)
+                print("saving to " + url)
+                saveFile(url)
+                #openFile(url)
+                gc.collect()
                 removeGroup(layer.info, allGroups=True)
                 dn()
     '''

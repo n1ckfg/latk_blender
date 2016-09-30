@@ -24,6 +24,8 @@ from bpy_extras.io_utils import unpack_list
 #from curve_simplify import *
 import random
 import bmesh
+import sys
+import gc
 
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
