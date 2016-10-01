@@ -252,6 +252,8 @@ def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False
     '''
     if (_caps==True):
         delete(capsObj)
+    if (_saveLayers==False):
+        saveFile(origFileName + "_meshed_all_layers")
 
 def getActiveFrameNum(layer=None):
     # assumes layer can have only one active frame

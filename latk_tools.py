@@ -180,11 +180,16 @@ def joinObjects(target=None):
         #bpy.context.scene.objects.unlink(strokesToJoin[sj-1])
     #~
     bpy.ops.object.join()
+    #~
     for i in range(1, len(target)):
         try:
-            removeObj(target[i].name)
+        	scn.objects.unlink(target[i])
         except:
-            pass
+        	pass
+        #try:
+            #removeObj(target[i].name)
+        #except:
+            #pass
         #try:
             #target[i].select = True
         #except:
