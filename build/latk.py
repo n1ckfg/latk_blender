@@ -1087,9 +1087,13 @@ def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False
                         #~
                         if (_vertexColors==True):
                             colorVertices(meshObj, strokeColor) 
-                        #~                                                   
-                        frameList.append(meshObj)    
+                        #~ 
+                        if (origParent != None):
+                            makeParent([meshObj, origParent])
+                        frameList.append(meshObj) 
                     else:
+                        if (origParent != None):
+                            makeParent([crv_ob, origParent])
                         frameList.append(crv_ob)    
                     # * * * * * * * * * * * * * *
                     # TODO fix parenting. Here's where the output gets parented to the layer's parent.
@@ -1098,7 +1102,8 @@ def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False
                         #layer.parent = origParent
                         #frameList[index].parent = layer.parent
                     if (origParent != None):
-                        makeParent([frameList[len(frameList)-1], origParent])
+                        # NOTE: this was old parenting scheme used for FoST. Glitched first frame.
+                        #makeParent([frameList[len(frameList)-1], origParent])
                         layer.parent = origParent
                     # * * * * * * * * * * * * * *
                     bpy.ops.object.select_all(action='DESELECT')
