@@ -1293,7 +1293,7 @@ def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False
                         goToFrame(l)
                         if (objs[j].hide == False):
                             parentMultiple([objs[j]], newParent, fixTransforms=False)
-                            #break
+                            break
                         #break
         saveFile(origFileName + "_ASSEMBLY")
     #~
