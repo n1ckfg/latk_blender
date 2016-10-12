@@ -31,6 +31,20 @@ import gc
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
 
+def importAppend(blendfile, section, obj, winDir=False):
+    # http://blender.stackexchange.com/questions/38060/how-to-link-append-with-a-python-script
+    #blendfile = "D:/path/to/the/repository.blend"
+    #section   = "\\Action\\"
+    #obj    = "myaction"
+    #~
+    url  = blendfile + section + obj
+    if (winDir==True):
+        section = blendfile + "\\" + section + "\\"
+    else:
+        section = blendfile + "/" + section + "/"
+    #~
+    bpy.ops.wm.append(filepath=url, filename=obj, directory=section)
+
 def deselect():
     bpy.ops.object.select_all(action='DESELECT')
 
@@ -50,10 +64,17 @@ def removeGroup(name="myGroup", allGroups=False):
             #if group.users == 1 and len(group.users_dupli_group) == 0: # EDIT
         group.user_clear()
         bpy.data.groups.remove(group) 
+        #~
+        #bpy.ops.group_unlink(group=group.name)
     else:
         for group in bpy.data.groups:
             group.user_clear()
-            bpy.data.groups.remove(group)            
+            bpy.data.groups.remove(group)   
+            #~
+            #bpy.ops.group_unlink(group=group.name)
+
+def importGroup(path, name, winDir=False):
+    importAppend(path, "Group", name, winDir)
 
 def removeObj(name="myObj", allObjs=False):
     if (allObjs==False):
@@ -986,6 +1007,8 @@ def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False
     if (_saveLayers==True):
         dn()
     origFileName = getFileName()
+    masterUrlList = []
+    masterGroupList = []
     #~
     totalStrokes = str(len(getAllStrokes()))
     totalCounter = 0
@@ -1205,8 +1228,14 @@ def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False
                 for i in range(0, len(target)):
                     target[i].select = True
                 makeGroup(layer.info)
+                #~
+                masterGroupList.append(layer.info)
+                #~
                 print("saving to " + url)
                 saveFile(url)
+                #~
+                masterUrlList.append(url)
+                #~
                 #openFile(url)
                 gc.collect()
                 removeGroup(layer.info, allGroups=True)
@@ -1228,6 +1257,12 @@ def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False
             except:
                 pass
     '''
+    if (_saveLayers==True):
+        openFile(origFileName)
+        for i in range(0, len(masterUrlList)):
+            importGroup(getFilePath() + masterUrlList[i] + ".blend", masterGroupList[i], winDir=True)
+        saveFile(origFileName + "_ASSEMBLY")
+    #~
     if (_caps==True):
         delete(capsObj)
     #if (_saveLayers==False):

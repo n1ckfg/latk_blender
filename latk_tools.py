@@ -1,3 +1,17 @@
+def importAppend(blendfile, section, obj, winDir=False):
+    # http://blender.stackexchange.com/questions/38060/how-to-link-append-with-a-python-script
+    #blendfile = "D:/path/to/the/repository.blend"
+    #section   = "\\Action\\"
+    #obj    = "myaction"
+    #~
+    url  = blendfile + section + obj
+    if (winDir==True):
+        section = blendfile + "\\" + section + "\\"
+    else:
+        section = blendfile + "/" + section + "/"
+    #~
+    bpy.ops.wm.append(filepath=url, filename=obj, directory=section)
+
 def deselect():
     bpy.ops.object.select_all(action='DESELECT')
 
@@ -17,10 +31,17 @@ def removeGroup(name="myGroup", allGroups=False):
             #if group.users == 1 and len(group.users_dupli_group) == 0: # EDIT
         group.user_clear()
         bpy.data.groups.remove(group) 
+        #~
+        #bpy.ops.group_unlink(group=group.name)
     else:
         for group in bpy.data.groups:
             group.user_clear()
-            bpy.data.groups.remove(group)            
+            bpy.data.groups.remove(group)   
+            #~
+            #bpy.ops.group_unlink(group=group.name)
+
+def importGroup(path, name, winDir=False):
+    importAppend(path, "Group", name, winDir)
 
 def removeObj(name="myObj", allObjs=False):
     if (allObjs==False):

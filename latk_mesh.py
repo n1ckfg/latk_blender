@@ -13,6 +13,8 @@ def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False
     if (_saveLayers==True):
         dn()
     origFileName = getFileName()
+    masterUrlList = []
+    masterGroupList = []
     #~
     totalStrokes = str(len(getAllStrokes()))
     totalCounter = 0
@@ -232,8 +234,14 @@ def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False
                 for i in range(0, len(target)):
                     target[i].select = True
                 makeGroup(layer.info)
+                #~
+                masterGroupList.append(layer.info)
+                #~
                 print("saving to " + url)
                 saveFile(url)
+                #~
+                masterUrlList.append(url)
+                #~
                 #openFile(url)
                 gc.collect()
                 removeGroup(layer.info, allGroups=True)
@@ -255,6 +263,12 @@ def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False
             except:
                 pass
     '''
+    if (_saveLayers==True):
+        openFile(origFileName)
+        for i in range(0, len(masterUrlList)):
+            importGroup(getFilePath() + masterUrlList[i] + ".blend", masterGroupList[i], winDir=True)
+        saveFile(origFileName + "_ASSEMBLY")
+    #~
     if (_caps==True):
         delete(capsObj)
     #if (_saveLayers==False):
