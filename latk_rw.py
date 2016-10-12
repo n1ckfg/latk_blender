@@ -13,6 +13,7 @@ def writeBrushStrokes(url=None, bake=True):
     useScaleAndOffset = True
     numPlaces = 7
     roundValues = True
+    palette = getActivePalette()
     #~
     sg = "{" + "\n"
     sg += "    \"creator\": \"blender\"," + "\n"
@@ -29,54 +30,58 @@ def writeBrushStrokes(url=None, bake=True):
             sb += "                        {" + "\n" # one frame
             #sb += "                           \"index\": " + str(h) + ",\n"
             sb += "                            \"strokes\": [" + "\n"
-            sb += "                                {" + "\n" # one stroke
-            for i in range(0, len(layer.frames[currentFrame].strokes)):
-                color = (0,0,0)
-                try:
-                    color = layer.frames[currentFrame].strokes[i].color.color
-                except:
-                    pass
-                sb += "                                    \"color\": [" + str(color[0]) + ", " + str(color[1]) + ", " + str(color[2])+ "]," + "\n"
-                sb += "                                    \"points\": [" + "\n"
-                for j in range(0, len(layer.frames[currentFrame].strokes[i].points)):
-                    x = 0.0
-                    y = 0.0
-                    z = 0.0
-                    #.
-                    point = layer.frames[currentFrame].strokes[i].points[j].co
-                    '''
-                    if(layer.parent):
-                        loc, rot, scale = layer.parent.matrix_world.decompose()
-                        point = Vector([(point.x * loc.x * scale.x, point.y * loc.y * scale.y, point.z * loc.z * scale.z])
-                    '''
-                    if useScaleAndOffset == True:
-                        x = (point.x * globalScale.x) + globalOffset.x
-                        y = (point.z * globalScale.y) + globalOffset.y
-                        z = (point.y * globalScale.z) + globalOffset.z
-                    else:
-                        x = point.x
-                        y = point.z
-                        z = point.y
-                    #~
-                    if roundValues == True:
-                        #sb += "                                       {\"x\":" + roundVal(x, numPlaces) + ", \"y\":" + roundVal(y, numPlaces) + ", \"z\":" + roundVal(z, numPlaces)
-                        sb += "                                        {\"co\": [" + roundVal(x, numPlaces) + ", " + roundVal(y, numPlaces) + ", " + roundVal(z, numPlaces) + "]"
-                    else:
-                        #sb += "                                       {\"x\":" + str(x) + ", \"y\":" + str(y) + ", \"z\":" + str(z)                    
-                        sb += "                                        {\"co\": [" + str(x) + ", " + str(y) + ", " + str(z) + "]"                  
-                    #~
-                    if j == len(layer.frames[currentFrame].strokes[i].points) - 1:
-                        sb += "}" + "\n"
-                        sb += "                                    ]" + "\n"
-                        if (i == len(layer.frames[currentFrame].strokes) - 1):
-                            sb += "                                }" + "\n" # last stroke for this frame
+            if (len(layer.frames[currentFrame].strokes) > 0):
+                sb += "                                {" + "\n" # one stroke
+                for i in range(0, len(layer.frames[currentFrame].strokes)):
+                    color = (0,0,0)
+                    try:
+                        #color = layer.frames[currentFrame].strokes[i].color.color
+                        color = palette.colors[layer.frames[currentFrame].strokes[i].colorname].color
+                    except:
+                        pass
+                    sb += "                                    \"color\": [" + str(color[0]) + ", " + str(color[1]) + ", " + str(color[2])+ "]," + "\n"
+                    sb += "                                    \"points\": [" + "\n"
+                    for j in range(0, len(layer.frames[currentFrame].strokes[i].points)):
+                        x = 0.0
+                        y = 0.0
+                        z = 0.0
+                        #.
+                        point = layer.frames[currentFrame].strokes[i].points[j].co
+                        '''
+                        if(layer.parent):
+                            loc, rot, scale = layer.parent.matrix_world.decompose()
+                            point = Vector([(point.x * loc.x * scale.x, point.y * loc.y * scale.y, point.z * loc.z * scale.z])
+                        '''
+                        if useScaleAndOffset == True:
+                            x = (point.x * globalScale.x) + globalOffset.x
+                            y = (point.z * globalScale.y) + globalOffset.y
+                            z = (point.y * globalScale.z) + globalOffset.z
                         else:
-                            sb += "                                }," + "\n" # end stroke
-                            sb += "                                {" + "\n" # begin stroke
-                    else:
-                        sb += "}," + "\n"
-                if i == len(layer.frames[currentFrame].strokes) - 1:
-                    sb += "                            ]" + "\n"
+                            x = point.x
+                            y = point.z
+                            z = point.y
+                        #~
+                        if roundValues == True:
+                            #sb += "                                       {\"x\":" + roundVal(x, numPlaces) + ", \"y\":" + roundVal(y, numPlaces) + ", \"z\":" + roundVal(z, numPlaces)
+                            sb += "                                        {\"co\": [" + roundVal(x, numPlaces) + ", " + roundVal(y, numPlaces) + ", " + roundVal(z, numPlaces) + "]"
+                        else:
+                            #sb += "                                       {\"x\":" + str(x) + ", \"y\":" + str(y) + ", \"z\":" + str(z)                    
+                            sb += "                                        {\"co\": [" + str(x) + ", " + str(y) + ", " + str(z) + "]"                  
+                        #~
+                        if j == len(layer.frames[currentFrame].strokes[i].points) - 1:
+                            sb += "}" + "\n"
+                            sb += "                                    ]" + "\n"
+                            if (i == len(layer.frames[currentFrame].strokes) - 1):
+                                sb += "                                }" + "\n" # last stroke for this frame
+                            else:
+                                sb += "                                }," + "\n" # end stroke
+                                sb += "                                {" + "\n" # begin stroke
+                        else:
+                            sb += "}," + "\n"
+                    if i == len(layer.frames[currentFrame].strokes) - 1:
+                        sb += "                            ]" + "\n"
+            else:
+                sb += "                            ]" + "\n"
             if h == len(layer.frames) - 1:
                 sb += "                        }" + "\n"
             else:

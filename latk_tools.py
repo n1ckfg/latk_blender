@@ -328,13 +328,14 @@ def bakeFrames():
     start = bpy.context.scene.frame_start
     end = bpy.context.scene.frame_end + 1
     scene = bpy.context.scene
-    gp = scene.grease_pencil
-    layer = gp.layers[0]    
-    for i in range(start, end):
-        try:
-            layer.frames.new(i)
-        except:
-            print ("Frame " + str(i) + " already exists.")
+    gp = getActiveGp()
+    #layer = gp.layers[0] 
+    for layer in gp.layers:   
+        for i in range(start, end):
+            try:
+                layer.frames.new(i)
+            except:
+                print ("Frame " + str(i) + " already exists.")
 
 def getStartEnd(pad=True):
     start = bpy.context.scene.frame_start
