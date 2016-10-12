@@ -1044,7 +1044,9 @@ def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False
             if (layer.parent):
                 origParent = layer.parent
                 layer.parent = None
-            masterParentList.append(origParent.name)
+                masterParentList.append(origParent.name)
+            else:
+                masterParentList.append(None)
             #~
             rangeStart = 0
             rangeEnd = len(layer.frames)
@@ -1280,20 +1282,24 @@ def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False
             importGroup(getFilePath() + masterUrlList[i] + ".blend", masterGroupList[i], winDir=True)
             group = bpy.data.groups[masterGroupList[i]]
             if (masterParentList[i] != None):
-                #deselect()
+                deselect()
                 newParent = matchName(masterParentList[i])[0]
                 objs = []
                 for j in range(0, len(group.objects)):
                     objs.append(group.objects[j])
-                #for j in range(0, len(objs)):
-                    #objs[j].select = True
+
                     #objs[j].parent = newParent
+                #goToFrame(0)
+                #refresh()
+                bpy.context.scene.objects.active = newParent
+                objs.append(newParent)
                 for j in range(0, len(objs)):
-                    for l in range(start, end):
-                        goToFrame(l)
-                        if (objs[j].hide == False):
-                            parentMultiple([objs[j]], newParent, fixTransforms=False)
-                            break
+                    objs[j].select = True
+                #parentMultiple(objs, newParent, fixTransforms=False)
+                makeParent(objs)
+                #for j in range(0, len(objs)):
+                    #for l in range(start, end):
+                    #parentMultiple([objs[j]], newParent, fixTransforms=False)
                         #break
         saveFile(origFileName + "_ASSEMBLY")
     #~
