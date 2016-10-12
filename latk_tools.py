@@ -186,7 +186,7 @@ def joinObjects(target=None):
     return target[len(target)-1]
 '''
 
-def joinObjects(target=None):
+def joinObjects(target=None, center=False):
     if not target:
         target = s()
     #~
@@ -217,8 +217,18 @@ def joinObjects(target=None):
             #pass
     #~
     gc.collect()
+    if (center==True):
+        centerOrigin(target[0])
     return target[0]
-    
+
+def centerOrigin(target=None):
+    if not target:
+        target = ss()
+    deselect()
+    target.select = True
+    bpy.ops.object.origin_set(type = 'ORIGIN_GEOMETRY')
+    deselect()
+
 def parentMultiple(target, root, fixTransforms=True):
     bpy.context.scene.objects.active = root # last object will be the parent
     bpy.ops.object.select_all(action='DESELECT')
