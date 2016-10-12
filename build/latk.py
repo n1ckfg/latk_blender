@@ -252,12 +252,15 @@ def joinObjects(target=None):
     gc.collect()
     return target[0]
     
-def parentMultiple(target, root):
+def parentMultiple(target, root, fixTransforms=True):
     bpy.context.scene.objects.active = root # last object will be the parent
     bpy.ops.object.select_all(action='DESELECT')
-    for obj in target:
-        obj.select = True
-    bpy.ops.object.parent_set(type='OBJECT', xmirror=False, keep_transform=True) 
+    for i in range(0, len(target)):
+        target[i].select = True
+    if (fixTransforms==True):
+        bpy.ops.object.parent_set(type='OBJECT', xmirror=False, keep_transform=False) 
+    else:
+        bpy.ops.object.parent_set(type='OBJECT', xmirror=False, keep_transform=True)
 
 def makeParent(target=None, unParent=False, fixTransforms=True):
     if not target:
@@ -1009,10 +1012,11 @@ def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False
     origFileName = getFileName()
     masterUrlList = []
     masterGroupList = []
+    masterParentList = []
     #~
     totalStrokes = str(len(getAllStrokes()))
     totalCounter = 0
-    origParent = None
+    #origParent = None
     start = bpy.context.scene.frame_start
     end = bpy.context.scene.frame_end + 1
     #~
@@ -1033,8 +1037,15 @@ def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False
     #~
     for b in range(0, len(pencil.layers)):
         layer = pencil.layers[b]
-        url = origFileName + "_layer" + str(b) + "_" + layer.info
+        origParent = None
+        #~
+        url = origFileName + "_layer" + str(b+1) + "_" + layer.info
         if (layer.lock==False):
+            if (layer.parent):
+                origParent = layer.parent
+                layer.parent = None
+            masterParentList.append(origParent.name)
+            #~
             rangeStart = 0
             rangeEnd = len(layer.frames)
             if (_singleFrame==True):
@@ -1057,9 +1068,12 @@ def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False
                     '''
                     # * * * * * * * * * * * * * *
                     # TODO fix parenting. Here's where the initial transform corrections go.
-                    if (layer.parent):
-                        origParent = layer.parent
-                        layer.parent = None
+                    # ***
+                    #if (layer.parent):
+                        #origParent = layer.parent
+                        #layer.parent = None
+                        # ***
+                        #~
                         #print(layer.parent.name)
                         #layer.parent = None
                         #for coord in coords:
@@ -1117,12 +1131,12 @@ def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False
                         if (_vertexColors==True):
                             colorVertices(meshObj, strokeColor) 
                         #~ 
-                        if (origParent != None):
-                            makeParent([meshObj, origParent])
+                        #if (origParent != None):
+                            #makeParent([meshObj, origParent])
                         frameList.append(meshObj) 
                     else:
-                        if (origParent != None):
-                            makeParent([crv_ob, origParent])
+                        #if (origParent != None):
+                            #makeParent([crv_ob, origParent])
                         frameList.append(crv_ob)    
                     # * * * * * * * * * * * * * *
                     # TODO fix parenting. Here's where the output gets parented to the layer's parent.
@@ -1131,8 +1145,7 @@ def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False
                         #layer.parent = origParent
                         #frameList[index].parent = layer.parent
                     if (origParent != None):
-                        # NOTE: this was old parenting scheme used for FoST. Glitched first frame.
-                        #makeParent([frameList[len(frameList)-1], origParent])
+                        makeParent([frameList[len(frameList)-1], origParent])
                         layer.parent = origParent
                     # * * * * * * * * * * * * * *
                     bpy.ops.object.select_all(action='DESELECT')
@@ -1146,6 +1159,7 @@ def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False
                     if (_animateFrames==True):
                         hideFrame(frameList[i], 0, True)
                         for j in range(start, end):
+                            #if (len(layer.frames) > 1):
                             if (j == layer.frames[c].frame_number):
                                 hideFrame(frameList[i], j, False)
                                 keyTransform(frameList[i], j)
@@ -1157,6 +1171,8 @@ def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False
                             elif (c != len(layer.frames)-1):
                                 hideFrame(frameList[i], j, True)
                             #~
+                            #else:
+                                #keyTransform(frameList[i], j)
                 #~
                 #~
                 if (_consolidateMtl==True):
@@ -1229,6 +1245,7 @@ def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False
                     target[i].select = True
                 makeGroup(layer.info)
                 #~
+                #makeParent(bpy.data.groups[layer.info], origParent)
                 masterGroupList.append(layer.info)
                 #~
                 print("saving to " + url)
@@ -1261,6 +1278,23 @@ def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False
         openFile(origFileName)
         for i in range(0, len(masterUrlList)):
             importGroup(getFilePath() + masterUrlList[i] + ".blend", masterGroupList[i], winDir=True)
+            group = bpy.data.groups[masterGroupList[i]]
+            if (masterParentList[i] != None):
+                #deselect()
+                newParent = matchName(masterParentList[i])[0]
+                objs = []
+                for j in range(0, len(group.objects)):
+                    objs.append(group.objects[j])
+                #for j in range(0, len(objs)):
+                    #objs[j].select = True
+                    #objs[j].parent = newParent
+                for j in range(0, len(objs)):
+                    for l in range(start, end):
+                        goToFrame(l)
+                        if (objs[j].hide == False):
+                            parentMultiple([objs[j]], newParent, fixTransforms=False)
+                            #break
+                        #break
         saveFile(origFileName + "_ASSEMBLY")
     #~
     if (_caps==True):

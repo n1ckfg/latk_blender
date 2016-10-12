@@ -219,12 +219,15 @@ def joinObjects(target=None):
     gc.collect()
     return target[0]
     
-def parentMultiple(target, root):
+def parentMultiple(target, root, fixTransforms=True):
     bpy.context.scene.objects.active = root # last object will be the parent
     bpy.ops.object.select_all(action='DESELECT')
-    for obj in target:
-        obj.select = True
-    bpy.ops.object.parent_set(type='OBJECT', xmirror=False, keep_transform=True) 
+    for i in range(0, len(target)):
+        target[i].select = True
+    if (fixTransforms==True):
+        bpy.ops.object.parent_set(type='OBJECT', xmirror=False, keep_transform=False) 
+    else:
+        bpy.ops.object.parent_set(type='OBJECT', xmirror=False, keep_transform=True)
 
 def makeParent(target=None, unParent=False, fixTransforms=True):
     if not target:
