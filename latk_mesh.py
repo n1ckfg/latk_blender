@@ -41,6 +41,7 @@ def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False
         #~
         url = origFileName + "_layer" + str(b+1) + "_" + layer.info
         if (layer.lock==False):
+            gpMeshCleanup(layer.info)
             if (layer.parent):
                 origParent = layer.parent
                 layer.parent = None
@@ -118,8 +119,7 @@ def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False
                         frameList.append(crv_ob)    
                     # * * * * * * * * * * * * * *
                     if (origParent != None):
-                        if (_saveLayers==False):
-                            makeParent([frameList[len(frameList)-1], origParent])
+                        makeParent([frameList[len(frameList)-1], origParent])
                         layer.parent = origParent
                     # * * * * * * * * * * * * * *
                     bpy.ops.object.select_all(action='DESELECT')
@@ -171,25 +171,39 @@ def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False
                 #~
                 masterUrlList.append(url)
                 #~
-                gc.collect()
-                removeGroup(layer.info, allGroups=True)
-                dn()
+                gpMeshCleanup(layer.info)
     #~
     if (_saveLayers==True):
         openFile(origFileName)
-        for ggg in range(0, len(masterUrlList)):
-            importGroup(getFilePath() + masterUrlList[ggg] + ".blend", masterGroupList[ggg], winDir=True)
-            group = bpy.data.groups[masterGroupList[ggg]]
-            if (masterParentList[ggg] != None):
-                newParent = matchName(masterParentList[ggg])[0]
-                #for j in range(0, len(group.objects)):
-                    #centerOrigin(group.objects[j])
-                parentMultiple(group.objects, newParent, fixTransforms=True)
+        for i in range(0, len(masterUrlList)):
+            importGroup(getFilePath() + masterUrlList[i] + ".blend", masterGroupList[i], winDir=True)
+            group = bpy.data.groups[masterGroupList[i]]
+            if (masterParentList[i] != None):
+                #deselect()
+                newParent = matchName(masterParentList[i])[0]
+                objs = []
+                for j in range(0, len(group.objects)):
+                    objs.append(group.objects[j])
+                #for j in range(0, len(objs)):
+                    #objs[j].select = True
+                    #objs[j].parent = newParent
+                for j in range(0, len(objs)):
+                    for l in range(start, end):
+                        goToFrame(l)
+                        if (objs[j].hide == False):
+                            parentMultiple([objs[j]], newParent, fixTransforms=False)
+                            #break
+                        #break
     #~
     saveFile(origFileName + "_ASSEMBLY")
     #~
     if (_caps==True):
         delete(capsObj)
+
+def gpMeshCleanup(target):
+    gc.collect()
+    removeGroup(target, allGroups=True)
+    dn()
 
 def getActiveFrameNum(layer=None):
     # assumes layer can have only one active frame
