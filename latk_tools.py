@@ -1,6 +1,6 @@
 def bakeParentToChild(start, end):
     # https://www.blender.org/api/blender_python_api_2_72_1/bpy.ops.nla.html
-    #bpy.ops.nla.bake(frame_start=1, frame_end=250, step=1, only_selected=True, visual_keying=True, clear_constraints=True, clear_parents=True, bake_types={'OBJECT'})    
+    #bpy.ops.nla.bake(frame_start=start, frame_end=end, step=1, only_selected=True, visual_keying=True, clear_constraints=True, clear_parents=True, bake_types={'OBJECT'})    
     bpy.ops.nla.bake(frame_start=start, frame_end=end, step=1, only_selected=True, visual_keying=True, clear_constraints=True, clear_parents=True, use_current_action=True, bake_types={'OBJECT'})    
 
 def importAppend(blendfile, section, obj, winDir=False):
