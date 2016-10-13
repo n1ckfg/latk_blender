@@ -124,11 +124,6 @@ def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False
                     bpy.ops.object.select_all(action='DESELECT')
                 #~
                 for i in range(0, len(frameList)):
-                    #~
-                    #deselect()
-                    #frameList[i].select=True
-                    #bakeParentToChild(start, end)
-                    #~
                     totalCounter += 1
                     print(frameList[i].name + " | " + str(totalCounter) + " of " + totalStrokes + " total")
                     if (_animateFrames==True):
@@ -145,6 +140,14 @@ def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False
                 if (_consolidateMtl==True):
                     consolidateMtl()
                 #~
+                deselect()
+                for i in range(0, len(frameList)):
+                    frameList[i].select = True
+                try:
+                    bakeParentToChild(start, end)
+                except:
+                    pass
+                #~
                 if (_joinMesh==True): #and _bakeMesh==True):
                     target = matchName("crv")
                     for i in range(start, end):
@@ -159,32 +162,18 @@ def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False
                             print("* joining " + str(len(strokesToJoin))  + " strokes")
                             joinObjects(strokesToJoin)
                             print("~ ~ ~ ~ ~ ~ ~ ~ ~")
-                    print("* baking keyframe animation")
-                    deselect()
-                    target[0].select=True
-                    bakeParentToChild(start, end)
-                    print("~ ~ ~ ~ ~ ~ ~ ~ ~")                    
             #~            
             if (_saveLayers==True):
                 deselect()
                 target = matchName("crv")
                 for tt in range(0, len(target)):
                     target[tt].select = True
-                #print("* begin bake...")
-                #print("~ ~ ~ ~ ~ ~ ~ ~ ~")
+                #print("* baking")
                 #bakeParentToChild(start, end)
-                #print("* ...end bake")
                 #print("~ ~ ~ ~ ~ ~ ~ ~ ~")
                 makeGroup(layer.info)
                 #~
                 masterGroupList.append(layer.info)
-                '''
-                group = bpy.data.groups[layer.info]
-                for gg in range(0, len(group.objects)):
-                    deselect()
-                    group.objects[gg].select=True
-                    bakeParentToChild(start, end)
-                '''
                 #~
                 print("saving to " + url)
                 saveFile(url)
