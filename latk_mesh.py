@@ -41,7 +41,6 @@ def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False
         #~
         url = origFileName + "_layer" + str(b+1) + "_" + layer.info
         if (layer.lock==False):
-            gpMeshCleanup(layer.info)
             if (layer.parent):
                 origParent = layer.parent
                 layer.parent = None
@@ -155,6 +154,7 @@ def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False
                             print("~ ~ ~ ~ ~ ~ ~ ~ ~")
                             print("* joining " + str(len(strokesToJoin))  + " strokes")
                             joinObjects(strokesToJoin)
+                            bakeParentToChild(start, end)
                             print("~ ~ ~ ~ ~ ~ ~ ~ ~")
             #~            
             if (_saveLayers==True):
@@ -177,6 +177,7 @@ def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False
         openFile(origFileName)
         for i in range(0, len(masterUrlList)):
             importGroup(getFilePath() + masterUrlList[i] + ".blend", masterGroupList[i], winDir=True)
+            '''
             group = bpy.data.groups[masterGroupList[i]]
             if (masterParentList[i] != None):
                 #deselect()
@@ -192,8 +193,7 @@ def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False
                         goToFrame(l)
                         if (objs[j].hide == False):
                             parentMultiple([objs[j]], newParent, fixTransforms=False)
-                            #break
-                        #break
+            '''
     #~
     saveFile(origFileName + "_ASSEMBLY")
     #~
