@@ -159,6 +159,7 @@ def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False
                             joinObjects(strokesToJoin)
                             print("~ ~ ~ ~ ~ ~ ~ ~ ~")
             #~            
+            '''
             deselect()
             target = matchName("crv")
             for tt in range(0, len(target)):
@@ -166,9 +167,9 @@ def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False
             print("* baking")
             bakeParentToChild(start, end)
             print("~ ~ ~ ~ ~ ~ ~ ~ ~")
+            '''
             #~
             if (_saveLayers==True):
-                '''
                 deselect()
                 target = matchName("crv")
                 for tt in range(0, len(target)):
@@ -176,7 +177,7 @@ def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False
                 print("* baking")
                 bakeParentToChild(start, end)
                 print("~ ~ ~ ~ ~ ~ ~ ~ ~")
-                '''
+                #~
                 makeGroup(layer.info)
                 #~
                 masterGroupList.append(layer.info)
