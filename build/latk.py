@@ -1201,15 +1201,15 @@ def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False
                 #~
                 gpMeshCleanup(layer.info)
     #~
+    if (_bakeMesh==True and _caps==True):
+        delete(capsObj)
+    #~
     if (_saveLayers==True):
         openFile(origFileName)
         for i in range(0, len(masterUrlList)):
             importGroup(getFilePath() + masterUrlList[i] + ".blend", masterGroupList[i], winDir=True)
-    #~
-    saveFile(origFileName + "_ASSEMBLY")
-    #~
-    if (_caps==True):
-        delete(capsObj)
+        #~
+        saveFile(origFileName + "_ASSEMBLY")
 
 def gpMeshCleanup(target):
     gc.collect()
