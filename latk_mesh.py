@@ -53,6 +53,14 @@ def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False
                 print("\n" + "*** gp layer " + str(b+1) + " of " + str(len(pencil.layers)) + " | gp frame " + str(c+1) + " of " + str(rangeEnd) + " ***")
                 frameList = []
                 for stroke in layer.frames[c].strokes:
+                    origParent = None
+                    if (layer.parent):
+                        origParent = layer.parent
+                        layer.parent = None
+                        masterParentList.append(origParent.name)
+                    else:
+                        masterParentList.append(None)
+                    #~
                     stroke_points = stroke.points
                     coords = [ (point.co.x, point.co.y, point.co.z) for point in stroke_points ]
                     '''
@@ -64,14 +72,6 @@ def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False
                     else:
                         coords = coordsOrig
                     '''
-                    #~
-                    origParent = None
-                    if (layer.parent):
-                        origParent = layer.parent
-                        layer.parent = None
-                        masterParentList.append(origParent.name)
-                    else:
-                        masterParentList.append(None)
                     #~
                     crv_ob = makeCurve(coords=coords, curveType=_curveType, resolution=_resolution, thickness=_thickness, bevelResolution=_bevelResolution, parent=layer.parent, capsObj=capsObj)
                     strokeColor = (0.5,0.5,0.5)
@@ -144,14 +144,6 @@ def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False
                 if (_consolidateMtl==True):
                     consolidateMtl()
                 #~
-                #deselect()
-                #for i in range(0, len(frameList)):
-                    #frameList[i].select = True
-                #try:
-                    #bakeParentToChild(start, end)
-                #except:
-                    #pass
-                #~
                 if (_joinMesh==True): #and _bakeMesh==True):
                     target = matchName("crv")
                     for i in range(start, end):
@@ -190,23 +182,6 @@ def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False
         openFile(origFileName)
         for i in range(0, len(masterUrlList)):
             importGroup(getFilePath() + masterUrlList[i] + ".blend", masterGroupList[i], winDir=True)
-            '''
-            group = bpy.data.groups[masterGroupList[i]]
-            if (masterParentList[i] != None):
-                #deselect()
-                newParent = matchName(masterParentList[i])[0]
-                objs = []
-                for j in range(0, len(group.objects)):
-                    objs.append(group.objects[j])
-                #for j in range(0, len(objs)):
-                    #objs[j].select = True
-                    #objs[j].parent = newParent
-                for j in range(0, len(objs)):
-                    for l in range(start, end):
-                        goToFrame(l)
-                        if (objs[j].hide == False):
-                            parentMultiple([objs[j]], newParent, fixTransforms=False)
-            '''
     #~
     saveFile(origFileName + "_ASSEMBLY")
     #~
