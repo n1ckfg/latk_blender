@@ -1010,6 +1010,11 @@ wb = writeBrushStrokes
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
 
+'''
+161013
+Tried an all-baking approach but it didn't seem to work. 
+Going back to parenting with baking for single objects, less elegant but seems to be OK
+'''
 # https://gist.github.com/pcote/1307658
 # http://blender.stackexchange.com/questions/7578/extruding-multiple-curves-at-once
 # http://blender.stackexchange.com/questions/24694/query-grease-pencil-strokes-from-python
@@ -1027,17 +1032,15 @@ def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False
     origFileName = getFileName()
     masterUrlList = []
     masterGroupList = []
+    masterParentList = []
     #~
     totalStrokes = str(len(getAllStrokes()))
     totalCounter = 0
-    origParent = None
     start = bpy.context.scene.frame_start
     end = bpy.context.scene.frame_end + 1
     #~
     pencil = getActiveGp()
     palette = getActivePalette()
-    #~
-    #strokesToJoinAll = []
     #~
     capsObj = None
     if (_caps==True):
@@ -1051,7 +1054,7 @@ def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False
     #~
     for b in range(0, len(pencil.layers)):
         layer = pencil.layers[b]
-        url = origFileName + "_layer" + str(b) + "_" + layer.info
+        url = origFileName + "_layer" + str(b+1) + "_" + layer.info
         if (layer.lock==False):
             rangeStart = 0
             rangeEnd = len(layer.frames)
@@ -1073,27 +1076,18 @@ def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False
                     else:
                         coords = coordsOrig
                     '''
-                    # * * * * * * * * * * * * * *
-                    # TODO fix parenting. Here's where the initial transform corrections go.
+                    #~
+                    origParent = None
                     if (layer.parent):
                         origParent = layer.parent
                         layer.parent = None
-                        #print(layer.parent.name)
-                        #layer.parent = None
-                        #for coord in coords:
-                            #coord = layer.matrix_inverse * Vector(coord)
-                    # * * * * * * * * * * * * * *                         
+                        masterParentList.append(origParent.name)
+                    else:
+                        masterParentList.append(None)
                     #~
                     crv_ob = makeCurve(coords=coords, curveType=_curveType, resolution=_resolution, thickness=_thickness, bevelResolution=_bevelResolution, parent=layer.parent, capsObj=capsObj)
                     strokeColor = (0.5,0.5,0.5)
                     if (_useColors==True):
-                        '''
-                        try:
-                            strokeColor = stroke.color.color
-                        except:
-                            strokeColor = (0.5,0.5,0.5)
-                            print ("error reading color")
-                        '''
                         strokeColor = palette.colors[stroke.colorname].color
                     mat = bpy.data.materials.new("new_mtl")
                     crv_ob.data.materials.append(mat)
@@ -1135,30 +1129,17 @@ def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False
                         if (_vertexColors==True):
                             colorVertices(meshObj, strokeColor) 
                         #~ 
-                        #if (origParent != None):
-                            #makeParent([meshObj, origParent])
                         frameList.append(meshObj) 
                     else:
-                        #if (origParent != None):
-                            #makeParent([crv_ob, origParent])
                         frameList.append(crv_ob)    
                     # * * * * * * * * * * * * * *
-                    # TODO fix parenting. Here's where the output gets parented to the layer's parent.
-                    #if (origParent != None):
-                        #index = len(frameList)-1
-                        #layer.parent = origParent
-                        #frameList[index].parent = layer.parent
                     if (origParent != None):
-                        # NOTE: this was old parenting scheme used for FoST. Glitched first frame.
                         makeParent([frameList[len(frameList)-1], origParent])
                         layer.parent = origParent
                     # * * * * * * * * * * * * * *
                     bpy.ops.object.select_all(action='DESELECT')
                 #~
                 for i in range(0, len(frameList)):
-                    #~
-                    #strokesToJoinAll.append(frameList[i])
-                    #~
                     totalCounter += 1
                     print(frameList[i].name + " | " + str(totalCounter) + " of " + totalStrokes + " total")
                     if (_animateFrames==True):
@@ -1167,23 +1148,23 @@ def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False
                             if (j == layer.frames[c].frame_number):
                                 hideFrame(frameList[i], j, False)
                                 keyTransform(frameList[i], j)
-                                #matchWithParent(frameList[i], layer.parent, j) 
                             elif (c < len(layer.frames)-1 and j > layer.frames[c].frame_number and j < layer.frames[c+1].frame_number):
                                 hideFrame(frameList[i], j, False)
-                                #keyTransform(frameList[i], j) 
-                            #else:
                             elif (c != len(layer.frames)-1):
                                 hideFrame(frameList[i], j, True)
-                            #~
-                #~
                 #~
                 if (_consolidateMtl==True):
                     consolidateMtl()
-                    #~
+                #~
+                #deselect()
+                #for i in range(0, len(frameList)):
+                    #frameList[i].select = True
+                #try:
+                    #bakeParentToChild(start, end)
+                #except:
+                    #pass
+                #~
                 if (_joinMesh==True): #and _bakeMesh==True):
-                    #print("* checking " + str(len(frameList)) + " strokes...")
-                    #strokesToJoin = []
-                    #try:
                     target = matchName("crv")
                     for i in range(start, end):
                         strokesToJoin = []
@@ -1197,58 +1178,15 @@ def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False
                             print("* joining " + str(len(strokesToJoin))  + " strokes")
                             joinObjects(strokesToJoin)
                             print("~ ~ ~ ~ ~ ~ ~ ~ ~")
-                    #if (_saveLayers==True):
-                        #saveFile(url)
-                        #openFile(url)
-                #except:
-                    #pass
-                #~                                
-                '''
-                if (_joinMesh==True):
-                    for j in range(start, end):
-                        if (_animateFrames==True):
-                            goToFrame(j)
-                        for pc in range(0, len(palette.colors)): 
-                            strokesToJoin = []
-                            #~
-                            for i in range(0, len(frameList)):
-                                try:
-                                    colorsMatch=False
-                                    numPlaces = 5
-                                    color1 = frameList[i].data.materials[0].diffuse_color
-                                    color2 = palette.colors[pc].color
-                                    #~
-                                    if (roundVal(color1[0], numPlaces) == roundVal(color2[0], numPlaces) and roundVal(color1[1], numPlaces) == roundVal(color2[1], numPlaces) and roundVal(color1[2], numPlaces) == roundVal(color2[2], numPlaces)):
-                                        colorsMatch = True
-                                        #print("match " + str(color1) + " " + str(color2))
-                                    #~    
-                                    if (frameList[i].hide == False and colorsMatch == True):
-                                        strokesToJoin.append(frameList[i])
-                                except:
-                                    pass
-                            #~
-                            for sj in range(1, len(strokesToJoin)):
-                                try:
-                                    bpy.ops.object.select_all(action='DESELECT')
-                                    bpy.context.scene.objects.active = strokesToJoin[sj]
-                                    #print("****** " + str(bpy.context.scene.objects.active))
-                                    #bpy.context.scene.objects.active.select = True
-                                    strokesToJoin[sj].select =True
-                                    strokesToJoin[sj-1].select =True
-                                    bpy.ops.object.join()
-                                    #bpy.context.scene.objects.unlink(strokesToJoin[sj-1])
-                                except:
-                                    pass
-                '''
+            #~            
             if (_saveLayers==True):
                 deselect()
                 target = matchName("crv")
-                for i in range(0, len(target)):
-                    target[i].select = True
-                if (len(target)==1):
-                    print("* baking single object")
-                    bakeParentToChild(start, end)
-                    print("~ ~ ~ ~ ~ ~ ~ ~ ~")
+                for tt in range(0, len(target)):
+                    target[tt].select = True
+                print("* baking")
+                bakeParentToChild(start, end)
+                print("~ ~ ~ ~ ~ ~ ~ ~ ~")
                 makeGroup(layer.info)
                 #~
                 masterGroupList.append(layer.info)
@@ -1258,38 +1196,39 @@ def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False
                 #~
                 masterUrlList.append(url)
                 #~
-                #openFile(url)
-                gc.collect()
-                removeGroup(layer.info, allGroups=True)
-                dn()
-    '''
+                gpMeshCleanup(layer.info)
     #~
-    if (_consolidateMtl==True):
-        consolidateMtl()
-    #~
-    if (_joinMesh==True and _bakeMesh==True):
-        for i in range(start,end):
-            goToFrame(i)
-            strokesToJoin = []
-            for j in range(0, len(strokesToJoinAll)):
-                if (strokesToJoinAll[j].hide==False):
-                    strokesToJoin.append(strokesToJoinAll[j])
-            try:
-                joinObjects(strokesToJoin)
-            except:
-                pass
-    '''
     if (_saveLayers==True):
         openFile(origFileName)
         for i in range(0, len(masterUrlList)):
             importGroup(getFilePath() + masterUrlList[i] + ".blend", masterGroupList[i], winDir=True)
+            '''
+            group = bpy.data.groups[masterGroupList[i]]
+            if (masterParentList[i] != None):
+                #deselect()
+                newParent = matchName(masterParentList[i])[0]
+                objs = []
+                for j in range(0, len(group.objects)):
+                    objs.append(group.objects[j])
+                #for j in range(0, len(objs)):
+                    #objs[j].select = True
+                    #objs[j].parent = newParent
+                for j in range(0, len(objs)):
+                    for l in range(start, end):
+                        goToFrame(l)
+                        if (objs[j].hide == False):
+                            parentMultiple([objs[j]], newParent, fixTransforms=False)
+            '''
     #~
     saveFile(origFileName + "_ASSEMBLY")
     #~
     if (_caps==True):
         delete(capsObj)
-    #if (_saveLayers==False):
-        #saveFile(origFileName + "_meshed_all_layers")
+
+def gpMeshCleanup(target):
+    gc.collect()
+    removeGroup(target, allGroups=True)
+    dn()
 
 def getActiveFrameNum(layer=None):
     # assumes layer can have only one active frame
@@ -1689,6 +1628,7 @@ def gpJoinTest():
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
+
 def testStroke():
     gp = getActiveGp()
     palette = getActivePalette()

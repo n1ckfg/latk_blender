@@ -42,17 +42,8 @@ def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False
     #~
     for b in range(0, len(pencil.layers)):
         layer = pencil.layers[b]
-        origParent = None
-        #~
         url = origFileName + "_layer" + str(b+1) + "_" + layer.info
         if (layer.lock==False):
-            if (layer.parent):
-                origParent = layer.parent
-                layer.parent = None
-                masterParentList.append(origParent.name)
-            else:
-                masterParentList.append(None)
-            #~
             rangeStart = 0
             rangeEnd = len(layer.frames)
             if (_singleFrame==True):
@@ -73,6 +64,14 @@ def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False
                     else:
                         coords = coordsOrig
                     '''
+                    #~
+                    origParent = None
+                    if (layer.parent):
+                        origParent = layer.parent
+                        layer.parent = None
+                        masterParentList.append(origParent.name)
+                    else:
+                        masterParentList.append(None)
                     #~
                     crv_ob = makeCurve(coords=coords, curveType=_curveType, resolution=_resolution, thickness=_thickness, bevelResolution=_bevelResolution, parent=layer.parent, capsObj=capsObj)
                     strokeColor = (0.5,0.5,0.5)
@@ -173,9 +172,9 @@ def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False
                 target = matchName("crv")
                 for tt in range(0, len(target)):
                     target[tt].select = True
-                #print("* baking")
-                #bakeParentToChild(start, end)
-                #print("~ ~ ~ ~ ~ ~ ~ ~ ~")
+                print("* baking")
+                bakeParentToChild(start, end)
+                print("~ ~ ~ ~ ~ ~ ~ ~ ~")
                 makeGroup(layer.info)
                 #~
                 masterGroupList.append(layer.info)
