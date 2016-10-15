@@ -1024,6 +1024,9 @@ Going back to parenting with baking for single objects, less elegant but seems t
 # http://blender.stackexchange.com/questions/6750/poly-bezier-curve-from-a-list-of-coordinates
 # http://blender.stackexchange.com/questions/7047/apply-transforms-to-linked-objects
 
+def assembleMesh():
+    pass
+
 def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False, _decimate = 0.1, _curveType="nurbs", _useColors=True, _saveLayers=False, _singleFrame=False, _vertexColors=False, _animateFrames=True, _solidify=False, _subd=0, _remesh=False, _consolidateMtl=True, _caps=False, _joinMesh=False):
     if (_joinMesh==True or _remesh==True):
         _bakeMesh=True
@@ -1203,7 +1206,6 @@ def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False
     #~
     if (_bakeMesh==True and _caps==True and _saveLayers==False):
         delete(capsObj)
-
     #~
     if (_saveLayers==True):
         openFile(origFileName)
