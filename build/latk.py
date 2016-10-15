@@ -1025,13 +1025,12 @@ Going back to parenting with baking for single objects, less elegant but seems t
 # http://blender.stackexchange.com/questions/7047/apply-transforms-to-linked-objects
 
 def assembleMesh():
-    dn()
     origFileName = getFileName()
     masterUrlList = []
     masterGroupList = []
     #~
-    start = bpy.context.scene.frame_start
-    end = bpy.context.scene.frame_end + 1
+    #start = bpy.context.scene.frame_start
+    #end = bpy.context.scene.frame_end + 1
     #~
     pencil = getActiveGp()
     palette = getActivePalette()
@@ -1042,7 +1041,7 @@ def assembleMesh():
         masterGroupList.append(layer.info)
         masterUrlList.append(url)
     #~
-    openFile(origFileName)
+    #openFile(origFileName)
     readyToSave = True
     for i in range(0, len(masterUrlList)):
         try:
