@@ -1053,8 +1053,9 @@ def assembleMesh():
             print("Error importing group " + masterGroupList[i] + ", " + str(i+1) + " of " + str(len(masterGroupList)))
     if (readyToSave==True):
         saveFile(origFileName + "_ASSEMBLY")
+        print(origFileName + "_ASSEMBLY.blend" + " saved.")
     else:
-        print(origFileName + "_ASSEMBLY" + " was not saved because some groups were missing.")
+        print(origFileName + "_ASSEMBLY.blend" + " was not saved because some groups were missing.")
 
 def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False, _decimate = 0.1, _curveType="nurbs", _useColors=True, _saveLayers=False, _singleFrame=False, _vertexColors=False, _animateFrames=True, _solidify=False, _subd=0, _remesh=False, _consolidateMtl=True, _caps=False, _joinMesh=False):
     if (_joinMesh==True or _remesh==True):
@@ -1234,7 +1235,10 @@ def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False
                 gpMeshCleanup(layer.info)
     #~
     if (_bakeMesh==True and _caps==True and _saveLayers==False):
-        delete(capsObj)
+        try:
+            delete(capsObj)
+        except:
+            print("Error deleting caps object.")    
     #~
     if (_saveLayers==True):
         openFile(origFileName)
