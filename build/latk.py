@@ -1201,8 +1201,9 @@ def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False
                 #~
                 gpMeshCleanup(layer.info)
     #~
-    if (_bakeMesh==True and _caps==True):
+    if (_bakeMesh==True and _caps==True and _saveLayers==False):
         delete(capsObj)
+
     #~
     if (_saveLayers==True):
         openFile(origFileName)
