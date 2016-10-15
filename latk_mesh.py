@@ -13,7 +13,36 @@ Going back to parenting with baking for single objects, less elegant but seems t
 # http://blender.stackexchange.com/questions/7047/apply-transforms-to-linked-objects
 
 def assembleMesh():
-    pass
+    origFileName = getFileName()
+    masterUrlList = []
+    masterGroupList = []
+    #~
+    #start = bpy.context.scene.frame_start
+    #end = bpy.context.scene.frame_end + 1
+    #~
+    pencil = getActiveGp()
+    palette = getActivePalette()
+    #~
+    for b in range(0, len(pencil.layers)):
+        layer = pencil.layers[b]
+        url = origFileName + "_layer" + str(b+1) + "_" + layer.info
+        masterGroupList.append(layer.info)
+        masterUrlList.append(url)
+    #~
+    #openFile(origFileName)
+    readyToSave = True
+    for i in range(0, len(masterUrlList)):
+        try:
+            importGroup(getFilePath() + masterUrlList[i] + ".blend", masterGroupList[i], winDir=True)
+            print("Imported group " + masterGroupList[i] + ", " + str(i+1) + " of " + str(len(masterGroupList)))
+        except:
+            readyToSave = False
+            print("Error importing group " + masterGroupList[i] + ", " + str(i+1) + " of " + str(len(masterGroupList)))
+    if (readyToSave==True):
+        saveFile(origFileName + "_ASSEMBLY")
+        print(origFileName + "_ASSEMBLY.blend" + " saved.")
+    else:
+        print(origFileName + "_ASSEMBLY.blend" + " was not saved because some groups were missing.")
 
 def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False, _decimate = 0.1, _curveType="nurbs", _useColors=True, _saveLayers=False, _singleFrame=False, _vertexColors=False, _animateFrames=True, _solidify=False, _subd=0, _remesh=False, _consolidateMtl=True, _caps=False, _joinMesh=False):
     if (_joinMesh==True or _remesh==True):
