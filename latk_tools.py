@@ -29,6 +29,12 @@ def makeGroup(name="myGroup", newGroup=True):
     else:
         bpy.ops.group_link(group=name)
 
+def deleteGroup(name="myGroup"):
+    group = bpy.data.groups[name]
+    for obj in group.objects:
+        delete(obj)
+    removeGroup(name)
+
 def removeGroup(name="myGroup", allGroups=False):
     if (allGroups==False):
         group = bpy.data.groups[name]
