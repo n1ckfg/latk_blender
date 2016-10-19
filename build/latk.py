@@ -1554,7 +1554,9 @@ def createMesh(name, origin, verts, faces):
     bpy.ops.object.mode_set(mode='OBJECT')
     return ob
 
-def exporter():
+def exporter(name="test", url=None, winDir=False):
+    if not url:
+        url = getFilePath()
     for j in range(bpy.context.scene.frame_start, bpy.context.scene.frame_end + 1):
         bpy.ops.object.select_all(action='DESELECT')
         goToFrame(j)
@@ -1562,7 +1564,11 @@ def exporter():
             if (bpy.data.objects[i].hide == False):
                 bpy.data.objects[i].select = True
         #bpy.context.scene.update()
-        bpy.ops.export_scene.obj(filepath="/Users/nick/Desktop/test" + str(j) + ".obj", use_selection=True)
+        if (winDir==True):
+            url += "\\"
+        else:
+            url += "/"
+        bpy.ops.export_scene.obj(filepath=url + name + "_" + str(j) + ".obj", use_selection=True)
 
 # crashes        
 def makeGpCurve(_type="PATH"):
