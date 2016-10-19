@@ -35,6 +35,46 @@ def deleteGroup(name="myGroup"):
         delete(obj)
     removeGroup(name)
 
+def deleteGroups(name=["myGroup"]):
+    for n in name:
+        deleteGroup(n)
+
+def preserveGroups(name=["myGroup"]):
+    allNames = []
+    for group in bpy.data.groups:
+        allNames.append(group.name)
+    for aN in allNames:
+        doDelete = True
+        for n in name:
+            if (aN == n):
+                doDelete = False
+        if (doDelete == True):
+            deleteGroup(aN)
+
+def preserveGroupName(name="myGroup"):
+    allNames = []
+    for group in bpy.data.groups:
+        allNames.append(group.name)
+    for aN in allNames:
+        doDelete = True
+        for n in name:
+            if re.match(r'^' + n + '', aN):
+                doDelete = False
+        if (doDelete == True):
+            deleteGroup(aN)
+
+def deleteGroupName(name="myGroup"):
+    allNames = []
+    for group in bpy.data.groups:
+        allNames.append(group.name)
+    for aN in allNames:
+        doDelete = False
+        for n in name:
+            if re.match(r'^' + n + '', aN):
+                doDelete = True
+        if (doDelete == True):
+            deleteGroup(aN)
+
 def removeGroup(name="myGroup", allGroups=False):
     if (allGroups==False):
         group = bpy.data.groups[name]
