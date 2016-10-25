@@ -1065,6 +1065,32 @@ def readBrushStrokes(url=None):
 
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
+
+def readBrushObj():
+    #readFilePath = "C:\\Users\\Public\\Temp\\"
+    readFilePath = "/Users/nick/Projects/LightningArtist/LightningArtistJS/animations/"
+    readFileName = "new_test.json"
+    #~
+    gp = getActiveGp()
+    '''
+    gp = bpy.data.grease_pencil.new("My GPencil")
+    scene = bpy.context.scene
+    scene.grease_pencil = gp
+    '''
+    #~
+    globalScale = Vector((10, 10, 10))
+    globalOffset = Vector((0, 0, 0))
+    useScaleAndOffset = True
+    #~
+    if (url==None):
+        url = readFilePath + readFileName
+    with open(url) as data_file: 
+        data = data_file.readlines()
+    print(data)
+
+# ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
+# ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
+
 # shortcuts
 
 def rbUnity(fileName):
