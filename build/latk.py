@@ -1088,16 +1088,14 @@ def readVrDoodler(url=None, color=(0.5, 0.5, 0.5)):
         data = data_file.readlines()
     strokes = []
     points = []
-    firstRun = True
     for line in data:
-        if str(line).startswith("o line") == True:
-            if (firstRun == False):
+        if str(line).startswith("l") == True:
+            if (len(points) > 0):
                 strokes.append(points)
-            points = []
-            firstRun = False
+                points = []
         elif str(line).startswith("v") == True:
             pointRaw = line.split()
-            point = (float(pointRaw[1]), float(pointRaw[2]), float(pointRaw[3]))
+            point = (-1 * float(pointRaw[1]), float(pointRaw[2]), float(pointRaw[3]))
             points.append(point)
     print("Read " + str(len(strokes)) + " strokes.")
     #~
