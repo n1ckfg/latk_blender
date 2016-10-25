@@ -1066,10 +1066,10 @@ def readBrushStrokes(url=None):
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 
-def readBrushObj():
+def readVrDoodler(url=None, color=(0.5, 0.5, 0.5)):
     #readFilePath = "C:\\Users\\Public\\Temp\\"
     readFilePath = "/Users/nick/Projects/LightningArtist/LightningArtistJS/animations/"
-    readFileName = "new_test.json"
+    readFileName = "new_test.obj"
     #~
     gp = getActiveGp()
     '''
@@ -1086,7 +1086,43 @@ def readBrushObj():
         url = readFilePath + readFileName
     with open(url) as data_file: 
         data = data_file.readlines()
-    print(data)
+    strokes = []
+    points = []
+    firstRun = True
+    for line in data:
+        if str(line).startswith("o line") == True:
+            if (firstRun == False):
+                strokes.append(points)
+            points = []
+            firstRun = False
+        elif str(line).startswith("v") == True:
+            pointRaw = line.split()
+            point = (float(pointRaw[1]), float(pointRaw[2]), float(pointRaw[3]))
+            points.append(point)
+    print("Read " + str(len(strokes)) + " strokes.")
+    #~
+    layer = gp.layers.new("VR_Doodler_layer", set_active=True)
+    palette = getActivePalette()  
+    frame = layer.frames.new(0)
+    #~
+    for j in range(0, len(strokes)):
+        createColor(color)
+        stroke = frame.strokes.new(getActiveColor().name)
+        stroke.draw_mode = "3DSPACE"
+        stroke.points.add(len(strokes[j]))
+        for l in range(0, len(strokes[j])):
+            x = 0.0
+            y = 0.0
+            z = 0.0
+            if useScaleAndOffset == True:
+                x = (strokes[j][l][0] * globalScale.x) + globalOffset.x
+                y = (strokes[j][l][2] * globalScale.y) + globalOffset.y
+                z = (strokes[j][l][1] * globalScale.z) + globalOffset.z
+            else:
+                x = strokes[j][l][0]
+                y = strokes[j][l][2]
+                z = strokes[j][l][1]
+            createPoint(stroke, l, (x, y, z))    
 
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
