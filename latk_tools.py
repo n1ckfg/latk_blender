@@ -198,7 +198,7 @@ def distributeStrokesAlt(step=1):
         if (counter > len(strokes)-1):
             counter = len(strokes)-1
 
-def distributeStrokes(step=1, pointStep=10, minPointStep=2):
+def distributeStrokes(pointStep=10, step=1, minPointStep=2):
     start, end = getStartEnd()
     palette = getActivePalette()
     strokes = getAllStrokes()
@@ -214,14 +214,15 @@ def distributeStrokes(step=1, pointStep=10, minPointStep=2):
             pass
         layer.active_frame = layer.frames[bpy.context.scene.frame_current]
         #~
-        #if (pointStep < minPointStep):
-        copyFrame(0, i+1+extraFrameCounter, strokeCounter+1)
-        #else:
-            #copyFrame(0, i+1+extraFrameCounter, strokeCounter)
-        lastGoodLoc = bpy.context.scene.frame_current
+        if (pointStep < minPointStep):
+            copyFrame(0, i+1+extraFrameCounter, strokeCounter+1)
+        else:
+            copyFrame(0, i+1+extraFrameCounter, strokeCounter)
+        #lastGoodLoc = bpy.context.scene.frame_current
         #print("* * * main frame at: " + str(lastGoodLoc) + " * * *")
         #~
         if (pointStep >= minPointStep):
+        #else:
             pointsCounter = 0
             stroke = strokes[strokeCounter]
             points = stroke.points
@@ -229,7 +230,7 @@ def distributeStrokes(step=1, pointStep=10, minPointStep=2):
             #print("points: " + str(len(points)) + "   subframes: " + str(subFrames))
             for j in range(0, subFrames):
                 extraFrameCounter += 1
-                inLoc = lastGoodLoc #strokeCounter+1+extraFrameCounterLast
+                #inLoc = lastGoodLoc #strokeCounter+1+extraFrameCounterLast
                 outLoc = i+1+extraFrameCounter
                 goToFrame(outLoc)
                 try:
@@ -241,20 +242,32 @@ def distributeStrokes(step=1, pointStep=10, minPointStep=2):
                 #print("-> copying " + str(inLoc) + " to " + str(outLoc))
                 #~ * * * * * * *
                 #copyFrame(0, outLoc, strokeCounter+1)#, j * pointStep)
-                copyFrame(0, outLoc, strokeCounter+1)
+                #copyFrame(0, outLoc, strokeCounter)
+                for l in range(0, strokeCounter):
+                    createStroke(layer.frames[0].strokes[l].points, layer.frames[0].strokes[l].color.color, layer.frames[outLoc])#newStroke.color.color)
                 #~ * * * * * * *
                 #refresh()
                 newStroke = layer.frames[0].strokes[strokeCounter]
                 newPoints = []
                 for l in range(0, len(newStroke.points)):
-                    if (l > j * pointStep):
+                    if (l < j * pointStep):
                         newPoints.append(newStroke.points[l])  
                 #~                                         
-                createStroke(newPoints, (1,0,0), layer.frames[outLoc])#newStroke.color.color)
+                #createStroke(newPoints, (1,0,0), layer.frames[outLoc])
+                createStroke(newPoints, newStroke.color.color, layer.frames[outLoc])
         #~
         strokeCounter += step
         if (strokeCounter > len(strokes)-1):
             strokeCounter = len(strokes)-1
+    #~
+    lastLoc = len(strokes)+1+extraFrameCounter
+    goToFrame(lastLoc)
+    try:
+        layer.frames.new(bpy.context.scene.frame_current)
+    except:
+        pass
+    layer.active_frame = layer.frames[bpy.context.scene.frame_current]
+    copyFrame(0, lastLoc)
 
 ds = distributeStrokes
 
