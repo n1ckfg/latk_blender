@@ -223,7 +223,7 @@ def deleteUnparentedCurves(name="crv"):
     for i in range(0, len(toDelete)):
         delete(toDelete[i])
 
-def distributeStrokes(step=1):
+def distributeStrokesAlt(step=1):
     palette = getActivePalette()
     strokes = getAllStrokes()
     layer = getActiveLayer()
@@ -251,6 +251,65 @@ def distributeStrokes(step=1):
         counter += step
         if (counter > len(strokes)-1):
             counter = len(strokes)-1
+
+def distributeStrokes(step=1, pointStep=10):
+    start, end = getStartEnd()
+    palette = getActivePalette()
+    strokes = getAllStrokes()
+    layer = getActiveLayer()
+    strokeCounter = 0
+    extraFrameCounter = 0
+    #~
+    for i in range(0, len(strokes)):
+        goToFrame(i+1+extraFrameCounter)
+        try:
+            layer.frames.new(bpy.context.scene.frame_current)
+        except:
+            pass
+        layer.active_frame = layer.frames[bpy.context.scene.frame_current]
+        #~
+        copyFrame(0, i+1+extraFrameCounter, strokeCounter+1)
+        lastGoodLoc = bpy.context.scene.frame_current
+        #print("* * * main frame at: " + str(lastGoodLoc) + " * * *")
+        #~
+        if (pointStep >= 2):
+            pointsCounter = 0
+            stroke = strokes[strokeCounter]
+            points = stroke.points
+            subFrames = roundValInt(len(points)/pointStep)
+            #print("points: " + str(len(points)) + "   subframes: " + str(subFrames))
+            for j in range(0, subFrames):
+                extraFrameCounter += 1
+                inLoc = lastGoodLoc #strokeCounter+1+extraFrameCounterLast
+                outLoc = i+1+extraFrameCounter
+                goToFrame(outLoc)
+                try:
+                    layer.frames.new(bpy.context.scene.frame_current)
+                except:
+                    pass
+                layer.active_frame = layer.frames[bpy.context.scene.frame_current]
+                #~
+                #print("-> copying " + str(inLoc) + " to " + str(outLoc))
+                #~ * * * * * * *
+                copyFrame(0, outLoc, strokeCounter+1)#, j * pointStep)
+                #~ * * * * * * *
+                #goToFrame(outLoc)
+                bpy.context.scene.frame_set(outLoc)
+                layer.active_frame = layer.frames[outLoc]
+                newStroke = layer.frames[outLoc].strokes[strokeCounter]
+                newPoints = newStroke.points
+                print("stroke: " + str(strokeCounter) + "   points: " + str(j * pointStep) + " of " + str(len(newPoints)))
+                deselect()
+                for l in range(0, len(newPoints)):
+                    if (l > j * pointStep):
+                        newPoints[l].select = True
+                #deleteSelected("points")
+        #~
+        strokeCounter += step
+        if (strokeCounter > len(strokes)-1):
+            strokeCounter = len(strokes)-1
+
+ds = distributeStrokes
 
 def writeOnStrokes(step=1):
     gp = getActiveGp()
@@ -456,6 +515,10 @@ def roundVal(a, b):
     formatter = "{0:." + str(b) + "f}"
     return formatter.format(a)
 
+def roundValInt(a):
+    formatter = "{0:." + str(0) + "f}"
+    return int(formatter.format(a))
+
 def frame_to_time(frame_number):
     scene = bpy.context.scene
     fps = scene.render.fps
@@ -510,6 +573,31 @@ def copyFrame(source, dest, limit=None):
         strokeDest.points.add(len(strokeSource.points))
         for l in range(0, len(strokeSource.points)):
             strokeDest.points[l].co = strokeSource.points[l].co
+
+def copyFramePoints(source, dest, limit=None, pointsPercentage=1):
+    scene = bpy.context.scene
+    layer = getActiveLayer()  
+    #.
+    frameSource = layer.frames[source]
+    frameDest = layer.frames[dest]
+    if not limit:
+        limit = len(frameSource.strokes)
+    for j in range(0, limit):
+        scene.frame_set(source)
+        strokeSource = frameSource.strokes[j]
+        scene.frame_set(dest)
+        strokeDest = frameDest.strokes.new(strokeSource.color.name)
+        # either of ('SCREEN', '3DSPACE', '2DSPACE', '2DIMAGE')
+        strokeDest.draw_mode = '3DSPACE'
+        if (j>=limit-1):
+            newVal = roundValInt(len(strokeSource.points) * pointsPercentage)
+            strokeDest.points.add(newVal)
+            for l in range(0, newVal):
+                strokeDest.points[l].co = strokeSource.points[l].co
+        else:
+            strokeDest.points.add(len(strokeSource.points))
+            for l in range(0, len(strokeSource.points)):
+                strokeDest.points[l].co = strokeSource.points[l].co
 
 def createStrokes(strokes, palette=None):
     if (palette == None):
