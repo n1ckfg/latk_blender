@@ -1184,65 +1184,6 @@ def readBrushStrokes(url=None):
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 
-def readVrDoodler(url=None, color=(0.5, 0.5, 0.5)):
-    #readFilePath = "C:\\Users\\Public\\Temp\\"
-    readFilePath = "/Users/nick/Projects/LightningArtist/LightningArtistJS/animations/"
-    readFileName = "new_test.obj"
-    #~
-    gp = getActiveGp()
-    '''
-    gp = bpy.data.grease_pencil.new("My GPencil")
-    scene = bpy.context.scene
-    scene.grease_pencil = gp
-    '''
-    #~
-    globalScale = Vector((10, 10, 10))
-    globalOffset = Vector((0, 0, 0))
-    useScaleAndOffset = True
-    #~
-    if (url==None):
-        url = readFilePath + readFileName
-    with open(url) as data_file: 
-        data = data_file.readlines()
-    strokes = []
-    points = []
-    for line in data:
-        if str(line).startswith("l") == True:
-            if (len(points) > 0):
-                strokes.append(points)
-                points = []
-        elif str(line).startswith("v") == True:
-            pointRaw = line.split()
-            point = (-1 * float(pointRaw[1]), float(pointRaw[2]), float(pointRaw[3]))
-            points.append(point)
-    print("Read " + str(len(strokes)) + " strokes.")
-    #~
-    layer = gp.layers.new("VR_Doodler_layer", set_active=True)
-    palette = getActivePalette()  
-    frame = layer.frames.new(0)
-    #~
-    for j in range(0, len(strokes)):
-        createColor(color)
-        stroke = frame.strokes.new(getActiveColor().name)
-        stroke.draw_mode = "3DSPACE"
-        stroke.points.add(len(strokes[j]))
-        for l in range(0, len(strokes[j])):
-            x = 0.0
-            y = 0.0
-            z = 0.0
-            if useScaleAndOffset == True:
-                x = (strokes[j][l][0] * globalScale.x) + globalOffset.x
-                y = (strokes[j][l][2] * globalScale.y) + globalOffset.y
-                z = (strokes[j][l][1] * globalScale.z) + globalOffset.z
-            else:
-                x = strokes[j][l][0]
-                y = strokes[j][l][2]
-                z = strokes[j][l][1]
-            createPoint(stroke, l, (x, y, z))    
-
-# ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
-# ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
-
 # shortcuts
 
 def rbUnity(fileName):
