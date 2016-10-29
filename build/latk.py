@@ -517,6 +517,12 @@ def matchName(_name):
             returns.append(obj)
     return returns
 
+def selectName(_name="crv"):
+    target = matchName(_name)
+    deselect()
+    for obj in target:
+        obj.select = True
+
 def deleteName(_name="crv"):
     target = matchName(_name)
     for obj in target:
