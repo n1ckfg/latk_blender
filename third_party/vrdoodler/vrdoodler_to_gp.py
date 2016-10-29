@@ -53,27 +53,40 @@ def checkForZero(v):
 
 def main():
     import argparse
-    parser = argparse.ArgumentParser(description="View information about a .tilt")
-    parser.add_argument('--strokes', action='store_true', help="Dump the sketch strokes")
-    parser.add_argument('--metadata', action='store_true', help="Dump the metadata")
+    parser = argparse.ArgumentParser(description="Convert a VRDoodler .obj")
+    #parser.add_argument('--strokes', action='store_true', help="Dump the strokes")
+    #parser.add_argument('--metadata', action='store_true', help="Dump the metadata")
     parser.add_argument('files', type=str, nargs='+', help="Files to examine")
 
     args = parser.parse_args()
-    if not (args.strokes or args.metadata):
-        print "You should pass at least one of --strokes or --metadata"
+    #if not (args.strokes or args.metadata):
+        #print "You should pass at least one of --strokes or --metadata"
 
     for filename in args.files:
-        t = Tilt(filename)
-        if args.strokes:
-            dump_sketch(t.sketch, filename)
-        if args.metadata:
-            pprint.pprint(t.metadata)
+        save_gp(filename)
 
-    globalScale = (-0.01, 0.01, 0.01)
+def save_gp(filename):
+    globalScale = (10, 10, 10)
     globalOffset = (0, 0, 0)
     useScaleAndOffset = True
     numPlaces = 7
     roundValues = True
+
+    with open(filename) as data_file: 
+        data = data_file.readlines()
+    strokes = []
+    points = []
+    for line in data:
+        if str(line).startswith("l") == True:
+            if (len(points) > 0):
+                strokes.append(points)
+                points = []
+        elif str(line).startswith("v") == True:
+            pointRaw = line.split()
+            point = (-1 * float(pointRaw[1]), float(pointRaw[2]), float(pointRaw[3]))
+            points.append(point)
+    print("Read " + str(len(strokes)) + " strokes.")
+
     # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
     sg = "{" + "\n"
     sg += "    \"creator\": \"vrdoodler\"," + "\n"
@@ -91,25 +104,21 @@ def main():
             #sb += "                           \"index\": " + str(h) + ",\n"
             sb += "                            \"strokes\": [" + "\n"
             sb += "                                {" + "\n" # one stroke
-            for i in range(0, len(sketch.strokes)):
-            	stroke = sketch.strokes[i]
+            for i in range(0, len(strokes)):
+            	stroke = strokes[i]
 
-                color = (0,0,0)
-                try:
-                    color = (stroke.brush_color[0], stroke.brush_color[1], stroke.brush_color[2])
-                except:
-                    pass
+                color = (0.5,0.5,0.5)
                 if roundValues == True:
                 	sb += "                                    \"color\": [" + str(roundVal(color[0], numPlaces)) + ", " + str(roundVal(color[1], numPlaces)) + ", " + str(roundVal(color[2], numPlaces)) + "]," + "\n"
                 else:
                 	sb += "                                    \"color\": [" + str(color[0]) + ", " + str(color[1]) + ", " + str(color[2]) + "]," + "\n"
                 sb += "                                    \"points\": [" + "\n"
-                for j in range(0, len(stroke.controlpoints)):
+                for j in range(0, len(stroke)):
                     x = 0.0
                     y = 0.0
                     z = 0.0
                     #~
-                    point = stroke.controlpoints[j].position
+                    point = stroke[j]
 
                     if useScaleAndOffset == True:
                         x = (point[0] * globalScale[0]) + globalOffset[0]
@@ -125,17 +134,17 @@ def main():
                     else:
                         sb += "                                        {\"co\": [" + str(x) + ", " + str(y) + ", " + str(z) + "]"                  
                     #~
-                    if j == len(stroke.controlpoints) - 1:
+                    if j == len(stroke) - 1:
                         sb += "}" + "\n"
                         sb += "                                    ]" + "\n"
-                        if (i == len(sketch.strokes) - 1):
+                        if (i == len(strokes) - 1):
                             sb += "                                }" + "\n" # last stroke for this frame
                         else:
                             sb += "                                }," + "\n" # end stroke
                             sb += "                                {" + "\n" # begin stroke
                     else:
                         sb += "}," + "\n"
-                if i == len(sketch.strokes) - 1:
+                if i == len(strokes) - 1:
                     sb += "                            ]" + "\n"
             #if h == len(layer.frames) - 1:
             sb += "                        }" + "\n"
