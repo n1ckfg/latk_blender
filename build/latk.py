@@ -77,6 +77,11 @@ def deselect():
 def selectAll():
     bpy.ops.object.select_all(action='SELECT')
 
+def groupName(name="crv", gName="myGroup"):
+    deselect()
+    selectName(name)
+    makeGroup(gName)
+
 def makeGroup(name="myGroup", newGroup=True):
     if (newGroup==True):
         bpy.ops.group.create(name=name)
