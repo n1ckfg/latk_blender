@@ -42,7 +42,8 @@ def assembleMesh():
         saveFile(origFileName + "_ASSEMBLY")
         print(origFileName + "_ASSEMBLY.blend" + " saved.")
     else:
-        print(origFileName + "_ASSEMBLY.blend" + " was not saved because some groups were missing.")
+        saveFile(origFileName + "_ASSEMBLY")
+        print(origFileName + "_ASSEMBLY.blend" + " was saved but some groups were missing.")
 
 def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False, _decimate = 0.1, _curveType="nurbs", _useColors=True, _saveLayers=False, _singleFrame=False, _vertexColors=False, _animateFrames=True, _solidify=False, _subd=0, _remesh=False, _consolidateMtl=True, _caps=False, _joinMesh=False):
     if (_joinMesh==True or _remesh==True):
