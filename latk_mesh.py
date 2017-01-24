@@ -235,7 +235,10 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=False, _
                             if (target[tt].hide==False):
                                 deselect()
                                 target[tt].select=True
-                                exporter(manualSelect=True, fileType="fbx", name=target[tt].name)
+                                exportName = target[tt].name
+                                exportName = exportName.split("crv_")[1]
+                                exportName = exportName.split("_mesh")[0]
+                                exporter(manualSelect=True, fileType="fbx", name=exportName)
                 #~
                 gpMeshCleanup(layer.info)
     #~
