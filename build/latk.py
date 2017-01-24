@@ -1706,7 +1706,7 @@ def createMesh(name, origin, verts, faces):
     bpy.ops.object.mode_set(mode='OBJECT')
     return ob
 
-def exporter(name="test", url=None, winDir=False):
+def exporter(name="test", url=None, winDir=False, fileType="fbx"):
     if not url:
         url = getFilePath()
     for j in range(bpy.context.scene.frame_start, bpy.context.scene.frame_end + 1):
@@ -1720,7 +1720,11 @@ def exporter(name="test", url=None, winDir=False):
             url += "\\"
         else:
             url += "/"
-        bpy.ops.export_scene.obj(filepath=url + name + "_" + str(j) + ".obj", use_selection=True)
+        #~
+        if (fileType=="fbx"):
+            bpy.ops.export_scene.fbx(filepath=url + name + "_" + str(j) + ".fbx", use_selection=True)
+        else:
+            bpy.ops.export_scene.obj(filepath=url + name + "_" + str(j) + ".obj", use_selection=True)
 
 # crashes        
 def makeGpCurve(_type="PATH"):
