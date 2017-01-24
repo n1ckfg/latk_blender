@@ -1254,7 +1254,7 @@ def assembleMesh():
         saveFile(origFileName + "_ASSEMBLY")
         print(origFileName + "_ASSEMBLY.blend" + " was saved but some groups were missing.")
 
-def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False, _decimate = 0.1, _curveType="nurbs", _useColors=True, _saveLayers=False, _singleFrame=False, _vertexColors=False, _animateFrames=True, _solidify=False, _subd=0, _remesh=False, _consolidateMtl=True, _caps=False, _joinMesh=False):
+def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=False, _decimate = 0.1, _curveType="nurbs", _useColors=True, _saveLayers=False, _singleFrame=False, _vertexColors=True, _animateFrames=True, _solidify=False, _subd=0, _remesh=False, _consolidateMtl=True, _caps=True, _joinMesh=True, _export=False):
     if (_joinMesh==True or _remesh==True):
         _bakeMesh=True
     if (_saveLayers==True):
@@ -1400,6 +1400,9 @@ def gpMesh(_thickness=0.0125, _resolution=1, _bevelResolution=0, _bakeMesh=False
                             print("* joining " + str(len(strokesToJoin))  + " strokes")
                             joinObjects(strokesToJoin)
                             print("~ ~ ~ ~ ~ ~ ~ ~ ~")
+                            #~
+                        if (_export==True and i==layer.frames[c].frame_number):
+                            exporter(manualSelect=True, fileType="fbx", name=layer.info + "_" + str(i))
             #~            
             '''
             deselect()
@@ -1706,25 +1709,32 @@ def createMesh(name, origin, verts, faces):
     bpy.ops.object.mode_set(mode='OBJECT')
     return ob
 
-def exporter(name="test", url=None, winDir=False, fileType="fbx"):
+def exporter(name="test", url=None, winDir=False, manualSelect=False, fileType="fbx"):
     if not url:
         url = getFilePath()
-    for j in range(bpy.context.scene.frame_start, bpy.context.scene.frame_end + 1):
-        bpy.ops.object.select_all(action='DESELECT')
-        goToFrame(j)
-        for i in range(0, len(bpy.data.objects)):
-            if (bpy.data.objects[i].hide == False):
-                bpy.data.objects[i].select = True
-        #bpy.context.scene.update()
         if (winDir==True):
             url += "\\"
         else:
             url += "/"
-        #~
-        if (fileType=="fbx"):
-            bpy.ops.export_scene.fbx(filepath=url + name + "_" + str(j) + ".fbx", use_selection=True)
-        else:
-            bpy.ops.export_scene.obj(filepath=url + name + "_" + str(j) + ".obj", use_selection=True)
+    #~
+    if (manualSelect == True):
+            if (fileType=="fbx"):
+                bpy.ops.export_scene.fbx(filepath=url + name + ".fbx", use_selection=True)
+            else:
+                bpy.ops.export_scene.obj(filepath=url + name + ".obj", use_selection=True)
+    else:
+        for j in range(bpy.context.scene.frame_start, bpy.context.scene.frame_end + 1):
+            bpy.ops.object.select_all(action='DESELECT')
+            goToFrame(j)
+            for i in range(0, len(bpy.data.objects)):
+                if (bpy.data.objects[i].hide == False):
+                    bpy.data.objects[i].select = True
+            #bpy.context.scene.update()
+            #~
+            if (fileType=="fbx"):
+                bpy.ops.export_scene.fbx(filepath=url + name + "_" + str(j) + ".fbx", use_selection=True)
+            else:
+                bpy.ops.export_scene.obj(filepath=url + name + "_" + str(j) + ".obj", use_selection=True)
 
 # crashes        
 def makeGpCurve(_type="PATH"):
