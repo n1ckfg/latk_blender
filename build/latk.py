@@ -1257,6 +1257,8 @@ def assembleMesh():
 def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=False, _decimate = 0.1, _curveType="nurbs", _useColors=True, _saveLayers=False, _singleFrame=False, _vertexColors=True, _animateFrames=True, _solidify=False, _subd=0, _remesh=False, _consolidateMtl=True, _caps=True, _joinMesh=True, _export=False):
     if (_joinMesh==True or _remesh==True):
         _bakeMesh=True
+    if (_export==True):
+        _saveLayers=True
     if (_saveLayers==True):
         dn()
     origFileName = getFileName()
@@ -1315,7 +1317,7 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=False, _
                         coords = coordsOrig
                     '''
                     #~
-                    crv_ob = makeCurve(coords=coords, curveType=_curveType, resolution=_resolution, thickness=_thickness, bevelResolution=_bevelResolution, parent=layer.parent, capsObj=capsObj)
+                    crv_ob = makeCurve(name="crv_" + layer.info + "_" + str(layer.frames[c].frame_number), coords=coords, curveType=_curveType, resolution=_resolution, thickness=_thickness, bevelResolution=_bevelResolution, parent=layer.parent, capsObj=capsObj)
                     strokeColor = (0.5,0.5,0.5)
                     if (_useColors==True):
                         strokeColor = palette.colors[stroke.colorname].color
@@ -1400,9 +1402,6 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=False, _
                             print("* joining " + str(len(strokesToJoin))  + " strokes")
                             joinObjects(strokesToJoin)
                             print("~ ~ ~ ~ ~ ~ ~ ~ ~")
-                            #~
-                        if (_export==True and i==layer.frames[c].frame_number):
-                            exporter(manualSelect=True, fileType="fbx", name=layer.info + "_" + str(i))
             #~            
             '''
             deselect()
@@ -1431,6 +1430,17 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=False, _
                 saveFile(url)
                 #~
                 masterUrlList.append(url)
+                #~
+                if (_export==True):
+                    for tt in range(0, len(target)):
+                        deselect()
+                        for i in range(start, end):
+                            deselect()
+                            goToFrame(i)
+                            if (target[tt].hide==False):
+                                deselect()
+                                target[tt].select=True
+                                exporter(manualSelect=True, fileType="fbx", name=target[tt].name)
                 #~
                 gpMeshCleanup(layer.info)
     #~
@@ -1603,7 +1613,7 @@ def matchWithParent(_child, _parent, _index):
         _child.parent = _parent
         keyTransform(_child, _index)   
 
-def makeCurve(coords, resolution=2, thickness=0.1, bevelResolution=1, curveType="bezier", parent=None, capsObj=None):
+def makeCurve(coords, resolution=2, thickness=0.1, bevelResolution=1, curveType="bezier", parent=None, capsObj=None, name="crv_ob"):
     # http://blender.stackexchange.com/questions/12201/bezier-spline-with-python-adds-unwanted-point
     # http://blender.stackexchange.com/questions/6750/poly-bezier-curve-from-a-list-of-coordinates
     # create the curve datablock
@@ -1655,7 +1665,7 @@ def makeCurve(coords, resolution=2, thickness=0.1, bevelResolution=1, curveType=
             polyline.bezier_points[i].handle_left = polyline.bezier_points[i].handle_right = polyline.bezier_points[i].co
     #~
     # create object
-    crv_ob = bpy.data.objects.new('crv_ob', curveData)
+    crv_ob = bpy.data.objects.new(name, curveData)
     #if (parent != None):
         #crv_ob.location = (parent.location) #object origin  
     #~
@@ -1699,7 +1709,7 @@ def createMesh(name, origin, verts, faces):
     ob.name = name
     ob.show_name = True
     me = ob.data
-    me.name = name+'Mesh'
+    me.name = name +'Mesh'
     #~
     # Create mesh from given verts, faces.
     me.from_pydata(verts, [], faces)
