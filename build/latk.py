@@ -1221,7 +1221,24 @@ Going back to parenting with baking for single objects, less elegant but seems t
 # http://blender.stackexchange.com/questions/6750/poly-bezier-curve-from-a-list-of-coordinates
 # http://blender.stackexchange.com/questions/7047/apply-transforms-to-linked-objects
 
-def assembleMesh():
+def exportForUnity():
+    start, end = getStartEnd()
+    target = matchName("crv")
+    for tt in range(0, len(target)):
+        deselect()
+        for i in range(start, end):
+            deselect()
+            goToFrame(i)
+            if (target[tt].hide==False):
+                deselect()
+                target[tt].select=True
+                exportName = target[tt].name
+                exportName = exportName.split("crv_")[1]
+                exportName = exportName.split("_mesh")[0]
+                exporter(manualSelect=True, fileType="fbx", name=exportName)
+                break
+
+def assembleMesh(export=False):
     origFileName = getFileName()
     masterUrlList = []
     masterGroupList = []
@@ -1241,6 +1258,9 @@ def assembleMesh():
     #openFile(origFileName)
     readyToSave = True
     for i in range(0, len(masterUrlList)):
+        if (export==True):
+            dn()
+        #~
         try:
             importGroup(getFilePath() + masterUrlList[i] + ".blend", masterGroupList[i], winDir=True)
             print("Imported group " + masterGroupList[i] + ", " + str(i+1) + " of " + str(len(masterGroupList)))
@@ -1248,17 +1268,21 @@ def assembleMesh():
             readyToSave = False
             print("Error importing group " + masterGroupList[i] + ", " + str(i+1) + " of " + str(len(masterGroupList)))
     if (readyToSave==True):
-        saveFile(origFileName + "_ASSEMBLY")
-        print(origFileName + "_ASSEMBLY.blend" + " saved.")
+        if (export==True):
+            exportForUnity()
+            print(origFileName + " FBXs exported.")
+        else:
+            saveFile(origFileName + "_ASSEMBLY")
+            print(origFileName + "_ASSEMBLY.blend" + " saved.")
     else:
-        saveFile(origFileName + "_ASSEMBLY")
-        print(origFileName + "_ASSEMBLY.blend" + " was saved but some groups were missing.")
+        if (export==True):
+            exportForUnity()
+            print(origFileName + " FBXs exported but some groups were missing.")
+        else:
+            saveFile(origFileName + "_ASSEMBLY")
+            print(origFileName + "_ASSEMBLY.blend" + " was saved but some groups were missing.")
 
-def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=False, _decimate = 0.1, _curveType="nurbs", _useColors=True, _saveLayers=False, _singleFrame=False, _vertexColors=True, _animateFrames=True, _solidify=False, _subd=0, _remesh=False, _consolidateMtl=True, _caps=True, _joinMesh=True, _export=False):
-    if (_export==True):
-        _saveLayers=True
-        _joinMesh=True
-    #~
+def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=False, _decimate = 0.1, _curveType="nurbs", _useColors=True, _saveLayers=False, _singleFrame=False, _vertexColors=True, _animateFrames=True, _solidify=False, _subd=0, _remesh=False, _consolidateMtl=True, _caps=True, _joinMesh=True):
     if (_joinMesh==True or _remesh==True):
         _bakeMesh=True
     #~
@@ -1434,20 +1458,6 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=False, _
                 saveFile(url)
                 #~
                 masterUrlList.append(url)
-                #~
-                if (_export==True):
-                    for tt in range(0, len(target)):
-                        deselect()
-                        for i in range(start, end):
-                            deselect()
-                            goToFrame(i)
-                            if (target[tt].hide==False):
-                                deselect()
-                                target[tt].select=True
-                                exportName = target[tt].name
-                                exportName = exportName.split("crv_")[1]
-                                exportName = exportName.split("_mesh")[0]
-                                exporter(manualSelect=True, fileType="fbx", name=exportName)
                 #~
                 gpMeshCleanup(layer.info)
     #~
