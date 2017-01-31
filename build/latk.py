@@ -1,11 +1,13 @@
 '''
+LIGHTNING ARTIST TOOLKIT v1.0.0
+
 The Lightning Artist Toolkit was developed with support from:
    Canada Council on the Arts
    Eyebeam Art + Technology Center
    Ontario Arts Council
    Toronto Arts Council
    
-Copyright (c) 2016 Nick Fox-Gieg
+Copyright (c) 2017 Nick Fox-Gieg
 http://fox-gieg.com
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
