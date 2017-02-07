@@ -27,17 +27,6 @@ along with the Lightning Artist Toolkit.  If not, see
 <http://www.gnu.org/licenses/>.
 '''
 
-bl_info = {
-    "name": "LightningArtist Toolkit", 
-    "category": "Animation"
-}
-
-def register():
-	pass
-
-def unregister():
-	pass
-
 import bpy
 from mathutils import *
 from math import sqrt
@@ -49,6 +38,14 @@ import random
 import bmesh
 import sys
 import gc
+
+#~
+
+bl_info = {
+    "name": "LightningArtist Toolkit", 
+    "author": "Nick Fox-Gieg",
+    "category": "Animation"
+}
 
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
