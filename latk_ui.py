@@ -8,9 +8,19 @@ class ImportLatk(bpy.types.Operator, ImportHelper, IOOBJOrientationHelper):
 
     filename_ext = ".json"
     filter_glob = StringProperty(
-            default="*.json;*.mtl",
+            default="*.json;*.latk",
             options={'HIDDEN'},
             )
+
+    def execute(self, context):
+        import latk as la
+        keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode"))
+        if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
+            import os
+            keywords["relpath"] = os.path.dirname(bpy.data.filepath)
+        #~
+        return la.readBrushStrokes(**keywords)
+
     '''
     def execute(self, context):
         # print("Selected: " + context.active_object.name)
@@ -52,9 +62,19 @@ class ExportLatk(bpy.types.Operator, ExportHelper, IOOBJOrientationHelper):
 
     filename_ext = ".json"
     filter_glob = StringProperty(
-            default="*.json;*.mtl",
+            default="*.json;*.latk",
             options={'HIDDEN'},
             )
+
+    def execute(self, context):
+        import latk as la
+        keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "check_existing"))
+        if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
+            import os
+            #keywords["relpath"] = os.path.dirname(bpy.data.filepath)
+        #~
+        return la.writeBrushStrokes(**keywords)
+
     '''
     path_mode = path_reference_mode
 

@@ -1029,7 +1029,8 @@ df = deleteFromAllFrames
 
 # http://blender.stackexchange.com/questions/24694/query-grease-pencil-strokes-from-python
 
-def writeBrushStrokes(url=None, bake=True):
+def writeBrushStrokes(filepath=None, bake=True):
+    url = filepath # compatibility with gui keywords
     #writeFilePath = "C:\\Users\\Public\\Temp\\"
     writeFilePath = "/Users/nick/Projects/LightningArtist/LightningArtistJS/animations/"
     writeFileName = "new_test.json"
@@ -1143,8 +1144,11 @@ def writeBrushStrokes(url=None, bake=True):
         f.write(sg)
         f.closed
     print("Wrote " + url)
-
-def readBrushStrokes(url=None):
+    #~                
+    return {'FINISHED'}
+    
+def readBrushStrokes(filepath=None):
+    url = filepath # compatibility with gui keywords
     #readFilePath = "C:\\Users\\Public\\Temp\\"
     readFilePath = "/Users/nick/Projects/LightningArtist/LightningArtistJS/animations/"
     readFileName = "new_test.json"
@@ -1202,7 +1206,8 @@ def readBrushStrokes(url=None):
                         z = data["grease_pencil"][0]["layers"][h]["frames"][i]["strokes"][j]["points"][l]["co"][1]
                     #stroke.points[l].co = (x, y, z)
                     createPoint(stroke, l, (x, y, z))
-
+    #~                
+    return {'FINISHED'}
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 
@@ -1942,9 +1947,19 @@ class ImportLatk(bpy.types.Operator, ImportHelper, IOOBJOrientationHelper):
 
     filename_ext = ".json"
     filter_glob = StringProperty(
-            default="*.json;*.mtl",
+            default="*.json;*.latk",
             options={'HIDDEN'},
             )
+
+    def execute(self, context):
+        import latk as la
+        keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode"))
+        if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
+            import os
+            keywords["relpath"] = os.path.dirname(bpy.data.filepath)
+        #~
+        return la.readBrushStrokes(**keywords)
+
     '''
     def execute(self, context):
         # print("Selected: " + context.active_object.name)
@@ -1986,9 +2001,19 @@ class ExportLatk(bpy.types.Operator, ExportHelper, IOOBJOrientationHelper):
 
     filename_ext = ".json"
     filter_glob = StringProperty(
-            default="*.json;*.mtl",
+            default="*.json;*.latk",
             options={'HIDDEN'},
             )
+
+    def execute(self, context):
+        import latk as la
+        keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "check_existing"))
+        if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
+            import os
+            #keywords["relpath"] = os.path.dirname(bpy.data.filepath)
+        #~
+        return la.writeBrushStrokes(**keywords)
+
     '''
     path_mode = path_reference_mode
 

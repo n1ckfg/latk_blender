@@ -1,6 +1,7 @@
 # http://blender.stackexchange.com/questions/24694/query-grease-pencil-strokes-from-python
 
-def writeBrushStrokes(url=None, bake=True):
+def writeBrushStrokes(filepath=None, bake=True):
+    url = filepath # compatibility with gui keywords
     #writeFilePath = "C:\\Users\\Public\\Temp\\"
     writeFilePath = "/Users/nick/Projects/LightningArtist/LightningArtistJS/animations/"
     writeFileName = "new_test.json"
@@ -114,8 +115,11 @@ def writeBrushStrokes(url=None, bake=True):
         f.write(sg)
         f.closed
     print("Wrote " + url)
-
-def readBrushStrokes(url=None):
+    #~                
+    return {'FINISHED'}
+    
+def readBrushStrokes(filepath=None):
+    url = filepath # compatibility with gui keywords
     #readFilePath = "C:\\Users\\Public\\Temp\\"
     readFilePath = "/Users/nick/Projects/LightningArtist/LightningArtistJS/animations/"
     readFileName = "new_test.json"
@@ -173,7 +177,8 @@ def readBrushStrokes(url=None):
                         z = data["grease_pencil"][0]["layers"][h]["frames"][i]["strokes"][j]["points"][l]["co"][1]
                     #stroke.points[l].co = (x, y, z)
                     createPoint(stroke, l, (x, y, z))
-
+    #~                
+    return {'FINISHED'}
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 
