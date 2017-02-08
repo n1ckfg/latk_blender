@@ -1029,7 +1029,7 @@ df = deleteFromAllFrames
 
 # http://blender.stackexchange.com/questions/24694/query-grease-pencil-strokes-from-python
 
-def writeBrushStrokes(filepath=None, bake=True):
+def writeBrushStrokes(filepath=None, bake=False):
     url = filepath # compatibility with gui keywords
     #writeFilePath = "C:\\Users\\Public\\Temp\\"
     writeFilePath = "/Users/nick/Projects/LightningArtist/LightningArtistJS/animations/"
