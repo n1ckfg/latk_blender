@@ -27,6 +27,12 @@ along with the Lightning Artist Toolkit.  If not, see
 <http://www.gnu.org/licenses/>.
 '''
 
+bl_info = {
+    "name": "LightningArtist Toolkit", 
+    "author": "Nick Fox-Gieg",
+    "category": "Animation"
+}
+
 import bpy
 from mathutils import *
 from math import sqrt
@@ -39,13 +45,19 @@ import bmesh
 import sys
 import gc
 
-#~
-
-bl_info = {
-    "name": "LightningArtist Toolkit", 
-    "author": "Nick Fox-Gieg",
-    "category": "Animation"
-}
+from bpy.props import (
+        BoolProperty,
+        FloatProperty,
+        StringProperty,
+        EnumProperty,
+        )
+from bpy_extras.io_utils import (
+        ImportHelper,
+        ExportHelper,
+        orientation_helper_factory,
+        path_reference_mode,
+        axis_conversion,
+        )
 
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
 # * * * * * * * * * * * * * * * * * * * * * * * * * *

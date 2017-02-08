@@ -27,6 +27,12 @@ along with the Lightning Artist Toolkit.  If not, see
 <http://www.gnu.org/licenses/>.
 '''
 
+bl_info = {
+    "name": "LightningArtist Toolkit", 
+    "author": "Nick Fox-Gieg",
+    "category": "Animation"
+}
+
 import bpy
 from mathutils import *
 from math import sqrt
@@ -39,13 +45,19 @@ import bmesh
 import sys
 import gc
 
-#~
-
-bl_info = {
-    "name": "LightningArtist Toolkit", 
-    "author": "Nick Fox-Gieg",
-    "category": "Animation"
-}
+from bpy.props import (
+        BoolProperty,
+        FloatProperty,
+        StringProperty,
+        EnumProperty,
+        )
+from bpy_extras.io_utils import (
+        ImportHelper,
+        ExportHelper,
+        orientation_helper_factory,
+        path_reference_mode,
+        axis_conversion,
+        )
 
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -1920,38 +1932,108 @@ def testJson():
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
 
-# http://michelanders.blogspot.ca/p/creating-blender-26-python-add-on.html
-def MyFunction(context):
-    print("Hello World")
+IOOBJOrientationHelper = orientation_helper_factory("IOOBJOrientationHelper", axis_forward='-Z', axis_up='Y')
 
-class LightingArtist(bpy.types.Operator):
-    bl_idname = "object.lightning_artist"
-    bl_label = "Lightning Artist"
-    bl_options = {'REGISTER', 'UNDO'}
-    #~
-    @classmethod
-    def poll(cls, context): ### poll handles context check, preventing a RuntimeError
-        if context.object != None: ### check that an object is selected
-            return context.object.select
-        return False
-    #~
-    def execute(self, context): ### executes after invoke, possibly repeating as user adjusts values
-        MyFunction(context)
-        return {'FINISHED'}
-    #~
-    def invoke(self, context, event): ### invoke usually defines properties for execute(), with user input
-        return self.execute(context)
+class ImportLatk(bpy.types.Operator, ImportHelper, IOOBJOrientationHelper):
+    """Load a Latk File"""
+    bl_idname = "import_scene.latk"
+    bl_label = "Import Latk"
+    bl_options = {'PRESET', 'UNDO'}
 
-def menu_draw(self, context):
-    self.layout.operator(LightingArtist.bl_idname, "LightingArtist") ### menu item for this class
+    filename_ext = ".json"
+    filter_glob = StringProperty(
+            default="*.json;*.mtl",
+            options={'HIDDEN'},
+            )
+    '''
+    def execute(self, context):
+        # print("Selected: " + context.active_object.name)
+        from . import import_obj
+
+        if self.split_mode == 'OFF':
+            self.use_split_objects = False
+            self.use_split_groups = False
+        else:
+            self.use_groups_as_vgroups = False
+
+        keywords = self.as_keywords(ignore=("axis_forward",
+                                            "axis_up",
+                                            "filter_glob",
+                                            "split_mode",
+                                            ))
+
+        global_matrix = axis_conversion(from_forward=self.axis_forward,
+                                        from_up=self.axis_up,
+                                        ).to_4x4()
+        keywords["global_matrix"] = global_matrix
+
+        if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
+            import os
+            keywords["relpath"] = os.path.dirname(bpy.data.filepath)
+
+        return import_obj.load(context, **keywords)
+
+    def draw(self, context):
+        layout = self.layout
+    '''
+
+class ExportLatk(bpy.types.Operator, ExportHelper, IOOBJOrientationHelper):
+    """Save a Latk File"""
+
+    bl_idname = "export_scene.latk"
+    bl_label = 'Export Latk'
+    bl_options = {'PRESET'}
+
+    filename_ext = ".json"
+    filter_glob = StringProperty(
+            default="*.json;*.mtl",
+            options={'HIDDEN'},
+            )
+    '''
+    path_mode = path_reference_mode
+
+    check_extension = True
+
+    def execute(self, context):
+        from . import export_obj
+
+        from mathutils import Matrix
+        keywords = self.as_keywords(ignore=("axis_forward",
+                                            "axis_up",
+                                            "global_scale",
+                                            "check_existing",
+                                            "filter_glob",
+                                            ))
+
+        global_matrix = (Matrix.Scale(self.global_scale, 4) *
+                         axis_conversion(to_forward=self.axis_forward,
+                                         to_up=self.axis_up,
+                                         ).to_4x4())
+
+        keywords["global_matrix"] = global_matrix
+        return export_obj.save(context, **keywords)
+    '''
+
+def menu_func_import(self, context):
+    self.layout.operator(ImportLatk.bl_idname, text="Latk Animation (.json)")
+
+
+def menu_func_export(self, context):
+    self.layout.operator(ExportLatk.bl_idname, text="Latk Animation (.json)")
+
 
 def register():
-    bpy.utils.register_module(__name__) ### module registration registers all classes
-    bpy.types.VIEW3D_MT_object.append(menu_draw) ### add module menu item to menu (identify menus with mouse hover)
+    bpy.utils.register_module(__name__)
+
+    bpy.types.INFO_MT_file_import.append(menu_func_import)
+    bpy.types.INFO_MT_file_export.append(menu_func_export)
+
 
 def unregister():
-    bpy.types.VIEW3D_MT_object.remove(menu_draw) ### unregister must mirror register
     bpy.utils.unregister_module(__name__)
+
+    bpy.types.INFO_MT_file_import.remove(menu_func_import)
+    bpy.types.INFO_MT_file_export.remove(menu_func_export)
 
 if __name__ == "__main__":
     register()
