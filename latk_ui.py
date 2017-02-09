@@ -1,6 +1,4 @@
-IOOBJOrientationHelper = orientation_helper_factory("IOOBJOrientationHelper", axis_forward='-Z', axis_up='Y')
-
-class ImportLatk(bpy.types.Operator, ImportHelper, IOOBJOrientationHelper):
+class ImportLatk(bpy.types.Operator, ImportHelper):
     """Load a Latk File"""
     bl_idname = "import_scene.latk"
     bl_label = "Import Latk"
@@ -53,7 +51,7 @@ class ImportLatk(bpy.types.Operator, ImportHelper, IOOBJOrientationHelper):
         layout = self.layout
     '''
 
-class ExportLatk(bpy.types.Operator, ExportHelper, IOOBJOrientationHelper):
+class ExportLatk(bpy.types.Operator, ExportHelper):
     """Save a Latk File"""
 
     bl_idname = "export_scene.latk"
@@ -73,7 +71,7 @@ class ExportLatk(bpy.types.Operator, ExportHelper, IOOBJOrientationHelper):
         keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "check_existing", "bake"))
         if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
             import os
-            #keywords["relpath"] = os.path.dirname(bpy.data.filepath)
+            keywords["relpath"] = os.path.dirname(bpy.data.filepath)
         #~
         keywords["bake"] = self.bake
         #~

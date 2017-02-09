@@ -45,19 +45,8 @@ import bmesh
 import sys
 import gc
 
-from bpy.props import (
-        BoolProperty,
-        FloatProperty,
-        StringProperty,
-        EnumProperty,
-        )
-from bpy_extras.io_utils import (
-        ImportHelper,
-        ExportHelper,
-        orientation_helper_factory,
-        path_reference_mode,
-        axis_conversion,
-        )
+from bpy.props import (BoolProperty, FloatProperty, StringProperty, EnumProperty)
+from bpy_extras.io_utils import (ImportHelper, ExportHelper)
 
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
