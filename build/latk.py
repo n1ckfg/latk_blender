@@ -2005,12 +2005,16 @@ class ExportLatk(bpy.types.Operator, ExportHelper, IOOBJOrientationHelper):
             options={'HIDDEN'},
             )
 
+    bake = BoolProperty(name="Bake Frames", description="Bake Keyframes to All Frames", default=True)
+
     def execute(self, context):
         import latk as la
-        keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "check_existing"))
+        keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "check_existing", "bake"))
         if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
             import os
             #keywords["relpath"] = os.path.dirname(bpy.data.filepath)
+        #~
+        keywords["bake"] = self.bake
         #~
         return la.writeBrushStrokes(**keywords)
 
