@@ -15,7 +15,7 @@ class ImportLatk(bpy.types.Operator, ImportHelper):
         keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode"))
         if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
             import os
-            keywords["relpath"] = os.path.dirname(bpy.data.filepath)
+            #keywords["relpath"] = os.path.dirname(bpy.data.filepath)
         #~
         return la.readBrushStrokes(**keywords)
 
@@ -71,7 +71,7 @@ class ExportLatk(bpy.types.Operator, ExportHelper):
         keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "check_existing", "bake"))
         if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
             import os
-            keywords["relpath"] = os.path.dirname(bpy.data.filepath)
+            #keywords["relpath"] = os.path.dirname(bpy.data.filepath)
         #~
         keywords["bake"] = self.bake
         #~
