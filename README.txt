@@ -1,5 +1,11 @@
 Lightning Artist Toolkit / Blender 
-Notes 160828
 
-Blender version: 2.77 nightly build
-(with Grease Pencil 2, Alembic, stereo 360 camera)
+To install, copy latk.py to:
+
+Windows:
+C:\Users\USER_NAME\AppData\Roaming\Blender Foundation\Blender\2.78\scripts\addons\
+
+Mac:
+/Users/USER_NAME/Library/Application Support/Blender/2.78/scripts/addons/
+
+
