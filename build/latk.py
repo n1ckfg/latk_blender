@@ -1064,8 +1064,12 @@ def writeBrushStrokes(filepath=None, bake=True):
                         x = 0.0
                         y = 0.0
                         z = 0.0
+                        pressure = 1.0
+                        strength = 1.0
                         #.
                         point = layer.frames[currentFrame].strokes[i].points[j].co
+                        pressure = layer.frames[currentFrame].strokes[i].points[j].pressure
+                        strength = layer.frames[currentFrame].strokes[i].points[j].strength
                         '''
                         if(layer.parent):
                             loc, rot, scale = layer.parent.matrix_world.decompose()
@@ -1082,10 +1086,10 @@ def writeBrushStrokes(filepath=None, bake=True):
                         #~
                         if roundValues == True:
                             #sb += "                                       {\"x\":" + roundVal(x, numPlaces) + ", \"y\":" + roundVal(y, numPlaces) + ", \"z\":" + roundVal(z, numPlaces)
-                            sb += "                                        {\"co\": [" + roundVal(x, numPlaces) + ", " + roundVal(y, numPlaces) + ", " + roundVal(z, numPlaces) + "]"
+                            sb += "                                        {\"co\": [" + roundVal(x, numPlaces) + ", " + roundVal(y, numPlaces) + ", " + roundVal(z, numPlaces) + "], \"pressure\": " + roundVal(pressure, numPlaces) + ", \"strength\": " + roundVal(strength, numPlaces)
                         else:
                             #sb += "                                       {\"x\":" + str(x) + ", \"y\":" + str(y) + ", \"z\":" + str(z)                    
-                            sb += "                                        {\"co\": [" + str(x) + ", " + str(y) + ", " + str(z) + "]"                  
+                            sb += "                                        {\"co\": [" + str(x) + ", " + str(y) + ", " + str(z) + "], \"pressure\": " + pressure + ", \"strength\": " + strength                  
                         #~
                         if j == len(layer.frames[currentFrame].strokes[i].points) - 1:
                             sb += "}" + "\n"
@@ -1185,6 +1189,8 @@ def readBrushStrokes(filepath=None):
                     x = 0.0
                     y = 0.0
                     z = 0.0
+                    pressure = 1.0
+                    strength = 1.0
                     if useScaleAndOffset == True:
                         x = (data["grease_pencil"][0]["layers"][h]["frames"][i]["strokes"][j]["points"][l]["co"][0] * globalScale.x) + globalOffset.x
                         y = (data["grease_pencil"][0]["layers"][h]["frames"][i]["strokes"][j]["points"][l]["co"][2] * globalScale.y) + globalOffset.y
@@ -1193,8 +1199,10 @@ def readBrushStrokes(filepath=None):
                         x = data["grease_pencil"][0]["layers"][h]["frames"][i]["strokes"][j]["points"][l]["co"][0]
                         y = data["grease_pencil"][0]["layers"][h]["frames"][i]["strokes"][j]["points"][l]["co"][2]
                         z = data["grease_pencil"][0]["layers"][h]["frames"][i]["strokes"][j]["points"][l]["co"][1]
+                    pressure = data["grease_pencil"][0]["layers"][h]["frames"][i]["strokes"][j]["points"][l]["pressure"]
+                    strength = data["grease_pencil"][0]["layers"][h]["frames"][i]["strokes"][j]["points"][l]["strength"]
                     #stroke.points[l].co = (x, y, z)
-                    createPoint(stroke, l, (x, y, z))
+                    createPoint(stroke, l, (x, y, z), pressure, strength)
     #~                
     return {'FINISHED'}
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
