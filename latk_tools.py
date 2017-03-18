@@ -834,14 +834,42 @@ def consolidateMtl(name="crv"):
         for i in range(1, len(curves)):
             curves[i].data.materials[0] = curves[0].data.materials[0]
 
-def makeEmissionMtl(name="crv"):
-    mat = bpy.context.scene.objects.active.data.materials[bpy.context.scene.objects.active.active_material_index]
-    color = mat.node_tree.nodes["Emission"].color
-    curves = matchName(name)
-    for curve in curves:
-        for i in range(0, len(curve.data.materials)):
-            if (compareTuple(curve.data.materials[i].diffuse_color, color)):
-                curve.data.materials[i] = mat
+def getActiveMtl():
+    return bpy.context.scene.objects.active.data.materials[bpy.context.scene.objects.active.active_material_index]
+
+def getMtlColor(node="Diffuse BSDF", mtl=None):
+    if not mtl:
+        mtl = getActiveMtl()
+    try:
+        colorRaw = mtl.node_tree.nodes[node].inputs["Color"].default_value
+        color = (colorRaw[0], colorRaw[1], colorRaw[2])
+        return color
+    except:
+        return None
+
+def getEmissionColor(mtl=None):
+    if not mtl:
+        mtl = getActiveMtl()
+    return getMtlColor("Emission", mtl)
+
+def getDiffuseColor(mtl=None):
+    if not mtl:
+        mtl = getActiveMtl()
+    return getMtlColor("Diffuse BSDF", mtl)
+
+def makeEmissionMtl():
+    mtl = getActiveMtl()
+    color = getEmissionColor()
+    #print("source color: " + str(color))
+    for obj in bpy.context.scene.objects:
+        try:
+            for j in range(0, len(obj.data.materials)):
+                destColor = getDiffuseColor(obj.data.materials[j])
+                #print("dest color: " + str(destColor))
+                if (compareTuple(destColor, color) == True):
+                    obj.data.materials[j] = mtl
+        except:
+            pass
 
 def deleteFromAllFrames():
     origStrokes = []

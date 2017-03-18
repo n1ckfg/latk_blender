@@ -755,6 +755,11 @@ def getActiveLayer():
     layer = gp.layers.active
     return layer
 
+def clearPalette():
+    palette = getActivePalette()
+    for color in palette.colors:
+        palette.colors.remove(color)
+
 def createPoint(_stroke, _index, _point, pressure=1, strength=1):
     _stroke.points[_index].co = _point
     _stroke.points[_index].select = True
@@ -779,6 +784,37 @@ def createColor(_color):
     #~        
     print("Active color is: " + "\"" + palette.colors.active.name + "\" " + str(palette.colors.active.color))
     return color
+
+# ~ ~ ~ 
+def createColorWithPalette(_color, numPlaces=7, maxColors=0):
+    #frame = getActiveFrame()
+    palette = getActivePalette()
+    matchingColorIndex = -1
+    places = numPlaces
+    for i in range(0, len(palette.colors)):
+        if (roundVal(_color[0], places) == roundVal(palette.colors[i].color.r, places) and roundVal(_color[1], places) == roundVal(palette.colors[i].color.g, places) and roundVal(_color[2], places) == roundVal(palette.colors[i].color.b, places)):
+            matchingColorIndex = i
+    #~
+    if (matchingColorIndex == -1):
+        if (maxColors<1 or len(palette.colors)<maxColors):
+            color = palette.colors.new()
+            color.color = _color
+        else:
+            distances = []
+            sortedColors = []
+            for color in palette.colors:
+                sortedColors.append(color)
+            for color in sortedColors:
+                distances.append(getDistance(_color, color.color))
+            sortedColors.sort(key=dict(zip(sortedColors, distances)).get)
+            palette.colors.active = palette.colors[sortedColors[0].name]
+    else:
+        palette.colors.active = palette.colors[matchingColorIndex]
+        color = palette.colors[matchingColorIndex]
+    #~        
+    print("Active color is: " + "\"" + palette.colors.active.name + "\" " + str(palette.colors.active.color))
+    return color
+# ~ ~ ~
 
 def changeColor():
     frame = getActiveFrame()
@@ -817,6 +853,7 @@ def pasteToNewLayer():
             #createPoint(newStroke, j, points[j].co)
 '''
 
+# TODO handle multiple materials on one mesh
 def searchMtl(color=None, name="crv"):
     returns = []
     if not color:
@@ -834,6 +871,7 @@ def compareTuple(t1, t2, numPlaces=5):
     else:
         return False
 
+# TODO handle multiple materials on one mesh
 def changeMtl(color=(1,1,0), searchColor=None, name="crv"):
     if not searchColor:
         searchColor = getActiveColor().color       
@@ -842,12 +880,50 @@ def changeMtl(color=(1,1,0), searchColor=None, name="crv"):
     for curve in curves:
         curve.data.materials[0].diffuse_color = color
 
+# TODO handle multiple materials on one mesh
 def consolidateMtl(name="crv"):
     palette = getActivePalette()
     for color in palette.colors:
         curves = searchMtl(color=color.color, name=name)
         for i in range(1, len(curves)):
             curves[i].data.materials[0] = curves[0].data.materials[0]
+
+def getActiveMtl():
+    return bpy.context.scene.objects.active.data.materials[bpy.context.scene.objects.active.active_material_index]
+
+def getMtlColor(node="Diffuse BSDF", mtl=None):
+    if not mtl:
+        mtl = getActiveMtl()
+    try:
+        colorRaw = mtl.node_tree.nodes[node].inputs["Color"].default_value
+        color = (colorRaw[0], colorRaw[1], colorRaw[2])
+        return color
+    except:
+        return None
+
+def getEmissionColor(mtl=None):
+    if not mtl:
+        mtl = getActiveMtl()
+    return getMtlColor("Emission", mtl)
+
+def getDiffuseColor(mtl=None):
+    if not mtl:
+        mtl = getActiveMtl()
+    return getMtlColor("Diffuse BSDF", mtl)
+
+def makeEmissionMtl():
+    mtl = getActiveMtl()
+    color = getEmissionColor()
+    #print("source color: " + str(color))
+    for obj in bpy.context.scene.objects:
+        try:
+            for j in range(0, len(obj.data.materials)):
+                destColor = getDiffuseColor(obj.data.materials[j])
+                #print("dest color: " + str(destColor))
+                if (compareTuple(destColor, color) == True):
+                    obj.data.materials[j] = mtl
+        except:
+            pass
 
 def deleteFromAllFrames():
     origStrokes = []
