@@ -140,10 +140,21 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=False, _
                     strokeColor = (0.5,0.5,0.5)
                     if (_useColors==True):
                         strokeColor = palette.colors[stroke.colorname].color
-                    mat = bpy.data.materials.new("new_mtl")
+                    # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
+                    mat = None
+                    if (_consolidateMtl==False):
+                       mat = bpy.data.materials.new("new_mtl")
+                       mat.diffuse_color = strokeColor
+                    else:
+                        for oldMat in bpy.data.materials:
+                            if (compareTuple(strokeColor, oldMat.diffuse_color) == True):
+                                mat = oldMat
+                                break
+                        if (mat == None):
+                            mat = bpy.data.materials.new("share_mtl")
+                            mat.diffuse_color = strokeColor  
                     crv_ob.data.materials.append(mat)
-                    crv_ob.data.materials[0].diffuse_color = strokeColor
-                    # TODO can you store vertex colors in a curve?
+                    # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ 
                     #~   
                     bpy.context.scene.objects.active = crv_ob
                     #~
@@ -204,11 +215,12 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=False, _
                             elif (c != len(layer.frames)-1):
                                 hideFrame(frameList[i], j, True)
                 #~
-                if (_consolidateMtl==True):
-                    consolidateMtl()
+                #if (_consolidateMtl==True):
+                    #consolidateMtl()
                 #~
                 if (_joinMesh==True): #and _bakeMesh==True):
-                    target = matchName("crv")
+                    #target = matchName("crv")
+                    target = matchName("crv_" + layer.info)
                     for i in range(start, end):
                         strokesToJoin = []
                         if (i == layer.frames[c].frame_number):
@@ -234,7 +246,8 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=False, _
             #~
             if (_saveLayers==True):
                 deselect()
-                target = matchName("crv")
+                #target = matchName("crv")
+                target = matchName("crv_" + layer.info)
                 for tt in range(0, len(target)):
                     target[tt].select = True
                 print("* baking")
