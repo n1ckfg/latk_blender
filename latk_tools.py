@@ -826,8 +826,25 @@ def changeMtl(color=(1,1,0), searchColor=None, name="crv"):
     for curve in curves:
         curve.data.materials[0].diffuse_color = color
 
-# TODO handle multiple materials on one mesh
-def consolidateMtl(name="crv"):
+def consolidateMtl():
+    palette = getActivePalette()
+    for color in palette.colors:
+        matchMat = None
+        for obj in bpy.context.scene.objects:
+            #print(obj.name)
+            try:
+                for i, mat in enumerate(obj.data.materials):
+                    #print(str(color.color) + " " + str(getDiffuseColor(mat)))
+                    if (compareTuple((color.color[0],color.color[1],color.color[2]), getDiffuseColor(mat)) == True):
+                        if (matchMat == None):
+                            matchMat = mat
+                        else:
+                            obj.data.materials[i] = matchMat
+            except:
+                pass
+
+# old version, can't handle multiple materials on one mesh
+def consolidateMtlAlt(name="crv"):
     palette = getActivePalette()
     for color in palette.colors:
         curves = searchMtl(color=color.color, name=name)

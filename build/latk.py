@@ -880,8 +880,25 @@ def changeMtl(color=(1,1,0), searchColor=None, name="crv"):
     for curve in curves:
         curve.data.materials[0].diffuse_color = color
 
-# TODO handle multiple materials on one mesh
-def consolidateMtl(name="crv"):
+def consolidateMtl():
+    palette = getActivePalette()
+    for color in palette.colors:
+        matchMat = None
+        for obj in bpy.context.scene.objects:
+            #print(obj.name)
+            try:
+                for i, mat in enumerate(obj.data.materials):
+                    #print(str(color.color) + " " + str(getDiffuseColor(mat)))
+                    if (compareTuple((color.color[0],color.color[1],color.color[2]), getDiffuseColor(mat)) == True):
+                        if (matchMat == None):
+                            matchMat = mat
+                        else:
+                            obj.data.materials[i] = matchMat
+            except:
+                pass
+
+# old version, can't handle multiple materials on one mesh
+def consolidateMtlAlt(name="crv"):
     palette = getActivePalette()
     for color in palette.colors:
         curves = searchMtl(color=color.color, name=name)
@@ -1571,9 +1588,9 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=False, _
         for i in range(0, len(masterUrlList)):
             importGroup(getFilePath() + masterUrlList[i] + ".blend", masterGroupList[i], winDir=True)
         #~
-        if (_consolidateMtl==True):
-            pass
-        # TODO consolidate duplicate materials in multiple layers
+        # TODO figure out why this doesn't work
+        #if (_consolidateMtl==True):
+            #consolidateMtl()
         #~
         saveFile(origFileName + "_ASSEMBLY")
 
