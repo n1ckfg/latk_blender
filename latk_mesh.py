@@ -273,6 +273,10 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=False, _
         for i in range(0, len(masterUrlList)):
             importGroup(getFilePath() + masterUrlList[i] + ".blend", masterGroupList[i], winDir=True)
         #~
+        if (_consolidateMtl==True):
+            pass
+        # TODO consolidate duplicate materials in multiple layers
+        #~
         saveFile(origFileName + "_ASSEMBLY")
 
 def gpMeshCleanup(target):
