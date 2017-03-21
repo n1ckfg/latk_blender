@@ -1982,6 +1982,9 @@ def gp():
     dn()
     gpMeshPreview()
 
+def gs():
+    gpMesh(_singleFrame=True)
+	
 def gb():
     dn()
     gpMesh(_bakeMesh=True)
