@@ -57,6 +57,14 @@ def bakeParentToChild(start, end):
     #bpy.ops.nla.bake(frame_start=start, frame_end=end, step=1, only_selected=True, visual_keying=True, clear_constraints=True, clear_parents=True, bake_types={'OBJECT'})    
     bpy.ops.nla.bake(frame_start=start, frame_end=end, step=1, only_selected=True, visual_keying=True, clear_constraints=True, clear_parents=True, use_current_action=True, bake_types={'OBJECT'})    
 
+def bakeParentToChildByName(name="crv"):
+    start, end = getStartEnd()
+    target = matchName(name)
+    for obj in target:
+        bpy.context.scene.objects.active = obj
+        #print(bpy.context.scene.objects.active.name)
+        bakeParentToChild(start, end)
+
 def importAppend(blendfile, section, obj, winDir=False):
     # http://blender.stackexchange.com/questions/38060/how-to-link-append-with-a-python-script
     #blendfile = "D:/path/to/the/repository.blend"
@@ -76,6 +84,15 @@ def deselect():
 
 def selectAll():
     bpy.ops.object.select_all(action='SELECT')
+
+# TODO fix so you can find selected group regardless of active object
+def getActiveGroup():
+    obj = bpy.context.scene.objects.active
+    for group in bpy.data.groups:
+        for groupObj in group.objects:
+            if(obj.name == groupObj.name):
+                return group
+    return None
 
 def groupName(name="crv", gName="myGroup"):
     deselect()
@@ -1563,10 +1580,18 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=False, _
                 deselect()
                 #target = matchName("crv")
                 target = matchName("crv_" + layer.info)
+                '''
                 for tt in range(0, len(target)):
                     target[tt].select = True
+                '''
                 print("* baking")
-                bakeParentToChild(start, end)
+                # ~ ~ new ~ ~ 
+                for obj in target:
+                    bpy.context.scene.objects.active = obj
+                    #print(bpy.context.scene.objects.active.name)
+                    bakeParentToChild(start, end)
+                # ~ ~ ~ ~ ~ ~
+                #bakeParentToChild(start, end)
                 print("~ ~ ~ ~ ~ ~ ~ ~ ~")
                 #~
                 makeGroup(layer.info)
