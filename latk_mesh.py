@@ -248,18 +248,18 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=False, _
                 deselect()
                 #target = matchName("crv")
                 target = matchName("crv_" + layer.info)
-                '''
                 for tt in range(0, len(target)):
                     target[tt].select = True
-                '''
                 print("* baking")
                 # ~ ~ new ~ ~ 
+                '''
                 for obj in target:
                     bpy.context.scene.objects.active = obj
                     #print(bpy.context.scene.objects.active.name)
                     bakeParentToChild(start, end)
+                '''
                 # ~ ~ ~ ~ ~ ~
-                #bakeParentToChild(start, end)
+                bakeParentToChild(start, end)
                 print("~ ~ ~ ~ ~ ~ ~ ~ ~")
                 #~
                 makeGroup(layer.info)
