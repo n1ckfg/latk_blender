@@ -126,6 +126,7 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=False, _
                     #~
                     stroke_points = stroke.points
                     coords = [ (point.co.x, point.co.y, point.co.z) for point in stroke_points ]
+                    pressures = [ point.pressure for point in stroke_points ]
                     '''
                     coords = []
                     if (_minDistance > 0.0):
@@ -136,7 +137,7 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=False, _
                         coords = coordsOrig
                     '''
                     #~
-                    crv_ob = makeCurve(name="crv_" + layer.info + "_" + str(layer.frames[c].frame_number), coords=coords, curveType=_curveType, resolution=_resolution, thickness=_thickness, bevelResolution=_bevelResolution, parent=layer.parent, capsObj=capsObj, useUvs=_useUvs)
+                    crv_ob = makeCurve(name="crv_" + layer.info + "_" + str(layer.frames[c].frame_number), coords=coords, pressures=pressures, curveType=_curveType, resolution=_resolution, thickness=_thickness, bevelResolution=_bevelResolution, parent=layer.parent, capsObj=capsObj, useUvs=_useUvs)
                     strokeColor = (0.5,0.5,0.5)
                     if (_useColors==True):
                         strokeColor = palette.colors[stroke.colorname].color
@@ -446,7 +447,7 @@ def matchWithParent(_child, _parent, _index):
         _child.parent = _parent
         keyTransform(_child, _index)   
 
-def makeCurve(coords, resolution=2, thickness=0.1, bevelResolution=1, curveType="bezier", parent=None, capsObj=None, name="crv_ob", useUvs=True):
+def makeCurve(coords, pressures, resolution=2, thickness=0.1, bevelResolution=1, curveType="bezier", parent=None, capsObj=None, name="crv_ob", useUvs=True):
     # http://blender.stackexchange.com/questions/12201/bezier-spline-with-python-adds-unwanted-point
     # http://blender.stackexchange.com/questions/6750/poly-bezier-curve-from-a-list-of-coordinates
     # create the curve datablock
@@ -488,13 +489,17 @@ def makeCurve(coords, resolution=2, thickness=0.1, bevelResolution=1, curveType=
     if (curveType=="NURBS"):
         polyline.points.add(len(coords)-1)
         for i, coord in enumerate(coords):
-                x,y,z = coord
-                polyline.points[i].co = (x, y, z, 1)    
+            x,y,z = coord
+            polyline.points[i].co = (x, y, z, 1) 
+            if (pressures != None):
+                polyline.points[i].radius = pressures[i]   
     elif (curveType=="BEZIER"):
         polyline.bezier_points.add(len(coords)-1)
         #polyline.bezier_points.foreach_set("co", unpack_list(coords))
         for i, coord in enumerate(coords):
             polyline.bezier_points[i].co = coord   
+            if (pressures != None):
+                polyline.bezier_points[i].radius = pressures[i]  
             polyline.bezier_points[i].handle_left = polyline.bezier_points[i].handle_right = polyline.bezier_points[i].co
     #~
     # create object

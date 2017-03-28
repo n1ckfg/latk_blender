@@ -1,3 +1,10 @@
+def getActiveCurvePoints():
+    target = s()[0]
+    if (target.data.splines[0].type=="BEZIER"):
+        return target.data.splines.active.bezier_points
+    else:
+        return target.data.splines.active.points        
+        
 def bakeParentToChild(start, end):
     # https://www.blender.org/api/blender_python_api_2_72_1/bpy.ops.nla.html
     #bpy.ops.nla.bake(frame_start=start, frame_end=end, step=1, only_selected=True, visual_keying=True, clear_constraints=True, clear_parents=True, bake_types={'OBJECT'})    
