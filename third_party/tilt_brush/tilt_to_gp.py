@@ -113,7 +113,7 @@ def dump_sketch(sketch, filename):
                         z = point[2]
                     #~
                     if roundValues == True:
-                        sb += "                                        {\"co\": [" + roundVal(x, numPlaces) + ", " + roundVal(y, numPlaces) + ", " + roundVal(z, numPlaces) + "], \"pressure\": " + str(pressure) + ", \"strength\": " + str(strength)
+                        sb += "                                        {\"co\": [" + roundVal(x, numPlaces) + ", " + roundVal(y, numPlaces) + ", " + roundVal(z, numPlaces) + "], \"pressure\": " + str(float(roundVal(pressure, numPlaces))) + ", \"strength\": " + str(float(roundVal(strength, numPlaces)))
                     else:
                         sb += "                                        {\"co\": [" + str(x) + ", " + str(y) + ", " + str(z) + "], \"pressure\": " + str(pressure) + ", \"strength\": " + str(strength)                  
                     #~
