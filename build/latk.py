@@ -1354,6 +1354,15 @@ Going back to parenting with baking for single objects, less elegant but seems t
 # http://blender.stackexchange.com/questions/6750/poly-bezier-curve-from-a-list-of-coordinates
 # http://blender.stackexchange.com/questions/7047/apply-transforms-to-linked-objects
 
+# http://blender.stackexchange.com/questions/17738/how-to-uv-unwrap-object-with-python
+def planarUvProject():
+    for area in bpy.context.screen.areas:
+        if area.type == 'VIEW_3D':
+            for region in area.regions:
+                if region.type == 'WINDOW':
+                    override = {'area': area, 'region': region, 'edit_object': bpy.context.edit_object}
+                    bpy.ops.uv.smart_project(override)
+                    
 def exportForUnity():
     start, end = getStartEnd()
     target = matchName("crv")
