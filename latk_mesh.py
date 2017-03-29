@@ -38,7 +38,7 @@ def exportForUnity():
                 exporter(manualSelect=True, fileType="fbx", name=exportName)
                 break
 
-def assembleMesh(export=False):
+def assembleMesh(export=False, createPalette=True):
     origFileName = getFileName()
     masterUrlList = []
     masterGroupList = []
@@ -67,6 +67,10 @@ def assembleMesh(export=False):
         except:
             readyToSave = False
             print("Error importing group " + masterGroupList[i] + ", " + str(i+1) + " of " + str(len(masterGroupList)))
+    #~
+    if (createPalete==True):
+        createMtlPalette()
+    #~
     if (readyToSave==True):
         if (export==True):
             exportForUnity()

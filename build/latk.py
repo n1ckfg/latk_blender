@@ -52,6 +52,46 @@ from bpy_extras.io_utils import (ImportHelper, ExportHelper)
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
 
+def createMtlPalette(numReps = 1):
+    palette = None
+    removeUnusedMtl()
+    for h in range(0, numReps):
+        palette = []
+        print("1-3. Creating palette of all materials...")
+        for mtl in bpy.data.materials:
+            foundNewMtl = True
+            for palMtl in palette:
+                try:
+                    if (compareTuple(getDiffuseColor(mtl), getDiffuseColor(palMtl))==True):
+                        foundNewMtl = False
+                        break
+                except:
+                    pass
+            if (foundNewMtl==True):
+                print("Found " + mtl.name)
+                palette.append(mtl)
+        for i, mtl in enumerate(palette):
+            mtl.name = "Palette_" + str(i+1)
+        print("2-3. Matching palette colors for all objects...")
+        for obj in bpy.context.scene.objects:
+            try:
+                for i, mtl in enumerate(obj.data.materials):
+                    for palMtl in palette:
+                        if (compareTuple(getDiffuseColor(mtl), getDiffuseColor(palMtl))==True):
+                            obj.data.materials[i] = palMtl
+            except:
+                pass
+        print("3-3. Removing unused materials...")
+        removeUnusedMtl()
+        print ("...Finished.")
+    return palette
+
+def removeUnusedMtl():
+    # http://blender.stackexchange.com/questions/5300/how-can-i-remove-all-unused-materials-from-a-file/35637#35637
+    for mtl in bpy.data.materials:
+        if not mtl.users:
+            bpy.data.materials.remove(mtl)
+
 def getActiveCurvePoints():
     target = s()[0]
     if (target.data.splines[0].type=="BEZIER"):
@@ -1380,7 +1420,7 @@ def exportForUnity():
                 exporter(manualSelect=True, fileType="fbx", name=exportName)
                 break
 
-def assembleMesh(export=False):
+def assembleMesh(export=False, createPalette=True):
     origFileName = getFileName()
     masterUrlList = []
     masterGroupList = []
@@ -1409,6 +1449,10 @@ def assembleMesh(export=False):
         except:
             readyToSave = False
             print("Error importing group " + masterGroupList[i] + ", " + str(i+1) + " of " + str(len(masterGroupList)))
+    #~
+    if (createPalete==True):
+        createMtlPalette()
+    #~
     if (readyToSave==True):
         if (export==True):
             exportForUnity()
