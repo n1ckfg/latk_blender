@@ -1,4 +1,4 @@
-def createMtlPalette(numPlaces=4, numReps = 1):
+def createMtlPalette(numPlaces=5, numReps = 1):
     palette = None
     removeUnusedMtl()
     for h in range(0, numReps):
@@ -29,7 +29,8 @@ def createMtlPalette(numPlaces=4, numReps = 1):
                 pass
         #print("3-3. Removing unused materials...")
         removeUnusedMtl()
-        print ("Created palette of " + str(len(palette)) + " materials.")
+    #~
+    print ("Created palette of " + str(len(palette)) + " materials.")
     return palette
 
 def removeUnusedMtl():

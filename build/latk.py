@@ -52,7 +52,7 @@ from bpy_extras.io_utils import (ImportHelper, ExportHelper)
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
 
-def createMtlPalette(numPlaces=4, numReps = 1):
+def createMtlPalette(numPlaces=5, numReps = 1):
     palette = None
     removeUnusedMtl()
     for h in range(0, numReps):
@@ -83,7 +83,8 @@ def createMtlPalette(numPlaces=4, numReps = 1):
                 pass
         #print("3-3. Removing unused materials...")
         removeUnusedMtl()
-        print ("Created palette of " + str(len(palette)) + " materials.")
+    #~
+    print ("Created palette of " + str(len(palette)) + " materials.")
     return palette
 
 def removeUnusedMtl():
@@ -1420,7 +1421,7 @@ def exportForUnity():
                 exporter(manualSelect=True, fileType="fbx", name=exportName)
                 break
 
-def assembleMesh(export=False, createPalette=True):
+def assembleMesh(export=False, createPalette=False):
     origFileName = getFileName()
     masterUrlList = []
     masterGroupList = []
@@ -1677,8 +1678,8 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=False, _
         for i in range(0, len(masterUrlList)):
             importGroup(getFilePath() + masterUrlList[i] + ".blend", masterGroupList[i], winDir=True)
         #~
-        if (_consolidateMtl==True):
-            createMtlPalette()
+        #if (_consolidateMtl==True):
+            #createMtlPalette()
         #~
         saveFile(origFileName + "_ASSEMBLY")
 
