@@ -68,7 +68,7 @@ def assembleMesh(export=False, createPalette=True):
             readyToSave = False
             print("Error importing group " + masterGroupList[i] + ", " + str(i+1) + " of " + str(len(masterGroupList)))
     #~
-    if (createPalete==True):
+    if (createPalette==True):
         createMtlPalette()
     #~
     if (readyToSave==True):
@@ -295,9 +295,8 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=False, _
         for i in range(0, len(masterUrlList)):
             importGroup(getFilePath() + masterUrlList[i] + ".blend", masterGroupList[i], winDir=True)
         #~
-        # TODO figure out why this doesn't work
-        #if (_consolidateMtl==True):
-            #consolidateMtl()
+        if (_consolidateMtl==True):
+            createMtlPalette()
         #~
         saveFile(origFileName + "_ASSEMBLY")
 

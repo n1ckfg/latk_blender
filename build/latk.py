@@ -52,38 +52,38 @@ from bpy_extras.io_utils import (ImportHelper, ExportHelper)
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
 
-def createMtlPalette(numReps = 1):
+def createMtlPalette(numPlaces=4, numReps = 1):
     palette = None
     removeUnusedMtl()
     for h in range(0, numReps):
         palette = []
-        print("1-3. Creating palette of all materials...")
+        #print("1-3. Creating palette of all materials...")
         for mtl in bpy.data.materials:
             foundNewMtl = True
             for palMtl in palette:
                 try:
-                    if (compareTuple(getDiffuseColor(mtl), getDiffuseColor(palMtl))==True):
+                    if (compareTuple(getDiffuseColor(mtl), getDiffuseColor(palMtl), numPlaces=numPlaces)==True):
                         foundNewMtl = False
                         break
                 except:
                     pass
             if (foundNewMtl==True):
-                print("Found " + mtl.name)
+                #print("Found " + mtl.name)
                 palette.append(mtl)
         for i, mtl in enumerate(palette):
             mtl.name = "Palette_" + str(i+1)
-        print("2-3. Matching palette colors for all objects...")
+        #print("2-3. Matching palette colors for all objects...")
         for obj in bpy.context.scene.objects:
             try:
                 for i, mtl in enumerate(obj.data.materials):
                     for palMtl in palette:
-                        if (compareTuple(getDiffuseColor(mtl), getDiffuseColor(palMtl))==True):
+                        if (compareTuple(getDiffuseColor(mtl), getDiffuseColor(palMtl), numPlaces=numPlaces)==True):
                             obj.data.materials[i] = palMtl
             except:
                 pass
-        print("3-3. Removing unused materials...")
+        #print("3-3. Removing unused materials...")
         removeUnusedMtl()
-        print ("...Finished.")
+        print ("Created palette of " + str(len(palette)) + "materials.")
     return palette
 
 def removeUnusedMtl():
@@ -1450,7 +1450,7 @@ def assembleMesh(export=False, createPalette=True):
             readyToSave = False
             print("Error importing group " + masterGroupList[i] + ", " + str(i+1) + " of " + str(len(masterGroupList)))
     #~
-    if (createPalete==True):
+    if (createPalette==True):
         createMtlPalette()
     #~
     if (readyToSave==True):
@@ -1677,9 +1677,8 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=False, _
         for i in range(0, len(masterUrlList)):
             importGroup(getFilePath() + masterUrlList[i] + ".blend", masterGroupList[i], winDir=True)
         #~
-        # TODO figure out why this doesn't work
-        #if (_consolidateMtl==True):
-            #consolidateMtl()
+        if (_consolidateMtl==True):
+            createMtlPalette()
         #~
         saveFile(origFileName + "_ASSEMBLY")
 
