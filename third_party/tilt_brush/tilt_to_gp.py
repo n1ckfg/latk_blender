@@ -95,7 +95,14 @@ def dump_sketch(sketch, filename):
                     z = 0.0
                     #~
                     point = stroke.controlpoints[j].position
-
+                    pressure = 1.0
+                    strength = 1.0
+                    try:
+                        pressure = stroke.controlpoints[j].extension[0]
+                        strength = pressure
+                    except:
+                        pass
+                    #~
                     if useScaleAndOffset == True:
                         x = (point[0] * globalScale[0]) + globalOffset[0]
                         y = (point[1] * globalScale[1]) + globalOffset[1]
@@ -106,9 +113,9 @@ def dump_sketch(sketch, filename):
                         z = point[2]
                     #~
                     if roundValues == True:
-                        sb += "                                        {\"co\": [" + roundVal(x, numPlaces) + ", " + roundVal(y, numPlaces) + ", " + roundVal(z, numPlaces) + "]"
+                        sb += "                                        {\"co\": [" + roundVal(x, numPlaces) + ", " + roundVal(y, numPlaces) + ", " + roundVal(z, numPlaces) + "], \"pressure\": " + str(pressure) + ", \"strength\": " + str(strength)
                     else:
-                        sb += "                                        {\"co\": [" + str(x) + ", " + str(y) + ", " + str(z) + "]"                  
+                        sb += "                                        {\"co\": [" + str(x) + ", " + str(y) + ", " + str(z) + "], \"pressure\": " + str(pressure) + ", \"strength\": " + str(strength)                  
                     #~
                     if j == len(stroke.controlpoints) - 1:
                         sb += "}" + "\n"
