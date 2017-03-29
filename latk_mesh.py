@@ -82,7 +82,7 @@ def assembleMesh(export=False):
             saveFile(origFileName + "_ASSEMBLY")
             print(origFileName + "_ASSEMBLY.blend" + " was saved but some groups were missing.")
 
-def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=False, _decimate = 0.1, _curveType="nurbs", _useColors=True, _saveLayers=False, _singleFrame=False, _vertexColors=False, _animateFrames=True, _solidify=False, _subd=0, _remesh=False, _consolidateMtl=True, _caps=True, _joinMesh=True, _useUvs=False):
+def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=False, _decimate = 0.1, _curveType="nurbs", _useColors=True, _saveLayers=False, _singleFrame=False, _vertexColors=False, _animateFrames=True, _solidify=False, _subd=0, _remesh=False, _consolidateMtl=True, _caps=True, _joinMesh=True, _uvStroke=False, _uvFill=False):
     if (_joinMesh==True or _remesh==True):
         _bakeMesh=True
     #~
@@ -146,7 +146,7 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=False, _
                         coords = coordsOrig
                     '''
                     #~
-                    crv_ob = makeCurve(name="crv_" + layer.info + "_" + str(layer.frames[c].frame_number), coords=coords, pressures=pressures, curveType=_curveType, resolution=_resolution, thickness=_thickness, bevelResolution=_bevelResolution, parent=layer.parent, capsObj=capsObj, useUvs=_useUvs)
+                    crv_ob = makeCurve(name="crv_" + layer.info + "_" + str(layer.frames[c].frame_number), coords=coords, pressures=pressures, curveType=_curveType, resolution=_resolution, thickness=_thickness, bevelResolution=_bevelResolution, parent=layer.parent, capsObj=capsObj, useUvs=_uvStroke)
                     strokeColor = (0.5,0.5,0.5)
                     if (_useColors==True):
                         strokeColor = palette.colors[stroke.colorname].color
@@ -194,7 +194,7 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=False, _
                         #~
                         # + + + + + + +
                         if (palette.colors[stroke.colorname].fill_alpha > 0.001):
-                            fill_ob = createFill(stroke.points)
+                            fill_ob = createFill(stroke.points, useUvs=_uvFill)
                             joinObjects([meshObj, fill_ob])
                         # + + + + + + +
                         #~
@@ -625,7 +625,7 @@ def randomMetaballs():
         element.co = coordinate
         element.radius = 2.0
 
-def createFill(inputVerts):
+def createFill(inputVerts, useUvs=False):
     verts = []
     #~
     # Create mesh 
@@ -677,6 +677,11 @@ def createFill(inputVerts):
     #~
     # Finish up, write the bmesh back to the mesh
     bm.to_mesh(me)
+    #~
+    if (useUvs==True):
+        ob.select = True
+        bpy.context.scene.objects.active = ob
+        planarUvProject()
     #~
     return ob
 
