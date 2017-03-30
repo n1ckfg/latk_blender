@@ -7,12 +7,9 @@ def createMtlPalette(numPlaces=5, numReps = 1):
         for mtl in bpy.data.materials:
             foundNewMtl = True
             for palMtl in palette:
-                try:
-                    if (compareTuple(getDiffuseColor(mtl), getDiffuseColor(palMtl), numPlaces=numPlaces)==True):
-                        foundNewMtl = False
-                        break
-                except:
-                    pass
+                if (compareTuple(getDiffuseColor(mtl), getDiffuseColor(palMtl), numPlaces=numPlaces)==True):
+                    foundNewMtl = False
+                    break
             if (foundNewMtl==True):
                 #print("Found " + mtl.name)
                 palette.append(mtl)
@@ -937,7 +934,11 @@ def getEmissionColor(mtl=None):
 def getDiffuseColor(mtl=None):
     if not mtl:
         mtl = getActiveMtl()
-    return getMtlColor("Diffuse BSDF", mtl)
+    col = getMtlColor("Diffuse BSDF", mtl)
+    if (col==None):
+        col = mtl.diffuse_color
+    return col
+    #return getMtlColor("Diffuse BSDF", mtl)
 
 def makeEmissionMtl():
     mtl = getActiveMtl()
