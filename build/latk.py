@@ -97,7 +97,9 @@ def getActiveCurvePoints():
     else:
         return target.data.splines.active.points        
         
-def bakeParentToChild(start, end):
+def bakeParentToChild(start=None, end=None):
+    if (start==None and end==None):
+        start, end = getStartEnd()
     # https://www.blender.org/api/blender_python_api_2_72_1/bpy.ops.nla.html
     #bpy.ops.nla.bake(frame_start=start, frame_end=end, step=1, only_selected=True, visual_keying=True, clear_constraints=True, clear_parents=True, bake_types={'OBJECT'})    
     bpy.ops.nla.bake(frame_start=start, frame_end=end, step=1, only_selected=True, visual_keying=True, clear_constraints=True, clear_parents=True, use_current_action=True, bake_types={'OBJECT'})    
