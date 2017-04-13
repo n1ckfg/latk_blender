@@ -1996,6 +1996,15 @@ def makeGpCurve(_type="PATH"):
     #bpy.context.area.type = "CONSOLE"
     bpy.context.area.type = original_type
 
+def cubesToVerts(target=None, cubeScale=0.25, posScale=0.01):
+    if not target:
+        target = s()[0].data.vertices
+    for vert in target:
+        bpy.ops.mesh.primitive_cube_add()
+        cube = s()[0]
+        cube.location = vert.co * posScale
+        cube.scale = (cubeScale,cubeScale,cubeScale)
+
 def randomMetaballs():
     # http://blenderscripting.blogspot.com/2012/09/tripping-metaballs-python.html
     scene = bpy.context.scene
