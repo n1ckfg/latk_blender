@@ -328,6 +328,26 @@ def remesher(obj, bake=True, mode="blocks", octree=6, threshold=0.0001, smoothSh
         else:
             return obj
 
+# https://blender.stackexchange.com/questions/45004/how-to-make-boolean-modifiers-with-python
+def booleanMod(target=None, op="union"):
+    if not target:
+        target=s()
+    for i in range(1, len(target)):
+            bpy.context.scene.objects.active = target[i]
+            bpy.ops.object.modifier_add(type="BOOLEAN")
+            bpy.context.object.modifiers["Boolean"].operation = op.upper()
+            bpy.context.object.modifiers["Boolean"].object = target[i-1]
+            bpy.ops.object.modifier_apply(apply_as='DATA', modifier="Boolean")
+            delete(target[i-1])
+
+def polyCube(pos=(0,0,0), scale=(1,1,1), rot=(0,0,0)):
+    bpy.ops.mesh.primitive_cube_add()
+    cube = s()[0]
+    cube.location = pos
+    cube.scale=scale
+    cube.rotation_euler=rot
+    return cube
+
 def applyModifiers(obj):
     mesh = obj.to_mesh(scene = bpy.context.scene, apply_modifiers=True, settings = 'PREVIEW')
     meshObj = bpy.data.objects.new(obj.name + "_mesh", mesh)
