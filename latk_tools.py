@@ -91,6 +91,7 @@ def getChildren(target=None):
     if not target:
         target=s()[0]
     # https://www.blender.org/forum/viewtopic.php?t=8661
+    return [ob for ob in bpy.context.scene.objects if ob.parent == target]
 
 def groupName(name="crv", gName="myGroup"):
     deselect()
