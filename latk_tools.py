@@ -87,6 +87,11 @@ def getActiveGroup():
                 return group
     return None
 
+def getChildren(target=None):
+    if not target:
+        target=s()[0]
+    # https://www.blender.org/forum/viewtopic.php?t=8661
+
 def groupName(name="crv", gName="myGroup"):
     deselect()
     selectName(name)
@@ -397,9 +402,9 @@ def joinObjects(target=None, center=False):
     #~
     for i in range(1, len(target)):
         try:
-        	scn.objects.unlink(target[i])
+            scn.objects.unlink(target[i])
         except:
-        	pass
+            pass
         #try:
             #removeObj(target[i].name)
         #except:
