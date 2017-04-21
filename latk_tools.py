@@ -717,9 +717,9 @@ def moveShot(start, end, x, y, z):
                     layer.frames[currentFrame].strokes[i].points[j].co.y += y
                     layer.frames[currentFrame].strokes[i].points[j].co.z += z
 
-def fixContext():
+def fixContext(ctx="VIEW_3D"):
     original_type = bpy.context.area.type
-    bpy.context.area.type = "VIEW_3D"
+    bpy.context.area.type = ctx
     return original_type
 
 def returnContext(original_type):
@@ -770,6 +770,41 @@ def getActiveLayer():
     gp = getActiveGp()
     layer = gp.layers.active
     return layer
+
+def duplicateLayer():
+    ctx = fixContext()
+    bpy.ops.gpencil.layer_duplicate()
+    returnContext(ctx)
+    return getActiveLayer()
+
+def splitLayer():
+    layer1 = getActiveLayer()
+    layer2 = duplicateLayer()
+    splitNum = getActiveFrameNum()
+    #~
+    for frame in layer1.frames:
+        if (frame.frame_number>splitNum):
+            layer1.frames.remove(frame)
+    for frame in layer2.frames:
+        if (frame.frame_number<=splitNum):
+            layer2.frames.remove(frame)
+    #~
+    # cap the new layers with blank frames
+    #blankFrame(layer1, bpy.context.scene.frame_current)
+    #blankFrame(layer2, bpy.context.scene.frame_current-1)
+    lastNum = layer2.frames[0].frame_number
+    blankFrame(layer1, lastNum)
+    blankFrame(layer2, lastNum-1)
+
+def blankFrame(layer=None, frame=None):
+    if not layer:
+        layer = getActiveLayer()
+    if not frame:
+        frame = bpy.context.scene.frame_current
+    try:
+        layer.frames.new(frame)
+    except:
+        pass
 
 def clearPalette():
     palette = getActivePalette()
@@ -1024,6 +1059,18 @@ def getActiveFrame():
     layer = gp.layers.active
     frame = layer.active_frame
     return frame
+
+def getActiveFrameNum():
+    '''
+    returns = -1
+    layer = getActiveLayer()
+    for i, frame in enumerate(layer.frames):
+        if (frame == layer.active_frame):
+            returns = i
+            break
+    return returns
+    '''
+    return getActiveFrame().frame_number
 
 # gp not timeline
 def setActiveFrame(index):
