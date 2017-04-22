@@ -857,7 +857,7 @@ def splitLayersAboveFrameLimit(limit=20):
         for i in range(0, int(getLayerLength()/limit)):
             currentLayer = getActiveLayer()
             print("* " + currentLayer.info + ": pass " + str(i))
-            if (getLayerLength() < limit):
+            if (getLayerLength() < limit or currentLayer.lock==True):
                 break
             goToFrame(currentLayer.frames[limit].frame_number)
             setActiveFrame(currentLayer.frames[limit].frame_number)
