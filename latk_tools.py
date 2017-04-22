@@ -837,34 +837,34 @@ def getActiveFrameTimelineNum():
 
 def checkLayersAboveFrameLimit(limit=20):
     gp = getActiveGp()
-    returns = False
+    returns = []
     print("~ ~ ~ ~")
     for layer in gp.layers:
         if (len(layer.frames) > limit):
-            returns = True
+            returns.append(layer)
             print("layer " + layer.info + " is over limit " + str(limit) + " with " + str(len(layer.frames)) + " frames.")
+    print(" - - - " + str(len(returns)) + " total layers over limit.")
     print("~ ~ ~ ~")
     return returns
 
 def splitLayersAboveFrameLimit(limit=20):
-    gp = getActiveGp()
-    layers = gp.layers
+    layers = checkLayersAboveFrameLimit(limit)
     #~
-    if (checkLayersAboveFrameLimit(limit) == True):
+    if (len(layers) > 0):
         for layer in layers:
-            if (getLayerLength() > limit):
-                setActiveLayer(layer.info)
-                for i in range(0, int(getLayerLength()/limit)):
-                    currentLayer = getActiveLayer()
-                    print("* " + currentLayer.info + ": pass " + str(i))
-                    if (getLayerLength() < limit):
-                        break
-                    goToFrame(currentLayer.frames[limit].frame_number)
-                    setActiveFrame(currentLayer.frames[limit].frame_number)
-                    #print("We are at layer " + currentLayer.info + " and frame " + str(getActiveFrameNum()) + " and timeline " + str(getActiveFrameTimelineNum()))
-                    currentLayer = splitLayer(currentLayer.frames[limit].frame_number)
-                    setActiveLayer(currentLayer.info)
-                    print("Split layer " + currentLayer.info + " with " + str(len(currentLayer.frames)) + " frames.")
+            setActiveLayer(layer.info)
+            for i in range(0, int(getLayerLength()/limit)):
+                currentLayer = getActiveLayer()
+                print("* " + currentLayer.info + ": pass " + str(i))
+                if (getLayerLength() < limit):
+                    break
+                goToFrame(currentLayer.frames[limit].frame_number)
+                setActiveFrame(currentLayer.frames[limit].frame_number)
+                #print("We are at layer " + currentLayer.info + " and frame " + str(getActiveFrameNum()) + " and timeline " + str(getActiveFrameTimelineNum()))
+                #currentLayer = splitLayer(currentLayer.frames[limit].frame_number)
+                splitLayer(currentLayer.frames[limit].frame_number)
+                #setActiveLayer(currentLayer.info)
+                print("Split layer " + currentLayer.info + " with " + str(len(currentLayer.frames)) + " frames.")
     else:
         print("No layers are above frame limit " + str(limit) + ".")
 
