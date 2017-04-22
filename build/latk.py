@@ -910,16 +910,11 @@ def splitLayersAboveFrameLimit(limit=20):
                 currentLayer = getActiveLayer()
                 goToFrame(currentLayer.frames[limit].frame_number)
                 print("We are at layer " + currentLayer.info + " and frame " + str(getActiveFrameNum()) + " and timeline " + str(getActiveFrameTimelineNum()))
-                #try:
                 splitLayer()
                 print("Split layer " + currentLayer.info + " with " + str(len(currentLayer.frames)) + " frames.")
-                        #except:
-                            #print ("Splitting layer " + currentLayer.info + " failed.")
-                            #break
-                    #else:
-                        #break
-    else:
-        print("No layers are above frame limit " + str(limit) + ".")
+                currentLayer = getActiveLayer()
+    #else:
+        #print("No layers are above frame limit " + str(limit) + ".")
 
 def getLayerLength(name=None):
     layer = None
@@ -1778,7 +1773,8 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=False, _
                     bakeParentToChild(start, end)
                 '''
                 # ~ ~ ~ ~ ~ ~
-                bakeParentToChild(start, end)
+                # * * * * *
+                #bakeParentToChild(start, end)
                 # * * * * *
                 bakeParentToChildByName("crv_" + layer.info)
                 # * * * * *

@@ -273,7 +273,8 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=False, _
                     bakeParentToChild(start, end)
                 '''
                 # ~ ~ ~ ~ ~ ~
-                bakeParentToChild(start, end)
+                # * * * * *
+                #bakeParentToChild(start, end)
                 # * * * * *
                 bakeParentToChildByName("crv_" + layer.info)
                 # * * * * *
