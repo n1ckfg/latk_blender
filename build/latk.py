@@ -758,6 +758,17 @@ def chooseShot(shot):
     return [start, end]
 '''
 
+def showHide(obj, hide, keyframe=False, frame=None):
+    obj.hide = hide
+    obj.hide_render = hide
+    #_obj.keyframe_insert(data_path="hide", frame=_frame) 
+    #_obj.keyframe_insert(data_path="hide_render", frame=_frame) 
+
+def showHideChildren(hide):
+    target = getChildren()
+    for obj in target:
+        showHide(obj, hide)
+
 def moveShot(start, end, x, y, z):
     gp = bpy.context.scene.grease_pencil
     target = (start, end)
