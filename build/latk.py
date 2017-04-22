@@ -1213,6 +1213,31 @@ def getAllStrokes(active=False):
     print("Got " + str(len(returns)) + " strokes.")
     return returns
 
+def getLayerStrokes(name=None):
+    gp = getActiveGp()
+    if not name:
+        name = gp.layers.active.info
+    layer = gp.layers[name]
+    strokes = []
+    for frame in layer.frames:
+        for stroke in frame.strokes:
+            strokes.append(stroke)
+    return strokes
+
+def getFrameStrokes(num=None, name=None):
+    gp = getActiveGp()
+    if not name:
+        name = gp.layers.active.info
+    layer = gp.layers[name]
+    if not num:
+        num = layer.active_frame.frame_number
+    strokes = []
+    for frame in layer.frames:
+        if (frame.frame_number == num):
+            for stroke in frame.strokes:
+                strokes.append(stroke)
+    return strokes
+
 def getSelectedStrokes(active=True):
     returns = []
     strokes = getAllStrokes(active)
