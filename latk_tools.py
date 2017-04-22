@@ -788,8 +788,9 @@ def duplicateLayer():
     returnContext(ctx)
     return getActiveLayer()
 
-def splitLayer():
-    splitNum = getActiveFrameTimelineNum()
+def splitLayer(splitNum=None):
+    if not splitNum:
+        splitNum = getActiveFrameTimelineNum()
     layer1 = getActiveLayer()
     layer2 = duplicateLayer()
     #~
@@ -851,16 +852,23 @@ def splitLayersAboveFrameLimit(limit=20):
     #~
     if (checkLayersAboveFrameLimit(limit) == True):
         for layer in layers:
-            setActiveLayer(layer.info)
             if (getLayerLength() > limit):
-                currentLayer = getActiveLayer()
-                goToFrame(currentLayer.frames[limit].frame_number)
-                print("We are at layer " + currentLayer.info + " and frame " + str(getActiveFrameNum()) + " and timeline " + str(getActiveFrameTimelineNum()))
-                splitLayer()
-                print("Split layer " + currentLayer.info + " with " + str(len(currentLayer.frames)) + " frames.")
-                currentLayer = getActiveLayer()
-    #else:
-        #print("No layers are above frame limit " + str(limit) + ".")
+                setActiveLayer(layer.info)
+                for i in range(0, 2):#int(getLayerLength()/limit)):
+                    currentLayer = getActiveLayer()
+                    print("* " + currentLayer.info + ": pass " + str(i))
+                    if (getLayerLength() < limit):
+                        break
+                    goToFrame(currentLayer.frames[limit].frame_number)
+                    setActiveFrame(currentLayer.frames[limit].frame_number)
+                    #print("We are at layer " + currentLayer.info + " and frame " + str(getActiveFrameNum()) + " and timeline " + str(getActiveFrameTimelineNum()))
+                    currentLayer = splitLayer(currentLayer.frames[limit].frame_number)
+                    setActiveLayer(currentLayer.info)
+                    print("Split layer " + currentLayer.info + " with " + str(len(currentLayer.frames)) + " frames.")
+    else:
+        print("No layers are above frame limit " + str(limit) + ".")
+
+splf = splitLayersAboveFrameLimit
 
 def getLayerLength(name=None):
     layer = None
@@ -1230,7 +1238,6 @@ d = delete
 j = joinObjects
 df = deleteFromAllFrames
 spl = splitLayer
-splf = splitLayersAboveFrameLimit
 cplf = checkLayersAboveFrameLimit
 
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
