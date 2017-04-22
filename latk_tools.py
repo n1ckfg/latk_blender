@@ -794,19 +794,23 @@ def splitLayer():
     layer2 = duplicateLayer()
     #~
     for frame in layer1.frames:
-        if (frame.frame_number>splitNum):
+        if (frame.frame_number>=splitNum):
             layer1.frames.remove(frame)
     for frame in layer2.frames:
-        if (frame.frame_number<=splitNum):
+        if (frame.frame_number<splitNum):
             layer2.frames.remove(frame)
     #~
-    lastNum = layer2.frames[0].frame_number
-    # cap the new layers with blank frames
-    #blankFrame(layer1, bpy.context.scene.frame_current)
-    #blankFrame(layer2, bpy.context.scene.frame_current-1)
-    blankFrame(layer1, lastNum)
-    blankFrame(layer2, lastNum-1)
-    return layer2
+    if (len(layer2.frames) > 0):
+        lastNum = layer2.frames[0].frame_number
+        # cap the new layers with blank frames
+        #blankFrame(layer1, bpy.context.scene.frame_current)
+        #blankFrame(layer2, bpy.context.scene.frame_current-1)
+        blankFrame(layer1, lastNum)
+        blankFrame(layer2, lastNum-1)
+        return layer2
+    else:
+        cleanEmptyLayers()
+        return None
 
 def blankFrame(layer=None, frame=None):
     if not layer:
@@ -833,29 +837,43 @@ def getActiveFrameTimelineNum():
 def checkLayersAboveFrameLimit(limit=20):
     gp = getActiveGp()
     returns = False
+    print("~ ~ ~ ~")
     for layer in gp.layers:
         if (len(layer.frames) > limit):
             returns = True
             print("layer " + layer.info + " is over limit " + str(limit) + " with " + str(len(layer.frames)) + " frames.")
+    print("~ ~ ~ ~")
     return returns
 
 def splitLayersAboveFrameLimit(limit=20):
     gp = getActiveGp()
     layers = gp.layers
+    #~
     if (checkLayersAboveFrameLimit(limit) == True):
         for layer in layers:
             setActiveLayer(layer.info)
-            currentLayer = getActiveLayer()
-            while(len(currentLayer.frames) > limit+2):
+            if (getLayerLength() > limit):
+                currentLayer = getActiveLayer()
                 goToFrame(currentLayer.frames[limit].frame_number)
-                try:
-                    currentLayer = splitLayer()
-                    print("Split layer " + layer.info + " with " + str(len(layer.frames)) + " frames.")
-                except:
-                    print ("Splitting layer " + layer.info + " failed.")
+                print("We are at layer " + currentLayer.info + " and frame " + str(getActiveFrameNum()) + " and timeline " + str(getActiveFrameTimelineNum()))
+                #try:
+                splitLayer()
+                print("Split layer " + currentLayer.info + " with " + str(len(currentLayer.frames)) + " frames.")
+                        #except:
+                            #print ("Splitting layer " + currentLayer.info + " failed.")
+                            #break
+                    #else:
+                        #break
     else:
-        print("No layers are above frame limit.")
-    #cleanEmptyLayers
+        print("No layers are above frame limit " + str(limit) + ".")
+
+def getLayerLength(name=None):
+    layer = None
+    if not name:
+        layer = getActiveLayer()
+    else:
+        layer = getActiveGp().layers[name]
+    return len(layer.frames)
 
 def cleanEmptyLayers():
     gp = getActiveGp()
@@ -1217,6 +1235,8 @@ d = delete
 j = joinObjects
 df = deleteFromAllFrames
 spl = splitLayer
+splf = splitLayersAboveFrameLimit
+cplf = checkLayersAboveFrameLimit
 
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
