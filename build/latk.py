@@ -1238,6 +1238,21 @@ def getFrameStrokes(num=None, name=None):
                 strokes.append(stroke)
     return strokes
 
+def getLayerStrokesAvg(name=None):
+    gp = getActiveGp()
+    if not name:
+        name = gp.layers.active.info
+    layer = gp.layers[name]
+    return float(roundVal(len(getLayerStrokes(name)) / len(layer.frames), 2))
+
+def getAllStrokesAvg(locked=True):
+    gp = getActiveGp()
+    avg = 0
+    for layer in gp.layers:
+        if (layer.lock == False or locked == True):
+            avg += getLayerStrokesAvg(layer.info)
+    return float(roundVal(avg / len(gp.layers), 2))
+
 def getSelectedStrokes(active=True):
     returns = []
     strokes = getAllStrokes(active)
