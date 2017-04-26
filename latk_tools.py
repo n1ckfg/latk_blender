@@ -715,6 +715,15 @@ def showHideChildren(hide):
     for obj in target:
         showHide(obj, hide)
 
+def rgbToHex(color, normalized=False):
+    if (normalized==True):
+        return "#%02x%02x%02x" % (color[0] * 255, color[1] * 255, color[2] * 255)
+    else:
+        return "#%02x%02x%02x" % (color[0], color[1], color[2])
+
+def normRgbToHex(color):
+    return rgbToHex(color, normalized=True)
+
 def moveShot(start, end, x, y, z):
     gp = bpy.context.scene.grease_pencil
     target = (start, end)
