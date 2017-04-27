@@ -1652,7 +1652,7 @@ def exportForUnity(sketchFab=True):
                 exportName = exportName.split("crv_")[1]
                 exportName = exportName.split("_mesh")[0]
                 exporter(manualSelect=True, fileType="fbx", name=exportName)
-                sketchFabList.append("0.83 " + exportName + ".fbx" + "\r")
+                sketchFabList.append("0.083 " + exportName + ".fbx" + "\r")
                 sketchFabListNum.append(float(exportName.split("_")[len(exportName.split("_"))-1]))
                 break
     if (sketchFab==True):
