@@ -21,9 +21,11 @@ def planarUvProject():
                     override = {'area': area, 'region': region, 'edit_object': bpy.context.edit_object}
                     bpy.ops.uv.smart_project(override)
                     
-def exportForUnity():
+def exportForUnity(sketchFab=True):
     start, end = getStartEnd()
     target = matchName("crv")
+    sketchFabList = []
+    sketchFabListNum = []
     for tt in range(0, len(target)):
         deselect()
         for i in range(start, end):
@@ -36,7 +38,30 @@ def exportForUnity():
                 exportName = exportName.split("crv_")[1]
                 exportName = exportName.split("_mesh")[0]
                 exporter(manualSelect=True, fileType="fbx", name=exportName)
+                sketchFabList.append("0.83 " + exportName + ".fbx" + "\r")
+                sketchFabListNum.append(float(exportName.split("_")[len(exportName.split("_"))-1]))
                 break
+    if (sketchFab==True):
+        #sketchFabList.reverse()
+        #~
+        print("before sort: ")
+        print(sketchFabList)
+        print(sketchFabListNum)
+        # this sorts entries by number instead of order in Outliner pane
+        sketchFabList.sort(key=lambda x: x[0])
+        ind = [i[0] for i in sorted(enumerate(sketchFabListNum),key=lambda x: x[1])]
+        sketchFabList = [i[0] for i in sorted(zip(sketchFabList, ind),key=lambda x: x[1])]
+        #~
+        print(getFilePath() + getFileName())
+        tempName = exportName.split("_")
+        tempString = ""
+        for i in range(0, len(tempName)-1):
+            tempString += str(tempName[i])
+            if (i < len(tempName)-1):
+                tempString += "_"
+        print("after sort: ")
+        print(sketchFabList)
+        writeTextFile(getFilePath() + getFileName() + "_" + tempString + ".sketchfab.timeframe", sketchFabList)
 
 def assembleMesh(export=False, createPalette=True):
     origFileName = getFileName()
@@ -51,8 +76,9 @@ def assembleMesh(export=False, createPalette=True):
     #~
     for b in range(0, len(pencil.layers)):
         layer = pencil.layers[b]
-        url = origFileName + "_layer" + str(b+1) + "_" + layer.info
-        masterGroupList.append(layer.info)
+        #url = origFileName + "_layer" + str(b+1) + "_" + layer.info
+        url = origFileName + "_layer_" + layer.info
+        masterGroupList.append(getLayerInfo(layer))
         masterUrlList.append(url)
     #~
     #openFile(origFileName)
@@ -70,6 +96,8 @@ def assembleMesh(export=False, createPalette=True):
     #~
     if (createPalette==True):
         createMtlPalette()
+    #~
+    consolidateGroups()
     #~
     if (readyToSave==True):
         if (export==True):
@@ -118,7 +146,8 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=False, _
     #~
     for b in range(0, len(pencil.layers)):
         layer = pencil.layers[b]
-        url = origFileName + "_layer" + str(b+1) + "_" + layer.info
+        #url = origFileName + "_layer" + str(b+1) + "_" + layer.info
+        url = origFileName + "_layer_" + layer.info
         if (layer.lock==False):
             rangeStart = 0
             rangeEnd = len(layer.frames)
@@ -150,7 +179,7 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=False, _
                         coords = coordsOrig
                     '''
                     #~
-                    crv_ob = makeCurve(name="crv_" + layer.info + "_" + str(layer.frames[c].frame_number), coords=coords, pressures=pressures, curveType=_curveType, resolution=_resolution, thickness=_thickness, bevelResolution=_bevelResolution, parent=layer.parent, capsObj=capsObj, useUvs=_uvStroke)
+                    crv_ob = makeCurve(name="crv_" + getLayerInfo(layer) + "_" + str(layer.frames[c].frame_number), coords=coords, pressures=pressures, curveType=_curveType, resolution=_resolution, thickness=_thickness, bevelResolution=_bevelResolution, parent=layer.parent, capsObj=capsObj, useUvs=_uvStroke)
                     strokeColor = (0.5,0.5,0.5)
                     if (_useColors==True):
                         strokeColor = palette.colors[stroke.colorname].color
@@ -234,7 +263,7 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=False, _
                 #~
                 if (_joinMesh==True): #and _bakeMesh==True):
                     #target = matchName("crv")
-                    target = matchName("crv_" + layer.info)
+                    target = matchName("crv_" + getLayerInfo(layer))
                     for i in range(start, end):
                         strokesToJoin = []
                         if (i == layer.frames[c].frame_number):
@@ -261,7 +290,7 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=False, _
             if (_saveLayers==True):
                 deselect()
                 #target = matchName("crv")
-                target = matchName("crv_" + layer.info)
+                target = matchName("crv_" + getLayerInfo(layer))
                 for tt in range(0, len(target)):
                     target[tt].select = True
                 print("* baking")
@@ -276,20 +305,20 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=False, _
                 # * * * * *
                 #bakeParentToChild(start, end)
                 # * * * * *
-                bakeParentToChildByName("crv_" + layer.info)
+                bakeParentToChildByName("crv_" + getLayerInfo(layer))
                 # * * * * *
                 print("~ ~ ~ ~ ~ ~ ~ ~ ~")
                 #~
-                makeGroup(layer.info)
+                makeGroup(getLayerInfo(layer))
                 #~
-                masterGroupList.append(layer.info)
+                masterGroupList.append(getLayerInfo(layer))
                 #~
                 print("saving to " + url)
                 saveFile(url)
                 #~
                 masterUrlList.append(url)
                 #~
-                gpMeshCleanup(layer.info)
+                gpMeshCleanup(getLayerInfo(layer))
     #~
     if (_bakeMesh==True and _caps==True and _saveLayers==False):
         delete(capsObj)
@@ -302,7 +331,12 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=False, _
         if (_consolidateMtl==True):
             createMtlPalette()
         #~
+        #consolidateGroups()
+        #~
         saveFile(origFileName + "_ASSEMBLY")
+
+def getLayerInfo(layer):
+    return layer.info.split(".")[0]
 
 def gpMeshCleanup(target):
     gc.collect()

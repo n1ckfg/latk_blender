@@ -36,6 +36,14 @@ def removeUnusedMtl():
         if not mtl.users:
             bpy.data.materials.remove(mtl)
 
+'''
+def sortLists(list1, list2):
+    list1.sort(key=lambda x: x[0])
+    ind = [i[0] for i in sorted(enumerate(list2),key=lambda x: x[1])]
+    list1 = [i[0] for i in sorted(zip(list1, ind),key=lambda x: x[1])]
+    return list1
+'''
+
 def getActiveCurvePoints():
     target = s()[0]
     if (target.data.splines[0].type=="BEZIER"):
@@ -71,6 +79,16 @@ def importAppend(blendfile, section, obj, winDir=False):
         section = blendfile + "/" + section + "/"
     #~
     bpy.ops.wm.append(filepath=url, filename=obj, directory=section)
+
+def writeTextFile(name="test.txt", lines=None):
+    file = open(name,"w") 
+    for line in lines:
+        file.write(line) 
+    file.close() 
+
+def readTextFile(name="text.txt"):
+    file = open(name, "r") 
+    return file.read() 
 
 def deselect():
     bpy.ops.object.select_all(action='DESELECT')
@@ -216,6 +234,34 @@ def deleteDuplicateStrokes(fromAllFrames = False):
                     deleteSelected()
             except:
                 pass
+
+def consolidateGroups():
+    wholeNames = []
+    mergeNames = []
+    for group in bpy.data.groups:
+        if("." in group.name):
+            mergeNames.append(group.name)
+        else:
+            wholeNames.append(group.name)
+    for sourceName in mergeNames:
+        sourceGroup = bpy.data.groups[sourceName]
+        destGroup = None
+        for destName in wholeNames:
+            if (sourceName.split(".")[0] == destName):
+                destGroup = bpy.data.groups[destName]
+                break
+        if (destGroup==None):
+            break
+        else:
+            for obj in sourceGroup.objects:
+                try:
+                    destGroup.objects.link(obj)
+                except:
+                    pass
+            removeGroup(sourceName)
+    print(mergeNames)
+    print(wholeNames)
+
 
 def sumPoints(stroke):
     x = 0
