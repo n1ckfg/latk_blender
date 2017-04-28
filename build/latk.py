@@ -920,6 +920,29 @@ def getActiveGp(_name="GPencil"):
     print("Active GP block is: " + gp.name)
     return gp
 
+def forceDrawMode():
+    #https://blenderartists.org/forum/showthread.php?255425-How-to-use-quot-bpy-ops-gpencil-draw()-quot
+    ctx = fixContext()
+    bpy.ops.gpencil.draw('INVOKE_REGION_WIN', mode='DRAW_POLY', stroke=[{"name":"", "pen_flip":False, "is_start":True, "location":(0, 0, 0),"mouse":(0,0), "pressure":1, "time":0}, {"name":"", "pen_flip":False, "is_start":True, "location":(0, 0, 0), "mouse":(0,0), "pressure":1, "time":0}])
+    returnContext(ctx)
+
+def initGp():
+    # https://blender.stackexchange.com/questions/48992/how-to-add-points-to-a-grease-pencil-stroke-or-make-new-one-with-python-script
+    scene = bpy.context.scene
+    if not scene.grease_pencil:
+        a = [ a for a in bpy.context.screen.areas if a.type == 'VIEW_3D' ][0]
+        override = {
+            'scene'         : scene,
+            'screen'        : bpy.context.screen,
+            'object'        : bpy.context.object,
+            'area'          : a,
+            'region'        : a.regions[0],
+            'window'        : bpy.context.window,
+            'active_object' : bpy.context.object
+        }
+        bpy.ops.gpencil.data_add(override)
+    return scene.grease_pencil
+
 def getActivePalette():
     gp = getActiveGp()
     palette = gp.palettes.active
