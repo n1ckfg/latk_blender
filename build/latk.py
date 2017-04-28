@@ -1635,7 +1635,9 @@ def readBrushStrokes(filepath=None):
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 
-def writeSvg(strokes=None, name="test.svg"):
+def writeSvg(strokes=None, name="test.svg", minLineWidth=3):
+    if not strokes:
+        strokes = getActiveFrame().strokes
     url = getFilePath() + name
     print(url)
     sW = getSceneResolution()[0]
@@ -1650,7 +1652,10 @@ def writeSvg(strokes=None, name="test.svg"):
     #~
     # BODY
     for stroke in strokes:
-        svg.append(svgStroke(points=stroke.points, stroke=stroke.color.color, fill=stroke.color.fill_color, strokeWidth=stroke.line_width, strokeOpacity=stroke.color.alpha, fillOpacity=stroke.color.fill_alpha))
+        width = stroke.line_width
+        if (width == None or width < minLineWidth):
+            width = minLineWidth
+        svg.append(svgStroke(points=stroke.points, stroke=stroke.color.color, fill=stroke.color.fill_color, strokeWidth=minLineWidth, strokeOpacity=stroke.color.alpha, fillOpacity=stroke.color.fill_alpha))
     #~
     # FOOTER
     svg.append("</svg>" + "\r")
