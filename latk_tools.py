@@ -86,6 +86,40 @@ def writeTextFile(name="test.txt", lines=None):
         file.write(line) 
     file.close() 
 
+def getWorldCoords(co=None, camera=None, usePixelCoords=True, useRenderScale=True, flipV=True):
+    # https://blender.stackexchange.com/questions/882/how-to-find-image-coordinates-of-the-rendered-vertex
+    # Test the function using the active object (which must be a camera)
+    # and the 3D cursor as the location to find.
+    scene = bpy.context.scene
+    if not camera:
+        camera = bpy.context.object
+    if not co:
+        co = bpy.context.scene.cursor_location
+    #~
+    co_2d = bpy_extras.object_utils.world_to_camera_view(scene, camera, co)
+    pixel_2d = None
+    #~
+    if (usePixelCoords==False):
+        print("2D Coords: ", co_2d)
+        return co_2d
+    else:
+        render_size = getSceneResolution(useRenderScale)
+        if (flipV==True):
+            pixel_2d = (round(co_2d.x * render_size[0]), round(render_size[1] - (co_2d.y * render_size[1])))
+        else:
+            pixel_2d = (round(co_2d.x * render_size[0]), round(co_2d.y * render_size[1]))
+        print("Pixel Coords: ", pixel_2d)
+        return pixel_2d
+
+def getSceneResolution(useRenderScale=True):
+    # https://blender.stackexchange.com/questions/882/how-to-find-image-coordinates-of-the-rendered-vertex
+    scene = bpy.context.scene
+    render_scale = scene.render.resolution_percentage / 100
+    if (useRenderScale==True):
+        return (int(scene.render.resolution_x * render_scale), int(scene.render.resolution_y * render_scale))
+    else:
+        return (int(scene.render.resolution_x), int(scene.render.resolution_y))
+
 def readTextFile(name="text.txt"):
     file = open(name, "r") 
     return file.read() 
@@ -763,9 +797,9 @@ def showHideChildren(hide):
 
 def rgbToHex(color, normalized=False):
     if (normalized==True):
-        return "#%02x%02x%02x" % (color[0] * 255, color[1] * 255, color[2] * 255)
+        return "#%02x%02x%02x" % (int(color[0] * 255.0), int(color[1] * 255.0), int(color[2] * 255.0))
     else:
-        return "#%02x%02x%02x" % (color[0], color[1], color[2])
+        return "#%02x%02x%02x" % (int(color[0]), int(color[1]), int(color[2]))
 
 def normRgbToHex(color):
     return rgbToHex(color, normalized=True)

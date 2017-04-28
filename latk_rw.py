@@ -193,6 +193,45 @@ def readBrushStrokes(filepath=None):
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 
+def writeSvg(strokes=None, name="test.svg"):
+    url = getFilePath() + name
+    print(url)
+    sW = getSceneResolution()[0]
+    sH = getSceneResolution()[1]
+    svg = []
+    #~
+    # HEADER
+    svg.append("<?xml version=\"1.0\" encoding=\"utf-8\"?>" + "\r");
+    svg.append("<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1//EN\" \"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\">" + "\r")
+    svg.append("<svg version=\"1.1\" id=\"Layer_1\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" x=\"0px\" y=\"0px\"" + "\r")
+    svg.append("\t" + "width=\"" + str(sW) + "px\" height=\"" + str(sH) + "px\" viewBox=\"0 0 " + str(sW) + " " + str(sH) + "\" enable-background=\"new 0 0 " + str(sW) + " " + str(sH) +"\" xml:space=\"preserve\">" + "\r")
+    #~
+    # BODY
+    for stroke in strokes:
+        svg.append(svgStroke(points=stroke.points, stroke=stroke.color.color, fill=stroke.color.fill_color, strokeWidth=stroke.line_width, strokeOpacity=stroke.color.alpha, fillOpacity=stroke.color.fill_alpha))
+    #~
+    # FOOTER
+    svg.append("</svg>" + "\r")
+    #~
+    writeTextFile(url, svg)
+
+def svgStroke(points=None, stroke=(0,0,1), fill=(1,0,0), strokeWidth=2.0, strokeOpacity=1.0, fillOpacity=1.0, closed=False):
+    # https://developer.mozilla.org/en-US/docs/Web/SVG/Element/path
+    returns = "<path stroke=\""+ normRgbToHex(stroke) + "\" fill=\""+ normRgbToHex(fill) + "\" stroke-width=\"" + str(strokeWidth) + "\" stroke-opacity=\"" + str(strokeOpacity) + "\" fill-opacity=\"" + str(fillOpacity) + "\" d=\""
+    for i, point in enumerate(points):
+        co = getWorldCoords(point.co)
+        if (i == 0):
+            returns += "M" + str(co[0]) + " " + str(co[1]) + " "
+        elif (i > 0 and i < len(points)-1):
+            returns += "L" + str(co[0]) + " " + str(co[1]) + " "
+        elif (i == len(points)-1):
+            if (closed==True):
+                returns += "L" + str(co[0]) + " " + str(co[1]) + " z"
+            else:
+                returns += "L" + str(co[0]) + " " + str(co[1])
+    returns += "\"/>" + "\r"
+    return returns
+
 # shortcuts
 
 def rbUnity(fileName):

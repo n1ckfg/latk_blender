@@ -34,6 +34,7 @@ bl_info = {
 }
 
 import bpy
+import bpy_extras
 from mathutils import *
 from math import sqrt
 import json

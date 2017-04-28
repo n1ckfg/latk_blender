@@ -34,6 +34,7 @@ bl_info = {
 }
 
 import bpy
+import bpy_extras
 from mathutils import *
 from math import sqrt
 import json
@@ -139,6 +140,40 @@ def writeTextFile(name="test.txt", lines=None):
     for line in lines:
         file.write(line) 
     file.close() 
+
+def getWorldCoords(co=None, camera=None, usePixelCoords=True, useRenderScale=True, flipV=True):
+    # https://blender.stackexchange.com/questions/882/how-to-find-image-coordinates-of-the-rendered-vertex
+    # Test the function using the active object (which must be a camera)
+    # and the 3D cursor as the location to find.
+    scene = bpy.context.scene
+    if not camera:
+        camera = bpy.context.object
+    if not co:
+        co = bpy.context.scene.cursor_location
+    #~
+    co_2d = bpy_extras.object_utils.world_to_camera_view(scene, camera, co)
+    pixel_2d = None
+    #~
+    if (usePixelCoords==False):
+        print("2D Coords: ", co_2d)
+        return co_2d
+    else:
+        render_size = getSceneResolution(useRenderScale)
+        if (flipV==True):
+            pixel_2d = (round(co_2d.x * render_size[0]), round(render_size[1] - (co_2d.y * render_size[1])))
+        else:
+            pixel_2d = (round(co_2d.x * render_size[0]), round(co_2d.y * render_size[1]))
+        print("Pixel Coords: ", pixel_2d)
+        return pixel_2d
+
+def getSceneResolution(useRenderScale=True):
+    # https://blender.stackexchange.com/questions/882/how-to-find-image-coordinates-of-the-rendered-vertex
+    scene = bpy.context.scene
+    render_scale = scene.render.resolution_percentage / 100
+    if (useRenderScale==True):
+        return (int(scene.render.resolution_x * render_scale), int(scene.render.resolution_y * render_scale))
+    else:
+        return (int(scene.render.resolution_x), int(scene.render.resolution_y))
 
 def readTextFile(name="text.txt"):
     file = open(name, "r") 
@@ -817,9 +852,9 @@ def showHideChildren(hide):
 
 def rgbToHex(color, normalized=False):
     if (normalized==True):
-        return "#%02x%02x%02x" % (color[0] * 255, color[1] * 255, color[2] * 255)
+        return "#%02x%02x%02x" % (int(color[0] * 255.0), int(color[1] * 255.0), int(color[2] * 255.0))
     else:
-        return "#%02x%02x%02x" % (color[0], color[1], color[2])
+        return "#%02x%02x%02x" % (int(color[0]), int(color[1]), int(color[2]))
 
 def normRgbToHex(color):
     return rgbToHex(color, normalized=True)
@@ -1600,6 +1635,45 @@ def readBrushStrokes(filepath=None):
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 
+def writeSvg(strokes=None, name="test.svg"):
+    url = getFilePath() + name
+    print(url)
+    sW = getSceneResolution()[0]
+    sH = getSceneResolution()[1]
+    svg = []
+    #~
+    # HEADER
+    svg.append("<?xml version=\"1.0\" encoding=\"utf-8\"?>" + "\r");
+    svg.append("<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1//EN\" \"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\">" + "\r")
+    svg.append("<svg version=\"1.1\" id=\"Layer_1\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" x=\"0px\" y=\"0px\"" + "\r")
+    svg.append("\t" + "width=\"" + str(sW) + "px\" height=\"" + str(sH) + "px\" viewBox=\"0 0 " + str(sW) + " " + str(sH) + "\" enable-background=\"new 0 0 " + str(sW) + " " + str(sH) +"\" xml:space=\"preserve\">" + "\r")
+    #~
+    # BODY
+    for stroke in strokes:
+        svg.append(svgStroke(points=stroke.points, stroke=stroke.color.color, fill=stroke.color.fill_color, strokeWidth=stroke.line_width, strokeOpacity=stroke.color.alpha, fillOpacity=stroke.color.fill_alpha))
+    #~
+    # FOOTER
+    svg.append("</svg>" + "\r")
+    #~
+    writeTextFile(url, svg)
+
+def svgStroke(points=None, stroke=(0,0,1), fill=(1,0,0), strokeWidth=2.0, strokeOpacity=1.0, fillOpacity=1.0, closed=False):
+    # https://developer.mozilla.org/en-US/docs/Web/SVG/Element/path
+    returns = "<path stroke=\""+ normRgbToHex(stroke) + "\" fill=\""+ normRgbToHex(fill) + "\" stroke-width=\"" + str(strokeWidth) + "\" stroke-opacity=\"" + str(strokeOpacity) + "\" fill-opacity=\"" + str(fillOpacity) + "\" d=\""
+    for i, point in enumerate(points):
+        co = getWorldCoords(point.co)
+        if (i == 0):
+            returns += "M" + str(co[0]) + " " + str(co[1]) + " "
+        elif (i > 0 and i < len(points)-1):
+            returns += "L" + str(co[0]) + " " + str(co[1]) + " "
+        elif (i == len(points)-1):
+            if (closed==True):
+                returns += "L" + str(co[0]) + " " + str(co[1]) + " z"
+            else:
+                returns += "L" + str(co[0]) + " " + str(co[1])
+    returns += "\"/>" + "\r"
+    return returns
+
 # shortcuts
 
 def rbUnity(fileName):
@@ -1945,7 +2019,7 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=False, _
         if (_consolidateMtl==True):
             createMtlPalette()
         #~
-        #consolidateGroups()
+        consolidateGroups()
         #~
         saveFile(origFileName + "_ASSEMBLY")
 
