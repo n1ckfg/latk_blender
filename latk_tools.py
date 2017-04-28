@@ -120,6 +120,14 @@ def getSceneResolution(useRenderScale=True):
     else:
         return (int(scene.render.resolution_x), int(scene.render.resolution_y))
 
+def setSceneResolution(width=1920, height=1080, scale=50):
+    # https://blender.stackexchange.com/questions/9164/modify-render-settings-for-all-scenes-using-python
+    for scene in bpy.data.scenes:
+        scene.render.resolution_x = width
+        scene.render.resolution_y = height
+        scene.render.resolution_percentage = scale
+        scene.render.use_border = False
+
 def readTextFile(name="text.txt"):
     file = open(name, "r") 
     return file.read() 
@@ -719,6 +727,13 @@ def copyFramePoints(source, dest, limit=None, pointsPercentage=1):
             strokeDest.points.add(len(strokeSource.points))
             for l in range(0, len(strokeSource.points)):
                 strokeDest.points[l].co = strokeSource.points[l].co
+
+def createCamera():
+    # https://blenderartists.org/forum/showthread.php?312512-how-to-add-an-empty-and-a-camera-using-python-script
+   cam = bpy.data.cameras.new("Camera")
+   cam_ob = bpy.data.objects.new("Camera", cam)
+   bpy.context.scene.objects.link(cam_ob)
+   return cam_ob
 
 def createStrokes(strokes, palette=None):
     if (palette == None):

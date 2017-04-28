@@ -175,6 +175,14 @@ def getSceneResolution(useRenderScale=True):
     else:
         return (int(scene.render.resolution_x), int(scene.render.resolution_y))
 
+def setSceneResolution(width=1920, height=1080, scale=50):
+    # https://blender.stackexchange.com/questions/9164/modify-render-settings-for-all-scenes-using-python
+    for scene in bpy.data.scenes:
+        scene.render.resolution_x = width
+        scene.render.resolution_y = height
+        scene.render.resolution_percentage = scale
+        scene.render.use_border = False
+
 def readTextFile(name="text.txt"):
     file = open(name, "r") 
     return file.read() 
@@ -774,6 +782,13 @@ def copyFramePoints(source, dest, limit=None, pointsPercentage=1):
             strokeDest.points.add(len(strokeSource.points))
             for l in range(0, len(strokeSource.points)):
                 strokeDest.points[l].co = strokeSource.points[l].co
+
+def createCamera():
+    # https://blenderartists.org/forum/showthread.php?312512-how-to-add-an-empty-and-a-camera-using-python-script
+   cam = bpy.data.cameras.new("Camera")
+   cam_ob = bpy.data.objects.new("Camera", cam)
+   bpy.context.scene.objects.link(cam_ob)
+   return cam_ob
 
 def createStrokes(strokes, palette=None):
     if (palette == None):
@@ -1635,7 +1650,7 @@ def readBrushStrokes(filepath=None):
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 
-def writeSvg(strokes=None, name="test.svg", minLineWidth=3):
+def writeSvg(strokes=None, name="test.svg", minLineWidth=3, camera=None):
     if not strokes:
         strokes = getActiveFrame().strokes
     url = getFilePath() + name
@@ -1651,22 +1666,33 @@ def writeSvg(strokes=None, name="test.svg", minLineWidth=3):
     svg.append("\t" + "width=\"" + str(sW) + "px\" height=\"" + str(sH) + "px\" viewBox=\"0 0 " + str(sW) + " " + str(sH) + "\" enable-background=\"new 0 0 " + str(sW) + " " + str(sH) +"\" xml:space=\"preserve\">" + "\r")
     #~
     # BODY
+    palette = getActivePalette()
     for stroke in strokes:
         width = stroke.line_width
         if (width == None or width < minLineWidth):
             width = minLineWidth
-        svg.append(svgStroke(points=stroke.points, stroke=stroke.color.color, fill=stroke.color.fill_color, strokeWidth=minLineWidth, strokeOpacity=stroke.color.alpha, fillOpacity=stroke.color.fill_alpha))
+        cStroke = (0,0,0,1)
+        cFill = (1,1,1,0)
+        try:
+            color = palette.colors[stroke.color.name]
+            print("found color: " + color.name)
+            cStroke = (color.color[0], color.color[1], color.color[2], color.alpha)
+            cFill = (color.fill_color[0], color.fill_color[1], color.fill_color[2], color.fill_alpha)
+        except:
+            print("color error")
+            pass
+        svg.append(svgStroke(points=stroke.points, stroke=(cStroke[0], cStroke[1], cStroke[2]), fill=(cFill[0], cFill[1], cFill[2]), strokeWidth=minLineWidth, strokeOpacity=cStroke[3], fillOpacity=cFill[3], camera=camera))
     #~
     # FOOTER
     svg.append("</svg>" + "\r")
     #~
     writeTextFile(url, svg)
 
-def svgStroke(points=None, stroke=(0,0,1), fill=(1,0,0), strokeWidth=2.0, strokeOpacity=1.0, fillOpacity=1.0, closed=False):
+def svgStroke(points=None, stroke=(0,0,1), fill=(1,0,0), strokeWidth=2.0, strokeOpacity=1.0, fillOpacity=1.0, camera=None, closed=False):
     # https://developer.mozilla.org/en-US/docs/Web/SVG/Element/path
     returns = "<path stroke=\""+ normRgbToHex(stroke) + "\" fill=\""+ normRgbToHex(fill) + "\" stroke-width=\"" + str(strokeWidth) + "\" stroke-opacity=\"" + str(strokeOpacity) + "\" fill-opacity=\"" + str(fillOpacity) + "\" d=\""
     for i, point in enumerate(points):
-        co = getWorldCoords(point.co)
+        co = getWorldCoords(co=point.co, camera=camera)
         if (i == 0):
             returns += "M" + str(co[0]) + " " + str(co[1]) + " "
         elif (i > 0 and i < len(points)-1):
