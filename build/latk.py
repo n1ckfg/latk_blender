@@ -98,6 +98,13 @@ def sortLists(list1, list2):
     list1 = [i[0] for i in sorted(zip(list1, ind),key=lambda x: x[1])]
     return list1
 '''
+def clearState():
+    for ob in bpy.data.objects.values():
+        try:
+            ob.selected=False
+        except:
+            pass
+    bpy.context.scene.objects.active = None
 
 def getActiveCurvePoints():
     target = s()[0]
@@ -923,8 +930,10 @@ def getActiveGp(_name="GPencil"):
 def forceDrawMode():
     #https://blenderartists.org/forum/showthread.php?255425-How-to-use-quot-bpy-ops-gpencil-draw()-quot
     ctx = fixContext()
-    bpy.ops.gpencil.draw('INVOKE_REGION_WIN', mode='DRAW_POLY', stroke=[{"name":"", "pen_flip":False, "is_start":True, "location":(0, 0, 0),"mouse":(0,0), "pressure":1, "time":0}, {"name":"", "pen_flip":False, "is_start":True, "location":(0, 0, 0), "mouse":(0,0), "pressure":1, "time":0}])
+    #bpy.ops.gpencil.draw('INVOKE_REGION_WIN', mode='DRAW_POLY', stroke=[{"name":"", "pen_flip":False, "is_start":True, "location":(0, 0, 0),"mouse":(0,0), "pressure":1, "time":0}, {"name":"", "pen_flip":False, "is_start":True, "location":(0, 0, 0), "mouse":(0,0), "pressure":1, "time":0}])
+    returns = bpy.ops.gpencil.draw(mode="DRAW")
     returnContext(ctx)
+    return returns
 
 def initGp():
     # https://blender.stackexchange.com/questions/48992/how-to-add-points-to-a-grease-pencil-stroke-or-make-new-one-with-python-script
