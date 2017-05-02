@@ -135,6 +135,13 @@ def setSceneResolution(width=1920, height=1080, scale=50):
         scene.render.resolution_percentage = scale
         scene.render.use_border = False
 
+def getSceneFps():
+    return bpy.context.scene.render.fps
+
+def setSceneFps(fps=12):
+    for scene in bpy.data.scenes:
+        scene.render.fps = fps
+
 def readTextFile(name="text.txt"):
     file = open(name, "r") 
     return file.read() 

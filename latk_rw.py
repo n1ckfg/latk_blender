@@ -194,11 +194,17 @@ def readBrushStrokes(filepath=None):
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 
 #def writeSvg(strokes=None, name="test.svg", minLineWidth=3, camera=None):
-def writeSvg(name="test.svg", minLineWidth=3, camera=None):
+def writeSvg(name="test.svg", minLineWidth=3, camera=None, fps=12, start=0, end=73):
     #if not strokes:
         #strokes = getActiveFrame().strokes
     if not camera:
         camera = getActiveCamera()
+    if not fps:
+        fps = getSceneFps()
+    if (start==None or end==None):
+    	start, end = getStartEnd()
+    fps = float(fps)
+    duration = float(end - start) / fps
     gp = getActiveGp()
     url = getFilePath() + name
     print(url)
@@ -233,7 +239,7 @@ def writeSvg(name="test.svg", minLineWidth=3, camera=None):
                     #print("color error")
                     #pass
                 svg.append("\t\t\t" + svgStroke(points=stroke.points, stroke=(cStroke[0], cStroke[1], cStroke[2]), fill=(cFill[0], cFill[1], cFill[2]), strokeWidth=minLineWidth, strokeOpacity=cStroke[3], fillOpacity=cFill[3], camera=camera) + "\r")
-            svg.append("\t\t\t" + svgAnimate(frame=i, fps=12.0, duration=float(len(layer.frames))/12.0) + "\r")
+            svg.append("\t\t\t" + svgAnimate(frame=frame.frame_number, fps=fps, duration=duration) + "\r")
             svg.append("\t\t" + "</g>" + "\r")
         svg.append("\t" + "</g>" + "\r")
     #~
