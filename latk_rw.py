@@ -193,9 +193,13 @@ def readBrushStrokes(filepath=None):
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 
-def writeSvg(strokes=None, name="test.svg", minLineWidth=3, camera=None):
-    if not strokes:
-        strokes = getActiveFrame().strokes
+#def writeSvg(strokes=None, name="test.svg", minLineWidth=3, camera=None):
+def writeSvg(name="test.svg", minLineWidth=3, camera=None):
+    #if not strokes:
+        #strokes = getActiveFrame().strokes
+    if not camera:
+        camera = getActiveCamera()
+    gp = getActiveGp()
     url = getFilePath() + name
     print(url)
     sW = getSceneResolution()[0]
@@ -209,27 +213,40 @@ def writeSvg(strokes=None, name="test.svg", minLineWidth=3, camera=None):
     svg.append("\t" + "width=\"" + str(sW) + "px\" height=\"" + str(sH) + "px\" viewBox=\"0 0 " + str(sW) + " " + str(sH) + "\" enable-background=\"new 0 0 " + str(sW) + " " + str(sH) +"\" xml:space=\"preserve\">" + "\r")
     #~
     # BODY
-    palette = getActivePalette()
-    for stroke in strokes:
-        width = stroke.line_width
-        if (width == None or width < minLineWidth):
-            width = minLineWidth
-        #cStroke = (0,0,0,1)
-        #cFill = (1,1,1,0)
-        #try:
-        color = palette.colors[stroke.colorname]
-        print("found color: " + color.name)
-        cStroke = (color.color[0], color.color[1], color.color[2], color.alpha)
-        cFill = (color.fill_color[0], color.fill_color[1], color.fill_color[2], color.fill_alpha)
-        #except:
-            #print("color error")
-            #pass
-        svg.append(svgStroke(points=stroke.points, stroke=(cStroke[0], cStroke[1], cStroke[2]), fill=(cFill[0], cFill[1], cFill[2]), strokeWidth=minLineWidth, strokeOpacity=cStroke[3], fillOpacity=cFill[3], camera=camera))
+    for layer in gp.layers:
+        svg.append("\t" + "<g id=\"" + layer.info + "\">" + "\r")
+        for i, frame in enumerate(layer.frames):
+            svg.append("\t\t" + "<g id=\"frame" + str(i) + "\">" + "\r")
+            palette = getActivePalette()
+            for stroke in frame.strokes:
+                width = stroke.line_width
+                if (width == None or width < minLineWidth):
+                    width = minLineWidth
+                #cStroke = (0,0,0,1)
+                #cFill = (1,1,1,0)
+                #try:
+                color = palette.colors[stroke.colorname]
+                print("found color: " + color.name)
+                cStroke = (color.color[0], color.color[1], color.color[2], color.alpha)
+                cFill = (color.fill_color[0], color.fill_color[1], color.fill_color[2], color.fill_alpha)
+                #except:
+                    #print("color error")
+                    #pass
+                svg.append("\t\t\t" + svgStroke(points=stroke.points, stroke=(cStroke[0], cStroke[1], cStroke[2]), fill=(cFill[0], cFill[1], cFill[2]), strokeWidth=minLineWidth, strokeOpacity=cStroke[3], fillOpacity=cFill[3], camera=camera) + "\r")
+            svg.append("\t\t\t" + svgAnimate(frame=i, fps=12.0, duration=float(len(layer.frames))/12.0) + "\r")
+            svg.append("\t\t" + "</g>" + "\r")
+        svg.append("\t" + "</g>" + "\r")
     #~
     # FOOTER
     svg.append("</svg>" + "\r")
     #~
     writeTextFile(url, svg)
+
+def svgAnimate(frame=0, fps=12, duration=10):
+    keyIn = (float(frame) / float(fps)) / float(duration)
+    keyOut = keyIn + (1.0/float(fps))
+    returns = "<animate attributeName=\"display\" values=\"none;inline;none;none\" keyTimes=\"0;" + str(keyIn) + ";" + str(keyOut) + ";1\" dur=\"" + str(duration) + "s\" begin=\"0s\" repeatCount=\"indefinite\"/>"
+    return returns
 
 def svgStroke(points=None, stroke=(0,0,1), fill=(1,0,0), strokeWidth=2.0, strokeOpacity=1.0, fillOpacity=1.0, camera=None, closed=False):
     # https://developer.mozilla.org/en-US/docs/Web/SVG/Element/path
@@ -245,7 +262,7 @@ def svgStroke(points=None, stroke=(0,0,1), fill=(1,0,0), strokeWidth=2.0, stroke
                 returns += "L" + str(co[0]) + " " + str(co[1]) + " z"
             else:
                 returns += "L" + str(co[0]) + " " + str(co[1])
-    returns += "\"/>" + "\r"
+    returns += "\"/>"
     return returns
 
 # shortcuts
