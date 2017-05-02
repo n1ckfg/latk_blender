@@ -742,6 +742,25 @@ def createCamera():
    bpy.context.scene.objects.link(cam_ob)
    return cam_ob
 
+def getActiveCamera():
+    # https://blender.stackexchange.com/questions/8245/find-active-camera-from-python
+    cam_ob = bpy.context.scene.camera
+    #~
+    if cam_ob is None:
+        print("no scene camera")
+        return None
+    elif cam_ob.type == 'CAMERA':
+        print("regular scene cam")
+        return cam_ob
+    else:
+        print("%s object as camera" % cam_ob.type)
+        ob = bpy.context.object
+        if ob is not None and ob.type == 'CAMERA':
+            print("Active camera object")
+            return ob
+        else:
+            return None
+
 def createStrokes(strokes, palette=None):
     if (palette == None):
         palette = getActivePalette()

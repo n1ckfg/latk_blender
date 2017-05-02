@@ -214,16 +214,16 @@ def writeSvg(strokes=None, name="test.svg", minLineWidth=3, camera=None):
         width = stroke.line_width
         if (width == None or width < minLineWidth):
             width = minLineWidth
-        cStroke = (0,0,0,1)
-        cFill = (1,1,1,0)
-        try:
-            color = palette.colors[stroke.color.name]
-            print("found color: " + color.name)
-            cStroke = (color.color[0], color.color[1], color.color[2], color.alpha)
-            cFill = (color.fill_color[0], color.fill_color[1], color.fill_color[2], color.fill_alpha)
-        except:
-            print("color error")
-            pass
+        #cStroke = (0,0,0,1)
+        #cFill = (1,1,1,0)
+        #try:
+        color = palette.colors[stroke.colorname]
+        print("found color: " + color.name)
+        cStroke = (color.color[0], color.color[1], color.color[2], color.alpha)
+        cFill = (color.fill_color[0], color.fill_color[1], color.fill_color[2], color.fill_alpha)
+        #except:
+            #print("color error")
+            #pass
         svg.append(svgStroke(points=stroke.points, stroke=(cStroke[0], cStroke[1], cStroke[2]), fill=(cFill[0], cFill[1], cFill[2]), strokeWidth=minLineWidth, strokeOpacity=cStroke[3], fillOpacity=cFill[3], camera=camera))
     #~
     # FOOTER

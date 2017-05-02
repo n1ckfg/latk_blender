@@ -797,6 +797,25 @@ def createCamera():
    bpy.context.scene.objects.link(cam_ob)
    return cam_ob
 
+def getActiveCamera():
+    # https://blender.stackexchange.com/questions/8245/find-active-camera-from-python
+    cam_ob = bpy.context.scene.camera
+    #~
+    if cam_ob is None:
+        print("no scene camera")
+        return None
+    elif cam_ob.type == 'CAMERA':
+        print("regular scene cam")
+        return cam_ob
+    else:
+        print("%s object as camera" % cam_ob.type)
+        ob = bpy.context.object
+        if ob is not None and ob.type == 'CAMERA':
+            print("Active camera object")
+            return ob
+        else:
+            return None
+
 def createStrokes(strokes, palette=None):
     if (palette == None):
         palette = getActivePalette()
@@ -1703,16 +1722,16 @@ def writeSvg(strokes=None, name="test.svg", minLineWidth=3, camera=None):
         width = stroke.line_width
         if (width == None or width < minLineWidth):
             width = minLineWidth
-        cStroke = (0,0,0,1)
-        cFill = (1,1,1,0)
-        try:
-            color = palette.colors[stroke.color.name]
-            print("found color: " + color.name)
-            cStroke = (color.color[0], color.color[1], color.color[2], color.alpha)
-            cFill = (color.fill_color[0], color.fill_color[1], color.fill_color[2], color.fill_alpha)
-        except:
-            print("color error")
-            pass
+        #cStroke = (0,0,0,1)
+        #cFill = (1,1,1,0)
+        #try:
+        color = palette.colors[stroke.colorname]
+        print("found color: " + color.name)
+        cStroke = (color.color[0], color.color[1], color.color[2], color.alpha)
+        cFill = (color.fill_color[0], color.fill_color[1], color.fill_color[2], color.fill_alpha)
+        #except:
+            #print("color error")
+            #pass
         svg.append(svgStroke(points=stroke.points, stroke=(cStroke[0], cStroke[1], cStroke[2]), fill=(cFill[0], cFill[1], cFill[2]), strokeWidth=minLineWidth, strokeOpacity=cStroke[3], fillOpacity=cFill[3], camera=camera))
     #~
     # FOOTER
