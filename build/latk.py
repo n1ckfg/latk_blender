@@ -1735,9 +1735,10 @@ def writeSvg(name="test.svg", minLineWidth=3, camera=None, fps=12, start=0, end=
     #~
     # BODY
     for layer in gp.layers:
-        svg.append("\t" + "<g id=\"" + layer.info + "\">" + "\r")
+        layerInfo = layer.info.replace(" ", "_").replace(".", "_")
+        svg.append("\t" + "<g id=\"" + layerInfo + "\">" + "\r")
         for i, frame in enumerate(layer.frames):
-            svg.append("\t\t" + "<g id=\"frame" + str(i) + "\">" + "\r")
+            svg.append("\t\t" + "<g id=\"" + layerInfo + "_frame" + str(i) + "\">" + "\r")
             palette = getActivePalette()
             for stroke in frame.strokes:
                 width = stroke.line_width
@@ -1754,7 +1755,7 @@ def writeSvg(name="test.svg", minLineWidth=3, camera=None, fps=12, start=0, end=
                     #print("color error")
                     #pass
                 svg.append("\t\t\t" + svgStroke(points=stroke.points, stroke=(cStroke[0], cStroke[1], cStroke[2]), fill=(cFill[0], cFill[1], cFill[2]), strokeWidth=minLineWidth, strokeOpacity=cStroke[3], fillOpacity=cFill[3], camera=camera) + "\r")
-            svg.append("\t\t\t" + svgAnimate(frame=frame.frame_number, fps=fps, duration=duration) + "\r")
+            svg.append("\t\t\t" + svgAnimate(frame=frame.frame_number, fps=fps, duration=duration, idTag="anim_" + layerInfo + "_frame" + str(i)) + "\r")
             svg.append("\t\t" + "</g>" + "\r")
         svg.append("\t" + "</g>" + "\r")
     #~
@@ -1763,10 +1764,9 @@ def writeSvg(name="test.svg", minLineWidth=3, camera=None, fps=12, start=0, end=
     #~
     writeTextFile(url, svg)
 
-def svgAnimate(frame=0, fps=12, duration=10):
+def svgAnimate(frame=0, fps=12, duration=10, idTag=None):
     keyIn = (float(frame) / float(fps)) / float(duration)
     keyOut = keyIn + (1.0/float(fps))
-    returns = "<animate attributeName=\"display\" values=\"none;inline;none;none\" keyTimes=\"0;" + str(keyIn) + ";" + str(keyOut) + ";1\" dur=\"" + str(duration) + "s\" begin=\"0s\" repeatCount=\"indefinite\"/>"
     return returns
 
 def svgStroke(points=None, stroke=(0,0,1), fill=(1,0,0), strokeWidth=2.0, strokeOpacity=1.0, fillOpacity=1.0, camera=None, closed=False):
