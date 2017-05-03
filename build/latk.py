@@ -1767,6 +1767,7 @@ def writeSvg(name="test.svg", minLineWidth=3, camera=None, fps=12, start=0, end=
 def svgAnimate(frame=0, fps=12, duration=10, idTag=None):
     keyIn = (float(frame) / float(fps)) / float(duration)
     keyOut = keyIn + (1.0/float(fps))
+    returns = "<animate id=\"" + str(idTag) + "\" attributeName=\"display\" values=\"none;inline;none;none\" keyTimes=\"0;" + str(keyIn) + ";" + str(keyOut) + ";1\" dur=\"" + str(duration) + "s\" begin=\"0s\" repeatCount=\"indefinite\"/>"
     return returns
 
 def svgStroke(points=None, stroke=(0,0,1), fill=(1,0,0), strokeWidth=2.0, strokeOpacity=1.0, fillOpacity=1.0, camera=None, closed=False):
