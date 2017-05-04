@@ -106,6 +106,12 @@ def clearState():
             pass
     bpy.context.scene.objects.active = None
 
+def onionSkin(layers=None, onion=False):
+    if not layers:
+        layers = getActiveGp().layers
+    for layer in layers:
+        layer.use_onion_skinning = onion
+
 def getActiveCurvePoints():
     target = s()[0]
     if (target.data.splines[0].type=="BEZIER"):
