@@ -43,6 +43,24 @@ def sortLists(list1, list2):
     list1 = [i[0] for i in sorted(zip(list1, ind),key=lambda x: x[1])]
     return list1
 '''
+
+# https://blender.stackexchange.com/questions/5668/add-nodes-to-material-with-python
+def texAllMtl(filePath="D://Asset Collections//Images//Element maps 2K//Plaster_maps//plaster_wall_distressed_04_normal.jpg"):
+    for mtl in bpy.data.materials:
+        mtl.use_nodes = True
+        nodes = mtl.node_tree.nodes
+        links = mtl.node_tree.links
+        texNode = nodes.new("ShaderNodeTexImage")
+        mapNode = nodes.new("ShaderNodeNormalMap")
+        shaderNode = nodes["Diffuse BSDF"]
+        links.new(texNode.outputs[0], mapNode.inputs[1])
+        links.new(mapNode.outputs[0], shaderNode.inputs[2])
+        texNode.image = bpy.data.images.load(filePath)
+        texNode.color_space = "NONE"
+        #~
+        mapNode.location = [shaderNode.location.x - 250, shaderNode.location.y]
+        texNode.location = [mapNode.location.x - 250, shaderNode.location.y]
+
 def clearState():
     for ob in bpy.data.objects.values():
         try:
