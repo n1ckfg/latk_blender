@@ -45,18 +45,33 @@ def sortLists(list1, list2):
 '''
 
 # https://blender.stackexchange.com/questions/5668/add-nodes-to-material-with-python
-def texAllMtl(filePath="D://Asset Collections//Images//Element maps 2K//Plaster_maps//plaster_wall_distressed_04_normal.jpg"):
+def texAllMtl(filePath="D://Asset Collections//Images//Element maps 2K//Plaster_maps//plaster_wall_distressed_04_normal.jpg", strength=1.0, colorData=False):
     for mtl in bpy.data.materials:
         mtl.use_nodes = True
         nodes = mtl.node_tree.nodes
         links = mtl.node_tree.links
-        texNode = nodes.new("ShaderNodeTexImage")
-        mapNode = nodes.new("ShaderNodeNormalMap")
+        #~
         shaderNode = nodes["Diffuse BSDF"]
+        texNode = None
+        mapNode = None
+        try:
+            texNode = nodes["Image Texture"]
+        except:
+            texNode = nodes.new("ShaderNodeTexImage")
+        try:
+            mapNode = nodes["Normal Map"]
+        except:
+            mapNode = nodes.new("ShaderNodeNormalMap")
+        #~
         links.new(texNode.outputs[0], mapNode.inputs[1])
         links.new(mapNode.outputs[0], shaderNode.inputs[2])
+        #~
         texNode.image = bpy.data.images.load(filePath)
-        texNode.color_space = "NONE"
+        if (colorData==True):
+            texNode.color_space = "COLOR"
+        else:
+            texNode.color_space = "NONE"
+        mapNode.inputs[0].default_value = strength
         #~
         mapNode.location = [shaderNode.location.x - 250, shaderNode.location.y]
         texNode.location = [mapNode.location.x - 250, shaderNode.location.y]
