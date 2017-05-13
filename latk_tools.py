@@ -487,6 +487,27 @@ def distributeStrokes(pointStep=10, step=1, minPointStep=2):
 
 ds = distributeStrokes
 
+# note that unlike createStroke, this creates a stroke from raw coordinates
+def drawPoints(points=None, color=None, frame=None, layer=None):
+    if not color:
+        color = getActiveColor()
+    if not frame:
+        frame = getActiveFrame()
+    if not layer:
+        layer = getActiveLayer()
+    stroke = frame.strokes.new(color.name)
+    stroke.draw_mode = "3DSPACE"
+    stroke.points.add(len(points))
+    for i, point in enumerate(points):
+        pressure = 1.0
+        strength = 1.0
+        if (len(point) > 3):
+            pressure = point[3]
+        if (len(point) > 4):
+            strength = point[4]
+        createPoint(stroke, i, (point[0], point[2], point[1]), pressure, strength)
+    return stroke
+
 def writeOnStrokes(step=1):
     gp = getActiveGp()
     for i in range(0, len(gp.layers)):

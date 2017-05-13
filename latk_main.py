@@ -45,7 +45,9 @@ import random
 import bmesh
 import sys
 import gc
-
+import xml.etree.ElementTree as etree
+from operator import itemgetter
+#~
 from bpy.props import (BoolProperty, FloatProperty, StringProperty, EnumProperty)
 from bpy_extras.io_utils import (ImportHelper, ExportHelper)
 
