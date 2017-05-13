@@ -385,6 +385,12 @@ def deleteUnparentedCurves(name="crv"):
     for i in range(0, len(toDelete)):
         delete(toDelete[i])
 
+def currentFrame(target=None):
+    if not target:
+        return bpy.context.scene.frame_current
+    else:
+        goToFrame(target)
+
 def distributeStrokesAlt(step=1):
     palette = getActivePalette()
     strokes = getAllStrokes()
@@ -491,10 +497,16 @@ ds = distributeStrokes
 def drawPoints(points=None, color=None, frame=None, layer=None):
     if not color:
         color = getActiveColor()
-    if not frame:
-        frame = getActiveFrame()
     if not layer:
         layer = getActiveLayer()
+        if not layer:
+            gp = getActiveGp()
+            layer = gp.layers.new("GP_Layer")
+            gp.layers.active = layer
+    if not frame:
+        frame = getActiveFrame()
+        if not frame:
+            frame = layer.frames.new(currentFrame())
     stroke = frame.strokes.new(color.name)
     stroke.draw_mode = "3DSPACE"
     stroke.points.add(len(points))
@@ -507,6 +519,9 @@ def drawPoints(points=None, color=None, frame=None, layer=None):
             strength = point[4]
         createPoint(stroke, i, (point[0], point[2], point[1]), pressure, strength)
     return stroke
+
+def testDrawPoints():
+    drawPoints([(0,0,0),(1,1,1),(0,1,0),(0,0,0)])
 
 def writeOnStrokes(step=1):
     gp = getActiveGp()
