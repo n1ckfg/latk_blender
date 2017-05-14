@@ -563,7 +563,10 @@ def drawPoints(points=None, color=None, frame=None, layer=None):
     if not frame:
         frame = getActiveFrame()
         if not frame:
-            frame = layer.frames.new(currentFrame())
+            try:
+                frame = layer.frames.new(currentFrame())
+            except:
+                pass
     stroke = frame.strokes.new(color.name)
     stroke.draw_mode = "3DSPACE"
     stroke.points.add(len(points))
@@ -1287,6 +1290,31 @@ def pasteToNewLayer():
         #for j in range(0, len(oldStroke.points)):
             #createPoint(newStroke, j, points[j].co)
 '''
+
+def newLayer(name="NewLayer", setActive=True):
+    gp = getActiveGp()
+    gp.layers.new(name)
+    if (setActive==True):
+        gp.layers.active = gp.layers[len(gp.layers)-1]
+    return gp.layers[len(gp.layers)-1]
+
+def getStrokePoints(target=None):
+    returns = []
+    if not target:
+        target = getSelectedStroke()
+    for point in target.points:
+        returns.append(point.co)
+    return returns
+
+def reprojectAllStrokes():
+    strokes = getAllStrokes()
+    newLayer()
+    for stroke in strokes:
+        points = getStrokePoints(stroke)
+        try:
+        	drawPoints(points)
+        except:
+        	pass
 
 # TODO handle multiple materials on one mesh
 def searchMtl(color=None, name="crv"):
