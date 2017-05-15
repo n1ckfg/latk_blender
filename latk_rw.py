@@ -289,7 +289,7 @@ def gmlParser(filepath=None):
     #~
     tree = etree.parse(filepath)
     root = tree.getroot()
-    if (root.tag != "GML"):
+    if (root.tag.lower() != "gml"):
         print("Not a GML file.")
         return
     #~
@@ -332,7 +332,11 @@ def gmlParser(filepath=None):
         for pt in pts:
             x = float(pt.find("x").text) * globalScale[0]
             y = float(pt.find("y").text) * globalScale[1]
-            z = float(pt.find("z").text) * globalScale[2]
+            z = 0.0
+            try:
+                z = float(pt.find("z").text) * globalScale[2]
+            except:
+                pass
             time = float(pt.find("time").text)
             if (yUp==False):
                 gmlPoints.append((x,y,z,time))
