@@ -15,7 +15,7 @@ cd $DIR
 rm $BUILD_TARGET
 touch $BUILD_TARGET
 
-cat "latk_main.py" "latk_tools.py" "latk_rw.py" "latk_mesh.py" "latk_test.py" "latk_ui.py" > $BUILD_TARGET
+cat "latk_main.py" "latk_tools.py" "latk_rw.py" "latk_mtl.py" "latk_mesh.py" "latk_test.py" "latk_ui.py" > $BUILD_TARGET
 
 cp $BUILD_TARGET "${HOME}/Applications/blender/2.77/scripts/addons/"
 cp $BUILD_TARGET "${HOME}/Applications/blender/2.78/scripts/addons/"

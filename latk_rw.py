@@ -1,3 +1,119 @@
+def exportForUnity(sketchFab=True):
+    start, end = getStartEnd()
+    target = matchName("crv")
+    sketchFabList = []
+    sketchFabListNum = []
+    for tt in range(0, len(target)):
+        deselect()
+        for i in range(start, end):
+            deselect()
+            goToFrame(i)
+            if (target[tt].hide==False):
+                deselect()
+                target[tt].select=True
+                exportName = target[tt].name
+                exportName = exportName.split("crv_")[1]
+                exportName = exportName.split("_mesh")[0]
+                exporter(manualSelect=True, fileType="fbx", name=exportName)
+                sketchFabList.append("0.083 " + exportName + ".fbx" + "\r")
+                sketchFabListNum.append(float(exportName.split("_")[len(exportName.split("_"))-1]))
+                break
+    if (sketchFab==True):
+        #sketchFabList.reverse()
+        #~
+        print("before sort: ")
+        print(sketchFabList)
+        print(sketchFabListNum)
+        # this sorts entries by number instead of order in Outliner pane
+        sketchFabList.sort(key=lambda x: x[0])
+        ind = [i[0] for i in sorted(enumerate(sketchFabListNum),key=lambda x: x[1])]
+        sketchFabList = [i[0] for i in sorted(zip(sketchFabList, ind),key=lambda x: x[1])]
+        #~
+        print(getFilePath() + getFileName())
+        tempName = exportName.split("_")
+        tempString = ""
+        for i in range(0, len(tempName)-1):
+            tempString += str(tempName[i])
+            if (i < len(tempName)-1):
+                tempString += "_"
+        print("after sort: ")
+        print(sketchFabList)
+        writeTextFile(getFilePath() + getFileName() + "_" + tempString + ".sketchfab.timeframe", sketchFabList)
+
+def exporter(name="test", url=None, winDir=False, manualSelect=False, fileType="fbx"):
+    if not url:
+        url = getFilePath()
+        if (winDir==True):
+            url += "\\"
+        else:
+            url += "/"
+    #~
+    if (manualSelect == True):
+            if (fileType=="fbx"):
+                bpy.ops.export_scene.fbx(filepath=url + name + ".fbx", use_selection=True)
+            else:
+                bpy.ops.export_scene.obj(filepath=url + name + ".obj", use_selection=True)
+    else:
+        for j in range(bpy.context.scene.frame_start, bpy.context.scene.frame_end + 1):
+            bpy.ops.object.select_all(action='DESELECT')
+            goToFrame(j)
+            for i in range(0, len(bpy.data.objects)):
+                if (bpy.data.objects[i].hide == False):
+                    bpy.data.objects[i].select = True
+            #bpy.context.scene.update()
+            #~
+            if (fileType=="fbx"):
+                bpy.ops.export_scene.fbx(filepath=url + name + "_" + str(j) + ".fbx", use_selection=True)
+            else:
+                bpy.ops.export_scene.obj(filepath=url + name + "_" + str(j) + ".obj", use_selection=True)
+
+
+def importAppend(blendfile, section, obj, winDir=False):
+    # http://blender.stackexchange.com/questions/38060/how-to-link-append-with-a-python-script
+    #blendfile = "D:/path/to/the/repository.blend"
+    #section   = "\\Action\\"
+    #obj    = "myaction"
+    #~
+    url  = blendfile + section + obj
+    if (winDir==True):
+        section = blendfile + "\\" + section + "\\"
+    else:
+        section = blendfile + "/" + section + "/"
+    #~
+    bpy.ops.wm.append(filepath=url, filename=obj, directory=section)
+
+def writeTextFile(name="test.txt", lines=None):
+    file = open(name,"w") 
+    for line in lines:
+        file.write(line) 
+    file.close() 
+
+def readTextFile(name="text.txt"):
+    file = open(name, "r") 
+    return file.read() 
+
+def saveFile(name, format=True):
+    if (format==True):
+        name = getFilePath() + name + ".blend"
+    bpy.ops.wm.save_as_mainfile(filepath=name)
+
+def openFile(name, format=True):
+    if (format==True):
+        name = getFilePath() + name + ".blend"
+    bpy.ops.wm.open_mainfile(filepath=name)
+
+def getFilePath(stripFileName=True):
+    name = bpy.context.blend_data.filepath
+    if (stripFileName==True):
+        name = name[:-len(getFileName(stripExtension=False))]
+    return name
+
+def getFileName(stripExtension=True):
+    name = bpy.path.basename(bpy.context.blend_data.filepath)
+    if (stripExtension==True):
+        name = name[:-6]
+    return name
+
 # http://blender.stackexchange.com/questions/24694/query-grease-pencil-strokes-from-python
 
 def writeBrushStrokes(filepath=None, bake=True):

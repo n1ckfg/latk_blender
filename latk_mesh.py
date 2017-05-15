@@ -1,3 +1,38 @@
+def joinObjects(target=None, center=False):
+    if not target:
+        target = s()
+    #~
+    bpy.ops.object.select_all(action='DESELECT') 
+    target[0].select = True
+    bpy.context.scene.objects.active = target[0]
+    for i in range(1, len(target)):
+        #print("****** " + str(bpy.context.scene.objects.active))
+        #bpy.context.scene.objects.active.select = True
+        target[i].select = True
+        #bpy.ops.object.join()
+        #bpy.context.scene.objects.unlink(strokesToJoin[sj-1])
+    #~
+    bpy.ops.object.join()
+    #~
+    for i in range(1, len(target)):
+        try:
+            scn.objects.unlink(target[i])
+        except:
+            pass
+        #try:
+            #removeObj(target[i].name)
+        #except:
+            #pass
+        #try:
+            #target[i].select = True
+        #except:
+            #pass
+    #~
+    gc.collect()
+    if (center==True):
+        centerOrigin(target[0])
+    return target[0]
+
 '''
 161013
 Tried an all-baking approach but it didn't seem to work. 
@@ -11,57 +46,6 @@ Going back to parenting with baking for single objects, less elegant but seems t
 # http://blenderscripting.blogspot.ca/2011/05/blender-25-python-bezier-from-list-of.html
 # http://blender.stackexchange.com/questions/6750/poly-bezier-curve-from-a-list-of-coordinates
 # http://blender.stackexchange.com/questions/7047/apply-transforms-to-linked-objects
-
-# http://blender.stackexchange.com/questions/17738/how-to-uv-unwrap-object-with-python
-def planarUvProject():
-    for area in bpy.context.screen.areas:
-        if area.type == 'VIEW_3D':
-            for region in area.regions:
-                if region.type == 'WINDOW':
-                    override = {'area': area, 'region': region, 'edit_object': bpy.context.edit_object}
-                    bpy.ops.uv.smart_project(override)
-                    
-def exportForUnity(sketchFab=True):
-    start, end = getStartEnd()
-    target = matchName("crv")
-    sketchFabList = []
-    sketchFabListNum = []
-    for tt in range(0, len(target)):
-        deselect()
-        for i in range(start, end):
-            deselect()
-            goToFrame(i)
-            if (target[tt].hide==False):
-                deselect()
-                target[tt].select=True
-                exportName = target[tt].name
-                exportName = exportName.split("crv_")[1]
-                exportName = exportName.split("_mesh")[0]
-                exporter(manualSelect=True, fileType="fbx", name=exportName)
-                sketchFabList.append("0.083 " + exportName + ".fbx" + "\r")
-                sketchFabListNum.append(float(exportName.split("_")[len(exportName.split("_"))-1]))
-                break
-    if (sketchFab==True):
-        #sketchFabList.reverse()
-        #~
-        print("before sort: ")
-        print(sketchFabList)
-        print(sketchFabListNum)
-        # this sorts entries by number instead of order in Outliner pane
-        sketchFabList.sort(key=lambda x: x[0])
-        ind = [i[0] for i in sorted(enumerate(sketchFabListNum),key=lambda x: x[1])]
-        sketchFabList = [i[0] for i in sorted(zip(sketchFabList, ind),key=lambda x: x[1])]
-        #~
-        print(getFilePath() + getFileName())
-        tempName = exportName.split("_")
-        tempString = ""
-        for i in range(0, len(tempName)-1):
-            tempString += str(tempName[i])
-            if (i < len(tempName)-1):
-                tempString += "_"
-        print("after sort: ")
-        print(sketchFabList)
-        writeTextFile(getFilePath() + getFileName() + "_" + tempString + ".sketchfab.timeframe", sketchFabList)
 
 def assembleMesh(export=False, createPalette=True):
     origFileName = getFileName()
@@ -335,23 +319,10 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=False, _
         #~
         saveFile(origFileName + "_ASSEMBLY")
 
-def getLayerInfo(layer):
-    return layer.info.split(".")[0]
-
 def gpMeshCleanup(target):
     gc.collect()
     removeGroup(target, allGroups=True)
     dn()
-
-def getActiveFrameNum(layer=None):
-    # assumes layer can have only one active frame
-    if not layer:
-        layer = getActiveLayer()
-    returns = -1
-    for i in range(0, len(layer.frames)):
-        if (layer.frames[i] == layer.active_frame):
-            returns = i
-    return returns
 
 def remesher(obj, bake=True, mode="blocks", octree=6, threshold=0.0001, smoothShade=False):
         #fixContext()
@@ -411,7 +382,14 @@ def getGeometryCenter(obj):
         sumWCoord[2] = sumWCoord[2]/numbVert
     return sumWCoord
 
-def centerOrigin(obj):
+def getActiveCurvePoints():
+    target = s()[0]
+    if (target.data.splines[0].type=="BEZIER"):
+        return target.data.splines.active.bezier_points
+    else:
+        return target.data.splines.active.points      
+
+def centerOriginAlt(obj):
     oldLoc = obj.location
     newLoc = getGeometryCenter(obj)
     for vert in obj.data.vertices:
@@ -419,6 +397,14 @@ def centerOrigin(obj):
         vert.co[1] -= newLoc[1] - oldLoc[1]
         vert.co[2] -= newLoc[2] - oldLoc[2]
     obj.location = newLoc
+
+def centerOrigin(target=None):
+    if not target:
+        target = ss()
+    deselect()
+    target.select = True
+    bpy.ops.object.origin_set(type = 'ORIGIN_GEOMETRY')
+    deselect()
 
 def colorVertices(obj, color=(1,0,0), makeMaterial=False):
     # start in object mode
@@ -450,72 +436,6 @@ def colorVertices(obj, color=(1,0,0), makeMaterial=False):
     # set to vertex paint mode to see the result
     #if (vertexPaintMode==True):
         #bpy.ops.object.mode_set(mode='VERTEX_PAINT')
-
-#def colorVertexCyclesMat(obj, color=(1,0,0), newMaterial=True):
-def colorVertexCyclesMat(obj):
-    # http://blender.stackexchange.com/questions/6084/use-python-to-add-multiple-colors-to-a-nurbs-curve
-    # http://blender.stackexchange.com/questions/5668/add-nodes-to-material-with-python
-    # this will fail if you don't have Cycles Render enabled
-    mesh = obj.data 
-    #~    
-    #if len(mesh.vertex_colors) == 0:
-        #bpy.ops.mesh.vertex_color_add()
-    #~
-    #if (newMaterial==True):
-    obj.active_material = bpy.data.materials.new('material')
-    obj.active_material.use_vertex_color_paint = True
-    #~
-    obj.active_material.use_nodes = True
-    nodes = obj.active_material.node_tree.nodes
-    material_output = nodes.get('Diffuse BSDF')
-    nodeAttr = nodes.new("ShaderNodeAttribute")
-    nodeAttr.attribute_name = "Col"
-    obj.active_material.node_tree.links.new(material_output.inputs[0], nodeAttr.outputs[0])
-    #~
-    #loop through each vertex
-    #num_verts = len(mesh.vertices)
-    #for vert_i in range(num_verts):
-        #colorVertex(obj, vert_i, color)
-        #print("Finished vertex: " + str(vert_i) + "/" + str(num_verts))
-
-def colorVertexAlt(obj, vert, color=[1,0,0]):
-    mesh = obj.data 
-    scn = bpy.context.scene
-    #check if our mesh already has Vertex Colors, and if not add some... (first we need to make sure it's the active object)
-    scn.objects.active = obj
-    obj.select = True
-    if len(mesh.vertex_colors) == 0:
-        bpy.ops.mesh.vertex_color_add()
-    i=0
-    for poly in mesh.polygons:
-        for vert_side in poly.loop_indices:
-            global_vert_num = poly.vertices[vert_side-min(poly.loop_indices)] 
-            if vert == global_vert_num:
-                mesh.vertex_colors[0].data[i].color = color
-            i += 1
-
-def setOrigin(target, point):
-    bpy.context.scene.objects.active = target
-    bpy.context.scene.cursor_location = point
-    bpy.ops.object.origin_set(type='ORIGIN_CURSOR')
-    #bpy.context.scene.update()
-
-def matchWithParent(_child, _parent, _index):
-    if (_parent):
-        #bpy.context.scene.frame_set(_index)
-        #if (_index == bpy.context.scene.frame_start):
-        '''
-        for v in _child.data.splines.active.bezier_points:
-            loc = v.co * _parent.matrix_world.inverted()
-            v.co = loc
-        '''
-        loc, rot, scale = _parent.matrix_world.inverted().decompose()
-        _child.location = loc
-        #_child.rotation_quaternion = rot
-        _child.scale = scale
-        #bpy.context.scene.update()
-        _child.parent = _parent
-        keyTransform(_child, _index)   
 
 def makeCurve(coords, pressures, resolution=2, thickness=0.1, bevelResolution=1, curveType="bezier", parent=None, capsObj=None, name="crv_ob", useUvs=True):
     # http://blender.stackexchange.com/questions/12201/bezier-spline-with-python-adds-unwanted-point
@@ -628,33 +548,6 @@ def createMesh(name, origin, verts, faces):
     # Set object mode
     bpy.ops.object.mode_set(mode='OBJECT')
     return ob
-
-def exporter(name="test", url=None, winDir=False, manualSelect=False, fileType="fbx"):
-    if not url:
-        url = getFilePath()
-        if (winDir==True):
-            url += "\\"
-        else:
-            url += "/"
-    #~
-    if (manualSelect == True):
-            if (fileType=="fbx"):
-                bpy.ops.export_scene.fbx(filepath=url + name + ".fbx", use_selection=True)
-            else:
-                bpy.ops.export_scene.obj(filepath=url + name + ".obj", use_selection=True)
-    else:
-        for j in range(bpy.context.scene.frame_start, bpy.context.scene.frame_end + 1):
-            bpy.ops.object.select_all(action='DESELECT')
-            goToFrame(j)
-            for i in range(0, len(bpy.data.objects)):
-                if (bpy.data.objects[i].hide == False):
-                    bpy.data.objects[i].select = True
-            #bpy.context.scene.update()
-            #~
-            if (fileType=="fbx"):
-                bpy.ops.export_scene.fbx(filepath=url + name + "_" + str(j) + ".fbx", use_selection=True)
-            else:
-                bpy.ops.export_scene.obj(filepath=url + name + "_" + str(j) + ".obj", use_selection=True)
 
 # crashes        
 def makeGpCurve(_type="PATH"):

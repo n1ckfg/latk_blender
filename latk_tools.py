@@ -1,80 +1,38 @@
-def createMtlPalette(numPlaces=5, numReps = 1):
-    palette = None
-    removeUnusedMtl()
-    for h in range(0, numReps):
-        palette = []
-        #print("1-3. Creating palette of all materials...")
-        for mtl in bpy.data.materials:
-            foundNewMtl = True
-            for palMtl in palette:
-                if (compareTuple(getDiffuseColor(mtl), getDiffuseColor(palMtl), numPlaces=numPlaces)==True):
-                    foundNewMtl = False
-                    break
-            if (foundNewMtl==True):
-                #print("Found " + mtl.name)
-                palette.append(mtl)
-        for i, mtl in enumerate(palette):
-            mtl.name = "Palette_" + str(i+1)
-        #print("2-3. Matching palette colors for all objects...")
-        for obj in bpy.context.scene.objects:
-            try:
-                for i, mtl in enumerate(obj.data.materials):
-                    for palMtl in palette:
-                        if (compareTuple(getDiffuseColor(mtl), getDiffuseColor(palMtl), numPlaces=numPlaces)==True):
-                            obj.data.materials[i] = palMtl
-            except:
-                pass
-        #print("3-3. Removing unused materials...")
-        removeUnusedMtl()
-    #~
-    print ("Created palette of " + str(len(palette)) + " materials.")
-    return palette
+def getLayerInfo(layer):
+    return layer.info.split(".")[0]
 
-def removeUnusedMtl():
-    # http://blender.stackexchange.com/questions/5300/how-can-i-remove-all-unused-materials-from-a-file/35637#35637
-    for mtl in bpy.data.materials:
-        if not mtl.users:
-            bpy.data.materials.remove(mtl)
+def getActiveFrameNum(layer=None):
+    # assumes layer can have only one active frame
+    if not layer:
+        layer = getActiveLayer()
+    returns = -1
+    for i in range(0, len(layer.frames)):
+        if (layer.frames[i] == layer.active_frame):
+            returns = i
+    return returns
 
-'''
-def sortLists(list1, list2):
-    list1.sort(key=lambda x: x[0])
-    ind = [i[0] for i in sorted(enumerate(list2),key=lambda x: x[1])]
-    list1 = [i[0] for i in sorted(zip(list1, ind),key=lambda x: x[1])]
-    return list1
-'''
+def setOrigin(target, point):
+    bpy.context.scene.objects.active = target
+    bpy.context.scene.cursor_location = point
+    bpy.ops.object.origin_set(type='ORIGIN_CURSOR')
+    #bpy.context.scene.update()
 
-# https://blender.stackexchange.com/questions/5668/add-nodes-to-material-with-python
-def texAllMtl(filePath="D://Asset Collections//Images//Element maps 2K//Plaster_maps//plaster_wall_distressed_04_normal.jpg", strength=1.0, colorData=False):
-    for mtl in bpy.data.materials:
-        mtl.use_nodes = True
-        nodes = mtl.node_tree.nodes
-        links = mtl.node_tree.links
-        #~
-        shaderNode = nodes["Diffuse BSDF"]
-        texNode = None
-        mapNode = None
-        try:
-            texNode = nodes["Image Texture"]
-        except:
-            texNode = nodes.new("ShaderNodeTexImage")
-        try:
-            mapNode = nodes["Normal Map"]
-        except:
-            mapNode = nodes.new("ShaderNodeNormalMap")
-        #~
-        links.new(texNode.outputs[0], mapNode.inputs[1])
-        links.new(mapNode.outputs[0], shaderNode.inputs[2])
-        #~
-        texNode.image = bpy.data.images.load(filePath)
-        if (colorData==True):
-            texNode.color_space = "COLOR"
-        else:
-            texNode.color_space = "NONE"
-        mapNode.inputs[0].default_value = strength
-        #~
-        mapNode.location = [shaderNode.location.x - 250, shaderNode.location.y]
-        texNode.location = [mapNode.location.x - 250, shaderNode.location.y]
+def matchWithParent(_child, _parent, _index):
+    if (_parent):
+        #bpy.context.scene.frame_set(_index)
+        #if (_index == bpy.context.scene.frame_start):
+        '''
+        for v in _child.data.splines.active.bezier_points:
+            loc = v.co * _parent.matrix_world.inverted()
+            v.co = loc
+        '''
+        loc, rot, scale = _parent.matrix_world.inverted().decompose()
+        _child.location = loc
+        #_child.rotation_quaternion = rot
+        _child.scale = scale
+        #bpy.context.scene.update()
+        _child.parent = _parent
+        keyTransform(_child, _index)   
 
 def clearState():
     for ob in bpy.data.objects.values():
@@ -90,13 +48,6 @@ def onionSkin(layers=None, onion=False):
     for layer in layers:
         layer.use_onion_skinning = onion
 
-def getActiveCurvePoints():
-    target = s()[0]
-    if (target.data.splines[0].type=="BEZIER"):
-        return target.data.splines.active.bezier_points
-    else:
-        return target.data.splines.active.points        
-        
 def bakeParentToChild(start=None, end=None):
     if (start==None and end==None):
         start, end = getStartEnd()
@@ -111,26 +62,6 @@ def bakeParentToChildByName(name="crv"):
         bpy.context.scene.objects.active = obj
         #print(bpy.context.scene.objects.active.name)
         bakeParentToChild(start, end)
-
-def importAppend(blendfile, section, obj, winDir=False):
-    # http://blender.stackexchange.com/questions/38060/how-to-link-append-with-a-python-script
-    #blendfile = "D:/path/to/the/repository.blend"
-    #section   = "\\Action\\"
-    #obj    = "myaction"
-    #~
-    url  = blendfile + section + obj
-    if (winDir==True):
-        section = blendfile + "\\" + section + "\\"
-    else:
-        section = blendfile + "/" + section + "/"
-    #~
-    bpy.ops.wm.append(filepath=url, filename=obj, directory=section)
-
-def writeTextFile(name="test.txt", lines=None):
-    file = open(name,"w") 
-    for line in lines:
-        file.write(line) 
-    file.close() 
 
 def getWorldCoords(co=None, camera=None, usePixelCoords=True, useRenderScale=True, flipV=True):
     # https://blender.stackexchange.com/questions/882/how-to-find-image-coordinates-of-the-rendered-vertex
@@ -180,10 +111,6 @@ def getSceneFps():
 def setSceneFps(fps=12):
     for scene in bpy.data.scenes:
         scene.render.fps = fps
-
-def readTextFile(name="text.txt"):
-    file = open(name, "r") 
-    return file.read() 
 
 def deselect():
     bpy.ops.object.select_all(action='DESELECT')
@@ -292,28 +219,6 @@ def removeObj(name="myObj", allObjs=False):
             obj.user_clear()
             bpy.data.objects.remove(obj)  
     refresh()
-
-def saveFile(name, format=True):
-    if (format==True):
-        name = getFilePath() + name + ".blend"
-    bpy.ops.wm.save_as_mainfile(filepath=name)
-
-def openFile(name, format=True):
-    if (format==True):
-        name = getFilePath() + name + ".blend"
-    bpy.ops.wm.open_mainfile(filepath=name)
-
-def getFilePath(stripFileName=True):
-    name = bpy.context.blend_data.filepath
-    if (stripFileName==True):
-        name = name[:-len(getFileName(stripExtension=False))]
-    return name
-
-def getFileName(stripExtension=True):
-    name = bpy.path.basename(bpy.context.blend_data.filepath)
-    if (stripExtension==True):
-        name = name[:-6]
-    return name
 
 def deleteDuplicateStrokes(fromAllFrames = False):
     strokes = getSelectedStrokes()
@@ -567,49 +472,6 @@ def joinObjects(target=None):
             pass
     return target[len(target)-1]
 '''
-
-def joinObjects(target=None, center=False):
-    if not target:
-        target = s()
-    #~
-    bpy.ops.object.select_all(action='DESELECT') 
-    target[0].select = True
-    bpy.context.scene.objects.active = target[0]
-    for i in range(1, len(target)):
-        #print("****** " + str(bpy.context.scene.objects.active))
-        #bpy.context.scene.objects.active.select = True
-        target[i].select = True
-        #bpy.ops.object.join()
-        #bpy.context.scene.objects.unlink(strokesToJoin[sj-1])
-    #~
-    bpy.ops.object.join()
-    #~
-    for i in range(1, len(target)):
-        try:
-            scn.objects.unlink(target[i])
-        except:
-            pass
-        #try:
-            #removeObj(target[i].name)
-        #except:
-            #pass
-        #try:
-            #target[i].select = True
-        #except:
-            #pass
-    #~
-    gc.collect()
-    if (center==True):
-        centerOrigin(target[0])
-    return target[0]
-
-def centerOrigin(target=None):
-    if not target:
-        target = ss()
-    deselect()
-    target.select = True
-    bpy.ops.object.origin_set(type = 'ORIGIN_GEOMETRY')
-    deselect()
 
 def parentMultiple(target, root, fixTransforms=True):
     bpy.context.scene.objects.active = root # last object will be the parent
@@ -1262,98 +1124,11 @@ def reprojectAllStrokes():
         except:
         	pass
 
-# TODO handle multiple materials on one mesh
-def searchMtl(color=None, name="crv"):
-    returns = []
-    if not color:
-        color = getActiveColor().color
-    curves = matchName(name)
-    for curve in curves:
-        if (compareTuple(curve.data.materials[0].diffuse_color, color)):
-            returns.append(curve)
-    #print ("found: " + str(returns))
-    return returns
-
 def compareTuple(t1, t2, numPlaces=5):
     if (roundVal(t1[0], numPlaces) == roundVal(t2[0], numPlaces) and roundVal(t1[1], numPlaces) == roundVal(t2[1], numPlaces) and roundVal(t1[2], numPlaces) == roundVal(t2[2], numPlaces)):
         return True
     else:
         return False
-
-# TODO handle multiple materials on one mesh
-def changeMtl(color=(1,1,0), searchColor=None, name="crv"):
-    if not searchColor:
-        searchColor = getActiveColor().color       
-    curves = searchMtl(color=searchColor, name=name)
-    print("changed: " + str(curves))
-    for curve in curves:
-        curve.data.materials[0].diffuse_color = color
-
-def consolidateMtl():
-    palette = getActivePalette()
-    for color in palette.colors:
-        matchMat = None
-        for obj in bpy.context.scene.objects:
-            #print(obj.name)
-            try:
-                for i, mat in enumerate(obj.data.materials):
-                    #print(str(color.color) + " " + str(getDiffuseColor(mat)))
-                    if (compareTuple((color.color[0],color.color[1],color.color[2]), getDiffuseColor(mat)) == True):
-                        if (matchMat == None):
-                            matchMat = mat
-                        else:
-                            obj.data.materials[i] = matchMat
-            except:
-                pass
-
-# old version, can't handle multiple materials on one mesh
-def consolidateMtlAlt(name="crv"):
-    palette = getActivePalette()
-    for color in palette.colors:
-        curves = searchMtl(color=color.color, name=name)
-        for i in range(1, len(curves)):
-            curves[i].data.materials[0] = curves[0].data.materials[0]
-
-def getActiveMtl():
-    return bpy.context.scene.objects.active.data.materials[bpy.context.scene.objects.active.active_material_index]
-
-def getMtlColor(node="Diffuse BSDF", mtl=None):
-    if not mtl:
-        mtl = getActiveMtl()
-    try:
-        colorRaw = mtl.node_tree.nodes[node].inputs["Color"].default_value
-        color = (colorRaw[0], colorRaw[1], colorRaw[2])
-        return color
-    except:
-        return None
-
-def getEmissionColor(mtl=None):
-    if not mtl:
-        mtl = getActiveMtl()
-    return getMtlColor("Emission", mtl)
-
-def getDiffuseColor(mtl=None):
-    if not mtl:
-        mtl = getActiveMtl()
-    col = getMtlColor("Diffuse BSDF", mtl)
-    if (col==None):
-        col = mtl.diffuse_color
-    return col
-    #return getMtlColor("Diffuse BSDF", mtl)
-
-def makeEmissionMtl():
-    mtl = getActiveMtl()
-    color = getEmissionColor()
-    #print("source color: " + str(color))
-    for obj in bpy.context.scene.objects:
-        try:
-            for j in range(0, len(obj.data.materials)):
-                destColor = getDiffuseColor(obj.data.materials[j])
-                #print("dest color: " + str(destColor))
-                if (compareTuple(destColor, color) == True):
-                    obj.data.materials[j] = mtl
-        except:
-            pass
 
 def deleteFromAllFrames():
     origStrokes = []
