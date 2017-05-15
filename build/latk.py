@@ -1909,6 +1909,7 @@ def svgStroke(points=None, stroke=(0,0,1), fill=(1,0,0), strokeWidth=2.0, stroke
 def gmlParser(filepath=None):
     globalScale = (0.1, 0.1, 0.1)
     useTime = True
+    minStrokeLength=3
     #~
     tree = etree.parse(filepath)
     root = tree.getroot()
@@ -1983,14 +1984,16 @@ def gmlParser(filepath=None):
             for stroke in strokes:
                 lastPoint = stroke[len(stroke)-1]
                 if (int(lastPoint[3] * float(fps)) <= frame.frame_number):
-                    drawPoints(stroke, frame=frame, layer=layer)
+                    if (len(stroke) >= minStrokeLength):
+                        drawPoints(stroke, frame=frame, layer=layer)
             #~
             gpPoints = []
             for gmlPoint in gmlPoints:
                 if (int(gmlPoint[3] * float(fps)) <= frame.frame_number):
                     gpPoints.append(gmlPoint)
             print("...Drawing into frame " + str(frame.frame_number) + " with " + str(len(gpPoints)) + " points.")
-            drawPoints(points=gpPoints, frame=frame, layer=layer)
+            if (len(gpPoints) >= minStrokeLength):
+                drawPoints(points=gpPoints, frame=frame, layer=layer)
     print("* * * * * * * * * * * * * * *")
     print("strokes: " + str(strokeCounter) + "   points: " + str(pointCounter))
 
