@@ -283,11 +283,13 @@ def svgStroke(points=None, stroke=(0,0,1), fill=(1,0,0), strokeWidth=2.0, stroke
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 
 #def gmlParser(filepath=None, globalScale=(0.1,0.1,0.1), useTime=True):
-def gmlParser(filepath=None):
+def gmlParser(filepath=None, splitStrokes=True):
     globalScale = (0.1, 0.1, 0.1)
     useTime = True
     minStrokeLength=3
+    #splitStrokes = True
     #~
+    masterLayerList = []
     tree = etree.parse(filepath)
     root = tree.getroot()
     '''
@@ -304,8 +306,9 @@ def gmlParser(filepath=None):
     #~
     tag = root.find("tag")
     yUp = False
-    layer = gp.layers.new("GML_Tag")
-    gp.layers.active = layer
+    origLayerName = "GML_Tag"
+    layer = newLayer(origLayerName)
+    masterLayerList.append(layer)
     #~
     header = tag.find("header")
     if header:
@@ -367,11 +370,12 @@ def gmlParser(filepath=None):
             goToFrame(frame.frame_number)
             layer.active_frame = frame
             #~
-            for stroke in strokes:
-                lastPoint = stroke[len(stroke)-1]
-                if (int(lastPoint[3] * float(fps)) <= frame.frame_number):
-                    if (len(stroke) >= minStrokeLength):
-                        drawPoints(stroke, frame=frame, layer=layer)
+            if (splitStrokes==False):
+                for stroke in strokes:
+                    lastPoint = stroke[len(stroke)-1]
+                    if (int(lastPoint[3] * float(fps)) <= frame.frame_number):
+                        if (len(stroke) >= minStrokeLength):
+                            drawPoints(stroke, frame=frame, layer=layer)
             #~
             gpPoints = []
             for gmlPoint in gmlPoints:
@@ -379,7 +383,23 @@ def gmlParser(filepath=None):
                     gpPoints.append(gmlPoint)
             print("...Drawing into frame " + str(frame.frame_number) + " with " + str(len(gpPoints)) + " points.")
             if (len(gpPoints) >= minStrokeLength):
+                if (splitStrokes==True):
+                    layer = newLayer(layer.info)
+                    masterLayerList.append(layer)
                 drawPoints(points=gpPoints, frame=frame, layer=layer)
+    # cleanup
+    if (splitStrokes==True):
+        for layer in masterLayerList:
+            if (len(layer.frames)<1):
+                deleteLayer(layer.info)
+        cleanCounter = 1
+        for layer in masterLayerList:
+            for gpLayer in gp.layers:
+                if (layer.info == gpLayer.info):
+                    gpLayer.info = origLayerName + "_" + str(cleanCounter)
+                    cleanCounter += 1
+                    break
+    #~
     print("* * * * * * * * * * * * * * *")
     print("strokes: " + str(strokeCounter) + "   points: " + str(pointCounter))
 

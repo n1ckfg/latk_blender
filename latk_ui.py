@@ -118,12 +118,16 @@ class ImportGml(bpy.types.Operator, ImportHelper):
             options={'HIDDEN'},
             )
 
+    splitStrokes = BoolProperty(name="Split Strokes", description="Split Strokes on Layers", default=True)
+
     def execute(self, context):
         import latk as la
-        keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode"))
+        keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "splitStrokes"))
         if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
             import os
             #keywords["relpath"] = os.path.dirname(bpy.data.filepath)
+        #~
+        keywords["splitStrokes"] = self.splitStrokes
         #~
         la.gmlParser(**keywords)
         return {'FINISHED'} 

@@ -28,7 +28,7 @@ along with the Lightning Artist Toolkit (Blender).  If not, see
 '''
 
 bl_info = {
-    "name": "LightningArtist Toolkit", 
+    "name": "Lightning Artist Toolkit (Latk)", 
     "author": "Nick Fox-Gieg",
     "category": "Animation"
 }
