@@ -1,3 +1,5 @@
+# 7 of 8. TESTS
+
 def testStroke():
     gp = getActiveGp()
     palette = getActivePalette()
@@ -20,10 +22,9 @@ def testJson():
         print("First color: " + str(data["grease_pencil"][0]["layers"][0]["frames"][0]["strokes"][0]["color"]))
         print("First point: " + str(data["grease_pencil"][0]["layers"][0]["frames"][0]["strokes"][0]["points"][0]))
 
-# ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
-# ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
-# shortcuts
-
+def testDrawPoints():
+    drawPoints([(0,0,0),(1,1,1),(0,1,0),(0,0,0)])
+    
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
 # * * * * * * * * * * * * * * * * * * * * * * * * * *

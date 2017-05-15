@@ -27,6 +27,8 @@ along with the Lightning Artist Toolkit (Blender).  If not, see
 <http://www.gnu.org/licenses/>.
 '''
 
+# 1 of 8. MAIN
+
 bl_info = {
     "name": "Lightning Artist Toolkit (Latk)", 
     "author": "Nick Fox-Gieg",
@@ -55,6 +57,8 @@ from bpy_extras.io_utils import (ImportHelper, ExportHelper)
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
 
+# 2 of 8. TOOLS
+
 def getLayerInfo(layer):
     return layer.info.split(".")[0]
 
@@ -67,12 +71,6 @@ def getActiveFrameNum(layer=None):
         if (layer.frames[i] == layer.active_frame):
             returns = i
     return returns
-
-def setOrigin(target, point):
-    bpy.context.scene.objects.active = target
-    bpy.context.scene.cursor_location = point
-    bpy.ops.object.origin_set(type='ORIGIN_CURSOR')
-    #bpy.context.scene.update()
 
 def matchWithParent(_child, _parent, _index):
     if (_parent):
@@ -488,25 +486,11 @@ def drawPoints(points=None, color=None, frame=None, layer=None):
     else:
         return None
 
-def testDrawPoints():
-    drawPoints([(0,0,0),(1,1,1),(0,1,0),(0,0,0)])
-
 def writeOnStrokes(step=1):
     gp = getActiveGp()
     for i in range(0, len(gp.layers)):
         gp.layers.active_index = i
         distributeStrokes(step)
-
-def writeOnMesh(step=1, name="crv"):
-    target = matchName(name)
-    for i in range (0, len(target), step):
-        if (i > len(target)-1):
-            i = len(target)-1
-        for j in range(i, (i+1)*step):
-            if (j > len(target)-1):
-                j = len(target)-1
-            hideFrame(target[j], 0, True)
-            hideFrame(target[j], len(target)-j, False)
 
 def getDistance(v1, v2):
     return sqrt( (v1[0] - v2[0])**2 + (v1[1] - v2[1])**2 + (v1[2] - v2[2])**2)
@@ -1042,8 +1026,6 @@ def splitLayersAboveFrameLimit(limit=20):
     #else:
         #print("No layers are above frame limit " + str(limit) + ".")
 
-splf = splitLayersAboveFrameLimit
-
 def getLayerLength(name=None):
     layer = None
     if not name:
@@ -1368,33 +1350,11 @@ def TestView3dOperatorFromPythonScript():       # Run this from a python script 
     #bpy.ops.screen.screen_full_area(oContextOverride)
     print("TestView3dOperatorFromPythonScript() completed succesfully.")
 
-
-# ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
-# ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
-# shortcuts
-
-def up():
-    makeParent(unParent=True)
-
-def ss():
-    return select()[0]
-
-def dn():
-    deleteName(_name="crv_ob")
-    deleteName(_name="caps_ob")
-
-c = changeColor
-a = alignCamera
-s = select
-d = delete
-j = joinObjects
-df = deleteFromAllFrames
-spl = splitLayer
-cplf = checkLayersAboveFrameLimit
-
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
+
+# 3 of 8. READ / WRITE
 
 def exportForUnity(sketchFab=True):
     start, end = getStartEnd()
@@ -1917,17 +1877,11 @@ def gmlParser(filepath=None, splitStrokes=True):
     print("* * * * * * * * * * * * * * *")
     print("strokes: " + str(strokeCounter) + "   points: " + str(pointCounter))
 
-# shortcuts
-
-def rbUnity(fileName):
-    readBrushStrokes("C:\\Users\\nick\\Documents\\GitHub\\LightningArtist\\latkUnity\\latkVive\\Assets\\" + fileName)
-
-rb = readBrushStrokes
-wb = writeBrushStrokes
-
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
+
+# 4 of 8. MATERIALS / RENDERING
 
 # http://blender.stackexchange.com/questions/17738/how-to-uv-unwrap-object-with-python
 def planarUvProject():
@@ -2145,6 +2099,12 @@ def makeEmissionMtl():
                     obj.data.materials[j] = mtl
         except:
             pass
+
+# * * * * * * * * * * * * * * * * * * * * * * * * * *
+# * * * * * * * * * * * * * * * * * * * * * * * * * *
+# * * * * * * * * * * * * * * * * * * * * * * * * * *
+
+# 5 of 8. MESHES / GEOMETRY
 
 def joinObjects(target=None, center=False):
     if not target:
@@ -2554,6 +2514,23 @@ def centerOrigin(target=None):
     bpy.ops.object.origin_set(type = 'ORIGIN_GEOMETRY')
     deselect()
 
+def setOrigin(target, point):
+    bpy.context.scene.objects.active = target
+    bpy.context.scene.cursor_location = point
+    bpy.ops.object.origin_set(type='ORIGIN_CURSOR')
+    #bpy.context.scene.update()
+
+def writeOnMesh(step=1, name="crv"):
+    target = matchName(name)
+    for i in range (0, len(target), step):
+        if (i > len(target)-1):
+            i = len(target)-1
+        for j in range(i, (i+1)*step):
+            if (j > len(target)-1):
+                j = len(target)-1
+            hideFrame(target[j], 0, True)
+            hideFrame(target[j], len(target)-j, False)
+
 def colorVertices(obj, color=(1,0,0), makeMaterial=False):
     # start in object mode
     mesh = obj.data
@@ -2796,9 +2773,12 @@ def createFill(inputVerts, useUvs=False):
     #~
     return ob
 
-# ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
-# ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
-# shortcuts
+# * * * * * * * * * * * * * * * * * * * * * * * * * *
+# * * * * * * * * * * * * * * * * * * * * * * * * * *
+# * * * * * * * * * * * * * * * * * * * * * * * * * *
+
+# 6 of 8. SHORTCUTS
+
 def mf():
     dn()
     gpMesh(_resolution=1, _bevelResolution=0, _singleFrame=True)
@@ -2839,9 +2819,39 @@ def gpJoinTest():
     dn()
     gpMesh(_bakeMesh=True, _joinMesh=True)
 
+def rbUnity(fileName):
+    readBrushStrokes("C:\\Users\\nick\\Documents\\GitHub\\LightningArtist\\latkUnity\\latkVive\\Assets\\" + fileName)
+
+rb = readBrushStrokes
+wb = writeBrushStrokes
+
+def up():
+    makeParent(unParent=True)
+
+def ss():
+    return select()[0]
+
+def dn():
+    deleteName(_name="crv_ob")
+    deleteName(_name="caps_ob")
+
+c = changeColor
+a = alignCamera
+s = select
+d = delete
+j = joinObjects
+df = deleteFromAllFrames
+spl = splitLayer
+cplf = checkLayersAboveFrameLimit
+
+splf = splitLayersAboveFrameLimit
+
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
+
+# 7 of 8. TESTS
+
 def testStroke():
     gp = getActiveGp()
     palette = getActivePalette()
@@ -2864,13 +2874,14 @@ def testJson():
         print("First color: " + str(data["grease_pencil"][0]["layers"][0]["frames"][0]["strokes"][0]["color"]))
         print("First point: " + str(data["grease_pencil"][0]["layers"][0]["frames"][0]["strokes"][0]["points"][0]))
 
-# ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
-# ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
-# shortcuts
+def testDrawPoints():
+    drawPoints([(0,0,0),(1,1,1),(0,1,0),(0,0,0)])
+    
+# * * * * * * * * * * * * * * * * * * * * * * * * * *
+# * * * * * * * * * * * * * * * * * * * * * * * * * *
+# * * * * * * * * * * * * * * * * * * * * * * * * * *
 
-# * * * * * * * * * * * * * * * * * * * * * * * * * *
-# * * * * * * * * * * * * * * * * * * * * * * * * * *
-# * * * * * * * * * * * * * * * * * * * * * * * * * *
+# 8 of 8. UI
 
 class ImportLatk(bpy.types.Operator, ImportHelper):
     """Load a Latk File"""

@@ -1,3 +1,5 @@
+# 4 of 8. MATERIALS / RENDERING
+
 # http://blender.stackexchange.com/questions/17738/how-to-uv-unwrap-object-with-python
 def planarUvProject():
     for area in bpy.context.screen.areas:
@@ -214,4 +216,8 @@ def makeEmissionMtl():
                     obj.data.materials[j] = mtl
         except:
             pass
+
+# * * * * * * * * * * * * * * * * * * * * * * * * * *
+# * * * * * * * * * * * * * * * * * * * * * * * * * *
+# * * * * * * * * * * * * * * * * * * * * * * * * * *
 

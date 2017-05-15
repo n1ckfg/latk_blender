@@ -1,3 +1,5 @@
+# 3 of 8. READ / WRITE
+
 def exportForUnity(sketchFab=True):
     start, end = getStartEnd()
     target = matchName("crv")
@@ -518,14 +520,6 @@ def gmlParser(filepath=None, splitStrokes=True):
     #~
     print("* * * * * * * * * * * * * * *")
     print("strokes: " + str(strokeCounter) + "   points: " + str(pointCounter))
-
-# shortcuts
-
-def rbUnity(fileName):
-    readBrushStrokes("C:\\Users\\nick\\Documents\\GitHub\\LightningArtist\\latkUnity\\latkVive\\Assets\\" + fileName)
-
-rb = readBrushStrokes
-wb = writeBrushStrokes
 
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
 # * * * * * * * * * * * * * * * * * * * * * * * * * *

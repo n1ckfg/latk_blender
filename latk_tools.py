@@ -1,3 +1,5 @@
+# 2 of 8. TOOLS
+
 def getLayerInfo(layer):
     return layer.info.split(".")[0]
 
@@ -10,12 +12,6 @@ def getActiveFrameNum(layer=None):
         if (layer.frames[i] == layer.active_frame):
             returns = i
     return returns
-
-def setOrigin(target, point):
-    bpy.context.scene.objects.active = target
-    bpy.context.scene.cursor_location = point
-    bpy.ops.object.origin_set(type='ORIGIN_CURSOR')
-    #bpy.context.scene.update()
 
 def matchWithParent(_child, _parent, _index):
     if (_parent):
@@ -431,25 +427,11 @@ def drawPoints(points=None, color=None, frame=None, layer=None):
     else:
         return None
 
-def testDrawPoints():
-    drawPoints([(0,0,0),(1,1,1),(0,1,0),(0,0,0)])
-
 def writeOnStrokes(step=1):
     gp = getActiveGp()
     for i in range(0, len(gp.layers)):
         gp.layers.active_index = i
         distributeStrokes(step)
-
-def writeOnMesh(step=1, name="crv"):
-    target = matchName(name)
-    for i in range (0, len(target), step):
-        if (i > len(target)-1):
-            i = len(target)-1
-        for j in range(i, (i+1)*step):
-            if (j > len(target)-1):
-                j = len(target)-1
-            hideFrame(target[j], 0, True)
-            hideFrame(target[j], len(target)-j, False)
 
 def getDistance(v1, v2):
     return sqrt( (v1[0] - v2[0])**2 + (v1[1] - v2[1])**2 + (v1[2] - v2[2])**2)
@@ -985,8 +967,6 @@ def splitLayersAboveFrameLimit(limit=20):
     #else:
         #print("No layers are above frame limit " + str(limit) + ".")
 
-splf = splitLayersAboveFrameLimit
-
 def getLayerLength(name=None):
     layer = None
     if not name:
@@ -1310,30 +1290,6 @@ def TestView3dOperatorFromPythonScript():       # Run this from a python script 
     bpy.ops.mesh.knife_project(oContextOverride)                # An operator like this normally requires to run off the View3D context.  By overriding it with what it needs it will run from any context (like Python script, Python shell, etc)
     #bpy.ops.screen.screen_full_area(oContextOverride)
     print("TestView3dOperatorFromPythonScript() completed succesfully.")
-
-
-# ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
-# ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
-# shortcuts
-
-def up():
-    makeParent(unParent=True)
-
-def ss():
-    return select()[0]
-
-def dn():
-    deleteName(_name="crv_ob")
-    deleteName(_name="caps_ob")
-
-c = changeColor
-a = alignCamera
-s = select
-d = delete
-j = joinObjects
-df = deleteFromAllFrames
-spl = splitLayer
-cplf = checkLayersAboveFrameLimit
 
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
 # * * * * * * * * * * * * * * * * * * * * * * * * * *

@@ -1,3 +1,5 @@
+# 5 of 8. MESHES / GEOMETRY
+
 def joinObjects(target=None, center=False):
     if not target:
         target = s()
@@ -406,6 +408,23 @@ def centerOrigin(target=None):
     bpy.ops.object.origin_set(type = 'ORIGIN_GEOMETRY')
     deselect()
 
+def setOrigin(target, point):
+    bpy.context.scene.objects.active = target
+    bpy.context.scene.cursor_location = point
+    bpy.ops.object.origin_set(type='ORIGIN_CURSOR')
+    #bpy.context.scene.update()
+
+def writeOnMesh(step=1, name="crv"):
+    target = matchName(name)
+    for i in range (0, len(target), step):
+        if (i > len(target)-1):
+            i = len(target)-1
+        for j in range(i, (i+1)*step):
+            if (j > len(target)-1):
+                j = len(target)-1
+            hideFrame(target[j], 0, True)
+            hideFrame(target[j], len(target)-j, False)
+
 def colorVertices(obj, color=(1,0,0), makeMaterial=False):
     # start in object mode
     mesh = obj.data
@@ -648,49 +667,7 @@ def createFill(inputVerts, useUvs=False):
     #~
     return ob
 
-# ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
-# ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
-# shortcuts
-def mf():
-    dn()
-    gpMesh(_resolution=1, _bevelResolution=0, _singleFrame=True)
-
-def gp():
-    dn()
-    gpMeshPreview()
-
-def gs():
-    gpMesh(_singleFrame=True)
-	
-def gb():
-    dn()
-    gpMesh(_bakeMesh=True)
-
-def gj():
-    dn()
-    gpMesh(_joinMesh=True)
-
-def gpMeshPreview():
-    # mesh curves faster but messier
-    gpMesh(_resolution=1, _bevelResolution=0)
-
-def gpMeshFinal():
-    # mesh curves slower but nicer
-    gpMesh(_resolution=1, _bevelResolution=1, _bakeMesh=True)
-
-def gpMeshCubes():
-    gpMesh(_resolution=1, _bevelResolution=0, _bakeMesh=True, _remesh=True)
-
-def gpMeshColor():
-    gpMesh(_resolution=1, _bevelResolution=0, _bakeMesh=True, _vertexColors=True)
-
-def gpMeshBackground():
-    gpMesh(_animateFrames=False, _bakeMesh=True, _thickness=0.008)
-
-def gpJoinTest():
-    dn()
-    gpMesh(_bakeMesh=True, _joinMesh=True)
-
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
+
