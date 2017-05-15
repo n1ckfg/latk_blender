@@ -290,9 +290,11 @@ def gmlParser(filepath=None):
     #~
     tree = etree.parse(filepath)
     root = tree.getroot()
+    '''
     if (root.tag.lower() != "gml"):
         print("Not a GML file.")
         return
+    '''
     #~
     strokeCounter = 0
     pointCounter = 0
@@ -316,7 +318,14 @@ def gmlParser(filepath=None):
         if (up[1] > 0):
             yUp = True
         screenBoundsEl = environment.find("screenBounds")
-        screenBounds = (float(screenBoundsEl.find("x").text), float(screenBoundsEl.find("y").text), float(screenBoundsEl.find("z").text))
+        sbX = float(screenBoundsEl.find("x").text)
+        sbY = float(screenBoundsEl.find("y").text)
+        sbZ = 1.0
+        try:
+            sbZ = float(screenBoundsEl.find("z").text)
+        except:
+            pass
+        screenBounds = (sbX, sbY, sbZ)
         globalScale = (globalScale[0] * screenBounds[0], globalScale[1] * screenBounds[1], globalScale[2] * screenBounds[2])
     #~
     drawing = tag.find("drawing")
@@ -339,10 +348,10 @@ def gmlParser(filepath=None):
             except:
                 pass
             time = float(pt.find("time").text)
-            if (yUp==False):
-                gmlPoints.append((x,y,z,time))
-            else:
-                gmlPoints.append((-x,z,y,time))
+            #if (yUp==False):
+            gmlPoints.append((x,y,z,time))
+            #else:
+                #gmlPoints.append((-x,z,y,time))
         gmlPoints = sorted(gmlPoints, key=itemgetter(3)) # sort by time
         strokes.append(gmlPoints)
         #~
