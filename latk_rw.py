@@ -194,7 +194,14 @@ def readBrushStrokes(filepath=None):
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 
 #def writeSvg(strokes=None, name="test.svg", minLineWidth=3, camera=None):
-def writeSvg(name="test.svg", minLineWidth=3, camera=None, fps=12, start=0, end=73):
+#def writeSvg(filepath=None, minLineWidth=3, camera=None, fps=12, start=0, end=73):
+def writeSvg(filepath=None):
+    minLineWidth=3
+    camera=None
+    fps=None
+    start=None
+    end=None
+    #~
     #if not strokes:
         #strokes = getActiveFrame().strokes
     if not camera:
@@ -202,11 +209,12 @@ def writeSvg(name="test.svg", minLineWidth=3, camera=None, fps=12, start=0, end=
     if not fps:
         fps = getSceneFps()
     if (start==None or end==None):
-    	start, end = getStartEnd()
+        start, end = getStartEnd()
     fps = float(fps)
     duration = float(end - start) / fps
     gp = getActiveGp()
-    url = getFilePath() + name
+    #url = getFilePath() + name
+    url = filepath
     print(url)
     sW = getSceneResolution()[0]
     sH = getSceneResolution()[1]
@@ -271,6 +279,93 @@ def svgStroke(points=None, stroke=(0,0,1), fill=(1,0,0), strokeWidth=2.0, stroke
                 returns += "L" + str(co[0]) + " " + str(co[1])
     returns += "\"/>"
     return returns
+
+# ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
+
+#def gmlParser(filepath=None, globalScale=(0.1,0.1,0.1), useTime=True):
+def gmlParser(filepath=None):
+    globalScale = (0.1, 0.1, 0.1)
+    useTime = True
+    #~
+    tree = etree.parse(filepath)
+    root = tree.getroot()
+    if (root.tag != "GML"):
+        print("Not a GML file.")
+        return
+    #~
+    strokeCounter = 0
+    pointCounter = 0
+    gp = getActiveGp()
+    fps = getSceneFps()
+    start, end = getStartEnd()
+    #~
+    tag = root.find("tag")
+    yUp = False
+    layer = gp.layers.new("GML_Tag")
+    gp.layers.active = layer
+    #~
+    header = tag.find("header")
+    if header:
+        pass
+    #~
+    environment = tag.find("environment")
+    if environment:
+        upEl = environment.find("up")
+        up = (float(upEl.find("x").text), float(upEl.find("y").text), float(upEl.find("z").text))
+        if (up[1] > 0):
+            yUp = True
+        screenBoundsEl = environment.find("screenBounds")
+        screenBounds = (float(screenBoundsEl.find("x").text), float(screenBoundsEl.find("y").text), float(screenBoundsEl.find("z").text))
+        globalScale = (globalScale[0] * screenBounds[0], globalScale[1] * screenBounds[1], globalScale[2] * screenBounds[2])
+    #~
+    drawing = tag.find("drawing")
+    strokesEl = drawing.findall("stroke")
+    strokeCounter += len(strokesEl)
+    strokes = []
+    for stroke in strokesEl:
+        #layer = gp.layers.new("GML_Tag" + str(i+1) + "_stroke" + str(j+1))
+        #gp.layers.active = layer
+        #~
+        pts = stroke.findall("pt")
+        pointCounter += len(pts)
+        gmlPoints = []
+        for pt in pts:
+            x = float(pt.find("x").text) * globalScale[0]
+            y = float(pt.find("y").text) * globalScale[1]
+            z = float(pt.find("z").text) * globalScale[2]
+            time = float(pt.find("time").text)
+            if (yUp==False):
+                gmlPoints.append((x,y,z,time))
+            else:
+                gmlPoints.append((-x,z,y,time))
+        gmlPoints = sorted(gmlPoints, key=itemgetter(3)) # sort by time
+        strokes.append(gmlPoints)
+        #~
+        for gmlPoint in gmlPoints:
+            frameNum = int(gmlPoint[3] * float(fps))
+            print(str(gmlPoint[3]))
+            goToFrame(frameNum)
+            try:
+                layer.frames.new(frameNum)
+            except:
+                pass
+        for frame in layer.frames:
+            goToFrame(frame.frame_number)
+            layer.active_frame = frame
+            #~
+            for stroke in strokes:
+                lastPoint = stroke[len(stroke)-1]
+                if (int(lastPoint[3] * float(fps)) <= frame.frame_number):
+                    drawPoints(stroke, frame=frame, layer=layer)
+            #~
+            gpPoints = []
+            for gmlPoint in gmlPoints:
+                if (int(gmlPoint[3] * float(fps)) <= frame.frame_number):
+                    gpPoints.append(gmlPoint)
+            print("...Drawing into frame " + str(frame.frame_number) + " with " + str(len(gpPoints)) + " points.")
+            drawPoints(points=gpPoints, frame=frame, layer=layer)
+    print("* * * * * * * * * * * * * * *")
+    print("strokes: " + str(strokeCounter) + "   points: " + str(pointCounter))
 
 # shortcuts
 

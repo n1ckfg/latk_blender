@@ -552,33 +552,36 @@ ds = distributeStrokes
 
 # note that unlike createStroke, this creates a stroke from raw coordinates
 def drawPoints(points=None, color=None, frame=None, layer=None):
-    if not color:
-        color = getActiveColor()
-    if not layer:
-        layer = getActiveLayer()
+    if (len(points) > 0):
+        if not color:
+            color = getActiveColor()
         if not layer:
-            gp = getActiveGp()
-            layer = gp.layers.new("GP_Layer")
-            gp.layers.active = layer
-    if not frame:
-        frame = getActiveFrame()
+            layer = getActiveLayer()
+            if not layer:
+                gp = getActiveGp()
+                layer = gp.layers.new("GP_Layer")
+                gp.layers.active = layer
         if not frame:
-            try:
-                frame = layer.frames.new(currentFrame())
-            except:
-                pass
-    stroke = frame.strokes.new(color.name)
-    stroke.draw_mode = "3DSPACE"
-    stroke.points.add(len(points))
-    for i, point in enumerate(points):
-        pressure = 1.0
-        strength = 1.0
-        if (len(point) > 3):
-            pressure = point[3]
-        if (len(point) > 4):
-            strength = point[4]
-        createPoint(stroke, i, (point[0], point[2], point[1]), pressure, strength)
-    return stroke
+            frame = getActiveFrame()
+            if not frame:
+                try:
+                    frame = layer.frames.new(currentFrame())
+                except:
+                    pass
+        stroke = frame.strokes.new(color.name)
+        stroke.draw_mode = "3DSPACE"
+        stroke.points.add(len(points))
+        for i, point in enumerate(points):
+            pressure = 1.0
+            strength = 1.0
+            if (len(point) > 3):
+                pressure = point[3]
+            if (len(point) > 4):
+                strength = point[4]
+            createPoint(stroke, i, (point[0], point[2], point[1]), pressure, strength)
+        return stroke
+    else:
+        return None
 
 def testDrawPoints():
     drawPoints([(0,0,0),(1,1,1),(0,1,0),(0,0,0)])
@@ -1814,7 +1817,14 @@ def readBrushStrokes(filepath=None):
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 
 #def writeSvg(strokes=None, name="test.svg", minLineWidth=3, camera=None):
-def writeSvg(name="test.svg", minLineWidth=3, camera=None, fps=12, start=0, end=73):
+#def writeSvg(filepath=None, minLineWidth=3, camera=None, fps=12, start=0, end=73):
+def writeSvg(filepath=None):
+    minLineWidth=3
+    camera=None
+    fps=None
+    start=None
+    end=None
+    #~
     #if not strokes:
         #strokes = getActiveFrame().strokes
     if not camera:
@@ -1822,11 +1832,12 @@ def writeSvg(name="test.svg", minLineWidth=3, camera=None, fps=12, start=0, end=
     if not fps:
         fps = getSceneFps()
     if (start==None or end==None):
-    	start, end = getStartEnd()
+        start, end = getStartEnd()
     fps = float(fps)
     duration = float(end - start) / fps
     gp = getActiveGp()
-    url = getFilePath() + name
+    #url = getFilePath() + name
+    url = filepath
     print(url)
     sW = getSceneResolution()[0]
     sH = getSceneResolution()[1]
@@ -1891,6 +1902,93 @@ def svgStroke(points=None, stroke=(0,0,1), fill=(1,0,0), strokeWidth=2.0, stroke
                 returns += "L" + str(co[0]) + " " + str(co[1])
     returns += "\"/>"
     return returns
+
+# ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
+
+#def gmlParser(filepath=None, globalScale=(0.1,0.1,0.1), useTime=True):
+def gmlParser(filepath=None):
+    globalScale = (0.1, 0.1, 0.1)
+    useTime = True
+    #~
+    tree = etree.parse(filepath)
+    root = tree.getroot()
+    if (root.tag != "GML"):
+        print("Not a GML file.")
+        return
+    #~
+    strokeCounter = 0
+    pointCounter = 0
+    gp = getActiveGp()
+    fps = getSceneFps()
+    start, end = getStartEnd()
+    #~
+    tag = root.find("tag")
+    yUp = False
+    layer = gp.layers.new("GML_Tag")
+    gp.layers.active = layer
+    #~
+    header = tag.find("header")
+    if header:
+        pass
+    #~
+    environment = tag.find("environment")
+    if environment:
+        upEl = environment.find("up")
+        up = (float(upEl.find("x").text), float(upEl.find("y").text), float(upEl.find("z").text))
+        if (up[1] > 0):
+            yUp = True
+        screenBoundsEl = environment.find("screenBounds")
+        screenBounds = (float(screenBoundsEl.find("x").text), float(screenBoundsEl.find("y").text), float(screenBoundsEl.find("z").text))
+        globalScale = (globalScale[0] * screenBounds[0], globalScale[1] * screenBounds[1], globalScale[2] * screenBounds[2])
+    #~
+    drawing = tag.find("drawing")
+    strokesEl = drawing.findall("stroke")
+    strokeCounter += len(strokesEl)
+    strokes = []
+    for stroke in strokesEl:
+        #layer = gp.layers.new("GML_Tag" + str(i+1) + "_stroke" + str(j+1))
+        #gp.layers.active = layer
+        #~
+        pts = stroke.findall("pt")
+        pointCounter += len(pts)
+        gmlPoints = []
+        for pt in pts:
+            x = float(pt.find("x").text) * globalScale[0]
+            y = float(pt.find("y").text) * globalScale[1]
+            z = float(pt.find("z").text) * globalScale[2]
+            time = float(pt.find("time").text)
+            if (yUp==False):
+                gmlPoints.append((x,y,z,time))
+            else:
+                gmlPoints.append((-x,z,y,time))
+        gmlPoints = sorted(gmlPoints, key=itemgetter(3)) # sort by time
+        strokes.append(gmlPoints)
+        #~
+        for gmlPoint in gmlPoints:
+            frameNum = int(gmlPoint[3] * float(fps))
+            print(str(gmlPoint[3]))
+            goToFrame(frameNum)
+            try:
+                layer.frames.new(frameNum)
+            except:
+                pass
+        for frame in layer.frames:
+            goToFrame(frame.frame_number)
+            layer.active_frame = frame
+            #~
+            for stroke in strokes:
+                lastPoint = stroke[len(stroke)-1]
+                if (int(lastPoint[3] * float(fps)) <= frame.frame_number):
+                    drawPoints(stroke, frame=frame, layer=layer)
+            #~
+            gpPoints = []
+            for gmlPoint in gmlPoints:
+                if (int(gmlPoint[3] * float(fps)) <= frame.frame_number):
+                    gpPoints.append(gmlPoint)
+            print("...Drawing into frame " + str(frame.frame_number) + " with " + str(len(gpPoints)) + " points.")
+            drawPoints(points=gpPoints, frame=frame, layer=layer)
+    print("* * * * * * * * * * * * * * *")
+    print("strokes: " + str(strokeCounter) + "   points: " + str(pointCounter))
 
 # shortcuts
 
@@ -2756,7 +2854,8 @@ class ImportLatk(bpy.types.Operator, ImportHelper):
             import os
             #keywords["relpath"] = os.path.dirname(bpy.data.filepath)
         #~
-        return la.readBrushStrokes(**keywords)
+        la.readBrushStrokes(**keywords)
+        return {'FINISHED'}
 
     '''
     def execute(self, context):
@@ -2814,7 +2913,8 @@ class ExportLatk(bpy.types.Operator, ExportHelper):
         #~
         keywords["bake"] = self.bake
         #~
-        return la.writeBrushStrokes(**keywords)
+        la.writeBrushStrokes(**keywords)
+        return {'FINISHED'}
 
     '''
     path_mode = path_reference_mode
@@ -2841,12 +2941,66 @@ class ExportLatk(bpy.types.Operator, ExportHelper):
         return export_obj.save(context, **keywords)
     '''
 
+# ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ 
+
+class ImportGml(bpy.types.Operator, ImportHelper):
+    """Load a Gml File"""
+    bl_idname = "import_scene.gml"
+    bl_label = "Import Gml"
+    bl_options = {'PRESET', 'UNDO'}
+
+    filename_ext = ".gml"
+    filter_glob = StringProperty(
+            default="*.gml",
+            options={'HIDDEN'},
+            )
+
+    def execute(self, context):
+        import latk as la
+        keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode"))
+        if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
+            import os
+            #keywords["relpath"] = os.path.dirname(bpy.data.filepath)
+        #~
+        la.gmlParser(**keywords)
+        return {'FINISHED'} 
+
+class ExportSvg(bpy.types.Operator, ExportHelper):
+    """Save an SVG SMIL File"""
+
+    bl_idname = "export_scene.svg"
+    bl_label = 'Export Svg'
+    bl_options = {'PRESET'}
+
+    filename_ext = ".svg"
+    filter_glob = StringProperty(
+            default="*.svg",
+            options={'HIDDEN'},
+            )
+
+    #bake = BoolProperty(name="Bake Frames", description="Bake Keyframes to All Frames", default=True)
+
+    def execute(self, context):
+        import latk as la
+        #keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "check_existing", "bake"))
+        keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "check_existing"))
+        if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
+            import os
+            #keywords["relpath"] = os.path.dirname(bpy.data.filepath)
+        #~
+        #keywords["bake"] = self.bake
+        #~
+        la.writeSvg(**keywords)
+        return {'FINISHED'} 
+
 def menu_func_import(self, context):
     self.layout.operator(ImportLatk.bl_idname, text="Latk Animation (.json)")
+    self.layout.operator(ImportGml.bl_idname, text="Graffiti Markup Language (.gml)")
 
 
 def menu_func_export(self, context):
     self.layout.operator(ExportLatk.bl_idname, text="Latk Animation (.json)")
+    self.layout.operator(ExportSvg.bl_idname, text="SVG SMIL Animation (.svg)")
 
 
 def register():

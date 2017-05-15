@@ -17,7 +17,8 @@ class ImportLatk(bpy.types.Operator, ImportHelper):
             import os
             #keywords["relpath"] = os.path.dirname(bpy.data.filepath)
         #~
-        return la.readBrushStrokes(**keywords)
+        la.readBrushStrokes(**keywords)
+        return {'FINISHED'}
 
     '''
     def execute(self, context):
@@ -75,7 +76,8 @@ class ExportLatk(bpy.types.Operator, ExportHelper):
         #~
         keywords["bake"] = self.bake
         #~
-        return la.writeBrushStrokes(**keywords)
+        la.writeBrushStrokes(**keywords)
+        return {'FINISHED'}
 
     '''
     path_mode = path_reference_mode
@@ -102,12 +104,66 @@ class ExportLatk(bpy.types.Operator, ExportHelper):
         return export_obj.save(context, **keywords)
     '''
 
+# ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ 
+
+class ImportGml(bpy.types.Operator, ImportHelper):
+    """Load a Gml File"""
+    bl_idname = "import_scene.gml"
+    bl_label = "Import Gml"
+    bl_options = {'PRESET', 'UNDO'}
+
+    filename_ext = ".gml"
+    filter_glob = StringProperty(
+            default="*.gml",
+            options={'HIDDEN'},
+            )
+
+    def execute(self, context):
+        import latk as la
+        keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode"))
+        if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
+            import os
+            #keywords["relpath"] = os.path.dirname(bpy.data.filepath)
+        #~
+        la.gmlParser(**keywords)
+        return {'FINISHED'} 
+
+class ExportSvg(bpy.types.Operator, ExportHelper):
+    """Save an SVG SMIL File"""
+
+    bl_idname = "export_scene.svg"
+    bl_label = 'Export Svg'
+    bl_options = {'PRESET'}
+
+    filename_ext = ".svg"
+    filter_glob = StringProperty(
+            default="*.svg",
+            options={'HIDDEN'},
+            )
+
+    #bake = BoolProperty(name="Bake Frames", description="Bake Keyframes to All Frames", default=True)
+
+    def execute(self, context):
+        import latk as la
+        #keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "check_existing", "bake"))
+        keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "check_existing"))
+        if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
+            import os
+            #keywords["relpath"] = os.path.dirname(bpy.data.filepath)
+        #~
+        #keywords["bake"] = self.bake
+        #~
+        la.writeSvg(**keywords)
+        return {'FINISHED'} 
+
 def menu_func_import(self, context):
     self.layout.operator(ImportLatk.bl_idname, text="Latk Animation (.json)")
+    self.layout.operator(ImportGml.bl_idname, text="Graffiti Markup Language (.gml)")
 
 
 def menu_func_export(self, context):
     self.layout.operator(ExportLatk.bl_idname, text="Latk Animation (.json)")
+    self.layout.operator(ExportSvg.bl_idname, text="SVG SMIL Animation (.svg)")
 
 
 def register():
