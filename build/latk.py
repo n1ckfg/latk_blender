@@ -2445,6 +2445,20 @@ def remesher(obj, bake=True, mode="blocks", octree=6, threshold=0.0001, smoothSh
         else:
             return obj
 
+# context error
+def decimator(target=None, ratio=0.1, bake=True):
+    if not target:
+        target = ss()
+    bpy.context.scene.objects.active = target
+    #ctx = fixContext
+    bpy.ops.object.modifier_add(type='DECIMATE')
+    #restoreContext(ctx)
+    bpy.context.object.modifiers["Decimate"].ratio = ratio     
+    if (bake == True):
+        return applyModifiers(target)
+    else:
+        return target
+
 # https://blender.stackexchange.com/questions/45004/how-to-make-boolean-modifiers-with-python
 def booleanMod(target=None, op="union"):
     if not target:
