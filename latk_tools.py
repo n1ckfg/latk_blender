@@ -545,7 +545,9 @@ def delete(_obj, clearMemory=False):
     #print("Deleted " + _obj.name)  
 '''
 
-def delete(_obj):
+def delete(_obj=None):
+    if not _obj:
+        _obj = ss()
     #oldMode = bpy.context.mode
     #bpy.ops.object.mode_set(mode='OBJECT')
     bpy.ops.object.select_all(action='DESELECT')
