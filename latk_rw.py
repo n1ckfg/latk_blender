@@ -402,7 +402,9 @@ def svgStroke(points=None, stroke=(0,0,1), fill=(1,0,0), strokeWidth=2.0, stroke
 
 #def gmlParser(filepath=None, globalScale=(0.1,0.1,0.1), useTime=True):
 def gmlParser(filepath=None, splitStrokes=True):
-    globalScale = (0.1, 0.1, 0.1)
+    globalScale = (1, 1, 1)
+    screenBounds = (1, 1, 1)
+    up = (0, 1, 0)
     useTime = True
     minStrokeLength=3
     #splitStrokes = True
@@ -423,31 +425,32 @@ def gmlParser(filepath=None, splitStrokes=True):
     start, end = getStartEnd()
     #~
     tag = root.find("tag")
-    yUp = False
     origLayerName = "GML_Tag"
     layer = newLayer(origLayerName)
     masterLayerList.append(layer)
     #~
     header = tag.find("header")
-    if header:
-        pass
+    #if header:
+        #pass
     #~
-    environment = tag.find("environment")
+    environment = header.find("environment")
+    if not environment:
+        environment = tag.find("environment")
     if environment:
         upEl = environment.find("up")
-        up = (float(upEl.find("x").text), float(upEl.find("y").text), float(upEl.find("z").text))
-        if (up[1] > 0):
-            yUp = True
+        if (upEl):
+        	up = (float(upEl.find("x").text), float(upEl.find("y").text), float(upEl.find("z").text))
         screenBoundsEl = environment.find("screenBounds")
-        sbX = float(screenBoundsEl.find("x").text)
-        sbY = float(screenBoundsEl.find("y").text)
-        sbZ = 1.0
-        try:
-            sbZ = float(screenBoundsEl.find("z").text)
-        except:
-            pass
-        screenBounds = (sbX, sbY, sbZ)
-        globalScale = (globalScale[0] * screenBounds[0], globalScale[1] * screenBounds[1], globalScale[2] * screenBounds[2])
+        if (screenBoundsEl):
+            sbX = float(screenBoundsEl.find("x").text)
+            sbY = float(screenBoundsEl.find("y").text)
+            sbZ = 1.0
+            try:
+            	sbZ = float(screenBoundsEl.find("z").text)
+            except:
+            	pass
+            screenBounds = (sbX, sbY, sbZ)
+    globalScale = (globalScale[0] * screenBounds[0], globalScale[1] * screenBounds[1], globalScale[2] * screenBounds[2])
     #~
     drawing = tag.find("drawing")
     strokesEl = drawing.findall("stroke")
@@ -467,8 +470,12 @@ def gmlParser(filepath=None, splitStrokes=True):
             try:
                 z = float(pt.find("z").text) * globalScale[2]
             except:
-                pass
-            time = float(pt.find("time").text)
+            	pass
+            time = 0.0
+            try:
+            	time = float(pt.find("time").text)
+            except:
+            	pass
             #if (yUp==False):
             gmlPoints.append((x,y,z,time))
             #else:
@@ -513,7 +520,7 @@ def gmlParser(filepath=None, splitStrokes=True):
         cleanCounter = 1
         for layer in masterLayerList:
             for gpLayer in gp.layers:
-                if (layer.info == gpLayer.info):
+                if (layer.info==gpLayer.info):
                     gpLayer.info = origLayerName + "_" + str(cleanCounter)
                     cleanCounter += 1
                     break
