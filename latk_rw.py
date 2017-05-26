@@ -406,6 +406,86 @@ def svgStroke(points=None, stroke=(0,0,1), fill=(1,0,0), strokeWidth=2.0, stroke
 
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 
+def writePainter(filepath=None):
+    outputFile = []
+    dim = (float(getSceneResolution()[0]), float(getSceneResolution()[1]), 0.0)
+    outputFile.append(painterHeader(dim))
+    #~
+    strokes = []
+    gp = getActiveGp()
+    for layer in gp.layers:
+        if (layer.lock == False):
+            for stroke in layer.active_frame.strokes:
+                strokes.append(stroke)
+    counter = 0
+    for stroke in strokes:
+        points = []
+        for point in stroke.points:
+            x = point.co[0] * dim[0] 
+            y = point.co[1] * dim[1]
+            z = point.co[2] * dim[2]
+            point = (x, y, z, counter)
+            counter += 1
+            points.append(point)
+        outputFile.append(painterStroke(points))
+    #~
+    outputFile.append(painterFooter())
+    writeTextFile(filepath, outputFile)
+
+def painterHeader(dim=(1024,1024,1024)):
+    s = "script_version_number version 10" + "\r"
+    s += "artist_name \"\"" + "\r"
+    s += "start_time date Wed, May 24, 2017 time 3:23 PM" + "\r"
+    s += "start_random 1366653360 1884255589" + "\r"
+    s += "variant \"Painter Brushes\" \"F-X\" \"Big Wet Luscious\"" + "\r"
+    s += "max_size_slider   14.00000" + "\r"
+    s += "min_radius_fraction_slider    0.20599" + "\r"
+    s += "build" + "\r"
+    s += "penetration_slider 100 percent" + "\r"
+    s += "texture \"Paper Textures\" \"<str t=17500 i=001>\"" + "\r"
+    s += "grain_inverted unchecked" + "\r"
+    s += "directional_grain unchecked" + "\r"
+    s += "scale_slider    1.00000" + "\r"
+    s += "paper_brightness_slider    0.50000" + "\r"
+    s += "paper_contrast_slider    1.00000" + "\r"
+    s += "portfolio_change \"\"" + "\r"
+    s += "gradation \"Painter Gradients.gradients\" \"<str t=17503 i=001>\"" + "\r"
+    s += "weaving \"Painter Weaves.weaves\" \"<str t=17504 i=001>\"" + "\r"
+    s += "pattern_change \"Painter Patterns\" \"<str t=17001 i=001>\"" + "\r"
+    s += "path_library_change \"Painter Selections\"" + "\r"
+    s += "nozzle_change \"Painter Nozzles\" \"<str t=17000 i=001>\"" + "\r"
+    s += "use_brush_grid unchecked" + "\r"
+    s += "new_tool 1" + "\r"
+    s += "gradation_options type 0 order 0 angle    0.00 spirality  1.000" + "\r"
+    s += "pattern_options pattern_type 1 offset 0.594" + "\r"
+    s += "preserve_transparency unchecked" + "\r"
+    s += "wind_direction 4.712389" + "\r"
+    s += "color red 1 green 109 blue 255" + "\r"
+    s += "background_color red 255 green 4 blue 4" + "\r"
+    s += "change_file \"ntitled-1\"" + "\r"
+    s += "new_3 \"Untitled-1\" width " + str(int(dim[0])) + " height " + str(int(dim[1])) + " resolution   72.00000 width_unit 1 height_unit 1 resolution_unit 1 paper_color red 255 green 255 blue 255 movie 0 frames 1" + "\r"
+    return s
+
+def painterFooter():
+    s = "end_time date Wed, May 24, 2017 time 3:25 PM" + "\r"
+    return s
+
+def painterStroke(points):
+    s = "stroke_start" + "\r"
+    for point in points:
+        s += painterPoint(point)
+    s += "stroke_end" + "\r"
+    return s
+
+def painterPoint(point):
+    x = point[0]
+    y = point[1]
+    time = point[3]
+    s = "pnt x  " + str(x) + " y  " + str(y) + " time " + str(time) + " prs 1.00 tlt 0.00 brg 0.00 whl 1.00 rot 0.00" + "\r"
+    return s
+
+# ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
+
 #def gmlParser(filepath=None, globalScale=(0.1,0.1,0.1), useTime=True):
 def gmlParser(filepath=None, splitStrokes=True):
     globalScale = (1, 1, 1)

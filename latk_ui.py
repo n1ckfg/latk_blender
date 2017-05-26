@@ -162,6 +162,34 @@ class ExportSvg(bpy.types.Operator, ExportHelper):
         la.writeSvg(**keywords)
         return {'FINISHED'} 
 
+class ExportPainter(bpy.types.Operator, ExportHelper):
+    """Save an SVG SMIL File"""
+
+    bl_idname = "export_scene.painter"
+    bl_label = 'Export Painter'
+    bl_options = {'PRESET'}
+
+    filename_ext = ".txt"
+    filter_glob = StringProperty(
+            default="*.txt",
+            options={'HIDDEN'},
+            )
+
+    #bake = BoolProperty(name="Bake Frames", description="Bake Keyframes to All Frames", default=True)
+
+    def execute(self, context):
+        import latk as la
+        #keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "check_existing", "bake"))
+        keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "check_existing"))
+        if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
+            import os
+            #keywords["relpath"] = os.path.dirname(bpy.data.filepath)
+        #~
+        #keywords["bake"] = self.bake
+        #~
+        la.writePainter(**keywords)
+        return {'FINISHED'} 
+
 def menu_func_import(self, context):
     self.layout.operator(ImportLatk.bl_idname, text="Latk Animation (.json)")
     self.layout.operator(ImportGml.bl_idname, text="Graffiti Markup Language (.gml)")
@@ -170,6 +198,7 @@ def menu_func_import(self, context):
 def menu_func_export(self, context):
     self.layout.operator(ExportLatk.bl_idname, text="Latk Animation (.json)")
     self.layout.operator(ExportSvg.bl_idname, text="SVG SMIL Animation (.svg)")
+    self.layout.operator(ExportPainter.bl_idname, text="Corel Painter Script (.txt)")
 
 
 def register():

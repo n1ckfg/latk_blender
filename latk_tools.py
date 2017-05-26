@@ -559,6 +559,12 @@ def delete(_obj=None):
 def refresh():
     bpy.context.scene.update()
 
+def remap(value, min1, max1, min2, max2):
+    range1 = max1 - min1
+    range2 = max2 - min2
+    valueScaled = float(value - min1) / float(range1)
+    return min2 + (valueScaled * range2)
+    
 def matchName(_name):
     returns = []
     for i in range(0, len(bpy.context.scene.objects)):
