@@ -1724,7 +1724,13 @@ def writeSvg(filepath=None):
                     #print("color error")
                     #pass
                 svg.append("\t\t\t" + svgStroke(points=stroke.points, stroke=(cStroke[0], cStroke[1], cStroke[2]), fill=(cFill[0], cFill[1], cFill[2]), strokeWidth=minLineWidth, strokeOpacity=cStroke[3], fillOpacity=cFill[3], camera=camera) + "\r")
-            svg.append("\t\t\t" + svgAnimate(frame=frame.frame_number, fps=fps, duration=duration, idTag="anim_" + layerInfo + "_frame" + str(i)) + "\r")
+            #~
+            idTagBase = "anim_" + layerInfo + "_frame"
+            idTag = idTagBase + str(i)
+            prevIdTag = "0s"
+            if (i>0):
+                prevIdTag = idTagBase + str(i-1) + ".end"
+            svg.append("\t\t\t" + svgAnimate(frame=frame.frame_number, fps=fps, duration=duration, idTag=idTag, prevIdTag=prevIdTag) + "\r")
             svg.append("\t\t" + "</g>" + "\r")
         svg.append("\t" + "</g>" + "\r")
     #~
@@ -1733,7 +1739,7 @@ def writeSvg(filepath=None):
     #~
     writeTextFile(url, svg)
 
-def svgAnimate(frame=0, fps=12, duration=10, idTag=None):
+def svgAnimate(frame=0, fps=12, duration=10, idTag=None, prevIdTag=None):
     keyIn = (float(frame) / float(fps)) / float(duration)
     keyOut = keyIn + (1.0/float(fps))
     returns = "<animate id=\"" + str(idTag) + "\" attributeName=\"display\" values=\"none;inline;none;none\" keyTimes=\"0;" + str(keyIn) + ";" + str(keyOut) + ";1\" dur=\"" + str(duration) + "s\" begin=\"0s\" repeatCount=\"indefinite\"/>"
