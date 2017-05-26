@@ -407,27 +407,31 @@ def svgStroke(points=None, stroke=(0,0,1), fill=(1,0,0), strokeWidth=2.0, stroke
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 
 def writePainter(filepath=None):
+    camera=getActiveCamera()
     outputFile = []
     dim = (float(getSceneResolution()[0]), float(getSceneResolution()[1]), 0.0)
     outputFile.append(painterHeader(dim))
     #~
     strokes = []
     gp = getActiveGp()
+    palette = getActivePalette()
     for layer in gp.layers:
         if (layer.lock == False):
             for stroke in layer.active_frame.strokes:
                 strokes.append(stroke)
     counter = 0
     for stroke in strokes:
+        color = palette.colors[stroke.color.name].color
         points = []
-        for point in stroke.points:
-            x = point.co[0] * dim[0] 
-            y = point.co[1] * dim[1]
-            z = point.co[2] * dim[2]
-            point = (x, y, z, counter)
+        for point in stroke.points: 
+            co = getWorldCoords(co=point.co, camera=camera)
+            x = co[0] 
+            y = co[1]
+            prs = point.pressure
+            point = (x, y, prs, counter)
             counter += 1
             points.append(point)
-        outputFile.append(painterStroke(points))
+        outputFile.append(painterStroke(points, color))
     #~
     outputFile.append(painterFooter())
     writeTextFile(filepath, outputFile)
@@ -470,8 +474,9 @@ def painterFooter():
     s = "end_time date Wed, May 24, 2017 time 3:25 PM" + "\r"
     return s
 
-def painterStroke(points):
-    s = "stroke_start" + "\r"
+def painterStroke(points, color=(0,0,0)):
+    s = "color red " + str(int(color[0]*255.0)) + " green " + str(int(color[1]*255.0)) + " blue " + str(int(color[2]*255.0)) + "\r"
+    s += "stroke_start" + "\r"
     for point in points:
         s += painterPoint(point)
     s += "stroke_end" + "\r"
@@ -481,7 +486,7 @@ def painterPoint(point):
     x = point[0]
     y = point[1]
     time = point[3]
-    s = "pnt x  " + str(x) + " y  " + str(y) + " time " + str(time) + " prs 1.00 tlt 0.00 brg 0.00 whl 1.00 rot 0.00" + "\r"
+    s = "pnt x  " + str(x) + " y  " + str(y) + " time " + str(time) + " prs " + str(roundVal(point[2], 2)) + " tlt 0.00 brg 0.00 whl 1.00 rot 0.00" + "\r"
     return s
 
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
