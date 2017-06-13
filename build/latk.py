@@ -1857,35 +1857,6 @@ def painterPoint(point):
 
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 
-def smilParser(filepath=None):
-    if not filepath:
-        filepath = "C:\\Users\\nick\\Desktop\\error.svg"
-    globalScale = (1, 1, 1)
-    screenBounds = (1, 1, 1)
-    up = (0, 1, 0)
-    useTime = True
-    minStrokeLength=3
-    #splitStrokes = True
-    #~
-    masterLayerList = []
-    tree = etree.parse(filepath)
-    root = tree.getroot()
-    '''
-    if (root.tag.lower() != "gml"):
-        print("Not a GML file.")
-        return
-    '''
-    #~
-    strokeCounter = 0
-    pointCounter = 0
-    gp = getActiveGp()
-    fps = getSceneFps()
-    start, end = getStartEnd()
-    #~
-    print(root)
-    paths = root.findall("g")
-    print(str(len(paths)))    
-
 #def gmlParser(filepath=None, globalScale=(0.1,0.1,0.1), useTime=True):
 def gmlParser(filepath=None, splitStrokes=True):
     globalScale = (1, 1, 1)
