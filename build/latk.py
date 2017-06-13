@@ -2676,6 +2676,23 @@ def getActiveCurvePoints():
     else:
         return target.data.splines.active.points      
 
+def curveToStroke(target=None):
+    if not target:
+        target = s()[0]
+    for spline in target.data.splines:
+        points = []
+        splinePoints = None
+        if (spline.type=="BEZIER"):
+            splinePoints = spline.bezier_points
+        else:
+            splinePoints = spline.points
+        for point in splinePoints:
+            points.append((point.co[0], point.co[2], point.co[1]))
+        try:
+            drawPoints(points)
+        except:
+            pass
+
 def centerOriginAlt(obj):
     oldLoc = obj.location
     newLoc = getGeometryCenter(obj)
