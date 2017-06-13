@@ -1731,12 +1731,13 @@ def writeSvg(filepath=None):
                     #pass
                 svg.append("\t\t\t" + svgStroke(points=stroke.points, stroke=(cStroke[0], cStroke[1], cStroke[2]), fill=(cFill[0], cFill[1], cFill[2]), strokeWidth=minLineWidth, strokeOpacity=cStroke[3], fillOpacity=cFill[3], camera=camera) + "\r")
             #~
-            idTagBase = "anim_" + layerInfo + "_frame"
-            idTag = idTagBase + str(i)
-            prevIdTag = "0s"
-            if (i>0):
-                prevIdTag = idTagBase + str(i-1) + ".end"
-            svg.append("\t\t\t" + svgAnimate(frame=frame.frame_number, fps=fps, duration=duration, idTag=idTag, prevIdTag=prevIdTag) + "\r")
+            #idTagBase = "anim_" + layerInfo + "_frame"
+            #idTag = idTagBase + str(i)
+            #prevIdTag = "0s"
+            #if (i>0):
+                #prevIdTag = idTagBase + str(i-1) + ".end"
+            #svg.append("\t\t\t" + svgAnimate(frame=frame.frame_number, fps=fps, duration=duration, idTag=idTag, prevIdTag=prevIdTag) + "\r")
+            svg.append("\t\t\t" + svgAnimate(frame=frame.frame_number, fps=fps, duration=duration) + "\r")
             svg.append("\t\t" + "</g>" + "\r")
         svg.append("\t" + "</g>" + "\r")
     #~
@@ -1745,10 +1746,11 @@ def writeSvg(filepath=None):
     #~
     writeTextFile(url, svg)
 
-def svgAnimate(frame=0, fps=12, duration=10, idTag=None, prevIdTag=None):
+def svgAnimate(frame=0, fps=12, duration=10, startFrame=False, endFrame=False):
     keyIn = (float(frame) / float(fps)) / float(duration)
     keyOut = keyIn + (1.0/float(fps))
-    returns = "<animate id=\"" + str(idTag) + "\" attributeName=\"display\" values=\"none;inline;none;none\" keyTimes=\"0;" + str(keyIn) + ";" + str(keyOut) + ";1\" dur=\"" + str(duration) + "s\" begin=\"0s\" repeatCount=\"indefinite\"/>"
+    #returns = "<animate id=\"" + str(idTag) + "\" attributeName=\"display\" values=\"none;inline;none;none\" keyTimes=\"0;" + str(keyIn) + ";" + str(keyOut) + ";1\" dur=\"" + str(duration) + "s\" begin=\"0s\" repeatCount=\"indefinite\"/>"
+    returns = "<animate attributeName=\"display\" repeatCount=\"indefinite\" dur=\"" + str(duration) + "s\" keyTimes=\"0;" + str(keyIn) + ";" + str(keyOut) + ";1\" values=\"none;inline;none;none\"/>"
     return returns
 
 def svgStroke(points=None, stroke=(0,0,1), fill=(1,0,0), strokeWidth=2.0, strokeOpacity=1.0, fillOpacity=1.0, camera=None, closed=False):
