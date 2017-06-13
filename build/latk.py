@@ -1985,6 +1985,63 @@ def gmlParser(filepath=None, splitStrokes=True):
     print("* * * * * * * * * * * * * * *")
     print("strokes: " + str(strokeCounter) + "   points: " + str(pointCounter))
 
+# ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
+
+def smilParser(filepath=None):
+    if not filepath:
+        filepath = "C:\\Users\\nick\\Desktop\\error.svg"
+    globalScale = (0.01, 0.01, 0.01)
+    screenBounds = (1, 1, 1)
+    up = (0, 1, 0)
+    useTime = True
+    minStrokeLength=3
+    #splitStrokes = True
+    #~
+    masterLayerList = []
+    tree = etree.parse(filepath)
+    root = tree.getroot()
+    '''
+    if (root.tag.lower() != "gml"):
+        print("Not a GML file.")
+        return
+    '''
+    #~
+    strokeCounter = 0
+    pointCounter = 0
+    gp = getActiveGp()
+    fps = getSceneFps()
+    start, end = getStartEnd()
+    #~
+    paths = getAllTags("path", tree)
+    for path in paths:
+        strokes = path.attrib["d"].split('M')
+        for stroke in strokes:
+            pointsList = []
+            pointsRaw = stroke.split(" ")
+            for pointRaw in pointsRaw:
+                pointRaw = pointRaw.split("Q")[0]
+                pointRaw = pointRaw.replace("Z", "")
+                pointRaw = pointRaw.replace("L", "")
+                try:
+                    pointsList.append(float(pointRaw))
+                except:
+                    pass
+            if (len(pointsList) % 2 != 0):
+                pointsList.pop()
+            points = []
+            for i in range(0, len(pointsList), 2):
+                point = (pointsList[i] * globalScale[0], pointsList[i+1] * globalScale[1], 0)
+                points.append(point)
+            if (len(points) > 1):
+                drawPoints(points)
+
+def getAllTags(name=None, xml=None):
+    returns = []
+    for node in xml.iter():
+        if (node.tag.split('}')[1] == name):
+            returns.append(node)
+    return returns
+
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
