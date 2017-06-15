@@ -621,6 +621,152 @@ def gmlParser(filepath=None, splitStrokes=True):
     print("* * * * * * * * * * * * * * *")
     print("strokes: " + str(strokeCounter) + "   points: " + str(pointCounter))
 
+def writeGml(filepath=None, make2d=False):
+    timeCounter = 0
+    timeIncrement = 0.01
+    #~
+    '''
+    # painter version
+    camera=getActiveCamera()
+    outputFile = []
+    dim = (float(getSceneResolution()[0]), float(getSceneResolution()[1]), 0.0)
+    outputFile.append(painterHeader(dim))
+    #~
+    strokes = []
+    gp = getActiveGp()
+    palette = getActivePalette()
+    for layer in gp.layers:
+        if (layer.lock == False):
+            for stroke in layer.active_frame.strokes:
+                strokes.append(stroke)
+    counter = 0
+    for stroke in strokes:
+        color = palette.colors[stroke.color.name].color
+        points = []
+        for point in stroke.points: 
+            co = getWorldCoords(co=point.co, camera=camera)
+            x = co[0] 
+            y = co[1]
+            prs = point.pressure
+            point = (x, y, prs, counter)
+            counter += 1
+            points.append(point)
+        outputFile.append(painterStroke(points, color))
+    #~
+    outputFile.append(painterFooter())
+    writeTextFile(filepath, outputFile)    
+    '''  
+    #~  
+    '''
+    # tilt brush version
+    def dump_sketch(sketch, filename):
+    globalScale = (-0.01, 0.01, 0.01)
+    globalOffset = (0, 0, 0)
+    useScaleAndOffset = True
+    numPlaces = 7
+    roundValues = True
+    # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
+    sg = gmlHeader((512,512,512))
+    allVals = []
+    minVal = 0
+    maxVal = 1
+    for stroke in sketch.strokes:
+        for controlpoint in stroke.controlpoints:
+            for val in controlpoint.position:
+                allVals.append(val)
+    allVals.sort()
+    minVal = allVals[0]
+    maxVal = allVals[len(allVals)-1]
+    for stroke in sketch.strokes:
+        color = (1,1,1)
+        try:
+            color = (stroke.brush_color[0], stroke.brush_color[1], stroke.brush_color[2], 1)
+        except:
+            pass
+        points = []
+        for controlpoint in stroke.controlpoints:
+            point = controlpoint.position
+            x = remap(point[0], minVal, maxVal, 0, 1)
+            y = remap(point[1], minVal, maxVal, 0, 1)
+            z = remap(point[2], minVal, maxVal, 0, 1)
+            points.append((x,y,z))
+        sg += gmlStroke(points, color)
+    sg += gmlFooter()
+    # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
+    url = filename + ".gml"
+    with open(url, "w") as f:
+        f.write(sg)
+        f.closed
+        print("Wrote " + url)
+    '''
+    #~
+    globalScale = (10, 10, 10)
+    globalOffset = (0, 0, 0)
+    useScaleAndOffset = True
+    numPlaces = 7
+    roundValues = True
+    #~
+    # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
+    sg = gmlHeader((512,512,512))
+    for i in range(0,len(strokes)):
+        sg += gmlStroke(strokes[i])
+    sg += gmlFooter()
+    # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
+    #~
+    url = filename + ".gml"
+    with open(url, "w") as f:
+        f.write(sg)
+        f.closed
+        print("Wrote " + url)    
+
+def gmlHeader(dim=(1024,1024,1024)):
+    s = "<gml spec=\"0.1b\">" + "\r"
+    s += "\t<tag>" + "\r"
+    s += "\t\t<header>" + "\r"
+    s += "\t\t\t<client>" + "\r"
+    s += "\t\t\t\t<name>KinectToPin</name>" + "\r"
+    s += "\t\t\t</client>" + "\r"
+    s += "\t\t\t<environment>" + "\r"
+    s += "\t\t\t\t<up>" + "\r"
+    s += "\t\t\t\t\t<x>0</x>" + "\r"
+    s += "\t\t\t\t\t<y>1</y>" + "\r"
+    s += "\t\t\t\t\t<z>0</z>" + "\r"
+    s += "\t\t\t\t</up>" + "\r"
+    s += "\t\t\t\t<screenBounds>" + "\r"
+    s += "\t\t\t\t\t<x>" + str(dim[0]) + "</x>" + "\r"
+    s += "\t\t\t\t\t<y>" + str(dim[1]) + "</y>" + "\r"
+    s += "\t\t\t\t\t<z>" + str(dim[2]) + "</z>" + "\r"
+    s += "\t\t\t\t</screenBounds>" + "\r"
+    s += "\t\t\t</environment>" + "\r"
+    s += "\t\t</header>" + "\r"
+    s += "\t\t<drawing>" + "\r"
+    return s
+
+def gmlFooter():
+    s = "\t\t</drawing>" + "\r"
+    s += "\t</tag>" + "\r"
+    s += "</gml>" + "\r"
+    return s
+
+def gmlStroke(points):
+    s = "\t\t\t<stroke>" + "\r"
+    for point in points:
+        s += gmlPoint(point)
+    s += "\t\t\t</stroke>" + "\r"
+    return s
+
+def gmlPoint(point):
+    global timeCounter
+    global timeIncrement
+    s = "\t\t\t\t<pt>" + "\r"
+    s += "\t\t\t\t\t<x>" + str(point[0]) + "</x>" + "\r"
+    s += "\t\t\t\t\t<y>" + str(point[1]) + "</y>" + "\r"
+    s += "\t\t\t\t\t<z>" + str(point[2]) + "</z>" + "\r"
+    s += "\t\t\t\t\t<time>" + str(timeCounter) + "</time>" + "\r"
+    s += "\t\t\t\t</pt>" + "\r"
+    timeCounter += timeIncrement
+    return s
+
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 
 def smilParser(filepath=None):

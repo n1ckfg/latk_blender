@@ -134,6 +134,34 @@ class ImportGml(bpy.types.Operator, ImportHelper):
         la.gmlParser(**keywords)
         return {'FINISHED'} 
 
+class ExportGml(bpy.types.Operator, ExportHelper):
+    """Save an SVG SMIL File"""
+
+    bl_idname = "export_scene.gml"
+    bl_label = 'Export Gml'
+    bl_options = {'PRESET'}
+
+    filename_ext = ".gml"
+    filter_glob = StringProperty(
+            default="*.gml",
+            options={'HIDDEN'},
+            )
+
+    make2d = BoolProperty(name="Make 2D", description="Project Coordinates to Camera View", default=True)
+
+    def execute(self, context):
+        import latk as la
+        #keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "check_existing", "bake"))
+        keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "check_existing"))
+        if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
+            import os
+            #keywords["relpath"] = os.path.dirname(bpy.data.filepath)
+        #~
+        keywords["make2d"] = self.make2d
+        #~
+        la.writeGml(**keywords)
+        return {'FINISHED'} 
+
 class ExportSvg(bpy.types.Operator, ExportHelper):
     """Save an SVG SMIL File"""
 
@@ -194,19 +222,17 @@ def menu_func_import(self, context):
     self.layout.operator(ImportLatk.bl_idname, text="Latk Animation (.json)")
     self.layout.operator(ImportGml.bl_idname, text="Graffiti Markup Language (.gml)")
 
-
 def menu_func_export(self, context):
     self.layout.operator(ExportLatk.bl_idname, text="Latk Animation (.json)")
+    #self.layout.operator(ExportGml.bl_idname, text="Graffiti Markup Language (.gml)")
     self.layout.operator(ExportSvg.bl_idname, text="SVG SMIL Animation (.svg)")
     self.layout.operator(ExportPainter.bl_idname, text="Corel Painter Script (.txt)")
-
 
 def register():
     bpy.utils.register_module(__name__)
 
     bpy.types.INFO_MT_file_import.append(menu_func_import)
     bpy.types.INFO_MT_file_export.append(menu_func_export)
-
 
 def unregister():
     bpy.utils.unregister_module(__name__)
