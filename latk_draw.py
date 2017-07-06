@@ -66,6 +66,52 @@ def makeSquare(pos=(0,0,0), size=1):
     #~
     return strokes
 
+def makeCircle(pos=(0,0,0), size=1, resolution=10):
+    points = []
+    x = 0
+    y = 0
+    angle = 0.0
+    step = 1.0/resolution
+    #~
+    while (angle < 2 * math.pi):
+        x = (size/2.0) * math.cos(angle)
+        y = (size/2.0) * math.sin(angle)
+        #~
+        points.append(addVec3((x, y, 0), pos))
+        angle += step
+    #~
+    return drawPoints(points)
+
+def makeTriangle(pos=(0,0,0), size=1):
+    s = size/2.0
+    p1 = (pos[0], pos[1] + s, pos[2])
+    p2 = (pos[0] - s, pos[1] - s, pos[2])
+    p3 = (pos[0] + s, pos[1] - s, pos[2])
+    return drawPoints([p1, p2, p3, p1])
+
+def makePyramid(pos=(0,0,0), size=1):
+    strokes = []
+    s = size/2.0
+    p1 = (pos[0], pos[1] + s, pos[2])
+    p2 = (pos[0] - s, pos[1] - s, pos[2] + s)
+    p3 = (pos[0] + s, pos[1] - s, pos[2] + s)
+    #~
+    strokes.append(drawPoints([p1, p2, p3, p1]))
+    #~
+    p4 = (pos[0], pos[1] + s, pos[2])
+    p5 = (pos[0] - s, pos[1] - s, pos[2] - s)
+    p6 = (pos[0] + s, pos[1] - s, pos[2] - s)
+    #~
+    strokes.append(drawPoints([p4, p5, p6, p4]))
+    #~
+    strokes.append(drawPoints([p2, p5]))
+    strokes.append(drawPoints([p3, p6]))
+    #~
+    return strokes
+
+
+
+
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
