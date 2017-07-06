@@ -3194,7 +3194,7 @@ def makeSquare(pos=(0,0,0), size=1):
     #~
     return strokes
 
-def makeCircle(pos=(0,0,0), size=1, resolution=10):
+def makeCircle(pos=(0,0,0), size=1, resolution=10, vertical=True):
     points = []
     x = 0
     y = 0
@@ -3204,11 +3204,28 @@ def makeCircle(pos=(0,0,0), size=1, resolution=10):
     while (angle < 2 * math.pi):
         x = (size/2.0) * math.cos(angle)
         y = (size/2.0) * math.sin(angle)
-        #~
-        points.append(addVec3((x, y, 0), pos))
+        if (vertical==True):
+            points.append(addVec3((x, y, 0), pos))
+        else:
+            points.append(addVec3((x, 0, y), pos))
         angle += step
     #~
     return drawPoints(points)
+
+def makeSphere(pos=(0,0,0), size=1, resolution=10, lat=10, lon=10):
+    points = []
+    for i in range(0, lat):
+        for j in range(0, lon):
+            points.append(multVec3(addVec3(getLatLon(i, j), pos), (size,size,size)))
+    drawPoints(points)
+
+def getLatLon(lat, lon):
+    eulat = (math.pi / 2.0) - lat
+    slat = math.sin(eulat)
+    x = math.cos(lon) * slat
+    y = math.sin(lon) * slat
+    z = math.cos(eulat)
+    return (x, y, z)
 
 def makeTriangle(pos=(0,0,0), size=1):
     s = size/2.0
