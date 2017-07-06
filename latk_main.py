@@ -39,6 +39,7 @@ import bpy
 import bpy_extras
 from mathutils import *
 from math import sqrt
+import math
 import json
 import re
 from bpy_extras.io_utils import unpack_list
