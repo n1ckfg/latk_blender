@@ -1,4 +1,4 @@
-# 6 of 8. SHORTCUTS
+# 7 of 9. SHORTCUTS
 
 def mf():
     dn()

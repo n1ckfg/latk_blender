@@ -1,4 +1,4 @@
-# 3 of 8. READ / WRITE
+# 3 of 9. READ / WRITE
 
 def exportForUnity(sketchFab=True):
     start, end = getStartEnd()

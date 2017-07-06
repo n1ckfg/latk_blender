@@ -1,4 +1,4 @@
-# 2 of 8. TOOLS
+# 2 of 9. TOOLS
 
 def getLayerInfo(layer):
     return layer.info.split(".")[0]
@@ -1298,6 +1298,12 @@ def TestView3dOperatorFromPythonScript():       # Run this from a python script 
     bpy.ops.mesh.knife_project(oContextOverride)                # An operator like this normally requires to run off the View3D context.  By overriding it with what it needs it will run from any context (like Python script, Python shell, etc)
     #bpy.ops.screen.screen_full_area(oContextOverride)
     print("TestView3dOperatorFromPythonScript() completed succesfully.")
+
+def addVec3(p1, p2):
+    return(p1[0]+p2[0], p1[1]+p2[1], p1[2]+p2[2])
+
+def multVec3(p1, p2):
+    return(p1[0]*p2[0], p1[1]*p2[1], p1[2]*p2[2])
 
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
 # * * * * * * * * * * * * * * * * * * * * * * * * * *

@@ -1,4 +1,4 @@
-# 7 of 8. TESTS
+# 8 of 9. TESTS
 
 def testStroke():
     gp = getActiveGp()

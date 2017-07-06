@@ -27,7 +27,7 @@ along with the Lightning Artist Toolkit (Blender).  If not, see
 <http://www.gnu.org/licenses/>.
 '''
 
-# 1 of 8. MAIN
+# 1 of 9. MAIN
 
 bl_info = {
     "name": "Lightning Artist Toolkit (Latk)", 
@@ -57,7 +57,7 @@ from bpy_extras.io_utils import (ImportHelper, ExportHelper)
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
 
-# 2 of 8. TOOLS
+# 2 of 9. TOOLS
 
 def getLayerInfo(layer):
     return layer.info.split(".")[0]
@@ -1358,11 +1358,17 @@ def TestView3dOperatorFromPythonScript():       # Run this from a python script 
     #bpy.ops.screen.screen_full_area(oContextOverride)
     print("TestView3dOperatorFromPythonScript() completed succesfully.")
 
+def addVec3(p1, p2):
+    return(p1[0]+p2[0], p1[1]+p2[1], p1[2]+p2[2])
+
+def multVec3(p1, p2):
+    return(p1[0]*p2[0], p1[1]*p2[1], p1[2]*p2[2])
+
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
 
-# 3 of 8. READ / WRITE
+# 3 of 9. READ / WRITE
 
 def exportForUnity(sketchFab=True):
     start, end = getStartEnd()
@@ -2192,7 +2198,7 @@ def getAllTags(name=None, xml=None):
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
 
-# 4 of 8. MATERIALS / RENDERING
+# 4 of 9. MATERIALS / RENDERING
 
 # http://blender.stackexchange.com/questions/17738/how-to-uv-unwrap-object-with-python
 def planarUvProject():
@@ -2415,7 +2421,7 @@ def makeEmissionMtl():
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
 
-# 5 of 8. MESHES / GEOMETRY
+# 5 of 9. MESHES / GEOMETRY
 
 def joinObjects(target=None, center=False):
     if not target:
@@ -3119,7 +3125,79 @@ def createFill(inputVerts, useUvs=False):
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
 
-# 6 of 8. SHORTCUTS
+# 6 of 9. DRAWING
+
+def makeLine(p1, p2):
+    return drawPoints([p1, p2])
+
+def makeGrid(gridRows=10, gridColumns=10, cell=0.1, zPos=0):
+    strokes = []
+    #~
+    xMax = gridRows * cell;
+    yMax = gridColumns * cell;
+    xHalf = xMax / 2;
+    yHalf = yMax / 2;
+    #~
+    for x in range(0, gridRows+1):
+        xPos = x * cell;
+        strokes.append(makeLine((-xHalf, xPos - xHalf, zPos), (xHalf, xPos - xHalf, zPos)))
+    #~
+    for y in range(0, gridColumns+1):
+        yPos = y * cell;
+        strokes.append(makeLine((yPos - yHalf, -yHalf, zPos), (yPos - yHalf, yHalf, zPos)))
+    #~
+    return strokes
+
+
+def makeCube(pos=(0,0,0), size=1):
+    strokes = []
+    s = size / 2
+    #~
+    p1 = addVec3((-s, -s, s), pos)
+    p2 = addVec3((-s, s, s), pos)
+    p3 = addVec3((s, -s, s), pos)
+    p4 = addVec3((s, s, s), pos)
+    p5 = addVec3((-s, -s, -s), pos)
+    p6 = addVec3((-s, s, -s), pos)
+    p7 = addVec3((s, -s, -s), pos)
+    p8 = addVec3((s, s, -s), pos)
+    #~
+    strokes.append(makeLine(p1, p2))
+    strokes.append(makeLine(p2, p4))
+    strokes.append(makeLine(p3, p1))
+    strokes.append(makeLine(p4, p3))
+    #~
+    strokes.append(makeLine(p5, p6))
+    strokes.append(makeLine(p6, p8))
+    strokes.append(makeLine(p7, p5))
+    strokes.append(makeLine(p8, p7))
+    #~
+    strokes.append(makeLine(p1, p5))
+    strokes.append(makeLine(p2, p6))
+    strokes.append(makeLine(p3, p7))
+    strokes.append(makeLine(p4, p8))
+    #~
+    return strokes
+
+def makeSquare(pos=(0,0,0), size=1):
+    strokes = []
+    s = size / 2
+    p1 = addVec3((-s, -s, 0), pos)
+    p2 = addVec3((-s, s, 0), pos)
+    p3 = addVec3((s, -s, 0), pos)
+    p4 = addVec3((s, s, 0), pos)
+    strokes.append(makeLine(p1, p2))
+    strokes.append(makeLine(p1, p3))
+    strokes.append(makeLine(p4, p2))
+    strokes.append(makeLine(p4, p3))
+    #~
+    return strokes
+
+# * * * * * * * * * * * * * * * * * * * * * * * * * *
+# * * * * * * * * * * * * * * * * * * * * * * * * * *
+# * * * * * * * * * * * * * * * * * * * * * * * * * *
+
+# 7 of 9. SHORTCUTS
 
 def mf():
     dn()
@@ -3192,7 +3270,7 @@ splf = splitLayersAboveFrameLimit
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
 
-# 7 of 8. TESTS
+# 8 of 9. TESTS
 
 def testStroke():
     gp = getActiveGp()
@@ -3223,7 +3301,7 @@ def testDrawPoints():
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
 
-# 8 of 8. UI
+# 9 of 9. UI
 
 class ImportLatk(bpy.types.Operator, ImportHelper):
     """Load a Latk File"""
