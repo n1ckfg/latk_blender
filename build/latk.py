@@ -1518,7 +1518,9 @@ def writeBrushStrokes(filepath=None, bake=True):
             currentFrame = h
             goToFrame(h)
             sb += "                        {" + "\n" # one frame
-            #sb += "                           \"index\": " + str(h) + ",\n"
+            sb += "                           \"frame_number\": " + str(layer.frames[currentFrame].frame_number) + ",\n"
+            if (layer.parent):
+                sb += "                           \"parent_location\": " + "[" + str(layer.parent.location[0]) + ", " + str(layer.parent.location[1]) + ", " + str(layer.parent.location[2]) + "],\n"
             sb += "                            \"strokes\": [" + "\n"
             if (len(layer.frames[currentFrame].strokes) > 0):
                 sb += "                                {" + "\n" # one stroke
@@ -1583,6 +1585,8 @@ def writeBrushStrokes(filepath=None, bake=True):
         #~
         sf = "                {" + "\n" 
         sf += "                    \"name\": \"" + layer.info + "\"," + "\n"
+        if (layer.parent):
+            sf += "                    \"parent\": \"" + layer.parent.name + "\"," + "\n"
         #s += "                    \"loop_in\":" + str(0) + "," + "\n"
         #s += "                    \"loop_out\":" + str(0) + "," + "\n"
         #s += "                    \"loop\":" + str(False).lower() + "," + "\n"
