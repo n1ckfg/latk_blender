@@ -99,6 +99,16 @@ def getLatLon(lat, lon):
     z = math.cos(eulat)
     return (x, y, z)
 
+def makeStarBurst(pos=(0,0,0), size=1, reps=20):
+    s = size/2.0
+    strokes = []
+    for i in range(0, reps):
+        lat = random.uniform(0, 90)
+        lon = random.uniform(0, 180)
+        p2 = multVec3(getLatLon(lat, lon), (s, s, s))
+        strokes.append(drawPoints([pos, p2]))
+    return strokes
+
 def makeTriangle(pos=(0,0,0), size=1):
     s = size/2.0
     p1 = (pos[0], pos[1] + s, pos[2])
