@@ -1868,6 +1868,53 @@ def painterPoint(point):
 
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 
+def importNorman(filepath=None):
+    globalScale = Vector((1, 1, 1))
+    globalOffset = Vector((0, 0, 0))
+    useScaleAndOffset = True
+    numPlaces = 7
+    roundValues = True
+    #~
+    with open(filepath) as data_file: 
+        data = json.load(data_file)
+    #~
+    frames = []    
+    for i in range(0, len(data["data"])):
+        strokes = []
+        for j in range(0, len(data["data"][i])):
+            points = []
+            for k in range(0, len(data["data"][i][j])):
+                points.append((data["data"][i][j][k]["x"], data["data"][i][j][k]["y"], data["data"][i][j][k]["z"]))
+            strokes.append(points)
+        frames.append(strokes)
+    #~
+    gp = getActiveGp()
+    layer = gp.layers.new("Norman_layer", set_active=True)
+    for i in range(0, len(frames)):
+        frame = layer.frames.new(i)
+        for j in range(0, len(frames[i])):
+            strokeColor = (0.5,0.5,0.5)
+            createColor(strokeColor)
+            stroke = frame.strokes.new(getActiveColor().name)
+            stroke.draw_mode = "3DSPACE" # either of ("SCREEN", "3DSPACE", "2DSPACE", "2DIMAGE")
+            stroke.points.add(len(frames[i][j])) # add 4 points
+            for l in range(0, len(frames[i][j])):
+                x = 0.0
+                y = 0.0
+                z = 0.0
+                pressure = 1.0
+                strength = 1.0
+                if useScaleAndOffset == True:
+                    x = (frames[i][j][l][0] * globalScale.x) + globalOffset.x
+                    y = (frames[i][j][l][2] * globalScale.y) + globalOffset.y
+                    z = (frames[i][j][l][1] * globalScale.z) + globalOffset.z
+                else:
+                    x = frames[i][j][l][0]
+                    y = frames[i][j][l][2]
+                    z = frames[i][j][l][1]
+                #~
+                createPoint(stroke, l, (x, y, z), pressure, strength)
+
 #def gmlParser(filepath=None, globalScale=(0.1,0.1,0.1), useTime=True):
 def gmlParser(filepath=None, splitStrokes=True):
     globalScale = (1, 1, 1)
@@ -3489,6 +3536,28 @@ class ExportLatk(bpy.types.Operator, ExportHelper):
 
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ 
 
+class ImportNorman(bpy.types.Operator, ImportHelper):
+    """Load a Norman File"""
+    bl_idname = "import_scene.norman"
+    bl_label = "Import Norman"
+    bl_options = {'PRESET', 'UNDO'}
+
+    filename_ext = ".json"
+    filter_glob = StringProperty(
+            default="*.json",
+            options={'HIDDEN'},
+            )
+
+    def execute(self, context):
+        import latk as la
+        keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode"))
+        if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
+            import os
+            #keywords["relpath"] = os.path.dirname(bpy.data.filepath)
+        #~
+        la.importNorman(**keywords)
+        return {'FINISHED'} 
+
 class ImportGml(bpy.types.Operator, ImportHelper):
     """Load a Gml File"""
     bl_idname = "import_scene.gml"
@@ -3601,13 +3670,14 @@ class ExportPainter(bpy.types.Operator, ExportHelper):
 
 def menu_func_import(self, context):
     self.layout.operator(ImportLatk.bl_idname, text="Latk Animation (.json)")
-    self.layout.operator(ImportGml.bl_idname, text="Graffiti Markup Language (.gml)")
+    self.layout.operator(ImportGml.bl_idname, text="Latk - GML (.gml)")
+    self.layout.operator(ImportNorman.bl_idname, text="Latk - Norman (.json)")
 
 def menu_func_export(self, context):
     self.layout.operator(ExportLatk.bl_idname, text="Latk Animation (.json)")
-    #self.layout.operator(ExportGml.bl_idname, text="Graffiti Markup Language (.gml)")
-    self.layout.operator(ExportSvg.bl_idname, text="SVG SMIL Animation (.svg)")
-    self.layout.operator(ExportPainter.bl_idname, text="Corel Painter Script (.txt)")
+    #self.layout.operator(ExportGml.bl_idname, text="Latk - GML (.gml)")
+    self.layout.operator(ExportSvg.bl_idname, text="Latk - SVG SMIL (.svg)")
+    self.layout.operator(ExportPainter.bl_idname, text="Latk - Corel Painter (.txt)")
 
 def register():
     bpy.utils.register_module(__name__)

@@ -108,6 +108,28 @@ class ExportLatk(bpy.types.Operator, ExportHelper):
 
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ 
 
+class ImportNorman(bpy.types.Operator, ImportHelper):
+    """Load a Norman File"""
+    bl_idname = "import_scene.norman"
+    bl_label = "Import Norman"
+    bl_options = {'PRESET', 'UNDO'}
+
+    filename_ext = ".json"
+    filter_glob = StringProperty(
+            default="*.json",
+            options={'HIDDEN'},
+            )
+
+    def execute(self, context):
+        import latk as la
+        keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode"))
+        if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
+            import os
+            #keywords["relpath"] = os.path.dirname(bpy.data.filepath)
+        #~
+        la.importNorman(**keywords)
+        return {'FINISHED'} 
+
 class ImportGml(bpy.types.Operator, ImportHelper):
     """Load a Gml File"""
     bl_idname = "import_scene.gml"
@@ -220,13 +242,14 @@ class ExportPainter(bpy.types.Operator, ExportHelper):
 
 def menu_func_import(self, context):
     self.layout.operator(ImportLatk.bl_idname, text="Latk Animation (.json)")
-    self.layout.operator(ImportGml.bl_idname, text="Graffiti Markup Language (.gml)")
+    self.layout.operator(ImportGml.bl_idname, text="Latk - GML (.gml)")
+    self.layout.operator(ImportNorman.bl_idname, text="Latk - Norman (.json)")
 
 def menu_func_export(self, context):
     self.layout.operator(ExportLatk.bl_idname, text="Latk Animation (.json)")
-    #self.layout.operator(ExportGml.bl_idname, text="Graffiti Markup Language (.gml)")
-    self.layout.operator(ExportSvg.bl_idname, text="SVG SMIL Animation (.svg)")
-    self.layout.operator(ExportPainter.bl_idname, text="Corel Painter Script (.txt)")
+    #self.layout.operator(ExportGml.bl_idname, text="Latk - GML (.gml)")
+    self.layout.operator(ExportSvg.bl_idname, text="Latk - SVG SMIL (.svg)")
+    self.layout.operator(ExportPainter.bl_idname, text="Latk - Corel Painter (.txt)")
 
 def register():
     bpy.utils.register_module(__name__)

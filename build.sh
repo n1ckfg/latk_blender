@@ -19,3 +19,4 @@ cat "latk_main.py" "latk_tools.py" "latk_rw.py" "latk_mtl.py" "latk_mesh.py" "la
 
 cp $BUILD_TARGET "${HOME}/Applications/blender/2.77/scripts/addons/"
 cp $BUILD_TARGET "${HOME}/Applications/blender/2.78/scripts/addons/"
+cp $BUILD_TARGET "${HOME}/Applications/blender/2.79/scripts/addons/"

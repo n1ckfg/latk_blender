@@ -9,4 +9,5 @@ copy /b latk_main.py+latk_tools.py+latk_rw.py+latk_mtl.py+latk_mesh.py+latk_draw
 
 copy %BUILD_TARGET% "%homepath%\AppData\Roaming\Blender Foundation\Blender\2.77\scripts\addons"
 copy %BUILD_TARGET% "%homepath%\AppData\Roaming\Blender Foundation\Blender\2.78\scripts\addons"
+copy %BUILD_TARGET% "%homepath%\AppData\Roaming\Blender Foundation\Blender\2.79\scripts\addons"
 @pause
