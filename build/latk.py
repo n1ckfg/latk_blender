@@ -1060,6 +1060,13 @@ def createPoint(_stroke, _index, _point, pressure=1, strength=1):
     _stroke.points[_index].pressure = pressure
     _stroke.points[_index].strength = strength
 
+def addPoint(_stroke, _point, pressure=1, strength=1):
+    _stroke.points.add(1)
+    createPoint(_stroke, len(stroke.points)-1, _point, pressure, strength)
+
+def closeStroke(_stroke):
+    addPoint(_stroke, _stroke.points[0].co)
+
 def createColor(_color):
     frame = getActiveFrame()
     palette = getActivePalette()
