@@ -291,6 +291,11 @@ def deleteDuplicateStrokes(fromAllFrames = False):
             except:
                 pass
 
+def deleteStroke(_stroke):
+    bpy.ops.object.select_all(action='DESELECT')
+    _stroke.select = True
+    deleteSelected()
+
 def consolidateGroups():
     wholeNames = []
     mergeNames = []
