@@ -296,6 +296,24 @@ def deleteStroke(_stroke):
     _stroke.select = True
     deleteSelected()
 
+def deleteStrokes(_strokes):
+    bpy.ops.object.select_all(action='DESELECT')
+    for stroke in _strokes:
+        stroke.select = True
+    deleteSelected()
+
+def getEmptyStrokes(_strokes, _minPoints=0):
+    returns = []
+    for stroke in _strokes:
+        if (len(stroke.points) <= _minPoints):
+            returns.append(stroke)
+    print("Found " + str(len(returns)) + " empty strokes.")
+    return returns
+
+def cleanEmptyStrokes(_strokes, _minPoints=0):
+    target = getEmptyStrokes(_strokes, _minPoints)
+    deleteStrokes(target)
+
 def consolidateGroups():
     wholeNames = []
     mergeNames = []
