@@ -242,6 +242,17 @@ def deleteStrokes(_strokes):
         stroke.select = True
     deleteSelected()
 
+def selectStrokePoint(_stroke, _index):
+    for i, point in enumerate(_stroke.points):
+        if (i==_index):
+            point.select=True
+        else:
+            point.select=False
+    return _stroke.points[_index]
+
+def selectLastStrokePoint(_stroke):
+    return selectStrokePoint(_stroke, len(_stroke.points)-1)
+
 def getEmptyStrokes(_strokes, _minPoints=0):
     returns = []
     for stroke in _strokes:
