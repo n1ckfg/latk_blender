@@ -1002,7 +1002,7 @@ def createPoint(_stroke, _index, _point, pressure=1, strength=1):
 
 def addPoint(_stroke, _point, pressure=1, strength=1):
     _stroke.points.add(1)
-    createPoint(_stroke, len(stroke.points)-1, _point, pressure, strength)
+    createPoint(_stroke, len(_stroke.points)-1, _point, pressure, strength)
 
 def closeStroke(_stroke):
     addPoint(_stroke, _stroke.points[0].co)
