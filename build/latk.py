@@ -1995,16 +1995,16 @@ def gmlParser(filepath=None, splitStrokes=True):
     if environment:
         upEl = environment.find("up")
         if (upEl):
-        	up = (float(upEl.find("x").text), float(upEl.find("y").text), float(upEl.find("z").text))
+            up = (float(upEl.find("x").text), float(upEl.find("y").text), float(upEl.find("z").text))
         screenBoundsEl = environment.find("screenBounds")
         if (screenBoundsEl):
             sbX = float(screenBoundsEl.find("x").text)
             sbY = float(screenBoundsEl.find("y").text)
             sbZ = 1.0
             try:
-            	sbZ = float(screenBoundsEl.find("z").text)
+                sbZ = float(screenBoundsEl.find("z").text)
             except:
-            	pass
+                pass
             screenBounds = (sbX, sbY, sbZ)
     globalScale = (globalScale[0] * screenBounds[0], globalScale[1] * screenBounds[1], globalScale[2] * screenBounds[2])
     #~
@@ -2026,12 +2026,12 @@ def gmlParser(filepath=None, splitStrokes=True):
             try:
                 z = float(pt.find("z").text) * globalScale[2]
             except:
-            	pass
+                pass
             time = 0.0
             try:
-            	time = float(pt.find("time").text)
+                time = float(pt.find("time").text)
             except:
-            	pass
+                pass
             #if (yUp==False):
             gmlPoints.append((x,y,z,time))
             #else:
@@ -2286,6 +2286,18 @@ def getAllTags(name=None, xml=None):
         if (node.tag.split('}')[1] == name):
             returns.append(node)
     return returns
+
+def writePointCloud(name=None, strokes=None):
+    if not strokes:
+        strokes = getSelectedStrokes()
+    lines = []
+    for stroke in strokes:
+        for point in stroke.points:
+            x = str(point.co[0])
+            y = str(point.co[1])
+            z = str(point.co[2])
+            lines.append(x + ", " + y + ", " + z + "\n")
+    writeTextFile(name=name, lines=lines)
 
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
