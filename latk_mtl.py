@@ -27,7 +27,7 @@ def colorVertexCyclesMat(obj):
     nodes = obj.active_material.node_tree.nodes
     material_output = nodes.get('Diffuse BSDF')
     nodeAttr = nodes.new("ShaderNodeAttribute")
-    nodeAttr.attribute_name = "Col"
+    nodeAttr.attribute_name = "Cd"
     obj.active_material.node_tree.links.new(material_output.inputs[0], nodeAttr.outputs[0])
     #~
     #loop through each vertex
