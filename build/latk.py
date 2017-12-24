@@ -60,6 +60,18 @@ from bpy_extras.io_utils import (ImportHelper, ExportHelper)
 
 # 2 of 9. TOOLS
 
+def lookAt(looker, lookee):
+    lookerPos = looker.matrix_world.to_translation()
+    lookeePos = lookee.matrix_world.to_translation()
+    #~
+    direction = lookeePos - lookerPos
+    #~
+    # point the cameras '-Z' and use its 'Y' as up
+    rot_quat = direction.to_track_quat('-Z', 'Y')
+    #~
+    # assume we're using euler rotation
+    looker.rotation_euler = rot_quat.to_euler()
+    
 def getLayerInfo(layer):
     return layer.info.split(".")[0]
 
