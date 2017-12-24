@@ -1,6 +1,20 @@
 # 2 of 9. TOOLS
 
+def cameraArray(target=None): 
+    if not target:
+        target = ss()
+    coords = [(target.matrix_world * v.co) for v in target.data.vertices]
+    cams = []
+    for coord in coords:
+        cam = createCamera()
+        cam.location = coord
+        cams.append(cam)
+    for cam in cams:
+        lookAt(cam, target)
+
 def lookAt(looker, lookee):
+    deselect()
+    select([looker, lookee])
     lookerPos = looker.matrix_world.to_translation()
     lookeePos = lookee.matrix_world.to_translation()
     #~
