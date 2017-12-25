@@ -63,6 +63,7 @@ from bpy_extras.io_utils import (ImportHelper, ExportHelper)
 def cameraArray(target=None): 
     if not target:
         target = ss()
+    scene = bpy.context.scene
     coords = [(target.matrix_world * v.co) for v in target.data.vertices]
     cams = []
     for coord in coords:
@@ -71,6 +72,8 @@ def cameraArray(target=None):
         cams.append(cam)
     for cam in cams:
         lookAt(cam, target)
+        rview = scene.render.views.new(cam.name)
+        rview.camera_suffix = "." + cam.name.split(".")[1]
 
 def lookAt(looker, lookee):
     deselect()
