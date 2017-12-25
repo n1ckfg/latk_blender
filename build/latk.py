@@ -60,10 +60,14 @@ from bpy_extras.io_utils import (ImportHelper, ExportHelper)
 
 # 2 of 9. TOOLS
 
-def cameraArray(target=None): 
+def cameraArray(target=None, hideTarget=True, deleteCamera=True): 
     if not target:
         target = ss()
     scene = bpy.context.scene
+    scene.render.use_multiview = True
+    scene.render.views["left"].use = False
+    scene.render.views["right"].use = False
+    #~
     coords = [(target.matrix_world * v.co) for v in target.data.vertices]
     cams = []
     for coord in coords:
@@ -72,8 +76,20 @@ def cameraArray(target=None):
         cams.append(cam)
     for cam in cams:
         lookAt(cam, target)
-        rview = scene.render.views.new(cam.name)
-        rview.camera_suffix = "." + cam.name.split(".")[1]
+        renView = scene.render.views.new(cam.name)
+        renView.camera_suffix = "." + cam.name.split(".")[1]
+        bpy.context.scene.objects.active = cam
+        makeParent([target], cam)
+    if (deleteCamera==True):
+        try:
+            pass
+            #delete(matchName("Camera")[0])
+        except:
+            pass
+    if (hideTarget==True):
+        target.hide = True
+        target.hide_select = False
+        target.hide_render = True
 
 def lookAt(looker, lookee):
     deselect()
