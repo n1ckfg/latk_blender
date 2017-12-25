@@ -65,6 +65,7 @@ def cameraArray(target=None, hideTarget=True, deleteCamera=True):
         target = ss()
     scene = bpy.context.scene
     scene.render.use_multiview = True
+    scene.render.views_format = "MULTIVIEW"
     scene.render.views["left"].use = False
     scene.render.views["right"].use = False
     #~
@@ -79,11 +80,10 @@ def cameraArray(target=None, hideTarget=True, deleteCamera=True):
         renView = scene.render.views.new(cam.name)
         renView.camera_suffix = "." + cam.name.split(".")[1]
         bpy.context.scene.objects.active = cam
-        makeParent([target], cam)
+    parentMultiple(cams, target)
     if (deleteCamera==True):
         try:
-            pass
-            #delete(matchName("Camera")[0])
+            delete(matchName("Camera")[0])
         except:
             pass
     if (hideTarget==True):
