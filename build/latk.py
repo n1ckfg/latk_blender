@@ -60,14 +60,26 @@ from bpy_extras.io_utils import (ImportHelper, ExportHelper)
 
 # 2 of 9. TOOLS
 
-def cameraArray(target=None, hideTarget=True, deleteCamera=True): 
+def cameraArray(target=None, hideTarget=True, removeCameras=True, removeLayers=True): 
     if not target:
         target = ss()
+    if (removeCameras == True):
+    	cams = matchName("Camera")
+    	for cam in cams:
+    		delete(cam)
+    #~
     scene = bpy.context.scene
-    scene.render.use_multiview = True
-    scene.render.views_format = "MULTIVIEW"
-    scene.render.views["left"].use = False
-    scene.render.views["right"].use = False
+    render = scene.render
+    render.use_multiview = True
+    render.views_format = "MULTIVIEW"
+    #~
+    if (removeLayers == True):
+        while (len(render.views) > 1): # can't delete first layer
+            render.views.remove(render.views[len(render.views)-1])
+        render.views[0].name = "left"
+        render.views.new("right")
+    render.views["left"].use = False
+    render.views["right"].use = False
     #~
     coords = [(target.matrix_world * v.co) for v in target.data.vertices]
     cams = []
@@ -75,17 +87,14 @@ def cameraArray(target=None, hideTarget=True, deleteCamera=True):
         cam = createCamera()
         cam.location = coord
         cams.append(cam)
-    for cam in cams:
+    for i, cam in enumerate(cams):
         lookAt(cam, target)
-        renView = scene.render.views.new(cam.name)
-        renView.camera_suffix = "." + cam.name.split(".")[1]
-        bpy.context.scene.objects.active = cam
+        cam.name = "Camera_" + str(i)
+        renView = render.views.new(cam.name)
+        renView.camera_suffix = "_" + cam.name.split("_")[1]
+        scene.objects.active = cam
     parentMultiple(cams, target)
-    if (deleteCamera==True):
-        try:
-            delete(matchName("Camera")[0])
-        except:
-            pass
+    #~
     if (hideTarget==True):
         target.hide = True
         target.hide_select = False
