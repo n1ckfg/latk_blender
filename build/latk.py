@@ -1482,7 +1482,7 @@ def exportForUnity(sketchFab=True):
                 exportName = target[tt].name
                 exportName = exportName.split("crv_")[1]
                 exportName = exportName.split("_mesh")[0]
-                exporter(manualSelect=True, fileType="fbx", name=exportName)
+                exporter(manualSelect=True, fileType="fbx", name=exportName, legacyFbx=True)
                 sketchFabList.append("0.083 " + exportName + ".fbx" + "\r")
                 sketchFabListNum.append(float(exportName.split("_")[len(exportName.split("_"))-1]))
                 break
@@ -1508,7 +1508,7 @@ def exportForUnity(sketchFab=True):
         print(sketchFabList)
         writeTextFile(getFilePath() + getFileName() + "_" + tempString + ".sketchfab.timeframe", sketchFabList)
 
-def exporter(name="test", url=None, winDir=False, manualSelect=False, fileType="fbx"):
+def exporter(name="test", url=None, winDir=False, manualSelect=False, fileType="fbx", legacyFbx=False):
     if not url:
         url = getFilePath()
         if (winDir==True):
@@ -1518,7 +1518,10 @@ def exporter(name="test", url=None, winDir=False, manualSelect=False, fileType="
     #~
     if (manualSelect == True):
             if (fileType=="fbx"):
-                bpy.ops.export_scene.fbx(filepath=url + name + ".fbx", use_selection=True)
+                if (legacyFbx == True):
+                    bpy.ops.export_scene.fbx(filepath=url + name + ".fbx", use_selection=True, version="ASCII6100") # legacy version
+                else:
+                    bpy.ops.export_scene.fbx(filepath=url + name + ".fbx", use_selection=True, version="BIN7400")
             else:
                 bpy.ops.export_scene.obj(filepath=url + name + ".obj", use_selection=True)
     else:
@@ -1531,7 +1534,10 @@ def exporter(name="test", url=None, winDir=False, manualSelect=False, fileType="
             #bpy.context.scene.update()
             #~
             if (fileType=="fbx"):
-                bpy.ops.export_scene.fbx(filepath=url + name + "_" + str(j) + ".fbx", use_selection=True)
+                if (legacyFbx == True):
+                    bpy.ops.export_scene.fbx(filepath=url + name + "_" + str(j) + ".fbx", use_selection=True, version="ASCII6100") # legacy version
+                else:
+                    bpy.ops.export_scene.fbx(filepath=url + name + "_" + str(j) + ".fbx", use_selection=True, version="BIN7400")
             else:
                 bpy.ops.export_scene.obj(filepath=url + name + "_" + str(j) + ".obj", use_selection=True)
 
