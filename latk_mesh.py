@@ -478,6 +478,7 @@ def colorVertices(obj, color=(1,0,0), makeMaterial=False):
         for idx in poly.loop_indices:
             #rgb = [random.random() for i in range(3)]
             color_layer.data[i].color = color #rgb
+            #color_layer.data[i].color = (color[0], color[1], color[2], 0) # future-proofing
             i += 1
     #~
     if (makeMaterial==True):
