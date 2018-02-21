@@ -2697,8 +2697,8 @@ def assembleMesh(export=False, createPalette=True):
             saveFile(origFileName + "_ASSEMBLY")
             print(origFileName + "_ASSEMBLY.blend" + " was saved but some groups were missing.")
 
-def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=False, _decimate = 0.1, _curveType="nurbs", _useColors=True, _saveLayers=False, _singleFrame=False, _vertexColors=False, _animateFrames=True, _solidify=False, _subd=0, _remesh="none", _consolidateMtl=True, _caps=True, _joinMesh=True, _uvStroke=False, _uvFill=False):
-    if (_joinMesh==True or _remesh==True):
+def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _decimate = 0.1, _curveType="nurbs", _useColors=True, _saveLayers=False, _singleFrame=False, _vertexColors=True, _animateFrames=True, _solidify=False, _subd=0, _remesh="none", _consolidateMtl=True, _caps=True, _joinMesh=True, _uvStroke=True, _uvFill=True):
+    if (_joinMesh==True or _remesh != "none"):
         _bakeMesh=True
     #~
     if (_saveLayers==True):
@@ -3074,8 +3074,11 @@ def colorVertices(obj, color=(1,0,0), makeMaterial=False):
     for poly in mesh.polygons:
         for idx in poly.loop_indices:
             #rgb = [random.random() for i in range(3)]
-            color_layer.data[i].color = color #rgb
-            #color_layer.data[i].color = (color[0], color[1], color[2], 1) # future-proofing
+            #color_layer.data[i].color = rgb
+            try:
+                color_layer.data[i].color = (color[0], color[1], color[2], 1) # future-proofing 2.79a
+            except:
+                color_layer.data[i].color = color # 2.79 and earlier
             i += 1
     #~
     if (makeMaterial==True):
