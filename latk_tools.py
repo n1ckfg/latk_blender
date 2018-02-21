@@ -1,5 +1,14 @@
 # 2 of 9. TOOLS
 
+def gpWorldRoot(name="Empty"):
+    bpy.ops.object.empty_add(type="PLAIN_AXES")
+    target = ss()
+    target.name = name
+    layers = getAllLayers()
+    for layer in layers:
+        layer.parent = target
+    return target
+    
 def cameraArray(target=None, hideTarget=True, removeCameras=True, removeLayers=True): 
     if not target:
         target = ss()

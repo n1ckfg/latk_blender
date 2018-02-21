@@ -60,6 +60,15 @@ from bpy_extras.io_utils import (ImportHelper, ExportHelper)
 
 # 2 of 9. TOOLS
 
+def gpWorldRoot(name="Empty"):
+    bpy.ops.object.empty_add(type="PLAIN_AXES")
+    target = ss()
+    target.name = name
+    layers = getAllLayers()
+    for layer in layers:
+        layer.parent = target
+    return target
+    
 def cameraArray(target=None, hideTarget=True, removeCameras=True, removeLayers=True): 
     if not target:
         target = ss()
@@ -3066,7 +3075,7 @@ def colorVertices(obj, color=(1,0,0), makeMaterial=False):
         for idx in poly.loop_indices:
             #rgb = [random.random() for i in range(3)]
             color_layer.data[i].color = color #rgb
-            #color_layer.data[i].color = (color[0], color[1], color[2], 0) # future-proofing
+            #color_layer.data[i].color = (color[0], color[1], color[2], 1) # future-proofing
             i += 1
     #~
     if (makeMaterial==True):
