@@ -461,7 +461,7 @@ def colorVertices(obj, color=(1,0,0), makeMaterial=False):
     mesh = obj.data
     #~
     if not mesh.vertex_colors:
-        mesh.vertex_colors.new("Cd") # .new()
+        mesh.vertex_colors.new("rgba") # .new()
     #~
     """
     let us assume for sake of brevity that there is now 
