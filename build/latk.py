@@ -3131,14 +3131,14 @@ def makeCurve(coords, pressures, resolution=2, thickness=0.1, bevelResolution=1,
     curveType=curveType.upper()
     polyline = curveData.splines.new(curveType)
     if (curveType=="NURBS"):
-        polyline.points.add(len(coords)-1)
+        polyline.points.add(len(coords))#-1)
         for i, coord in enumerate(coords):
             x,y,z = coord
             polyline.points[i].co = (x, y, z, 1) 
             if (pressures != None):
                 polyline.points[i].radius = pressures[i]   
     elif (curveType=="BEZIER"):
-        polyline.bezier_points.add(len(coords)-1)
+        polyline.bezier_points.add(len(coords))#-1)
         #polyline.bezier_points.foreach_set("co", unpack_list(coords))
         for i, coord in enumerate(coords):
             polyline.bezier_points[i].co = coord   
