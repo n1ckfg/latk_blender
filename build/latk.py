@@ -2700,7 +2700,7 @@ def assembleMesh(export=False, createPalette=True):
 def gpMeshQ(val = 0.1):
     gpMesh(_decimate=val, _saveLayers=True)
 
-def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _decimate = 0.1, _curveType="nurbs", _useColors=True, _saveLayers=False, _singleFrame=False, _vertexColors=True, _animateFrames=True, _solidify=False, _subd=0, _remesh="none", _consolidateMtl=True, _caps=True, _joinMesh=True, _uvStroke=True, _uvFill=True):
+def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _decimate = 0.1, _curveType="nurbs", _useColors=True, _saveLayers=False, _singleFrame=False, _vertexColors=True, _vertexColorName="rgba", _animateFrames=True, _solidify=False, _subd=0, _remesh="none", _consolidateMtl=True, _caps=True, _joinMesh=True, _uvStroke=True, _uvFill=True):
     if (_joinMesh==True or _remesh != "none"):
         _bakeMesh=True
     #~
@@ -2818,7 +2818,7 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
                         # + + + + + + +
                         #~
                         if (_vertexColors==True):
-                            colorVertices(meshObj, strokeColor) 
+                            colorVertices(meshObj, strokeColor, colorName = _vertexColorName) 
                         #~ 
                         frameList.append(meshObj) 
                     else:
@@ -3056,12 +3056,12 @@ def writeOnMesh(step=1, name="crv"):
             hideFrame(target[j], 0, True)
             hideFrame(target[j], len(target)-j, False)
 
-def colorVertices(obj, color=(1,0,0), makeMaterial=False):
+def colorVertices(obj, color=(1,0,0), makeMaterial=False, colorName="rgba"):
     # start in object mode
     mesh = obj.data
     #~
     if not mesh.vertex_colors:
-        mesh.vertex_colors.new("rgba") # .new()
+        mesh.vertex_colors.new(colorName) # .new()
     #~
     """
     let us assume for sake of brevity that there is now 
