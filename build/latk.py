@@ -51,6 +51,10 @@ import gc
 import xml.etree.ElementTree as etree
 from operator import itemgetter
 #~
+import zipfile
+from io import BytesIO
+import os
+#~
 from bpy.props import (BoolProperty, FloatProperty, StringProperty, EnumProperty)
 from bpy_extras.io_utils import (ImportHelper, ExportHelper)
 
@@ -1599,11 +1603,11 @@ def getFileName(stripExtension=True):
 
 # http://blender.stackexchange.com/questions/24694/query-grease-pencil-strokes-from-python
 
-def writeBrushStrokes(filepath=None, bake=True):
+def writeBrushStrokes(filepath=None, bake=True, zipped=False):
     url = filepath # compatibility with gui keywords
     #writeFilePath = "C:\\Users\\Public\\Temp\\"
-    writeFilePath = "/Users/nick/Projects/LightningArtist/LightningArtistJS/animations/"
-    writeFileName = "new_test.json"
+    #writeFilePath = "/Users/nick/Projects/LightningArtist/LightningArtistJS/animations/"
+    #writeFileName = "new_test.json"
     #~
     if(bake == True):
         bakeFrames()
@@ -1713,14 +1717,23 @@ def writeBrushStrokes(filepath=None, bake=True):
     sg += "    ]"+ "\n"
     sg += "}"+ "\n"
     #if (len(gp.layers) == 1):
-    if (url==None):
-        url = writeFilePath + writeFileName
+    #if (url==None):
+        #url = writeFilePath + writeFileName
     #else:
         #url = writeFilePath + layer.info + str(f + 1) + "." + writeFileType
     #~
-    with open(url, "w") as f:
-        f.write(sg)
-        f.closed
+    if (zipped == True):
+        filenameRaw = os.path.split(url)[1].split(".")
+        filename = ""
+        for i in range(0, len(filenameRaw)-1):
+            filename += filenameRaw[i]
+        imz = InMemoryZip()
+        imz.append(filename + ".json", sg)
+        imz.writetofile(url)
+    else:
+        with open(url, "w") as f:
+            f.write(sg)
+            f.closed
     print("Wrote " + url)
     #~                
     return {'FINISHED'}
@@ -1728,8 +1741,8 @@ def writeBrushStrokes(filepath=None, bake=True):
 def readBrushStrokes(filepath=None):
     url = filepath # compatibility with gui keywords
     #readFilePath = "C:\\Users\\Public\\Temp\\"
-    readFilePath = "/Users/nick/Projects/LightningArtist/LightningArtistJS/animations/"
-    readFileName = "new_test.json"
+    #readFilePath = "/Users/nick/Projects/LightningArtist/LightningArtistJS/animations/"
+    #readFileName = "new_test.json"
     #~
     gp = getActiveGp()
     '''
@@ -1742,11 +1755,21 @@ def readBrushStrokes(filepath=None):
     globalOffset = Vector((0, 0, 0))
     useScaleAndOffset = True
     #~
-    if (url==None):
-        url = readFilePath + readFileName
-    with open(url) as data_file:    
-        data = json.load(data_file)
-        print("Read " + str(len(data["grease_pencil"][0]["layers"][0]["frames"])) + " frames on first layer.")
+    #if (url==None):
+        #url = readFilePath + readFileName
+    data = None
+
+    filename = os.path.split(url)[1].split(".")
+    filetype = filename[len(filename)-1].lower()
+    if (filetype == "latk" or filetype == "zip"):
+        imz = InMemoryZip()
+        imz.readFromDisk(url)
+        # https://stackoverflow.com/questions/6541767/python-urllib-error-attributeerror-bytes-object-has-no-attribute-read/6542236
+        data = json.loads(imz.files[0].decode("utf-8"))        
+    else:
+        with open(url) as data_file:    
+            data = json.load(data_file)
+            print("Read " + str(len(data["grease_pencil"][0]["layers"][0]["frames"])) + " frames on first layer.")
     #~
     #scene.frame_set(5) # ensure we'll see the stroke (set to frame 5 below)
     for h in range(0, len(data["grease_pencil"][0]["layers"])):
@@ -2367,6 +2390,60 @@ def writePointCloud(name=None, strokes=None):
             z = str(point.co[2])
             lines.append(x + ", " + y + ", " + z + "\n")
     writeTextFile(name=name, lines=lines)
+
+
+class InMemoryZip(object):
+
+    def __init__(self):
+        # Create the in-memory file-like object for working w/imz
+        self.in_memory_zip = BytesIO()
+        self.files = []
+
+    # Just zip it, zip it
+    def append(self, filename_in_zip, file_contents):
+        # Appends a file with name filename_in_zip and contents of
+        # file_contents to the in-memory zip.
+        # Get a handle to the in-memory zip in append mode
+        zf = zipfile.ZipFile(self.in_memory_zip, "a", zipfile.ZIP_DEFLATED, False)
+
+        # Write the file to the in-memory zip
+        zf.writestr(filename_in_zip, file_contents)
+
+        # Mark the files as having been created on Windows so that
+        # Unix permissions are not inferred as 0000
+        for zfile in zf.filelist:
+             zfile.create_system = 0         
+
+        return self
+
+    def readFromMemory(self):
+        # Returns a string with the contents of the in-memory zip.
+        self.in_memory_zip.seek(0)
+        return self.in_memory_zip.read()
+
+    def readFromDisk(self, url):
+        zf = zipfile.ZipFile(url, 'r')
+        for file in zf.infolist():
+            self.files.append(zf.read(file.filename))
+
+    # Zip it, zip it, zip it
+    def writetofile(self, filename):
+        # Writes the in-memory zip to a file.
+        f = open(filename, "wb")
+        f.write(self.readFromMemory())
+        f.close()
+
+'''
+# Zip examples
+# write
+imz = InMemoryZip()
+imz.append("testfile.txt", "Make a test") #.append("testfile2.txt", "And another one")
+imz.writetofile("testfile.zip")
+
+# read
+imz.readFromDisk("testfile.zip")
+print(imz.files[0])
+'''
 
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -3565,7 +3642,7 @@ class ImportLatk(bpy.types.Operator, ImportHelper):
 
     filename_ext = ".json"
     filter_glob = StringProperty(
-            default="*.json;*.latk",
+            default="*.latk;*.json",
             options={'HIDDEN'},
             )
 
@@ -3611,20 +3688,21 @@ class ImportLatk(bpy.types.Operator, ImportHelper):
         layout = self.layout
     '''
 
-class ExportLatk(bpy.types.Operator, ExportHelper):
-    """Save a Latk File"""
+class ExportLatkJson(bpy.types.Operator, ExportHelper): # TODO combine into one class
+    """Save a Latk Json File"""
 
-    bl_idname = "export_scene.latk"
-    bl_label = 'Export Latk'
+    bake = BoolProperty(name="Bake Frames", description="Bake Keyframes to All Frames", default=True)
+
+    bl_idname = "export_scene.latkjson"
+    bl_label = 'Export Latk Json'
     bl_options = {'PRESET'}
 
     filename_ext = ".json"
+
     filter_glob = StringProperty(
-            default="*.json;*.latk",
+            default="*.json",
             options={'HIDDEN'},
             )
-
-    bake = BoolProperty(name="Bake Frames", description="Bake Keyframes to All Frames", default=True)
 
     def execute(self, context):
         import latk as la
@@ -3635,7 +3713,35 @@ class ExportLatk(bpy.types.Operator, ExportHelper):
         #~
         keywords["bake"] = self.bake
         #~
-        la.writeBrushStrokes(**keywords)
+        la.writeBrushStrokes(**keywords, zipped=False)
+        return {'FINISHED'}
+
+class ExportLatk(bpy.types.Operator, ExportHelper):  # TODO combine into one class
+    """Save a Latk File"""
+
+    bake = BoolProperty(name="Bake Frames", description="Bake Keyframes to All Frames", default=True)
+
+    bl_idname = "export_scene.latk"
+    bl_label = 'Export Latk'
+    bl_options = {'PRESET'}
+
+    filename_ext = ".latk"
+
+    filter_glob = StringProperty(
+            default="*.latk",
+            options={'HIDDEN'},
+            )
+
+    def execute(self, context):
+        import latk as la
+        keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "check_existing", "bake"))
+        if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
+            import os
+            #keywords["relpath"] = os.path.dirname(bpy.data.filepath)
+        #~
+        keywords["bake"] = self.bake
+        #~
+        la.writeBrushStrokes(**keywords, zipped=True)
         return {'FINISHED'}
 
     '''
@@ -3798,12 +3904,13 @@ class ExportPainter(bpy.types.Operator, ExportHelper):
         return {'FINISHED'} 
 
 def menu_func_import(self, context):
-    self.layout.operator(ImportLatk.bl_idname, text="Latk Animation (.json)")
+    self.layout.operator(ImportLatk.bl_idname, text="Latk Animation (.latk, .json)")
     self.layout.operator(ImportGml.bl_idname, text="Latk - GML (.gml)")
     self.layout.operator(ImportNorman.bl_idname, text="Latk - Norman (.json)")
 
 def menu_func_export(self, context):
-    self.layout.operator(ExportLatk.bl_idname, text="Latk Animation (.json)")
+    self.layout.operator(ExportLatkJson.bl_idname, text="Latk Animation (.json)")
+    self.layout.operator(ExportLatk.bl_idname, text="Latk Animation (.latk)")
     #self.layout.operator(ExportGml.bl_idname, text="Latk - GML (.gml)")
     self.layout.operator(ExportSvg.bl_idname, text="Latk - SVG SMIL (.svg)")
     self.layout.operator(ExportPainter.bl_idname, text="Latk - Corel Painter (.txt)")
