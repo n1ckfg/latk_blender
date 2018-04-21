@@ -8,7 +8,7 @@ class ImportLatk(bpy.types.Operator, ImportHelper):
 
     filename_ext = ".json"
     filter_glob = StringProperty(
-            default="*.latk;*.json",
+            default="*.latk;*.json;*.zip",
             options={'HIDDEN'},
             )
 
