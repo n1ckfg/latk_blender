@@ -8,11 +8,7 @@ def joinObjects(target=None, center=False):
     target[0].select = True
     bpy.context.scene.objects.active = target[0]
     for i in range(1, len(target)):
-        #print("****** " + str(bpy.context.scene.objects.active))
-        #bpy.context.scene.objects.active.select = True
         target[i].select = True
-        #bpy.ops.object.join()
-        #bpy.context.scene.objects.unlink(strokesToJoin[sj-1])
     #~
     bpy.ops.object.join()
     #~
@@ -21,14 +17,6 @@ def joinObjects(target=None, center=False):
             scn.objects.unlink(target[i])
         except:
             pass
-        #try:
-            #removeObj(target[i].name)
-        #except:
-            #pass
-        #try:
-            #target[i].select = True
-        #except:
-            #pass
     #~
     gc.collect()
     if (center==True):
@@ -54,20 +42,15 @@ def assembleMesh(export=False, createPalette=True):
     masterUrlList = []
     masterGroupList = []
     #~
-    #start = bpy.context.scene.frame_start
-    #end = bpy.context.scene.frame_end + 1
-    #~
     pencil = getActiveGp()
     palette = getActivePalette()
     #~
     for b in range(0, len(pencil.layers)):
         layer = pencil.layers[b]
-        #url = origFileName + "_layer" + str(b+1) + "_" + layer.info
         url = origFileName + "_layer_" + layer.info
         masterGroupList.append(getLayerInfo(layer))
         masterUrlList.append(url)
     #~
-    #openFile(origFileName)
     readyToSave = True
     for i in range(0, len(masterUrlList)):
         if (export==True):
@@ -135,7 +118,6 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
     #~
     for b in range(0, len(pencil.layers)):
         layer = pencil.layers[b]
-        #url = origFileName + "_layer" + str(b+1) + "_" + layer.info
         url = origFileName + "_layer_" + layer.info
         if (layer.lock==False):
             rangeStart = 0
@@ -158,15 +140,6 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
                     stroke_points = stroke.points
                     coords = [ (point.co.x, point.co.y, point.co.z) for point in stroke_points ]
                     pressures = [ point.pressure for point in stroke_points ]
-                    '''
-                    coords = []
-                    if (_minDistance > 0.0):
-                        for pp in range(0, len(coordsOrig)):
-                            if (pp > 0 and getDistance(coordsOrig[pp], coordsOrig[pp-1]) >= _minDistance):
-                                coords.append(coordsOrig[pp])
-                    else:
-                        coords = coordsOrig
-                    '''
                     #~
                     crv_ob = makeCurve(name="crv_" + getLayerInfo(layer) + "_" + str(layer.frames[c].frame_number), coords=coords, pressures=pressures, curveType=_curveType, resolution=_resolution, thickness=_thickness, bevelResolution=_bevelResolution, parent=layer.parent, capsObj=capsObj, useUvs=_uvStroke, usePressure=_usePressure)
                     strokeColor = (0.5,0.5,0.5)
@@ -247,11 +220,7 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
                             elif (c != len(layer.frames)-1):
                                 hideFrame(frameList[i], j, True)
                 #~
-                #if (_consolidateMtl==True):
-                    #consolidateMtl()
-                #~
-                if (_joinMesh==True): #and _bakeMesh==True):
-                    #target = matchName("crv")
+                if (_joinMesh==True): 
                     target = matchName("crv_" + getLayerInfo(layer))
                     for i in range(start, end):
                         strokesToJoin = []
@@ -265,34 +234,13 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
                             print("* joining " + str(len(strokesToJoin))  + " strokes")
                             joinObjects(strokesToJoin)
                             print("~ ~ ~ ~ ~ ~ ~ ~ ~")
-            #~            
-            '''
-            deselect()
-            target = matchName("crv")
-            for tt in range(0, len(target)):
-                target[tt].select = True
-            print("* baking")
-            bakeParentToChild(start, end)
-            print("~ ~ ~ ~ ~ ~ ~ ~ ~")
-            '''
             #~
             if (_saveLayers==True):
                 deselect()
-                #target = matchName("crv")
                 target = matchName("crv_" + getLayerInfo(layer))
                 for tt in range(0, len(target)):
                     target[tt].select = True
                 print("* baking")
-                # ~ ~ new ~ ~ 
-                '''
-                for obj in target:
-                    bpy.context.scene.objects.active = obj
-                    #print(bpy.context.scene.objects.active.name)
-                    bakeParentToChild(start, end)
-                '''
-                # ~ ~ ~ ~ ~ ~
-                # * * * * *
-                #bakeParentToChild(start, end)
                 # * * * * *
                 bakeParentToChildByName("crv_" + getLayerInfo(layer))
                 # * * * * *
@@ -330,7 +278,6 @@ def gpMeshCleanup(target):
     dn()
 
 def remesher(obj, bake=True, mode="blocks", octree=6, threshold=0.0001, smoothShade=False):
-        #fixContext()
         bpy.context.scene.objects.active = obj
         bpy.ops.object.modifier_add(type="REMESH")
         bpy.context.object.modifiers["Remesh"].mode = mode.upper() #sharp, smooth, blocks
@@ -347,9 +294,7 @@ def decimator(target=None, ratio=0.1, bake=True):
     if not target:
         target = ss()
     bpy.context.scene.objects.active = target
-    #ctx = fixContext
     bpy.ops.object.modifier_add(type='DECIMATE')
-    #restoreContext(ctx)
     bpy.context.object.modifiers["Decimate"].ratio = ratio     
     if (bake == True):
         return applyModifiers(target)
@@ -464,23 +409,13 @@ def colorVertices(obj, color=(1,0,0), makeMaterial=False, colorName="rgba"):
     mesh = obj.data
     #~
     if not mesh.vertex_colors:
-        mesh.vertex_colors.new(colorName) # .new()
+        mesh.vertex_colors.new(colorName) 
     #~
-    """
-    let us assume for sake of brevity that there is now 
-    a vertex color map called  'Col'    
-    """
-    #~
-    #color_layer = mesh.vertex_colors["Col"]
-    #~
-    # or you could avoid using the color_layer name
     color_layer = mesh.vertex_colors.active  
     #~
     i = 0
     for poly in mesh.polygons:
         for idx in poly.loop_indices:
-            #rgb = [random.random() for i in range(3)]
-            #color_layer.data[i].color = rgb
             try:
                 color_layer.data[i].color = (color[0], color[1], color[2], 1) # future-proofing 2.79a
             except:
@@ -489,10 +424,6 @@ def colorVertices(obj, color=(1,0,0), makeMaterial=False, colorName="rgba"):
     #~
     if (makeMaterial==True):
         colorVertexCyclesMat(obj)
-    #~
-    # set to vertex paint mode to see the result
-    #if (vertexPaintMode==True):
-        #bpy.ops.object.mode_set(mode='VERTEX_PAINT')
 
 def makeCurve(coords, pressures, resolution=2, thickness=0.1, bevelResolution=1, curveType="bezier", parent=None, capsObj=None, name="crv_ob", useUvs=True, usePressure=True):
     # http://blender.stackexchange.com/questions/12201/bezier-spline-with-python-adds-unwanted-point
@@ -551,8 +482,6 @@ def makeCurve(coords, pressures, resolution=2, thickness=0.1, bevelResolution=1,
     #~
     # create object
     crv_ob = bpy.data.objects.new(name, curveData)
-    #if (parent != None):
-        #crv_ob.location = (parent.location) #object origin  
     #~
     # attach to scene and validate context
     scn = bpy.context.scene
@@ -562,30 +491,6 @@ def makeCurve(coords, pressures, resolution=2, thickness=0.1, bevelResolution=1,
     if (useUvs==True):
         crv_ob.data.use_uv_as_generated = True
     return crv_ob
-
-'''
-# old attempts
-def make_basic_curve():
-    crv = bpy.data.curves.new("crv", type="CURVE")
-    crv_ob = bpy.data.objects.new("crv_ob", crv)
-    return crv, crv_ob
-
-def makePolyLine(objname, curvename, cList):  
-    curvedata = bpy.data.curves.new(name=curvename, type='CURVE')  
-    curvedata.dimensions = '3D'  
-    #~
-    objectdata = bpy.data.objects.new(objname, curvedata)  
-    objectdata.location = (0,0,0) #object origin  
-    bpy.context.scene.objects.link(objectdata)  
-    #~  
-    polyline = curvedata.splines.new('NURBS')  
-    polyline.points.add(len(cList)-1)  
-    for num in range(len(cList)):  
-        polyline.points[num].co = (cList[num])+(w,)  
-    #~  
-    polyline.order_u = len(polyline.points)-1
-    polyline.use_endpoint_u = True
-'''
 
 def createMesh(name, origin, verts, faces):
     bpy.ops.object.add(

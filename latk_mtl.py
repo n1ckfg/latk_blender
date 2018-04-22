@@ -9,17 +9,12 @@ def planarUvProject():
                     override = {'area': area, 'region': region, 'edit_object': bpy.context.edit_object}
                     bpy.ops.uv.smart_project(override)
                     
-#def colorVertexCyclesMat(obj, color=(1,0,0), newMaterial=True):
 def colorVertexCyclesMat(obj):
     # http://blender.stackexchange.com/questions/6084/use-python-to-add-multiple-colors-to-a-nurbs-curve
     # http://blender.stackexchange.com/questions/5668/add-nodes-to-material-with-python
     # this will fail if you don't have Cycles Render enabled
     mesh = obj.data 
     #~    
-    #if len(mesh.vertex_colors) == 0:
-        #bpy.ops.mesh.vertex_color_add()
-    #~
-    #if (newMaterial==True):
     obj.active_material = bpy.data.materials.new('material')
     obj.active_material.use_vertex_color_paint = True
     #~
@@ -29,17 +24,11 @@ def colorVertexCyclesMat(obj):
     nodeAttr = nodes.new("ShaderNodeAttribute")
     nodeAttr.attribute_name = "Cd"
     obj.active_material.node_tree.links.new(material_output.inputs[0], nodeAttr.outputs[0])
-    #~
-    #loop through each vertex
-    #num_verts = len(mesh.vertices)
-    #for vert_i in range(num_verts):
-        #colorVertex(obj, vert_i, color)
-        #print("Finished vertex: " + str(vert_i) + "/" + str(num_verts))
 
 def colorVertexAlt(obj, vert, color=[1,0,0]):
     mesh = obj.data 
     scn = bpy.context.scene
-    #check if our mesh already has Vertex Colors, and if not add some... (first we need to make sure it's the active object)
+    # check if our mesh already has Vertex Colors, and if not add some... (first we need to make sure it's the active object)
     scn.objects.active = obj
     obj.select = True
     if len(mesh.vertex_colors) == 0:
@@ -57,7 +46,7 @@ def createMtlPalette(numPlaces=5, numReps = 1):
     removeUnusedMtl()
     for h in range(0, numReps):
         palette = []
-        #print("1-3. Creating palette of all materials...")
+        # 1-3. Creating palette of all materials
         for mtl in bpy.data.materials:
             foundNewMtl = True
             for palMtl in palette:
@@ -65,11 +54,10 @@ def createMtlPalette(numPlaces=5, numReps = 1):
                     foundNewMtl = False
                     break
             if (foundNewMtl==True):
-                #print("Found " + mtl.name)
                 palette.append(mtl)
         for i, mtl in enumerate(palette):
             mtl.name = "Palette_" + str(i+1)
-        #print("2-3. Matching palette colors for all objects...")
+        # 2-3. Matching palette colors for all objects
         for obj in bpy.context.scene.objects:
             try:
                 for i, mtl in enumerate(obj.data.materials):
@@ -78,7 +66,7 @@ def createMtlPalette(numPlaces=5, numReps = 1):
                             obj.data.materials[i] = palMtl
             except:
                 pass
-        #print("3-3. Removing unused materials...")
+        # 3-3. Removing unused materials
         removeUnusedMtl()
     #~
     print ("Created palette of " + str(len(palette)) + " materials.")
@@ -89,14 +77,6 @@ def removeUnusedMtl():
     for mtl in bpy.data.materials:
         if not mtl.users:
             bpy.data.materials.remove(mtl)
-
-'''
-def sortLists(list1, list2):
-    list1.sort(key=lambda x: x[0])
-    ind = [i[0] for i in sorted(enumerate(list2),key=lambda x: x[1])]
-    list1 = [i[0] for i in sorted(zip(list1, ind),key=lambda x: x[1])]
-    return list1
-'''
 
 # https://blender.stackexchange.com/questions/5668/add-nodes-to-material-with-python
 def texAllMtl(filePath="D://Asset Collections//Images//Element maps 2K//Plaster_maps//plaster_wall_distressed_04_normal.jpg", strength=1.0, colorData=False):
@@ -139,7 +119,6 @@ def searchMtl(color=None, name="crv"):
     for curve in curves:
         if (compareTuple(curve.data.materials[0].diffuse_color, color)):
             returns.append(curve)
-    #print ("found: " + str(returns))
     return returns
 
 # TODO handle multiple materials on one mesh
@@ -156,10 +135,8 @@ def consolidateMtl():
     for color in palette.colors:
         matchMat = None
         for obj in bpy.context.scene.objects:
-            #print(obj.name)
             try:
                 for i, mat in enumerate(obj.data.materials):
-                    #print(str(color.color) + " " + str(getDiffuseColor(mat)))
                     if (compareTuple((color.color[0],color.color[1],color.color[2]), getDiffuseColor(mat)) == True):
                         if (matchMat == None):
                             matchMat = mat
@@ -201,17 +178,14 @@ def getDiffuseColor(mtl=None):
     if (col==None):
         col = mtl.diffuse_color
     return col
-    #return getMtlColor("Diffuse BSDF", mtl)
 
 def makeEmissionMtl():
     mtl = getActiveMtl()
     color = getEmissionColor()
-    #print("source color: " + str(color))
     for obj in bpy.context.scene.objects:
         try:
             for j in range(0, len(obj.data.materials)):
                 destColor = getDiffuseColor(obj.data.materials[j])
-                #print("dest color: " + str(destColor))
                 if (compareTuple(destColor, color) == True):
                     obj.data.materials[j] = mtl
         except:

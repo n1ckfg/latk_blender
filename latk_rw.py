@@ -1,5 +1,8 @@
 # 3 of 9. READ / WRITE
 
+def exportAlembic(url="test.abc"):
+    bpy.ops.wm.alembic_export(filepath=url, vcolors=True, face_sets=True, renderable_only=False)
+
 def exportForUnity(sketchFab=True):
     start, end = getStartEnd()
     target = matchName("crv")
@@ -48,30 +51,33 @@ def exporter(name="test", url=None, winDir=False, manualSelect=False, fileType="
         else:
             url += "/"
     #~
-    if (manualSelect == True):
-            if (fileType=="fbx"):
-                if (legacyFbx == True):
-                    bpy.ops.export_scene.fbx(filepath=url + name + ".fbx", use_selection=True, version="ASCII6100") # legacy version
-                else:
-                    bpy.ops.export_scene.fbx(filepath=url + name + ".fbx", use_selection=True, version="BIN7400")
-            else:
-                bpy.ops.export_scene.obj(filepath=url + name + ".obj", use_selection=True)
+    if (fileType.lower() == "alembic"):
+        bpy.ops.wm.alembic_export(filepath=name + ".abc", vcolors=True, face_sets=True, renderable_only=False)
     else:
-        for j in range(bpy.context.scene.frame_start, bpy.context.scene.frame_end + 1):
-            bpy.ops.object.select_all(action='DESELECT')
-            goToFrame(j)
-            for i in range(0, len(bpy.data.objects)):
-                if (bpy.data.objects[i].hide == False):
-                    bpy.data.objects[i].select = True
-            #bpy.context.scene.update()
-            #~
-            if (fileType=="fbx"):
-                if (legacyFbx == True):
-                    bpy.ops.export_scene.fbx(filepath=url + name + "_" + str(j) + ".fbx", use_selection=True, version="ASCII6100") # legacy version
+        if (manualSelect == True):
+                if (fileType.lower()=="fbx"):
+                    if (legacyFbx == True):
+                        bpy.ops.export_scene.fbx(filepath=url + name + ".fbx", use_selection=True, version="ASCII6100") # legacy version
+                    else:
+                        bpy.ops.export_scene.fbx(filepath=url + name + ".fbx", use_selection=True, version="BIN7400")
                 else:
-                    bpy.ops.export_scene.fbx(filepath=url + name + "_" + str(j) + ".fbx", use_selection=True, version="BIN7400")
-            else:
-                bpy.ops.export_scene.obj(filepath=url + name + "_" + str(j) + ".obj", use_selection=True)
+                    bpy.ops.export_scene.obj(filepath=url + name + ".obj", use_selection=True)
+        else:
+            for j in range(bpy.context.scene.frame_start, bpy.context.scene.frame_end + 1):
+                bpy.ops.object.select_all(action='DESELECT')
+                goToFrame(j)
+                for i in range(0, len(bpy.data.objects)):
+                    if (bpy.data.objects[i].hide == False):
+                        bpy.data.objects[i].select = True
+                #bpy.context.scene.update()
+                #~
+                if (fileType=="fbx"):
+                    if (legacyFbx == True):
+                        bpy.ops.export_scene.fbx(filepath=url + name + "_" + str(j) + ".fbx", use_selection=True, version="ASCII6100") # legacy version
+                    else:
+                        bpy.ops.export_scene.fbx(filepath=url + name + "_" + str(j) + ".fbx", use_selection=True, version="BIN7400")
+                else:
+                    bpy.ops.export_scene.obj(filepath=url + name + "_" + str(j) + ".obj", use_selection=True)
 
 
 def importAppend(blendfile, section, obj, winDir=False):

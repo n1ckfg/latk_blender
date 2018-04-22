@@ -78,18 +78,10 @@ def getActiveFrameNum(layer=None):
 
 def matchWithParent(_child, _parent, _index):
     if (_parent):
-        #bpy.context.scene.frame_set(_index)
-        #if (_index == bpy.context.scene.frame_start):
-        '''
-        for v in _child.data.splines.active.bezier_points:
-            loc = v.co * _parent.matrix_world.inverted()
-            v.co = loc
-        '''
         loc, rot, scale = _parent.matrix_world.inverted().decompose()
         _child.location = loc
         #_child.rotation_quaternion = rot
         _child.scale = scale
-        #bpy.context.scene.update()
         _child.parent = _parent
         keyTransform(_child, _index)   
 
@@ -111,7 +103,6 @@ def bakeParentToChild(start=None, end=None):
     if (start==None and end==None):
         start, end = getStartEnd()
     # https://www.blender.org/api/blender_python_api_2_72_1/bpy.ops.nla.html
-    #bpy.ops.nla.bake(frame_start=start, frame_end=end, step=1, only_selected=True, visual_keying=True, clear_constraints=True, clear_parents=True, bake_types={'OBJECT'})    
     bpy.ops.nla.bake(frame_start=start, frame_end=end, step=1, only_selected=True, visual_keying=True, clear_constraints=True, clear_parents=True, use_current_action=True, bake_types={'OBJECT'})    
 
 def bakeParentToChildByName(name="crv"):
@@ -119,7 +110,6 @@ def bakeParentToChildByName(name="crv"):
     target = matchName(name)
     for obj in target:
         bpy.context.scene.objects.active = obj
-        #print(bpy.context.scene.objects.active.name)
         bakeParentToChild(start, end)
 
 def getWorldCoords(co=None, camera=None, usePixelCoords=True, useRenderScale=True, flipV=True):
@@ -252,18 +242,13 @@ def deleteGroupName(name="myGroup"):
 def removeGroup(name="myGroup", allGroups=False):
     if (allGroups==False):
         group = bpy.data.groups[name]
-        #for group in bpy.data.groups:
-            #if group.users == 1 and len(group.users_dupli_group) == 0: # EDIT
         group.user_clear()
         bpy.data.groups.remove(group) 
         #~
-        #bpy.ops.group_unlink(group=group.name)
     else:
         for group in bpy.data.groups:
             group.user_clear()
             bpy.data.groups.remove(group)   
-            #~
-            #bpy.ops.group_unlink(group=group.name)
 
 def importGroup(path, name, winDir=False):
     importAppend(path, "Group", name, winDir)
@@ -371,7 +356,6 @@ def renameCurves(name="mesh", nameMesh="crv_ob_mesh", nameCurve="crv"):
     target = matchName(nameMesh)
     for i in range(0, len(target)):
         target[i].name = name + "_" + str(i)
-    #dn(nameCurve)
 
 def deleteUnparentedCurves(name="crv"):
     target = matchName(name)
@@ -402,17 +386,6 @@ def distributeStrokesAlt(step=1):
         except:
             pass
         layer.active_frame = layer.frames[i+1]
-        '''
-        strokesToBuild.append(strokes[i])
-        for l in range(0, len(strokesToBuild)):    
-            strokeDest = getActiveFrame().strokes.new(palette.colors[0].name)
-            strokeDest.draw_mode = '3DSPACE'
-            strokeDest.points.add(len(strokesToBuild[l].points))
-            for m in range(0, len(strokesToBuild[l].points)):
-                strokeDest.points[m].co = strokesToBuild[l].points[m].co 
-                strokeDest.points[m].pressure = 1
-                strokeDest.points[m].strength = 1
-        '''
         copyFrame(0, i+1, counter)
         counter += step
         if (counter > len(strokes)-1):
@@ -438,19 +411,14 @@ def distributeStrokes(pointStep=10, step=1, minPointStep=2):
             copyFrame(0, i+1+extraFrameCounter, strokeCounter+1)
         else:
             copyFrame(0, i+1+extraFrameCounter, strokeCounter)
-        #lastGoodLoc = bpy.context.scene.frame_current
-        #print("* * * main frame at: " + str(lastGoodLoc) + " * * *")
         #~
         if (pointStep >= minPointStep):
-        #else:
             pointsCounter = 0
             stroke = strokes[strokeCounter]
             points = stroke.points
             subFrames = roundValInt(len(points)/pointStep)
-            #print("points: " + str(len(points)) + "   subframes: " + str(subFrames))
             for j in range(0, subFrames):
                 extraFrameCounter += 1
-                #inLoc = lastGoodLoc #strokeCounter+1+extraFrameCounterLast
                 outLoc = i+1+extraFrameCounter
                 goToFrame(outLoc)
                 try:
@@ -459,21 +427,14 @@ def distributeStrokes(pointStep=10, step=1, minPointStep=2):
                     pass
                 layer.active_frame = layer.frames[bpy.context.scene.frame_current]
                 #~
-                #print("-> copying " + str(inLoc) + " to " + str(outLoc))
-                #~ * * * * * * *
-                #copyFrame(0, outLoc, strokeCounter+1)#, j * pointStep)
-                #copyFrame(0, outLoc, strokeCounter)
                 for l in range(0, strokeCounter):
                     createStroke(layer.frames[0].strokes[l].points, layer.frames[0].strokes[l].color.color, layer.frames[outLoc])#newStroke.color.color)
-                #~ * * * * * * *
-                #refresh()
                 newStroke = layer.frames[0].strokes[strokeCounter]
                 newPoints = []
                 for l in range(0, len(newStroke.points)):
                     if (l < j * pointStep):
                         newPoints.append(newStroke.points[l])  
                 #~                                         
-                #createStroke(newPoints, (1,0,0), layer.frames[outLoc])
                 createStroke(newPoints, newStroke.color.color, layer.frames[outLoc])
         #~
         strokeCounter += step
@@ -533,25 +494,6 @@ def writeOnStrokes(step=1):
 def getDistance(v1, v2):
     return sqrt( (v1[0] - v2[0])**2 + (v1[1] - v2[1])**2 + (v1[2] - v2[2])**2)
     
-'''
-def joinObjects(target=None):
-    if not target:
-        target = s()
-    for i in range(1, len(target)):
-        try:
-            bpy.ops.object.select_all(action='DESELECT')
-            bpy.context.scene.objects.active = target[i]
-            #print("****** " + str(bpy.context.scene.objects.active))
-            #bpy.context.scene.objects.active.select = True
-            target[i].select =True
-            target[i-1].select =True
-            bpy.ops.object.join()
-            #bpy.context.scene.objects.unlink(strokesToJoin[sj-1])
-        except:
-            pass
-    return target[len(target)-1]
-'''
-
 def parentMultiple(target, root, fixTransforms=True):
     bpy.context.scene.objects.active = root # last object will be the parent
     bpy.ops.object.select_all(action='DESELECT')
@@ -578,26 +520,16 @@ def makeParent(target=None, unParent=False, fixTransforms=True):
         for i in range(0, len(target)-1):
             target[i].select=True
         bpy.context.scene.objects.active = target[len(target)-1] # last object will be the parent
-        #original_type = bpy.context.area.type
-        #print("Current context: " + original_type)
-        #bpy.context.area.type = "VIEW_3D"
         #~
         if (fixTransforms==True):
             bpy.ops.object.parent_set(type='OBJECT', xmirror=False, keep_transform=False) 
         else:   
             bpy.ops.object.parent_set(type='OBJECT', xmirror=False, keep_transform=True) 
-        #~
-        #bpy.context.area.type = original_type 
-        #print("Parent is " + target[len(target)-1].name)   
 
 def keyTransform(_obj, _frame):
-    #_obj.location = _pos
-    #_obj.rotation_quaternion = _rot
-    #_obj.scale = _scale
     _obj.keyframe_insert(data_path="location", frame=_frame) 
     _obj.keyframe_insert(data_path="rotation_euler", frame=_frame) 
     _obj.keyframe_insert(data_path="scale", frame=_frame)
-    #bpy.context.scene.update()
 
 def keyMatrix(_obj, _frame):
     _obj.keyframe_insert(data_path="matrix_world", frame=_frame) 
@@ -608,50 +540,13 @@ def select(target=None):
     print("selected " + str(target))
     return target
 
-'''
-def move(x, y, z, target=None):
-    if not target:
-        target = select()
-    bpy.ops.object.select_all(action='DESELECT')
-    for i in range(0, len(target)):
-        bpy.data.objects[target[i].name].select = True
-        bpy.ops.transform.translate(value=(x, y, z))
-
-def moveTo(x, y, z, target=None):
-    if not target:
-        target = select()
-    bpy.ops.object.select_all(action='DESELECT')
-    for i in range(0, len(target)):
-        bpy.data.objects[target[i].name].select = True
-        bpy.ops.transform.location = str((x, y, z))
-'''
-
-'''
-def delete(_obj, clearMemory=False):
-    bpy.ops.object.mode_set(mode = 'OBJECT')
-    #if not target:
-        #target = s()
-    #for _obj in target:
-    if (clearMemory==True):
-        mesh = bpy.data.meshes[_obj.name]
-        mesh.user_clear()
-        bpy.data.meshes.remove(mesh)
-    bpy.ops.object.select_all(action='DESELECT')
-    bpy.data.objects[_obj.name].select = True
-    bpy.ops.object.delete()   
-    #print("Deleted " + _obj.name)  
-'''
-
 def delete(_obj=None):
     if not _obj:
         _obj = ss()
-    #oldMode = bpy.context.mode
-    #bpy.ops.object.mode_set(mode='OBJECT')
     bpy.ops.object.select_all(action='DESELECT')
     bpy.data.objects[_obj.name].select = True
     bpy.ops.object.delete()
     gc.collect()
-    #bpy.ops.object.mode_set(mode=oldMode)   
 
 def refresh():
     bpy.context.scene.update()
@@ -704,7 +599,6 @@ def bakeFrames():
     end = bpy.context.scene.frame_end + 1
     scene = bpy.context.scene
     gp = getActiveGp()
-    #layer = gp.layers[0] 
     for layer in gp.layers:   
         for i in range(start, end):
             try:
@@ -823,7 +717,6 @@ def createStroke(points, color=(0,0,0), frame=None, palette=None):
     if (palette == None):
         palette = getActivePalette()
     if (frame == None):
-        #frame = getActiveLayer().frames.new(bpy.context.scene.frame_current)
         frame = getActiveFrame()
     #~
     strokeColor = createColor(color)
@@ -849,24 +742,9 @@ def hideFrame(_obj, _frame, _hide):
     _obj.keyframe_insert(data_path="hide", frame=_frame) 
     _obj.keyframe_insert(data_path="hide_render", frame=_frame) 
 
-'''
-def chooseShot(shot):
-    start = 0
-    end = 0
-    if shot == 1:
-        start = 1
-        end = 44
-    elif shot == 2:
-        start = 45
-        end = 63
-    return [start, end]
-'''
-
 def showHide(obj, hide, keyframe=False, frame=None):
     obj.hide = hide
     obj.hide_render = hide
-    #_obj.keyframe_insert(data_path="hide", frame=_frame) 
-    #_obj.keyframe_insert(data_path="hide_render", frame=_frame) 
 
 def showHideChildren(hide):
     target = getChildren()
@@ -911,7 +789,6 @@ def alignCamera():
     # strokes, points, frame
     bpy.ops.view3d.camera_to_view()
     #~
-    #bpy.context.area.type = "CONSOLE"
     bpy.context.area.type = original_type
 
 # ~ ~ ~ ~ ~ ~ grease pencil ~ ~ ~ ~ ~ ~
@@ -931,7 +808,6 @@ def getActiveGp(_name="GPencil"):
 def forceDrawMode():
     #https://blenderartists.org/forum/showthread.php?255425-How-to-use-quot-bpy-ops-gpencil-draw()-quot
     ctx = fixContext()
-    #bpy.ops.gpencil.draw('INVOKE_REGION_WIN', mode='DRAW_POLY', stroke=[{"name":"", "pen_flip":False, "is_start":True, "location":(0, 0, 0),"mouse":(0,0), "pressure":1, "time":0}, {"name":"", "pen_flip":False, "is_start":True, "location":(0, 0, 0), "mouse":(0,0), "pressure":1, "time":0}])
     returns = bpy.ops.gpencil.draw(mode="DRAW")
     returnContext(ctx)
     return returns
@@ -1007,8 +883,6 @@ def splitLayer(splitNum=None):
     if (len(layer2.frames) > 0):
         lastNum = layer2.frames[0].frame_number
         # cap the new layers with blank frames
-        #blankFrame(layer1, bpy.context.scene.frame_current)
-        #blankFrame(layer2, bpy.context.scene.frame_current-1)
         blankFrame(layer1, lastNum)
         blankFrame(layer2, lastNum-1)
         return layer2
@@ -1033,7 +907,6 @@ def getActiveFrameNum():
         if (frame == layer.active_frame):
             returns = i
     return returns
-    #return getActiveFrame().frame_number
 
 def getActiveFrameTimelineNum():
     return getActiveLayer().frames[getActiveFrameNum()].frame_number
@@ -1064,13 +937,8 @@ def splitLayersAboveFrameLimit(limit=20):
                 break
             goToFrame(currentLayer.frames[limit].frame_number)
             setActiveFrame(currentLayer.frames[limit].frame_number)
-            #print("We are at layer " + currentLayer.info + " and frame " + str(getActiveFrameNum()) + " and timeline " + str(getActiveFrameTimelineNum()))
-            #currentLayer = splitLayer(currentLayer.frames[limit].frame_number)
             splitLayer(currentLayer.frames[limit].frame_number)
-            #setActiveLayer(currentLayer.info)
             print("Split layer " + currentLayer.info + " with " + str(len(currentLayer.frames)) + " frames.")
-    #else:
-        #print("No layers are above frame limit " + str(limit) + ".")
 
 def getLayerLength(name=None):
     layer = None
@@ -1125,7 +993,6 @@ def createColor(_color):
 
 # ~ ~ ~ 
 def createColorWithPalette(_color, numPlaces=7, maxColors=0):
-    #frame = getActiveFrame()
     palette = getActivePalette()
     matchingColorIndex = -1
     places = numPlaces
@@ -1175,21 +1042,6 @@ def changeColor():
         for j in range(0, len(points)):
             createPoint(newStroke, j, points[j].co)
     print(str(len(strokes)) + " changed to " + palette.colors.active.name)
-
-'''
-def pasteToNewLayer():
-    frame = getActiveFrame()
-    oldStrokes = getSelectedStrokes()
-    #~
-    for oldStroke in oldStrokes:
-        newStroke = frame.strokes.new(oldStroke.color_name)
-        newStroke.draw_mode = "3DSPACE" # either of ("SCREEN", "3DSPACE", "2DSPACE", "2DIMAGE")
-        newStroke.line_width = oldStroke.line_width
-        newStroke.points = oldStroke.points
-        #newStroke.points.add(len(oldStroke.points))
-        #for j in range(0, len(oldStroke.points)):
-            #createPoint(newStroke, j, points[j].co)
-'''
 
 def newLayer(name="NewLayer", setActive=True):
     gp = getActiveGp()
@@ -1378,7 +1230,6 @@ def deleteSelected(target="strokes"):
     # strokes, points, frame
     bpy.ops.gpencil.delete(type=target.upper())
     #~
-    #bpy.context.area.type = "CONSOLE"
     bpy.context.area.type = original_type
 
 # https://www.blender.org/forum/viewtopic.php?t=27834
@@ -1400,7 +1251,6 @@ def AssembleOverrideContextForView3dOps():
 def TestView3dOperatorFromPythonScript():       # Run this from a python script and operators that would normally fail because they were not called from a View3D context will work!
     oContextOverride = AssembleOverrideContextForView3dOps()    # Get an override context suitable for bpy.ops operators that require View3D
     bpy.ops.mesh.knife_project(oContextOverride)                # An operator like this normally requires to run off the View3D context.  By overriding it with what it needs it will run from any context (like Python script, Python shell, etc)
-    #bpy.ops.screen.screen_full_area(oContextOverride)
     print("TestView3dOperatorFromPythonScript() completed succesfully.")
 
 def addVec3(p1, p2):
