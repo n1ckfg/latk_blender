@@ -2771,6 +2771,25 @@ def colorVertices(obj, color=(1,0,0), makeMaterial=False, colorName="rgba"):
     if (makeMaterial==True):
         colorVertexCyclesMat(obj)
 
+def meshToGp(obj=None):
+    if not obj:
+        obj = ss()
+    mesh = obj.data
+    mat = obj.matrix_world
+    #~
+    points = []
+    for face in mesh.polygons:
+        for idx in face.vertices:
+            pointsFace = []
+            pointsFace.append(mesh.vertices[idx].co)
+        finalPoint = Vector((0,0,0))
+        for vert in pointsFace:
+            finalPoint += vert
+        finalPoint /= len(pointsFace)
+        finalPoint = mat * finalPoint
+        points.append((finalPoint.x, finalPoint.z, finalPoint.y))
+    drawPoints(points)
+
 def makeCurve(coords, pressures, resolution=2, thickness=0.1, bevelResolution=1, curveType="bezier", parent=None, capsObj=None, name="crv_ob", useUvs=True, usePressure=True):
     # http://blender.stackexchange.com/questions/12201/bezier-spline-with-python-adds-unwanted-point
     # http://blender.stackexchange.com/questions/6750/poly-bezier-curve-from-a-list-of-coordinates
