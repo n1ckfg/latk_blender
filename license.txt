@@ -1,4 +1,4 @@
-The Lightning Artist Toolkit was developed with support from:
+The Lightning Artist Toolkit (Blender) was developed with support from:
    Canada Council on the Arts
    Eyebeam Art + Technology Center
    Ontario Arts Council
