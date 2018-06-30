@@ -2315,10 +2315,43 @@ def getMtlColor(node="Diffuse BSDF", mtl=None):
     except:
         return None
 
-def getEmissionColor(mtl=None):
+def setMtlShader(shader="diffuse", mtl=None):
+    # https://blender.stackexchange.com/questions/23436/control-cycles-material-nodes-and-material-properties-in-python
     if not mtl:
         mtl = getActiveMtl()
-    return getMtlColor("Emission", mtl)
+    col = getDiffuseColor(mtl)
+    #~
+    # clear all nodes to start clean
+    nodes = mtl.node_tree.nodes
+    for node in nodes:
+        nodes.remove(node)
+    #~
+    destNode = None
+    #~
+    # https://docs.blender.org/api/blender_python_api_2_78_0/bpy.types.html
+    # create emission node
+    if (shader.lower()=="emission"):
+        destNode = nodes.new(type="ShaderNodeEmission")
+        destNode.inputs[0].default_value = (col[0], col[1], col[2], 1) # RGBA
+        #destNode.inputs[1].default_value = 5.0 # strength
+    elif (shader.lower()=="principled"):
+        destNode = nodes.new(type="ShaderNodeBsdfPrincipled")
+        destNode.inputs["Base Color"].default_value = (col[0], col[1], col[2], 1) # RGBA
+    else:
+        destNode = nodes.new(type="ShaderNodeBsdfDiffuse")
+        destNode.inputs[0].default_value = (col[0], col[1], col[2], 1) # RGBA
+    #~
+    destNode.location = 0,0
+    #~
+    # create output node
+    node_output = nodes.new(type="ShaderNodeOutputMaterial")   
+    node_output.location = 400,0
+    #~
+    # link nodes
+    links = mtl.node_tree.links
+    link = links.new(destNode.outputs[0], node_output.inputs[0])
+    #~
+    return mtl
 
 def getDiffuseColor(mtl=None):
     if not mtl:
@@ -2327,6 +2360,11 @@ def getDiffuseColor(mtl=None):
     if (col==None):
         col = mtl.diffuse_color
     return col
+
+def getEmissionColor(mtl=None):
+    if not mtl:
+        mtl = getActiveMtl()
+    return getMtlColor("Emission", mtl)
 
 def makeEmissionMtl():
     mtl = getActiveMtl()
