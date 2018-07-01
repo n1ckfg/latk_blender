@@ -2348,6 +2348,7 @@ def setMtlShader(shader="diffuse", mtl=None):
     elif (shader.lower()=="principled"):
         destNode = nodes.new(type="ShaderNodeBsdfPrincipled")
         destNode.inputs["Base Color"].default_value = (col[0], col[1], col[2], 1) # RGBA
+        destNode.inputs["Subsurface Color"].default_value = (col[0], col[1], col[2], 1) # RGBA
     else:
         destNode = nodes.new(type="ShaderNodeBsdfDiffuse")
         destNode.inputs[0].default_value = (col[0], col[1], col[2], 1) # RGBA
