@@ -2305,21 +2305,30 @@ def consolidateMtlAlt(name="crv"):
 def getActiveMtl():
     return bpy.context.scene.objects.active.data.materials[bpy.context.scene.objects.active.active_material_index]
 
-def getMtlColor(node="Diffuse BSDF", mtl=None):
+def getMtlColor(node="diffuse", mtl=None):
     if not mtl:
         mtl = getActiveMtl()
     try:
-        colorRaw = mtl.node_tree.nodes[node].inputs["Color"].default_value
-        color = (colorRaw[0], colorRaw[1], colorRaw[2])
-        return color
+        if (node.lower() == "emission"):
+            color = mtl.node_tree.nodes["Emission"].inputs["Color"].default_value
+            return (color[0], color[1], color[2])
+        elif (node.lower() == "principled"):
+            color = mtl.node_tree.nodes["Principled BSDF"].inputs["Base Color"].default_value
+            return (color[0], color[1], color[2])
+        else:
+            color = mtl.node_tree.nodes["Diffuse BSDF"].inputs["Color"].default_value
+            return (color[0], color[1], color[2])
     except:
         return None
 
+# assumes that we're starting with diffuse shader, the default
 def setMtlShader(shader="diffuse", mtl=None):
     # https://blender.stackexchange.com/questions/23436/control-cycles-material-nodes-and-material-properties-in-python
     if not mtl:
         mtl = getActiveMtl()
-    col = getDiffuseColor(mtl)
+    col = getUnknownColor(mtl)
+    if not col:
+        return None
     #~
     # clear all nodes to start clean
     nodes = mtl.node_tree.nodes
@@ -2353,10 +2362,14 @@ def setMtlShader(shader="diffuse", mtl=None):
     #~
     return mtl
 
+def setAllMtlShader(shader="principled"):
+    for mtl in bpy.data.materials:
+        setMtlShader(shader, mtl)
+
 def getDiffuseColor(mtl=None):
     if not mtl:
         mtl = getActiveMtl()
-    col = getMtlColor("Diffuse BSDF", mtl)
+    col = getMtlColor("diffuse", mtl)
     if (col==None):
         col = mtl.diffuse_color
     return col
@@ -2364,8 +2377,26 @@ def getDiffuseColor(mtl=None):
 def getEmissionColor(mtl=None):
     if not mtl:
         mtl = getActiveMtl()
-    return getMtlColor("Emission", mtl)
+    return getMtlColor("emission", mtl)
 
+def getPrincipledColor(mtl=None):
+    if not mtl:
+        mtl = getActiveMtl()
+    return getMtlColor("principled", mtl)
+
+def getUnknownColor(mtl=None):
+    if not mtl:
+        mtl = getActiveMtl()
+    col = None
+    if (col == None):
+        col = getEmissionColor(mtl)
+    if (col == None):
+        col = getPrincipledColor(mtl)
+    if (col == None):
+        col = getDiffuseColor(mtl)
+    return col
+
+# is this obsolete now that all materials are linked by color value?
 def makeEmissionMtl():
     mtl = getActiveMtl()
     color = getEmissionColor()
