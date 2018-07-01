@@ -181,7 +181,9 @@ def setMtlShader(shader="diffuse", mtl=None):
     if not col:
         return None
     #~
+    # https://blender.stackexchange.com/questions/33189/python-script-attribute-error-while-using-node-editor
     # clear all nodes to start clean
+    mtl.use_nodes = True
     nodes = mtl.node_tree.nodes
     for node in nodes:
         nodes.remove(node)
