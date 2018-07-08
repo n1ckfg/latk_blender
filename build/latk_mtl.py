@@ -263,6 +263,122 @@ def makeEmissionMtl():
         except:
             pass
 
+#~ ~ ~ ~ ~ ~ ~ ~
+# pixel / uv methods
+#~ ~ ~ ~ ~ ~ ~ ~
+
+# http://blender.stackexchange.com/questions/49341/how-to-get-the-uv-corresponding-to-a-vertex-via-the-python-api
+# https://blenderartists.org/forum/archive/index.php/t-195230.html
+# https://developer.blender.org/T28211
+# http://blenderscripting.blogspot.ca/2012/08/adjusting-image-pixels-walkthrough.html
+# https://www.blender.org/forum/viewtopic.php?t=25804
+# https://docs.blender.org/api/blender_python_api_2_63_2/bmesh.html
+# http://blender.stackexchange.com/questions/1311/how-can-i-get-vertex-positions-from-a-mesh
+
+def uv_from_vert_first(uv_layer, v):
+    for l in v.link_loops:
+        uv_data = l[uv_layer]
+        return uv_data.uv
+    return None
+
+
+def uv_from_vert_average(uv_layer, v):
+    uv_average = Vector((0.0, 0.0))
+    total = 0.0
+    for loop in v.link_loops:
+        uv_average += loop[uv_layer].uv
+        total += 1.0
+    #~
+    if total != 0.0:
+        return uv_average * (1.0 / total)
+    else:
+        return None
+
+# Example using the functions above
+'''
+def testUvs():
+    obj = bpy.context.scene.objects.active #edit_object
+    me = obj.data
+    bm = bmesh.new()
+    bm.from_mesh(me) #from_edit_mesh(me)
+    #~
+    images = getUvImages()
+    #~
+    uv_layer = bm.loops.layers.uv.active
+    #~
+    for v in bm.verts:
+        uv_first = uv_from_vert_first(uv_layer, v)
+        uv_average = uv_from_vert_average(uv_layer, v)
+        print("Vertex: %r, uv_first=%r, uv_average=%r" % (v, uv_first, uv_average))
+        #~
+        pixel = getPixelFromUvArray(images[obj.active_material.texture_slots[0].texture.image.name], uv_first[0], uv_first[1])
+        print("Pixel: " + str(pixel))
+'''
+
+def getVerts(target=None):
+    if not target:
+        target = bpy.context.scene.objects.active
+    me = target.data
+    bm = bmesh.new()
+    bm.from_mesh(me)
+    return bm.verts
+
+def getUvImages():
+    obj = bpy.context.scene.objects.active
+    uv_images = {}
+    #~
+    #for uv_tex in obdata.uv_textures.active.data:
+    for tex in obj.active_material.texture_slots:
+        try:
+            uv_tex = tex.texture
+            if (uv_tex.image and
+                uv_tex.image.name not in uv_images and
+                uv_tex.image.pixels):
+
+                uv_images[uv_tex.image.name] = (
+                    uv_tex.image.size[0],
+                    uv_tex.image.size[1],
+                    uv_tex.image.pixels[:]
+                    # Accessing pixels directly is far too slow.
+                    # Copied to new array for massive performance-gain.
+                )
+        except:
+            pass
+    #~
+    return uv_images
+
+def getPixelFromImage(img, xPos, yPos):
+    imgWidth = int(img.size[0])
+    r = img.pixels[4 * (xPos + imgWidth * yPos) + 0]
+    g = img.pixels[4 * (xPos + imgWidth * yPos) + 1]
+    b = img.pixels[4 * (xPos + imgWidth * yPos) + 2]
+    a = img.pixels[4 * (xPos + imgWidth * yPos) + 3]
+    return [r, g, b, a]
+
+def getPixelFromUv(img, u, v):
+    imgWidth = int(img.size[0])
+    imgHeight = int(img.size[1])
+    pixel_x = int(u * imgWidth)
+    pixel_y = int(v * imgHeight)
+    return getPixelFromImage(img, pixel_x, pixel_y)
+
+# *** these methods are much faster but don't work in all contexts
+def getPixelFromImageArray(img, xPos, yPos):
+    imgWidth = int(img[0]) #img.size[0]
+    #r = img.pixels[4 * (xPos + imgWidth * yPos) + 0]
+    r = img[2][4 * (xPos + imgWidth * yPos) + 0]
+    g = img[2][4 * (xPos + imgWidth * yPos) + 1]
+    b = img[2][4 * (xPos + imgWidth * yPos) + 2]
+    a = img[2][4 * (xPos + imgWidth * yPos) + 3]
+    return [r, g, b, a]
+
+def getPixelFromUvArray(img, u, v):
+    imgWidth = int(img[0]) #img.size[0]
+    imgHeight = int(img[1]) #img.size[1]
+    pixel_x = int(u * imgWidth)
+    pixel_y = int(v * imgHeight)
+    return getPixelFromImageArray(img, pixel_x, pixel_y)
+
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
