@@ -632,13 +632,18 @@ def createFill(inputVerts, useUvs=False):
 def getAlembicCurves(obj=None):
     if not obj:
         obj = ss()
-    splines = obj.data.splines
-    for spline in splines:
-        points = []
-        for point in spline.points:
-            points.append(point.co)
-        drawPoints(points)
-    
+    name = obj.name
+    start, end = getStartEnd()
+    for i in range(start, end):
+        goToFrame(i)
+        blankFrame()
+        obj = bpy.context.scene.objects[obj.name] # make sure obj is still accessible
+        splines = obj.data.splines
+        for spline in splines:
+            points = []
+            for point in spline.points:
+                points.append(point.co)
+            drawPoints(points)
 
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
