@@ -2994,6 +2994,17 @@ def createFill(inputVerts, useUvs=False):
     #~
     return ob
 
+def getAlembicCurves(obj=None):
+    if not obj:
+        obj = ss()
+    splines = obj.data.splines
+    for spline in splines:
+        points = []
+        for point in spline.points:
+            points.append(point.co)
+        drawPoints(points)
+    
+
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
