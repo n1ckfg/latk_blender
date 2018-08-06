@@ -1,4 +1,4 @@
-# 3 of 9. READ / WRITE
+# 3 of 10. READ / WRITE
 
 def exportAlembic(url="test.abc"):
     bpy.ops.wm.alembic_export(filepath=url, vcolors=True, face_sets=True, renderable_only=False)

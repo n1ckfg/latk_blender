@@ -27,7 +27,7 @@ along with the Lightning Artist Toolkit (Blender).  If not, see
 <http://www.gnu.org/licenses/>.
 '''
 
-# 1 of 9. MAIN
+# 1 of 10. MAIN
 
 bl_info = {
     "name": "Lightning Artist Toolkit (Latk)", 
@@ -37,12 +37,15 @@ bl_info = {
 
 import bpy
 import bpy_extras
+from bpy_extras import view3d_utils
 from mathutils import *
+from mathutils import Vector, Matrix
 from math import sqrt
 import math
 import json
 import re
 from bpy_extras.io_utils import unpack_list
+import parameter_editor
 #from curve_simplify import *
 import random
 import bmesh
@@ -55,7 +58,13 @@ import zipfile
 from io import BytesIO
 import os
 #~
-from bpy.props import (BoolProperty, FloatProperty, StringProperty, EnumProperty)
+from freestyle.shaders import *
+from freestyle.predicates import *
+from freestyle.types import Operators, StrokeShader, StrokeVertex
+from freestyle.chainingiterators import ChainSilhouetteIterator, ChainPredicateIterator
+from freestyle.functions import *
+#~
+from bpy.props import (BoolProperty, FloatProperty, StringProperty, IntProperty, PointerProperty, EnumProperty)
 from bpy_extras.io_utils import (ImportHelper, ExportHelper)
 
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
