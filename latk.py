@@ -4176,6 +4176,17 @@ class LatkProperties(bpy.types.PropertyGroup):
         default="rgba"
     )
 
+    remesh_mode = EnumProperty(
+        name="Remesh Mode",
+        items=(
+            ("NONE", "None", "No remeshing", 0),
+            ("SHARP", "Sharp", "Sharp remesh", 1),
+            ("SMOOTH", "Smooth", "Smooth remesh", 2),
+            ("BLOCKS", "Blocks", "Blocks remesh", 3)
+        ),
+        default="NONE"
+    )
+
 # https://docs.blender.org/api/blender_python_api_2_78_release/bpy.types.Panel.html
 class LatkProperties_Panel(bpy.types.Panel):
     """Creates a Panel in the render context of the properties editor"""
@@ -4206,6 +4217,9 @@ class LatkProperties_Panel(bpy.types.Panel):
         row.prop(latk, "vertexColorName")
 
         row = layout.row()
+        row.prop(latk, "remesh_mode")
+
+        row = layout.row()
         row.operator("latk_button.gpmesh")
 
         row = layout.row()
@@ -4213,6 +4227,9 @@ class LatkProperties_Panel(bpy.types.Panel):
 
         row = layout.row()
         row.operator("latk_button.dn")
+
+        row = layout.row()
+        row.operator("latk_button.principled")
 
 class Latk_Button_Gpmesh(bpy.types.Operator):
     """Load Mesh Sequence"""
@@ -4222,7 +4239,7 @@ class Latk_Button_Gpmesh(bpy.types.Operator):
     
     def execute(self, context):
         latk_settings = bpy.context.scene.latk_settings
-        gpMesh(_thickness=latk_settings.thickness)
+        gpMesh(_thickness=latk_settings.thickness, _remesh=latk_settings.remesh_mode.lower(), _resolution=latk_settings.resolution, _bevelResolution=latk_settings.bevelResolution, _decimate=latk_settings.decimate, _vertexColorName=latk_settings.vertexColorName)
         return {'FINISHED'}
 
 class Latk_Button_Dn(bpy.types.Operator):
@@ -4243,6 +4260,16 @@ class Latk_Button_Splf(bpy.types.Operator):
     
     def execute(self, context):
         splf()
+        return {'FINISHED'}
+
+class Latk_Button_Principled(bpy.types.Operator):
+    """Load Mesh Sequence"""
+    bl_idname = "latk_button.principled"
+    bl_label = "All Mtl Principled"
+    bl_options = {'UNDO'}
+    
+    def execute(self, context):
+        setAllMtlShader()
         return {'FINISHED'}
 
 # ~ ~ ~ 
