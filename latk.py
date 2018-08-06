@@ -4210,33 +4210,30 @@ class LatkProperties_Panel(bpy.types.Panel):
         layout = self.layout
 
         scene = context.scene
-        gp = scene.freestyle_gpencil_export
-        freestyle = scene.render.layers.active.freestyle_settings
-
-        layout.active = (gp.use_freestyle_gpencil_export and freestyle.mode != 'SCRIPT')
+        latk = scene.latk_settings
 
         #row = layout.row()
         #row.prop(gp, "draw_mode", expand=True)
 
         row = layout.row()
-        row.prop(gp, "numColPlaces")
-        row.prop(gp, "numMaxColors")
+        row.prop(latk, "numColPlaces")
+        row.prop(latk, "numMaxColors")
 
         row = layout.row()
-        row.prop(gp, "use_fill")
-        row.prop(gp, "use_overwrite")
-        row.prop(gp, "doClearPalette")
+        row.prop(latk, "use_fill")
+        row.prop(latk, "use_overwrite")
+        row.prop(latk, "doClearPalette")
 
         row = layout.row()
-        row.prop(gp, "visible_only")
-        row.prop(gp, "use_connecting")
-        row.prop(gp, "vertexHitbox")
+        row.prop(latk, "visible_only")
+        row.prop(latk, "use_connecting")
+        row.prop(latk, "vertexHitbox")
 
         row = layout.row()
         row.operator("latk_button.load_mesh_sequence")
 
 
-class LoadMeshSequence(bpy.types.Operator):
+class Latk_Button_LoadMeshSequence(bpy.types.Operator):
     """Load Mesh Sequence"""
     bl_idname = "latk_button.load_mesh_sequence"
     bl_label = "Load Mesh Sequence"
@@ -4266,6 +4263,7 @@ def register():
 
     bpy.types.INFO_MT_file_import.append(menu_func_import)
     bpy.types.INFO_MT_file_export.append(menu_func_export)
+    bpy.types.Scene.latk_settings = bpy.props.CollectionProperty(type=LatkProperties)
 
     # freestyle
     #for cls in classes:
@@ -4282,6 +4280,7 @@ def unregister():
 
     bpy.types.INFO_MT_file_import.remove(menu_func_import)
     bpy.types.INFO_MT_file_export.remove(menu_func_export)
+    del bpy.types.Scene.latk_settings
 
     # freestyle
     #for cls in classes:
