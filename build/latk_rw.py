@@ -5,7 +5,7 @@ def exportAlembic(url="test.abc"):
 
 def exportForUnity(sketchFab=True):
     start, end = getStartEnd()
-    target = matchName("crv")
+    target = matchName("latk")
     sketchFabList = []
     sketchFabListNum = []
     for tt in range(0, len(target)):
@@ -17,7 +17,7 @@ def exportForUnity(sketchFab=True):
                 deselect()
                 target[tt].select=True
                 exportName = target[tt].name
-                exportName = exportName.split("crv_")[1]
+                exportName = exportName.split("latk_")[1]
                 exportName = exportName.split("_mesh")[0]
                 exporter(manualSelect=True, fileType="fbx", name=exportName, legacyFbx=True)
                 sketchFabList.append("0.083 " + exportName + ".fbx\r")

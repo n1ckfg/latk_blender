@@ -111,7 +111,7 @@ def texAllMtl(filePath="D://Asset Collections//Images//Element maps 2K//Plaster_
         texNode.location = [mapNode.location.x - 250, shaderNode.location.y]
 
 # TODO handle multiple materials on one mesh
-def searchMtl(color=None, name="crv"):
+def searchMtl(color=None, name="latk"):
     returns = []
     if not color:
         color = getActiveColor().color
@@ -122,7 +122,7 @@ def searchMtl(color=None, name="crv"):
     return returns
 
 # TODO handle multiple materials on one mesh
-def changeMtl(color=(1,1,0), searchColor=None, name="crv"):
+def changeMtl(color=(1,1,0), searchColor=None, name="latk"):
     if not searchColor:
         searchColor = getActiveColor().color       
     curves = searchMtl(color=searchColor, name=name)
@@ -146,7 +146,7 @@ def consolidateMtl():
                 pass
 
 # old version, can't handle multiple materials on one mesh
-def consolidateMtlAlt(name="crv"):
+def consolidateMtlAlt(name="latk"):
     palette = getActivePalette()
     for color in palette.colors:
         curves = searchMtl(color=color.color, name=name)

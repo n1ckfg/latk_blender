@@ -417,6 +417,25 @@ class LatkProperties(bpy.types.PropertyGroup):
         default="NONE"
     )
 
+    material_set_mode = EnumProperty(
+        name="Material Set Mode",
+        items=(
+            ("ALL", "All", "All materials", 0),
+            ("SELECTED", "Selected", "Selected materials", 1)
+        ),
+        default="ALL"
+    )
+
+    material_shader_mode = EnumProperty(
+        name="Material Shader Mode",
+        items=(
+            ("DIFFUSE", "Diffuse", "Diffuse shader", 0),
+            ("PRINCIPLED", "Principled", "Principled shader", 1),
+            ("EMISSION", "Emission", "Emission shader", 2)
+        ),
+        default="PRINCIPLED"
+    )
+
 # https://docs.blender.org/api/blender_python_api_2_78_release/bpy.types.Panel.html
 class LatkProperties_Panel(bpy.types.Panel):
     """Creates a Panel in the render context of the properties editor"""
@@ -459,12 +478,18 @@ class LatkProperties_Panel(bpy.types.Panel):
         row.operator("latk_button.dn")
 
         row = layout.row()
-        row.operator("latk_button.principled")
+        row.prop(latk, "material_set_mode")
+
+        row = layout.row()
+        row.prop(latk, "material_shader_mode")
+
+        row = layout.row()
+        row.operator("latk_button.mtlshader")
 
 class Latk_Button_Gpmesh(bpy.types.Operator):
     """Load Mesh Sequence"""
     bl_idname = "latk_button.gpmesh"
-    bl_label = "Mesh Strokes"
+    bl_label = "Mesh GP Strokes"
     bl_options = {'UNDO'}
     
     def execute(self, context):
@@ -475,31 +500,35 @@ class Latk_Button_Gpmesh(bpy.types.Operator):
 class Latk_Button_Dn(bpy.types.Operator):
     """Load Mesh Sequence"""
     bl_idname = "latk_button.dn"
-    bl_label = "Delete Strokes"
+    bl_label = "Delete Latk Meshes"
     bl_options = {'UNDO'}
     
     def execute(self, context):
-        deleteName("crv")
+        deleteName("latk")
         return {'FINISHED'}
 
 class Latk_Button_Splf(bpy.types.Operator):
     """Load Mesh Sequence"""
     bl_idname = "latk_button.splf"
-    bl_label = "Split Strokes"
+    bl_label = "Split GP Strokes"
     bl_options = {'UNDO'}
     
     def execute(self, context):
-        splf()
+        splitLayersAboveFrameLimit(20)
         return {'FINISHED'}
 
-class Latk_Button_Principled(bpy.types.Operator):
+class Latk_Button_MtlShader(bpy.types.Operator):
     """Load Mesh Sequence"""
-    bl_idname = "latk_button.principled"
-    bl_label = "All Mtl Principled"
+    bl_idname = "latk_button.mtlshader"
+    bl_label = "Set Material Shaders"
     bl_options = {'UNDO'}
     
     def execute(self, context):
-        setAllMtlShader()
+        latk_settings = bpy.context.scene.latk_settings
+        if (latk_settings.material_set_mode.lower() == "all"):
+            setAllMtlShader(latk_settings.material_shader_mode.lower())
+        elif (latk_settings.material_set_mode.lower() == "selected"):
+            setMtlShader(latk_settings.material_shader_mode.lower())
         return {'FINISHED'}
 
 # ~ ~ ~ 

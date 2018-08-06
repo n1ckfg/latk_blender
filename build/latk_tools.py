@@ -105,7 +105,7 @@ def bakeParentToChild(start=None, end=None):
     # https://www.blender.org/api/blender_python_api_2_72_1/bpy.ops.nla.html
     bpy.ops.nla.bake(frame_start=start, frame_end=end, step=1, only_selected=True, visual_keying=True, clear_constraints=True, clear_parents=True, use_current_action=True, bake_types={'OBJECT'})    
 
-def bakeParentToChildByName(name="crv"):
+def bakeParentToChildByName(name="latk"):
     start, end = getStartEnd()
     target = matchName(name)
     for obj in target:
@@ -182,7 +182,7 @@ def getChildren(target=None):
     # https://www.blender.org/forum/viewtopic.php?t=8661
     return [ob for ob in bpy.context.scene.objects if ob.parent == target]
 
-def groupName(name="crv", gName="myGroup"):
+def groupName(name="latk", gName="myGroup"):
     deselect()
     selectName(name)
     makeGroup(gName)
@@ -330,12 +330,12 @@ def sumPoints(stroke):
         z += co[2]
     return roundVal(x + y + z, 5)
 
-def renameCurves(name="mesh", nameMesh="crv_ob_mesh", nameCurve="crv"):
+def renameCurves(name="mesh", nameMesh="latk_ob_mesh", nameCurve="latk"):
     target = matchName(nameMesh)
     for i in range(0, len(target)):
         target[i].name = name + "_" + str(i)
 
-def deleteUnparentedCurves(name="crv"):
+def deleteUnparentedCurves(name="latk"):
     target = matchName(name)
     toDelete = []
     for i in range(0, len(target)):
@@ -432,13 +432,13 @@ def matchName(_name):
             returns.append(obj)
     return returns
 
-def selectName(_name="crv"):
+def selectName(_name="latk"):
     target = matchName(_name)
     deselect()
     for obj in target:
         obj.select = True
 
-def deleteName(_name="crv"):
+def deleteName(_name="latk"):
     target = matchName(_name)
     for obj in target:
         try:

@@ -141,7 +141,7 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
                     coords = [ (point.co.x, point.co.y, point.co.z) for point in stroke_points ]
                     pressures = [ point.pressure for point in stroke_points ]
                     #~
-                    crv_ob = makeCurve(name="crv_" + getLayerInfo(layer) + "_" + str(layer.frames[c].frame_number), coords=coords, pressures=pressures, curveType=_curveType, resolution=_resolution, thickness=_thickness, bevelResolution=_bevelResolution, parent=layer.parent, capsObj=capsObj, useUvs=_uvStroke, usePressure=_usePressure)
+                    latk_ob = makeCurve(name="latk_" + getLayerInfo(layer) + "_" + str(layer.frames[c].frame_number), coords=coords, pressures=pressures, curveType=_curveType, resolution=_resolution, thickness=_thickness, bevelResolution=_bevelResolution, parent=layer.parent, capsObj=capsObj, useUvs=_uvStroke, usePressure=_usePressure)
                     strokeColor = (0.5,0.5,0.5)
                     if (_useColors==True):
                         strokeColor = palette.colors[stroke.colorname].color
@@ -158,10 +158,10 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
                         if (mat == None):
                             mat = bpy.data.materials.new("share_mtl")
                             mat.diffuse_color = strokeColor  
-                    crv_ob.data.materials.append(mat)
+                    latk_ob.data.materials.append(mat)
                     # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ 
                     #~   
-                    bpy.context.scene.objects.active = crv_ob
+                    bpy.context.scene.objects.active = latk_ob
                     #~
                     # solidify replaced by curve bevel
                     if (_solidify==True):
@@ -182,7 +182,7 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
                     if (_bakeMesh==True): #or _remesh==True):
                         bpy.ops.object.modifier_add(type='DECIMATE')
                         bpy.context.object.modifiers["Decimate"].ratio = _decimate     
-                        meshObj = applyModifiers(crv_ob)
+                        meshObj = applyModifiers(latk_ob)
                         #~
                         if (_remesh != "none"):
                             meshObj = remesher(meshObj, mode=_remesh)
@@ -198,7 +198,7 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
                         #~ 
                         frameList.append(meshObj) 
                     else:
-                        frameList.append(crv_ob)    
+                        frameList.append(latk_ob)    
                     # * * * * * * * * * * * * * *
                     if (origParent != None):
                         makeParent([frameList[len(frameList)-1], origParent])
@@ -221,7 +221,7 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
                                 hideFrame(frameList[i], j, True)
                 #~
                 if (_joinMesh==True): 
-                    target = matchName("crv_" + getLayerInfo(layer))
+                    target = matchName("latk_" + getLayerInfo(layer))
                     for i in range(start, end):
                         strokesToJoin = []
                         if (i == layer.frames[c].frame_number):
@@ -237,12 +237,12 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
             #~
             if (_saveLayers==True):
                 deselect()
-                target = matchName("crv_" + getLayerInfo(layer))
+                target = matchName("latk_" + getLayerInfo(layer))
                 for tt in range(0, len(target)):
                     target[tt].select = True
                 print("* baking")
                 # * * * * *
-                bakeParentToChildByName("crv_" + getLayerInfo(layer))
+                bakeParentToChildByName("latk_" + getLayerInfo(layer))
                 # * * * * *
                 print("~ ~ ~ ~ ~ ~ ~ ~ ~")
                 #~
@@ -393,7 +393,7 @@ def setOrigin(target, point):
     bpy.ops.object.origin_set(type='ORIGIN_CURSOR')
     #bpy.context.scene.update()
 
-def writeOnMesh(step=1, name="crv"):
+def writeOnMesh(step=1, name="latk"):
     target = matchName(name)
     for i in range (0, len(target), step):
         if (i > len(target)-1):
@@ -444,7 +444,7 @@ def meshToGp(obj=None):
         points.append((finalPoint.x, finalPoint.z, finalPoint.y))
     drawPoints(points)
 
-def makeCurve(coords, pressures, resolution=2, thickness=0.1, bevelResolution=1, curveType="bezier", parent=None, capsObj=None, name="crv_ob", useUvs=True, usePressure=True):
+def makeCurve(coords, pressures, resolution=2, thickness=0.1, bevelResolution=1, curveType="bezier", parent=None, capsObj=None, name="latk_ob", useUvs=True, usePressure=True):
     # http://blender.stackexchange.com/questions/12201/bezier-spline-with-python-adds-unwanted-point
     # http://blender.stackexchange.com/questions/6750/poly-bezier-curve-from-a-list-of-coordinates
     # create the curve datablock
@@ -469,7 +469,7 @@ def makeCurve(coords, pressures, resolution=2, thickness=0.1, bevelResolution=1,
             #coords.append((vec.x, vec.y, vec.z))
     '''
     #~
-    curveData = bpy.data.curves.new('crv', type='CURVE')
+    curveData = bpy.data.curves.new('latk', type='CURVE')
     curveData.dimensions = '3D'
     curveData.fill_mode = 'FULL'
     curveData.resolution_u = resolution
@@ -500,16 +500,16 @@ def makeCurve(coords, pressures, resolution=2, thickness=0.1, bevelResolution=1,
             polyline.bezier_points[i].handle_left = polyline.bezier_points[i].handle_right = polyline.bezier_points[i].co
     #~
     # create object
-    crv_ob = bpy.data.objects.new(name, curveData)
+    latk_ob = bpy.data.objects.new(name, curveData)
     #~
     # attach to scene and validate context
     scn = bpy.context.scene
-    scn.objects.link(crv_ob)
-    scn.objects.active = crv_ob
-    crv_ob.select = True
+    scn.objects.link(latk_ob)
+    scn.objects.active = latk_ob
+    latk_ob.select = True
     if (useUvs==True):
-        crv_ob.data.use_uv_as_generated = True
-    return crv_ob
+        latk_ob.data.use_uv_as_generated = True
+    return latk_ob
 
 def createMesh(name, origin, verts, faces):
     bpy.ops.object.add(

@@ -53,7 +53,7 @@ def ss():
     return select()[0]
 
 def dn():
-    deleteName(_name="crv_ob")
+    deleteName(_name="latk_ob")
     deleteName(_name="caps_ob")
 
 c = changeColor
