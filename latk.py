@@ -4146,52 +4146,34 @@ class LatkProperties(bpy.types.PropertyGroup):
     """Implements the properties for the Freestyle to Grease Pencil exporter"""
     bl_idname = "GREASE_PENCIL_PT_LatkProperties"
 
-    '''
-    enable_latk = BoolProperty(
-        name="Lightning Artist Toolkit",
-        description="Enable Lightning Artist Toolkit",
+    thickness = FloatProperty(
+        name="Thickness",
+        description="Thickness",
+        default=0.1
     )
-    '''
 
-    use_fill = BoolProperty(
-        name="Fill",
-        description="Fill the contour with the object's material color",
-        default=False,
+    resolution = IntProperty(
+        name="Resolution",
+        description="Resolution",
+        default=1
     )
-    use_connecting = BoolProperty(
-        name="Connecting Strokes",
-        description="Connect all vertices with strokes",
-        default=False,
+
+    bevelResolution = IntProperty(
+        name="Bevel Resolution",
+        description="Bevel Resolution",
+        default=0
     )
-    visible_only = BoolProperty(
-        name="Visible Only",
-        description="Only render visible lines",
-        default=True,
+
+    decimate = FloatProperty(
+        name="Decimate",
+        description="Decimate",
+        default=0.1
     )
-    use_overwrite = BoolProperty(
-        name="Overwrite",
-        description="Remove the GPencil strokes from previous renders before a new render",
-        default=False,
-    )
-    vertexHitbox = FloatProperty(
-        name="Vertex Hitbox",
-        description="How close a GP stroke needs to be to a vertex",
-        default=1.5,
-    )
-    numColPlaces = IntProperty(
-        name="Color Places",
-        description="How many decimal places used to find matching colors",
-        default=5,
-    )
-    numMaxColors = IntProperty(
-        name="Max Colors",
-        description="How many colors are in the Grease Pencil palette",
-        default=16,
-    )
-    doClearPalette = BoolProperty(
-        name="Clear Palette",
-        description="Delete palette before beginning a new render",
-        default=False,
+
+    vertexColorName = StringProperty(
+        name="Vertex Color Name",
+        description="Vertex Color Name",
+        default="rgba"
     )
 
 # https://docs.blender.org/api/blender_python_api_2_78_release/bpy.types.Panel.html
@@ -4212,34 +4194,54 @@ class LatkProperties_Panel(bpy.types.Panel):
         scene = context.scene
         latk = scene.latk_settings
 
-        #row = layout.row()
-        #row.prop(gp, "draw_mode", expand=True)
+        row = layout.row()
+        row.prop(latk, "thickness")
+        row.prop(latk, "resolution")
 
         row = layout.row()
-        row.prop(latk, "numColPlaces")
-        row.prop(latk, "numMaxColors")
+        row.prop(latk, "bevelResolution")
+        row.prop(latk, "decimate")
 
         row = layout.row()
-        row.prop(latk, "use_fill")
-        row.prop(latk, "use_overwrite")
-        row.prop(latk, "doClearPalette")
+        row.prop(latk, "vertexColorName")
 
         row = layout.row()
-        row.prop(latk, "visible_only")
-        row.prop(latk, "use_connecting")
-        row.prop(latk, "vertexHitbox")
+        row.operator("latk_button.gpmesh")
 
         row = layout.row()
-        row.operator("latk_button.load_mesh_sequence")
+        row.operator("latk_button.splf")
 
+        row = layout.row()
+        row.operator("latk_button.dn")
 
-class Latk_Button_LoadMeshSequence(bpy.types.Operator):
+class Latk_Button_Gpmesh(bpy.types.Operator):
     """Load Mesh Sequence"""
-    bl_idname = "latk_button.load_mesh_sequence"
-    bl_label = "Load Mesh Sequence"
+    bl_idname = "latk_button.gpmesh"
+    bl_label = "Mesh Strokes"
     bl_options = {'UNDO'}
     
     def execute(self, context):
+        gpMesh()
+        return {'FINISHED'}
+
+class Latk_Button_Dn(bpy.types.Operator):
+    """Load Mesh Sequence"""
+    bl_idname = "latk_button.dn"
+    bl_label = "Delete Strokes"
+    bl_options = {'UNDO'}
+    
+    def execute(self, context):
+        deleteName("crv")
+        return {'FINISHED'}
+
+class Latk_Button_Splf(bpy.types.Operator):
+    """Load Mesh Sequence"""
+    bl_idname = "latk_button.splf"
+    bl_label = "Split Strokes"
+    bl_options = {'UNDO'}
+    
+    def execute(self, context):
+        splf()
         return {'FINISHED'}
 
 # ~ ~ ~ 
@@ -4263,7 +4265,7 @@ def register():
 
     bpy.types.INFO_MT_file_import.append(menu_func_import)
     bpy.types.INFO_MT_file_export.append(menu_func_export)
-    bpy.types.Scene.latk_settings = bpy.props.CollectionProperty(type=LatkProperties)
+    bpy.types.Scene.latk_settings = PointerProperty(type=LatkProperties)
 
     # freestyle
     #for cls in classes:
