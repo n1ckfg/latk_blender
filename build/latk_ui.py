@@ -269,6 +269,8 @@ class ExportPainter(bpy.types.Operator, ExportHelper):
         la.writePainter(**keywords)
         return {'FINISHED'} 
 
+# ~ ~ ~ 
+
 class FreestyleGPencil(bpy.types.PropertyGroup):
     """Implements the properties for the Freestyle to Grease Pencil exporter"""
     bl_idname = "RENDER_PT_gpencil_export"
@@ -307,7 +309,7 @@ class FreestyleGPencil(bpy.types.PropertyGroup):
     use_overwrite = BoolProperty(
         name="Overwrite",
         description="Remove the GPencil strokes from previous renders before a new render",
-        default=True,
+        default=False,
     )
     vertexHitbox = FloatProperty(
         name="Vertex Hitbox",
@@ -330,7 +332,7 @@ class FreestyleGPencil(bpy.types.PropertyGroup):
         default=False,
     )
 
-class SVGExporterPanel(bpy.types.Panel):
+class FreestyleGPencil_Panel(bpy.types.Panel):
     """Creates a Panel in the render context of the properties editor"""
     bl_idname = "RENDER_PT_FreestyleGPencilPanel"
     bl_space_type = 'PROPERTIES'
@@ -368,6 +370,113 @@ class SVGExporterPanel(bpy.types.Panel):
         row.prop(gp, "use_connecting")
         row.prop(gp, "vertexHitbox")
 
+# ~ ~ ~ 
+
+class LatkProperties(bpy.types.PropertyGroup):
+    """Implements the properties for the Freestyle to Grease Pencil exporter"""
+    bl_idname = "GREASE_PENCIL_PT_LatkProperties"
+
+    '''
+    enable_latk = BoolProperty(
+        name="Lightning Artist Toolkit",
+        description="Enable Lightning Artist Toolkit",
+    )
+    '''
+
+    use_fill = BoolProperty(
+        name="Fill",
+        description="Fill the contour with the object's material color",
+        default=False,
+    )
+    use_connecting = BoolProperty(
+        name="Connecting Strokes",
+        description="Connect all vertices with strokes",
+        default=False,
+    )
+    visible_only = BoolProperty(
+        name="Visible Only",
+        description="Only render visible lines",
+        default=True,
+    )
+    use_overwrite = BoolProperty(
+        name="Overwrite",
+        description="Remove the GPencil strokes from previous renders before a new render",
+        default=False,
+    )
+    vertexHitbox = FloatProperty(
+        name="Vertex Hitbox",
+        description="How close a GP stroke needs to be to a vertex",
+        default=1.5,
+    )
+    numColPlaces = IntProperty(
+        name="Color Places",
+        description="How many decimal places used to find matching colors",
+        default=5,
+    )
+    numMaxColors = IntProperty(
+        name="Max Colors",
+        description="How many colors are in the Grease Pencil palette",
+        default=16,
+    )
+    doClearPalette = BoolProperty(
+        name="Clear Palette",
+        description="Delete palette before beginning a new render",
+        default=False,
+    )
+
+# https://docs.blender.org/api/blender_python_api_2_78_release/bpy.types.Panel.html
+class LatkProperties_Panel(bpy.types.Panel):
+    """Creates a Panel in the render context of the properties editor"""
+    bl_idname = "GREASE_PENCIL_PT_LatkPropertiesPanel"
+    bl_space_type = 'VIEW_3D'
+    bl_label = "Lightning Artist Toolkit"
+    bl_region_type = 'UI'
+    bl_context = "object"
+
+    #def draw_header(self, context):
+        #self.layout.prop(context.scene.freestyle_gpencil_export, "enable_latk", text="")
+
+    def draw(self, context):
+        layout = self.layout
+
+        scene = context.scene
+        gp = scene.freestyle_gpencil_export
+        freestyle = scene.render.layers.active.freestyle_settings
+
+        layout.active = (gp.use_freestyle_gpencil_export and freestyle.mode != 'SCRIPT')
+
+        #row = layout.row()
+        #row.prop(gp, "draw_mode", expand=True)
+
+        row = layout.row()
+        row.prop(gp, "numColPlaces")
+        row.prop(gp, "numMaxColors")
+
+        row = layout.row()
+        row.prop(gp, "use_fill")
+        row.prop(gp, "use_overwrite")
+        row.prop(gp, "doClearPalette")
+
+        row = layout.row()
+        row.prop(gp, "visible_only")
+        row.prop(gp, "use_connecting")
+        row.prop(gp, "vertexHitbox")
+
+        row = layout.row()
+        row.operator("latk_button.load_mesh_sequence")
+
+
+class LoadMeshSequence(bpy.types.Operator):
+    """Load Mesh Sequence"""
+    bl_idname = "latk_button.load_mesh_sequence"
+    bl_label = "Load Mesh Sequence"
+    bl_options = {'UNDO'}
+    
+    def execute(self, context):
+        return {'FINISHED'}
+
+# ~ ~ ~ 
+
 def menu_func_import(self, context):
     self.layout.operator(ImportLatk.bl_idname, text="Latk Animation (.latk, .json)")
     self.layout.operator(ImportGml.bl_idname, text="Latk - GML (.gml)")
@@ -380,7 +489,7 @@ def menu_func_export(self, context):
     self.layout.operator(ExportSvg.bl_idname, text="Latk - SVG SMIL (.svg)")
     self.layout.operator(ExportPainter.bl_idname, text="Latk - Corel Painter (.txt)")
 
-#classes = (FreestyleGPencil, SVGExporterPanel)
+#classes = (FreestyleGPencil, FreestyleGPencil_Panel)
 
 def register():
     bpy.utils.register_module(__name__)
