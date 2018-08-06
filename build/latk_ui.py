@@ -451,7 +451,8 @@ class Latk_Button_Gpmesh(bpy.types.Operator):
     bl_options = {'UNDO'}
     
     def execute(self, context):
-        gpMesh()
+        latk_settings = bpy.context.scene.latk_settings
+        gpMesh(_thickness=latk_settings.thickness)
         return {'FINISHED'}
 
 class Latk_Button_Dn(bpy.types.Operator):
@@ -505,7 +506,7 @@ def register():
     parameter_editor.callbacks_lineset_pre.append(export_fill)
     parameter_editor.callbacks_lineset_post.append(export_stroke)
     # bpy.app.handlers.render_post.append(export_stroke)
-    print("anew")
+    #print("anew")
 
 def unregister():
     bpy.utils.unregister_module(__name__)
