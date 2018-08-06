@@ -1,4 +1,4 @@
-TARGET=/home/nick/Desktop/test003.blend
+TARGET=/Users/nick/Sync/Jenny/02_production/blender/main014.blend
 
 SOURCE="${BASH_SOURCE[0]}"
 while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symlink
@@ -10,5 +10,5 @@ DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 
 cd $DIR
 
-"$HOME/Applications/blender/blender" $TARGET --background --python mesh_final.py
+/Applications/blender/blender.app/Contents/MacOS/blender $TARGET --background --python mesh_settings.py
 
