@@ -376,33 +376,45 @@ class LatkProperties(bpy.types.PropertyGroup):
     """Implements the properties for the Freestyle to Grease Pencil exporter"""
     bl_idname = "GREASE_PENCIL_PT_LatkProperties"
 
+    bakeMesh = BoolProperty(
+    	name="Bake Mesh",
+    	description="Bake generated curve to mesh",
+    	default=True
+    )
+
+    saveLayers = BoolProperty(
+    	name="Save Layers",
+    	description="Save every layer to its own file",
+    	default=False
+    )
+
     thickness = FloatProperty(
         name="Thickness",
-        description="Thickness",
+        description="Tube mesh thickness",
         default=0.1
     )
 
     resolution = IntProperty(
         name="Resolution",
-        description="Resolution",
+        description="Tube mesh resolution",
         default=1
     )
 
     bevelResolution = IntProperty(
         name="Bevel Resolution",
-        description="Bevel Resolution",
+        description="Tube mesh bevel resolution",
         default=0
     )
 
     decimate = FloatProperty(
         name="Decimate",
-        description="Decimate",
+        description="Decimate mesh",
         default=0.1
     )
 
     vertexColorName = StringProperty(
-        name="Vertex Color Name",
-        description="Vertex Color Name",
+        name="Vertex Color",
+        description="Vertex color name for export",
         default="rgba"
     )
 
@@ -418,7 +430,7 @@ class LatkProperties(bpy.types.PropertyGroup):
     )
 
     material_set_mode = EnumProperty(
-        name="Material Set Mode",
+        name="Material Set",
         items=(
             ("ALL", "All", "All materials", 0),
             ("SELECTED", "Selected", "Selected materials", 1)
@@ -427,11 +439,11 @@ class LatkProperties(bpy.types.PropertyGroup):
     )
 
     material_shader_mode = EnumProperty(
-        name="Material Shader Mode",
+        name="Shader",
         items=(
             ("DIFFUSE", "Diffuse", "Diffuse shader", 0),
-            ("PRINCIPLED", "Principled", "Principled shader", 1),
-            ("EMISSION", "Emission", "Emission shader", 2)
+            #("EMISSION", "Emission", "Emission shader", 1),
+            ("PRINCIPLED", "Principled", "Principled shader", 1) #2)
         ),
         default="PRINCIPLED"
     )
@@ -455,6 +467,23 @@ class LatkProperties_Panel(bpy.types.Panel):
         latk = scene.latk_settings
 
         row = layout.row()
+        row.operator("latk_button.gpmesh_singleframe")
+        row.operator("latk_button.dn")
+
+        row = layout.row()
+        row.operator("latk_button.splf")
+        row.operator("latk_button.gpmesh")
+
+        row = layout.row()
+        row.prop(latk, "material_set_mode")
+        row.prop(latk, "material_shader_mode")
+
+        row = layout.row()
+        row.operator("latk_button.mtlshader")
+
+        # ~ ~ ~ 
+
+        row = layout.row()
         row.prop(latk, "thickness")
         row.prop(latk, "resolution")
 
@@ -464,43 +493,38 @@ class LatkProperties_Panel(bpy.types.Panel):
 
         row = layout.row()
         row.prop(latk, "vertexColorName")
-
-        row = layout.row()
         row.prop(latk, "remesh_mode")
 
         row = layout.row()
-        row.operator("latk_button.gpmesh")
-
-        row = layout.row()
-        row.operator("latk_button.splf")
-
-        row = layout.row()
-        row.operator("latk_button.dn")
-
-        row = layout.row()
-        row.prop(latk, "material_set_mode")
-
-        row = layout.row()
-        row.prop(latk, "material_shader_mode")
-
-        row = layout.row()
-        row.operator("latk_button.mtlshader")
+        row.prop(latk, "bakeMesh")
+        row.prop(latk, "saveLayers")
 
 class Latk_Button_Gpmesh(bpy.types.Operator):
-    """Load Mesh Sequence"""
+    """Mesh all GP strokes"""
     bl_idname = "latk_button.gpmesh"
-    bl_label = "Mesh GP Strokes"
+    bl_label = "MESH ALL"
     bl_options = {'UNDO'}
     
     def execute(self, context):
         latk_settings = bpy.context.scene.latk_settings
-        gpMesh(_thickness=latk_settings.thickness, _remesh=latk_settings.remesh_mode.lower(), _resolution=latk_settings.resolution, _bevelResolution=latk_settings.bevelResolution, _decimate=latk_settings.decimate, _vertexColorName=latk_settings.vertexColorName)
+        gpMesh(_thickness=latk_settings.thickness, _remesh=latk_settings.remesh_mode.lower(), _resolution=latk_settings.resolution, _bevelResolution=latk_settings.bevelResolution, _decimate=latk_settings.decimate, _bakeMesh=latk_settings.bakeMesh, _joinMesh=latk_settings.bakeMesh, _saveLayers=latk_settings.saveLayers, _vertexColorName=latk_settings.vertexColorName)
+        return {'FINISHED'}
+
+class Latk_Button_Gpmesh_SingleFrame(bpy.types.Operator):
+    """Mesh a single frame"""
+    bl_idname = "latk_button.gpmesh_singleframe"
+    bl_label = "Mesh Frame"
+    bl_options = {'UNDO'}
+    
+    def execute(self, context):
+        latk_settings = bpy.context.scene.latk_settings
+        gpMesh(_singleFrame=True, _animateFrames=False, _thickness=latk_settings.thickness, _remesh=latk_settings.remesh_mode.lower(), _resolution=latk_settings.resolution, _bevelResolution=latk_settings.bevelResolution, _decimate=latk_settings.decimate, _bakeMesh=latk_settings.bakeMesh, _joinMesh=latk_settings.bakeMesh, _saveLayers=latk_settings.saveLayers, _vertexColorName=latk_settings.vertexColorName)
         return {'FINISHED'}
 
 class Latk_Button_Dn(bpy.types.Operator):
-    """Load Mesh Sequence"""
+    """Delete generated meshes"""
     bl_idname = "latk_button.dn"
-    bl_label = "Delete Latk Meshes"
+    bl_label = "Delete All"
     bl_options = {'UNDO'}
     
     def execute(self, context):
@@ -508,9 +532,9 @@ class Latk_Button_Dn(bpy.types.Operator):
         return {'FINISHED'}
 
 class Latk_Button_Splf(bpy.types.Operator):
-    """Load Mesh Sequence"""
+    """Split GP stroke layers"""
     bl_idname = "latk_button.splf"
-    bl_label = "Split GP Strokes"
+    bl_label = "Split Layers"
     bl_options = {'UNDO'}
     
     def execute(self, context):
@@ -518,7 +542,7 @@ class Latk_Button_Splf(bpy.types.Operator):
         return {'FINISHED'}
 
 class Latk_Button_MtlShader(bpy.types.Operator):
-    """Load Mesh Sequence"""
+    """Set Material Shaders"""
     bl_idname = "latk_button.mtlshader"
     bl_label = "Set Material Shaders"
     bl_options = {'UNDO'}

@@ -277,12 +277,13 @@ def gpMeshCleanup(target):
     removeGroup(target, allGroups=True)
     dn()
 
-def remesher(obj, bake=True, mode="blocks", octree=6, threshold=0.0001, smoothShade=False):
+def remesher(obj, bake=True, mode="blocks", octree=6, threshold=0.0001, smoothShade=False, removeDisconnected=False):
         bpy.context.scene.objects.active = obj
         bpy.ops.object.modifier_add(type="REMESH")
         bpy.context.object.modifiers["Remesh"].mode = mode.upper() #sharp, smooth, blocks
         bpy.context.object.modifiers["Remesh"].octree_depth = octree
         bpy.context.object.modifiers["Remesh"].use_smooth_shade = int(smoothShade)
+        bpy.context.object.modifiers["Remesh"].use_remove_disconnected = int(removeDisconnected)
         bpy.context.object.modifiers["Remesh"].threshold = threshold
         if (bake==True):
             return applyModifiers(obj)     

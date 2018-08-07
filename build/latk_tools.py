@@ -411,6 +411,7 @@ def delete(_obj=None):
     if not _obj:
         _obj = ss()
     bpy.ops.object.select_all(action='DESELECT')
+    bpy.data.objects[_obj.name].hide = False
     bpy.data.objects[_obj.name].select = True
     bpy.ops.object.delete()
     gc.collect()
@@ -731,6 +732,7 @@ def blankFrame(layer=None, frame=None):
     except:
         pass
 
+'''
 def getActiveFrameNum():
     returns = -1
     layer = getActiveLayer()
@@ -738,6 +740,7 @@ def getActiveFrameNum():
         if (frame == layer.active_frame):
             returns = i
     return returns
+'''
 
 def getActiveFrameTimelineNum():
     return getActiveLayer().frames[getActiveFrameNum()].frame_number
