@@ -377,8 +377,8 @@ class LatkProperties(bpy.types.PropertyGroup):
     bl_idname = "GREASE_PENCIL_PT_LatkProperties"
 
     bakeMesh = BoolProperty(
-    	name="Bake Mesh",
-    	description="Bake generated curve to mesh",
+    	name="Bake Curves",
+    	description="Bake generated curves to mesh",
     	default=True
     )
 
@@ -468,11 +468,14 @@ class LatkProperties_Panel(bpy.types.Panel):
 
         row = layout.row()
         row.operator("latk_button.gpmesh_singleframe")
+        
+        row = layout.row()
         row.operator("latk_button.dn")
+        row.operator("latk_button.gpmesh")
 
         row = layout.row()
         row.operator("latk_button.splf")
-        row.operator("latk_button.gpmesh")
+        row.operator("latk_button.bakeselected")
 
         row = layout.row()
         row.prop(latk, "material_set_mode")
@@ -508,6 +511,17 @@ class Latk_Button_Gpmesh(bpy.types.Operator):
     def execute(self, context):
         latk_settings = bpy.context.scene.latk_settings
         gpMesh(_thickness=latk_settings.thickness, _remesh=latk_settings.remesh_mode.lower(), _resolution=latk_settings.resolution, _bevelResolution=latk_settings.bevelResolution, _decimate=latk_settings.decimate, _bakeMesh=latk_settings.bakeMesh, _joinMesh=latk_settings.bakeMesh, _saveLayers=latk_settings.saveLayers, _vertexColorName=latk_settings.vertexColorName)
+        return {'FINISHED'}
+
+class Latk_Button_BakeSelected(bpy.types.Operator):
+    """Mesh all GP strokes"""
+    bl_idname = "latk_button.bakeselected"
+    bl_label = "Bake Selected"
+    bl_options = {'UNDO'}
+    
+    def execute(self, context):
+        latk_settings = bpy.context.scene.latk_settings
+        decimateAndBake(_decimate=latk_settings.decimate)
         return {'FINISHED'}
 
 class Latk_Button_Gpmesh_SingleFrame(bpy.types.Operator):

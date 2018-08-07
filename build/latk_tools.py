@@ -908,6 +908,15 @@ def compareTuple(t1, t2, numPlaces=5):
     else:
         return False
 
+def setActiveObject(target=None):
+    if not target:
+        target = ss()
+    bpy.context.scene.objects.active = target
+    return target
+
+def getActiveObject():
+    return bpy.context.scene.objects.active
+
 def deleteFromAllFrames():
     origStrokes = []
     frame = getActiveFrame()

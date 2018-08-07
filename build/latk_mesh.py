@@ -277,6 +277,15 @@ def gpMeshCleanup(target):
     removeGroup(target, allGroups=True)
     dn()
 
+def decimateAndBake(target=None, _decimate=0.1):
+    if not target:
+        target = s()
+    for obj in target:
+        setActiveObject(obj)
+        bpy.ops.object.modifier_add(type='DECIMATE')
+        bpy.context.object.modifiers["Decimate"].ratio = _decimate     
+        meshObj = applyModifiers(obj)
+
 def remesher(obj, bake=True, mode="blocks", octree=6, threshold=0.0001, smoothShade=False, removeDisconnected=False):
         bpy.context.scene.objects.active = obj
         bpy.ops.object.modifier_add(type="REMESH")
