@@ -104,6 +104,9 @@ def readTextFile(name="text.txt"):
     file = open(name, "r") 
     return file.read() 
 
+def newFile():
+    bpy.ops.wm.read_homefile()
+
 def saveFile(name, format=True):
     if (format==True):
         name = getFilePath() + name + ".blend"

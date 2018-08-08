@@ -277,7 +277,7 @@ class FreestyleGPencil(bpy.types.PropertyGroup):
 
     use_freestyle_gpencil_export = BoolProperty(
         name="Grease Pencil Export",
-        description="Export Freestyle edges to Grease Pencil",
+        description="Export Freestyle edges to Grease Pencil"
     )
     '''
     draw_mode = EnumProperty(
@@ -288,33 +288,33 @@ class FreestyleGPencil(bpy.types.PropertyGroup):
             # ('2DIMAGE', "2D Image", "", 2),
             ('SCREEN', "Screen", "", 3),
             ),
-        default='3DSPACE',
+        default='3DSPACE'
     )
     '''
     use_fill = BoolProperty(
         name="Fill",
         description="Fill the contour with the object's material color",
-        default=False,
+        default=False
     )
     use_connecting = BoolProperty(
         name="Connecting Strokes",
         description="Connect all vertices with strokes",
-        default=False,
+        default=False
     )
     visible_only = BoolProperty(
         name="Visible Only",
         description="Only render visible lines",
-        default=True,
+        default=True
     )
     use_overwrite = BoolProperty(
         name="Overwrite",
         description="Remove the GPencil strokes from previous renders before a new render",
-        default=False,
+        default=False
     )
     vertexHitbox = FloatProperty(
         name="Vertex Hitbox",
         description="How close a GP stroke needs to be to a vertex",
-        default=1.5,
+        default=1.5
     )
     numColPlaces = IntProperty(
         name="Color Places",
@@ -324,12 +324,12 @@ class FreestyleGPencil(bpy.types.PropertyGroup):
     numMaxColors = IntProperty(
         name="Max Colors",
         description="How many colors are in the Grease Pencil palette",
-        default=16,
+        default=16
     )
     doClearPalette = BoolProperty(
         name="Clear Palette",
         description="Delete palette before beginning a new render",
-        default=False,
+        default=False
     )
 
 class FreestyleGPencil_Panel(bpy.types.Panel):
@@ -410,6 +410,12 @@ class LatkProperties(bpy.types.PropertyGroup):
         name="Decimate",
         description="Decimate mesh",
         default=0.1
+    )
+
+    numSplitFrames = IntProperty(
+        name="Split Frames",
+        description="Split layers if they have more than this many frames",
+        default=20
     )
 
     vertexColorName = StringProperty(
@@ -501,6 +507,7 @@ class LatkProperties_Panel(bpy.types.Panel):
         row = layout.row()
         row.prop(latk, "bakeMesh")
         row.prop(latk, "saveLayers")
+        row.prop(latk, "numSplitFrames")
 
 class Latk_Button_Gpmesh(bpy.types.Operator):
     """Mesh all GP strokes"""
@@ -529,7 +536,7 @@ class Latk_Button_Gpmesh_SingleFrame(bpy.types.Operator):
     bl_idname = "latk_button.gpmesh_singleframe"
     bl_label = "Mesh Frame"
     bl_options = {'UNDO'}
-    
+
     def execute(self, context):
         latk_settings = bpy.context.scene.latk_settings
         gpMesh(_singleFrame=True, _animateFrames=False, _thickness=latk_settings.thickness, _remesh=latk_settings.remesh_mode.lower(), _resolution=latk_settings.resolution, _bevelResolution=latk_settings.bevelResolution, _decimate=latk_settings.decimate, _bakeMesh=latk_settings.bakeMesh, _joinMesh=latk_settings.bakeMesh, _saveLayers=latk_settings.saveLayers, _vertexColorName=latk_settings.vertexColorName)
@@ -552,7 +559,8 @@ class Latk_Button_Splf(bpy.types.Operator):
     bl_options = {'UNDO'}
     
     def execute(self, context):
-        splitLayersAboveFrameLimit(20)
+        latk_settings = bpy.context.scene.latk_settings
+        splitLayersAboveFrameLimit(latk_settings.numSplitFrames)
         return {'FINISHED'}
 
 class Latk_Button_MtlShader(bpy.types.Operator):
