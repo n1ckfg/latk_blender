@@ -377,7 +377,7 @@ class LatkProperties(bpy.types.PropertyGroup):
     bl_idname = "GREASE_PENCIL_PT_LatkProperties"
 
     bakeMesh = BoolProperty(
-    	name="Bake Curves",
+    	name="Auto Bake Curves",
     	description="Bake generated curves to mesh",
     	default=True
     )
@@ -418,6 +418,12 @@ class LatkProperties(bpy.types.PropertyGroup):
         default=20
     )
 
+    writeStrokeSteps = IntProperty(
+        name="Write-On Steps",
+        description="Write-on steps",
+        default=10
+    )
+
     vertexColorName = StringProperty(
         name="Vertex Color",
         description="Vertex color name for export",
@@ -427,7 +433,7 @@ class LatkProperties(bpy.types.PropertyGroup):
     remesh_mode = EnumProperty(
         name="Remesh Mode",
         items=(
-            ("NONE", "None", "No remeshing", 0),
+            ("NONE", "No Remesh", "No remeshing curves", 0),
             ("SHARP", "Sharp", "Sharp remesh", 1),
             ("SMOOTH", "Smooth", "Smooth remesh", 2),
             ("BLOCKS", "Blocks", "Blocks remesh", 3)
@@ -483,18 +489,15 @@ class LatkProperties_Panel(bpy.types.Panel):
         row.prop(latk, "bevelResolution")
         row.prop(latk, "decimate")
 
-        # ~ ~ ~ 
-
         row = layout.row()
         row.operator("latk_button.gpmesh")
         row.operator("latk_button.dn")
 
         row = layout.row()
-        row.operator("latk_button.bakeselected")
-        row.prop(latk, "remesh_mode")
+        row.prop(latk, "remesh_mode", expand=True)
 
         # ~ ~ ~ 
-        
+
         row = layout.row()
         row.operator("latk_button.mtlshader")
 
@@ -504,14 +507,22 @@ class LatkProperties_Panel(bpy.types.Panel):
 
         # ~ ~ ~ 
 
-        row = layout.row()
-        row.operator("latk_button.splf")
-        row.prop(latk, "numSplitFrames")
+        #row = layout.row()
+        #row.prop(latk, "writeStrokeSteps")
+        #row.operator("latk_button.writeonstrokes")
 
         row = layout.row()
-        row.prop(latk, "vertexColorName")
+        row.prop(latk, "numSplitFrames")
+        row.operator("latk_button.splf")
+
+        row = layout.row()
+        row.operator("latk_button.bakeselected")
+        row.operator("latk_button.bakeall")
+
+        row = layout.row()
         row.prop(latk, "bakeMesh")
         row.prop(latk, "saveLayers")
+        row.prop(latk, "vertexColorName")
 
 class Latk_Button_Gpmesh(bpy.types.Operator):
     """Mesh all GP strokes"""
@@ -524,15 +535,38 @@ class Latk_Button_Gpmesh(bpy.types.Operator):
         gpMesh(_thickness=latk_settings.thickness, _remesh=latk_settings.remesh_mode.lower(), _resolution=latk_settings.resolution, _bevelResolution=latk_settings.bevelResolution, _decimate=latk_settings.decimate, _bakeMesh=latk_settings.bakeMesh, _joinMesh=latk_settings.bakeMesh, _saveLayers=False, _vertexColorName=latk_settings.vertexColorName)
         return {'FINISHED'}
 
+class Latk_Button_WriteOnStrokes(bpy.types.Operator):
+    """Mesh all GP strokes"""
+    bl_idname = "latk_button.writeonstrokes"
+    bl_label = "Write-On"
+    bl_options = {'UNDO'}
+    
+    def execute(self, context):
+        latk_settings = bpy.context.scene.latk_settings
+        writeOnStrokes(step=latk_settings.writeStrokeSteps)
+        return {'FINISHED'}
+
 class Latk_Button_BakeSelected(bpy.types.Operator):
     """Mesh all GP strokes"""
     bl_idname = "latk_button.bakeselected"
-    bl_label = "Bake Selected"
+    bl_label = "Bake Curve"
     bl_options = {'UNDO'}
     
     def execute(self, context):
         latk_settings = bpy.context.scene.latk_settings
         decimateAndBake(_decimate=latk_settings.decimate)
+        return {'FINISHED'}
+
+class Latk_Button_BakeAllCurves(bpy.types.Operator):
+    """Mesh all GP strokes"""
+    bl_idname = "latk_button.bakeall"
+    bl_label = "Bake All Curves"
+    bl_options = {'UNDO'}
+    
+    def execute(self, context):
+        latk_settings = bpy.context.scene.latk_settings
+        target = matchName("latk")
+        decimateAndBake(target, _decimate=latk_settings.decimate)
         return {'FINISHED'}
 
 class Latk_Button_Gpmesh_SingleFrame(bpy.types.Operator):
