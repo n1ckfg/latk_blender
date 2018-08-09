@@ -3234,11 +3234,11 @@ def distributeStrokes(pointStep=10, step=1, minPointStep=2):
 
 #ds = distributeStrokes
 
-def writeOnStrokes(step=10):
+def writeOnStrokes(pointStep=10, step=1):
     gp = getActiveGp()
     for i in range(0, len(gp.layers)):
         gp.layers.active_index = i
-        distributeStrokes(step=step)
+        distributeStrokes(pointStep=pointStep, step=step)
 
 def makeLine(p1, p2):
     return drawPoints([p1, p2])
@@ -4215,8 +4215,14 @@ class LatkProperties(bpy.types.PropertyGroup):
     )
 
     writeStrokeSteps = IntProperty(
-        name="Write-On Steps",
+        name="Steps",
         description="Write-on steps",
+        default=1
+    )
+
+    writeStrokePoints = IntProperty(
+        name="Points",
+        description="Write-on points per step",
         default=10
     )
 
@@ -4303,9 +4309,10 @@ class LatkProperties_Panel(bpy.types.Panel):
 
         # ~ ~ ~ 
 
-        #row = layout.row()
-        #row.prop(latk, "writeStrokeSteps")
-        #row.operator("latk_button.writeonstrokes")
+        row = layout.row()
+        row.prop(latk, "writeStrokeSteps")
+        row.prop(latk, "writeStrokePoints")
+        row.operator("latk_button.writeonstrokes")
 
         row = layout.row()
         row.prop(latk, "numSplitFrames")
@@ -4332,18 +4339,18 @@ class Latk_Button_Gpmesh(bpy.types.Operator):
         return {'FINISHED'}
 
 class Latk_Button_WriteOnStrokes(bpy.types.Operator):
-    """Mesh all GP strokes"""
+    """Sequence write-on strokes"""
     bl_idname = "latk_button.writeonstrokes"
     bl_label = "Write-On"
     bl_options = {'UNDO'}
     
     def execute(self, context):
         latk_settings = bpy.context.scene.latk_settings
-        writeOnStrokes(step=latk_settings.writeStrokeSteps)
+        writeOnStrokes(step=latk_settings.writeStrokeSteps, pointStep=latk_settings.writeStrokePoints)
         return {'FINISHED'}
 
 class Latk_Button_BakeSelected(bpy.types.Operator):
-    """Mesh all GP strokes"""
+    """Bake selected curves to meshes"""
     bl_idname = "latk_button.bakeselected"
     bl_label = "Bake Curve"
     bl_options = {'UNDO'}
@@ -4354,7 +4361,7 @@ class Latk_Button_BakeSelected(bpy.types.Operator):
         return {'FINISHED'}
 
 class Latk_Button_BakeAllCurves(bpy.types.Operator):
-    """Mesh all GP strokes"""
+    """Bake all curves to meshes"""
     bl_idname = "latk_button.bakeall"
     bl_label = "Bake All Curves"
     bl_options = {'UNDO'}

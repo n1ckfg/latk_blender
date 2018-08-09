@@ -419,8 +419,14 @@ class LatkProperties(bpy.types.PropertyGroup):
     )
 
     writeStrokeSteps = IntProperty(
-        name="Write-On Steps",
+        name="Steps",
         description="Write-on steps",
+        default=1
+    )
+
+    writeStrokePoints = IntProperty(
+        name="Points",
+        description="Write-on points per step",
         default=10
     )
 
@@ -507,9 +513,10 @@ class LatkProperties_Panel(bpy.types.Panel):
 
         # ~ ~ ~ 
 
-        #row = layout.row()
-        #row.prop(latk, "writeStrokeSteps")
-        #row.operator("latk_button.writeonstrokes")
+        row = layout.row()
+        row.prop(latk, "writeStrokeSteps")
+        row.prop(latk, "writeStrokePoints")
+        row.operator("latk_button.writeonstrokes")
 
         row = layout.row()
         row.prop(latk, "numSplitFrames")
@@ -536,18 +543,18 @@ class Latk_Button_Gpmesh(bpy.types.Operator):
         return {'FINISHED'}
 
 class Latk_Button_WriteOnStrokes(bpy.types.Operator):
-    """Mesh all GP strokes"""
+    """Sequence write-on strokes"""
     bl_idname = "latk_button.writeonstrokes"
     bl_label = "Write-On"
     bl_options = {'UNDO'}
     
     def execute(self, context):
         latk_settings = bpy.context.scene.latk_settings
-        writeOnStrokes(step=latk_settings.writeStrokeSteps)
+        writeOnStrokes(step=latk_settings.writeStrokeSteps, pointStep=latk_settings.writeStrokePoints)
         return {'FINISHED'}
 
 class Latk_Button_BakeSelected(bpy.types.Operator):
-    """Mesh all GP strokes"""
+    """Bake selected curves to meshes"""
     bl_idname = "latk_button.bakeselected"
     bl_label = "Bake Curve"
     bl_options = {'UNDO'}
@@ -558,7 +565,7 @@ class Latk_Button_BakeSelected(bpy.types.Operator):
         return {'FINISHED'}
 
 class Latk_Button_BakeAllCurves(bpy.types.Operator):
-    """Mesh all GP strokes"""
+    """Bake all curves to meshes"""
     bl_idname = "latk_button.bakeall"
     bl_label = "Bake All Curves"
     bl_options = {'UNDO'}

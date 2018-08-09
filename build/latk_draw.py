@@ -183,11 +183,11 @@ def distributeStrokes(pointStep=10, step=1, minPointStep=2):
 
 #ds = distributeStrokes
 
-def writeOnStrokes(step=10):
+def writeOnStrokes(pointStep=10, step=1):
     gp = getActiveGp()
     for i in range(0, len(gp.layers)):
         gp.layers.active_index = i
-        distributeStrokes(step=step)
+        distributeStrokes(pointStep=pointStep, step=step)
 
 def makeLine(p1, p2):
     return drawPoints([p1, p2])
