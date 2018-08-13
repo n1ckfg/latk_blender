@@ -2667,6 +2667,12 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
                             joinObjects(strokesToJoin)
                             print("~ ~ ~ ~ ~ ~ ~ ~ ~")
             #~
+            deselect()
+            target = matchName("latk_" + getLayerInfo(layer))
+            for tt in range(0, len(target)):
+                target[tt].select = True            
+            centerOrigin(target[tt])
+            #~
             if (_saveLayers==True):
                 deselect()
                 target = matchName("latk_" + getLayerInfo(layer))
@@ -2689,7 +2695,8 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
                 #~
                 gpMeshCleanup(getLayerInfo(layer))
     #~
-    if (_bakeMesh==True and _caps==True and _saveLayers==False):
+    #if (_bakeMesh==True and _caps==True and _saveLayers==False):
+    if (_caps==True):
         delete(capsObj)
     #~
     if (_saveLayers==True):
