@@ -62,6 +62,11 @@ def lookAt(looker, lookee):
     #~
     # assume we're using euler rotation
     looker.rotation_euler = rot_quat.to_euler()
+
+def centerPivot(target=None):
+    if not target:
+        target = ss()
+    bpy.ops.object.origin_set(type="ORIGIN_GEOMETRY")
     
 def getLayerInfo(layer):
     return layer.info.split(".")[0]
