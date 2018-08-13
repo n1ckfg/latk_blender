@@ -588,9 +588,28 @@ def hideFrameByScale(_obj, _frame, _hide):
         _obj.scale = [hideScaleVal, hideScaleVal, hideScaleVal]
     else:
         _obj.scale = [showScaleVal, showScaleVal, showScaleVal]
-    #_obj.keyframe_insert(data_path="location", frame=_frame)
-    #_obj.keyframe_insert(data_path="rotation_quaternion", frame=_frame)
+    _obj.keyframe_insert(data_path="location", frame=_frame)
+    _obj.keyframe_insert(data_path="rotation_quaternion", frame=_frame)
     _obj.keyframe_insert(data_path="scale", frame=_frame)
+    if (_obj.hide == True):
+        _obj.hide = False
+        _obj.keyframe_insert(data_path="hide", frame=_frame)
+    if (_obj.hide_render == True):
+        _obj.hide_render = False
+        _obj.keyframe_insert(data_path="hide_render", frame=_frame)
+    
+def deleteAnimationPath(target=None, paths=["hide", "hide_render"]):
+    if not target:
+        target = ss()
+    fcurves = target.animation_data.action.fcurves
+    curves_to_remove = []
+    for path in paths:
+        for i, curve in enumerate(fcurves):
+            if (curve.data_path == path):
+                curves_to_remove.append(i)
+    for i in range(0, len(curves_to_remove)):
+        fcurves.remove(fcurves[i])
+
 
 def showHide(obj, hide, keyframe=False, frame=None):
     obj.hide = hide

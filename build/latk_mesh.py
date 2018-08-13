@@ -211,29 +211,16 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
                     totalCounter += 1
                     print(frameList[i].name + " | " + str(totalCounter) + " of " + totalStrokes + " total")
                     if (_animateFrames==True):
-                        if (_hideMode == "hide"):
-                            hideFrame(frameList[i], start, True)
-                        elif (_hideMode == "scale"):
-                            hideFrameByScale(frameList[i], start, True)
+                        hideFrame(frameList[i], start, True)
+                        #~
                         for j in range(start, end):
                             if (j == layer.frames[c].frame_number):
-                                if (_hideMode == "hide"):
-                                    hideFrame(frameList[i], j, False)
-                                elif (_hideMode == "scale"):
-                                    hideFrameByScale(frameList[i], j, False)
+                                hideFrame(frameList[i], j, False)
                                 keyTransform(frameList[i], j)
                             elif (c < len(layer.frames)-1 and j > layer.frames[c].frame_number and j < layer.frames[c+1].frame_number):
-                                if (_hideMode == "hide"):
-                                    hideFrame(frameList[i], j, False)
-                                elif(_hideMode == "scale"):
-                                    hideFrameByScale(frameList[i], j, False)
+                                hideFrame(frameList[i], j, False)
                             elif (c != len(layer.frames)-1):
-                                if (_hideMode == "hide"):
-                                    hideFrame(frameList[i], j, True)
-                                elif (_hideMode == "scale"):
-                                    hideFrameByScale(frameList[i], j, True)
-                            elif (c == len(layer.frames)-1 and _hideMode == "scale"):
-                                hideFrameByScale(frameList[i], j-1, True)
+                                hideFrame(frameList[i], j, True)
                 #~
                 if (_joinMesh==True): 
                     target = matchName("latk_" + getLayerInfo(layer))
@@ -277,6 +264,13 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
                 masterUrlList.append(url)
                 #~
                 gpMeshCleanup(getLayerInfo(layer))
+            #~
+            if (_hideMode=="scale"): 
+                target = matchName("latk_")
+                for i in range(start, end):
+                    goToFrame(i)
+                    for j in range(0, len(target)):
+                        hideFrameByScale(target[j], i, target[j].hide)
     #~
     #if (_bakeMesh==True and _caps==True and _saveLayers==False):
     if (_caps==True):
