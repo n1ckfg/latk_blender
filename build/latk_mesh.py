@@ -86,7 +86,7 @@ def assembleMesh(export=False, createPalette=True):
 def gpMeshQ(val = 0.1):
     gpMesh(_decimate=val, _saveLayers=True)
 
-def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _decimate = 0.1, _curveType="nurbs", _useColors=True, _saveLayers=False, _singleFrame=False, _vertexColors=True, _vertexColorName="rgba", _animateFrames=True, _solidify=False, _subd=0, _remesh="none", _consolidateMtl=True, _caps=True, _joinMesh=True, _uvStroke=True, _uvFill=True, _usePressure=True):
+def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _decimate = 0.1, _curveType="nurbs", _useColors=True, _saveLayers=False, _singleFrame=False, _vertexColors=True, _vertexColorName="rgba", _animateFrames=True, _solidify=False, _subd=0, _remesh="none", _consolidateMtl=True, _caps=True, _joinMesh=True, _uvStroke=True, _uvFill=True, _usePressure=True, _hideMode="hide"):
     if (_joinMesh==True or _remesh != "none"):
         _bakeMesh=True
     #~
@@ -142,7 +142,7 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
                     pressures = [ point.pressure for point in stroke_points ]
                     #~
                     latk_ob = makeCurve(name="latk_" + getLayerInfo(layer) + "_" + str(layer.frames[c].frame_number), coords=coords, pressures=pressures, curveType=_curveType, resolution=_resolution, thickness=_thickness, bevelResolution=_bevelResolution, parent=layer.parent, capsObj=capsObj, useUvs=_uvStroke, usePressure=_usePressure)
-                    centerPivot(latk_ob)
+                    centerOrigin(latk_ob)
                     strokeColor = (0.5,0.5,0.5)
                     if (_useColors==True):
                         strokeColor = palette.colors[stroke.colorname].color
@@ -211,15 +211,39 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
                     totalCounter += 1
                     print(frameList[i].name + " | " + str(totalCounter) + " of " + totalStrokes + " total")
                     if (_animateFrames==True):
-                        hideFrame(frameList[i], 0, True)
+                        if (_hideMode == "hide"):
+                            hideFrame(frameList[i], 0, True)
+                        elif (_hideMode == "scale"):
+                            hideFrameByScale(frameList[i], 0, True)
+                        else:
+                            hideFrameByScale(frameList[i], 0, True)
+                            hideFrame(frameList[i], 0, True)
                         for j in range(start, end):
                             if (j == layer.frames[c].frame_number):
-                                hideFrame(frameList[i], j, False)
+                                if (_hideMode == "hide"):
+                                    hideFrame(frameList[i], j, False)
+                                elif (_hideMode == "scale"):
+                                    hideFrameByScale(frameList[i], j, False)
+                                else:
+                                    hideFrameByScale(frameList[i], j, False)
+                                    hideFrame(frameList[i], j, False)
                                 keyTransform(frameList[i], j)
                             elif (c < len(layer.frames)-1 and j > layer.frames[c].frame_number and j < layer.frames[c+1].frame_number):
-                                hideFrame(frameList[i], j, False)
+                                if (_hideMode == "hide"):
+                                    hideFrame(frameList[i], j, False)
+                                elif(_hideMode == "scale"):
+                                    hideFrameByScale(frameList[i], j, False)
+                                else:
+                                    hideFrameByScale(frameList[i], j, False)
+                                    hideFrame(frameList[i], j, False)
                             elif (c != len(layer.frames)-1):
-                                hideFrame(frameList[i], j, True)
+                                if (_hideMode == "hide"):
+                                    hideFrame(frameList[i], j, True)
+                                elif (_hideMode == "scale"):
+                                    hideFrameByScale(frameList[i], j, True)
+                                else:
+                                    hideFrameByScale(frameList[i], j, True)
+                                    hideFrame(frameList[i], j, True)
                 #~
                 if (_joinMesh==True): 
                     target = matchName("latk_" + getLayerInfo(layer))
@@ -234,7 +258,6 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
                             print("~ ~ ~ ~ ~ ~ ~ ~ ~")
                             print("* joining " + str(len(strokesToJoin))  + " strokes")
                             joinObjects(strokesToJoin)
-                            centerPivot()
                             print("~ ~ ~ ~ ~ ~ ~ ~ ~")
             #~
             if (_saveLayers==True):
@@ -397,6 +420,7 @@ def centerOrigin(target=None):
         target = ss()
     deselect()
     target.select = True
+    setActiveObject(target)
     bpy.ops.object.origin_set(type = 'ORIGIN_GEOMETRY')
     deselect()
 

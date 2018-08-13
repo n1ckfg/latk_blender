@@ -136,10 +136,12 @@ def lookAt(looker, lookee):
     # assume we're using euler rotation
     looker.rotation_euler = rot_quat.to_euler()
 
+'''
 def centerPivot(target=None):
     if not target:
         target = ss()
     bpy.ops.object.origin_set(type="ORIGIN_GEOMETRY")
+'''
     
 def getLayerInfo(layer):
     return layer.info.split(".")[0]
@@ -651,6 +653,17 @@ def hideFrame(_obj, _frame, _hide):
     _obj.hide_render = _hide
     _obj.keyframe_insert(data_path="hide", frame=_frame) 
     _obj.keyframe_insert(data_path="hide_render", frame=_frame) 
+
+def hideFrameByScale(_obj, _frame, _hide):
+    showScaleVal = 1
+    hideScaleVal = 0.0001
+    if (_hide == True):
+        _obj.scale = [hideScaleVal, hideScaleVal, hideScaleVal]
+    else:
+        _obj.scale = [showScaleVal, showScaleVal, showScaleVal]
+    _obj.keyframe_insert(data_path="location", frame=_frame)
+    _obj.keyframe_insert(data_path="rotation_quaternion", frame=_frame)
+    _obj.keyframe_insert(data_path="scale", frame=_frame)
 
 def showHide(obj, hide, keyframe=False, frame=None):
     obj.hide = hide
@@ -2480,7 +2493,7 @@ def assembleMesh(export=False, createPalette=True):
 def gpMeshQ(val = 0.1):
     gpMesh(_decimate=val, _saveLayers=True)
 
-def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _decimate = 0.1, _curveType="nurbs", _useColors=True, _saveLayers=False, _singleFrame=False, _vertexColors=True, _vertexColorName="rgba", _animateFrames=True, _solidify=False, _subd=0, _remesh="none", _consolidateMtl=True, _caps=True, _joinMesh=True, _uvStroke=True, _uvFill=True, _usePressure=True):
+def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _decimate = 0.1, _curveType="nurbs", _useColors=True, _saveLayers=False, _singleFrame=False, _vertexColors=True, _vertexColorName="rgba", _animateFrames=True, _solidify=False, _subd=0, _remesh="none", _consolidateMtl=True, _caps=True, _joinMesh=True, _uvStroke=True, _uvFill=True, _usePressure=True, _hideMode="hide"):
     if (_joinMesh==True or _remesh != "none"):
         _bakeMesh=True
     #~
@@ -2536,7 +2549,7 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
                     pressures = [ point.pressure for point in stroke_points ]
                     #~
                     latk_ob = makeCurve(name="latk_" + getLayerInfo(layer) + "_" + str(layer.frames[c].frame_number), coords=coords, pressures=pressures, curveType=_curveType, resolution=_resolution, thickness=_thickness, bevelResolution=_bevelResolution, parent=layer.parent, capsObj=capsObj, useUvs=_uvStroke, usePressure=_usePressure)
-                    centerPivot(latk_ob)
+                    centerOrigin(latk_ob)
                     strokeColor = (0.5,0.5,0.5)
                     if (_useColors==True):
                         strokeColor = palette.colors[stroke.colorname].color
@@ -2605,15 +2618,39 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
                     totalCounter += 1
                     print(frameList[i].name + " | " + str(totalCounter) + " of " + totalStrokes + " total")
                     if (_animateFrames==True):
-                        hideFrame(frameList[i], 0, True)
+                        if (_hideMode == "hide"):
+                            hideFrame(frameList[i], 0, True)
+                        elif (_hideMode == "scale"):
+                            hideFrameByScale(frameList[i], 0, True)
+                        else:
+                            hideFrameByScale(frameList[i], 0, True)
+                            hideFrame(frameList[i], 0, True)
                         for j in range(start, end):
                             if (j == layer.frames[c].frame_number):
-                                hideFrame(frameList[i], j, False)
+                                if (_hideMode == "hide"):
+                                    hideFrame(frameList[i], j, False)
+                                elif (_hideMode == "scale"):
+                                    hideFrameByScale(frameList[i], j, False)
+                                else:
+                                    hideFrameByScale(frameList[i], j, False)
+                                    hideFrame(frameList[i], j, False)
                                 keyTransform(frameList[i], j)
                             elif (c < len(layer.frames)-1 and j > layer.frames[c].frame_number and j < layer.frames[c+1].frame_number):
-                                hideFrame(frameList[i], j, False)
+                                if (_hideMode == "hide"):
+                                    hideFrame(frameList[i], j, False)
+                                elif(_hideMode == "scale"):
+                                    hideFrameByScale(frameList[i], j, False)
+                                else:
+                                    hideFrameByScale(frameList[i], j, False)
+                                    hideFrame(frameList[i], j, False)
                             elif (c != len(layer.frames)-1):
-                                hideFrame(frameList[i], j, True)
+                                if (_hideMode == "hide"):
+                                    hideFrame(frameList[i], j, True)
+                                elif (_hideMode == "scale"):
+                                    hideFrameByScale(frameList[i], j, True)
+                                else:
+                                    hideFrameByScale(frameList[i], j, True)
+                                    hideFrame(frameList[i], j, True)
                 #~
                 if (_joinMesh==True): 
                     target = matchName("latk_" + getLayerInfo(layer))
@@ -2628,7 +2665,6 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
                             print("~ ~ ~ ~ ~ ~ ~ ~ ~")
                             print("* joining " + str(len(strokesToJoin))  + " strokes")
                             joinObjects(strokesToJoin)
-                            centerPivot()
                             print("~ ~ ~ ~ ~ ~ ~ ~ ~")
             #~
             if (_saveLayers==True):
@@ -2791,6 +2827,7 @@ def centerOrigin(target=None):
         target = ss()
     deselect()
     target.select = True
+    setActiveObject(target)
     bpy.ops.object.origin_set(type = 'ORIGIN_GEOMETRY')
     deselect()
 
@@ -4265,6 +4302,16 @@ class LatkProperties(bpy.types.PropertyGroup):
         default="NONE"
     )
 
+    hide_mode = EnumProperty(
+        name="Hide Mode",
+        items=(
+            ("HIDE", "Hide", "Hide only", 0),
+            ("SCALE", "Scale", "Scale only", 1),
+            ("HIDE_SCALE", "Hide + Scale", "Hide and scale", 2)
+        ),
+        default="HIDE"
+    )
+
     material_set_mode = EnumProperty(
         name="Material Set",
         items=(
@@ -4318,8 +4365,10 @@ class LatkProperties_Panel(bpy.types.Panel):
         row.operator("latk_button.dn")
 
         row = layout.row()
-        row.prop(latk, "remesh_mode", expand=True)
+        row.prop(latk, "hide_mode", expand=True)
 
+        row = layout.row()
+        row.prop(latk, "remesh_mode", expand=True)
         # ~ ~ ~ 
 
         row = layout.row()
@@ -4357,7 +4406,7 @@ class Latk_Button_Gpmesh(bpy.types.Operator):
     
     def execute(self, context):
         latk_settings = bpy.context.scene.latk_settings
-        gpMesh(_thickness=latk_settings.thickness, _remesh=latk_settings.remesh_mode.lower(), _resolution=latk_settings.resolution, _bevelResolution=latk_settings.bevelResolution, _decimate=latk_settings.decimate, _bakeMesh=latk_settings.bakeMesh, _joinMesh=latk_settings.bakeMesh, _saveLayers=False, _vertexColorName=latk_settings.vertexColorName)
+        gpMesh(_thickness=latk_settings.thickness, _remesh=latk_settings.remesh_mode.lower(), _resolution=latk_settings.resolution, _bevelResolution=latk_settings.bevelResolution, _decimate=latk_settings.decimate, _bakeMesh=latk_settings.bakeMesh, _joinMesh=latk_settings.bakeMesh, _saveLayers=False, _vertexColorName=latk_settings.vertexColorName, _hideMode=latk_settings.hide_mode.lower())
         return {'FINISHED'}
 
 class Latk_Button_WriteOnStrokes(bpy.types.Operator):

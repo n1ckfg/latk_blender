@@ -447,6 +447,16 @@ class LatkProperties(bpy.types.PropertyGroup):
         default="NONE"
     )
 
+    hide_mode = EnumProperty(
+        name="Hide Mode",
+        items=(
+            ("HIDE", "Hide", "Hide only", 0),
+            ("SCALE", "Scale", "Scale only", 1),
+            ("HIDE_SCALE", "Hide + Scale", "Hide and scale", 2)
+        ),
+        default="HIDE"
+    )
+
     material_set_mode = EnumProperty(
         name="Material Set",
         items=(
@@ -500,8 +510,10 @@ class LatkProperties_Panel(bpy.types.Panel):
         row.operator("latk_button.dn")
 
         row = layout.row()
-        row.prop(latk, "remesh_mode", expand=True)
+        row.prop(latk, "hide_mode", expand=True)
 
+        row = layout.row()
+        row.prop(latk, "remesh_mode", expand=True)
         # ~ ~ ~ 
 
         row = layout.row()
@@ -539,7 +551,7 @@ class Latk_Button_Gpmesh(bpy.types.Operator):
     
     def execute(self, context):
         latk_settings = bpy.context.scene.latk_settings
-        gpMesh(_thickness=latk_settings.thickness, _remesh=latk_settings.remesh_mode.lower(), _resolution=latk_settings.resolution, _bevelResolution=latk_settings.bevelResolution, _decimate=latk_settings.decimate, _bakeMesh=latk_settings.bakeMesh, _joinMesh=latk_settings.bakeMesh, _saveLayers=False, _vertexColorName=latk_settings.vertexColorName)
+        gpMesh(_thickness=latk_settings.thickness, _remesh=latk_settings.remesh_mode.lower(), _resolution=latk_settings.resolution, _bevelResolution=latk_settings.bevelResolution, _decimate=latk_settings.decimate, _bakeMesh=latk_settings.bakeMesh, _joinMesh=latk_settings.bakeMesh, _saveLayers=False, _vertexColorName=latk_settings.vertexColorName, _hideMode=latk_settings.hide_mode.lower())
         return {'FINISHED'}
 
 class Latk_Button_WriteOnStrokes(bpy.types.Operator):
