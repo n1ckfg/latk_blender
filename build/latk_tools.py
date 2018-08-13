@@ -588,8 +588,8 @@ def hideFrameByScale(_obj, _frame, _hide):
         _obj.scale = [hideScaleVal, hideScaleVal, hideScaleVal]
     else:
         _obj.scale = [showScaleVal, showScaleVal, showScaleVal]
-    _obj.keyframe_insert(data_path="location", frame=_frame)
-    _obj.keyframe_insert(data_path="rotation_quaternion", frame=_frame)
+    #_obj.keyframe_insert(data_path="location", frame=_frame)
+    #_obj.keyframe_insert(data_path="rotation_quaternion", frame=_frame)
     _obj.keyframe_insert(data_path="scale", frame=_frame)
 
 def showHide(obj, hide, keyframe=False, frame=None):

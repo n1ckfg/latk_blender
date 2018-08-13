@@ -450,9 +450,8 @@ class LatkProperties(bpy.types.PropertyGroup):
     hide_mode = EnumProperty(
         name="Hide Mode",
         items=(
-            ("HIDE", "Hide", "Hide only", 0),
-            ("SCALE", "Scale", "Scale only", 1),
-            ("HIDE_SCALE", "Hide + Scale", "Hide and scale", 2)
+            ("HIDE", "Hide", "Hide inactive frames", 0),
+            ("SCALE", "Scale", "Scale inactive frames", 1)
         ),
         default="HIDE"
     )
