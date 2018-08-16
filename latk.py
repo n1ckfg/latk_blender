@@ -4383,8 +4383,8 @@ class LatkProperties_Panel(bpy.types.Panel):
         row.operator("latk_button.gpmesh")
         row.operator("latk_button.dn")
 
-        row = layout.row()
-        row.prop(latk, "hide_mode", expand=True)
+        #row = layout.row()
+        #row.prop(latk, "hide_mode", expand=True)
 
         row = layout.row()
         row.prop(latk, "remesh_mode", expand=True)
