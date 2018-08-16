@@ -270,7 +270,15 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
                 for i in range(start, end):
                     goToFrame(i)
                     for j in range(0, len(target)):
-                        hideFrameByScale(target[j], i, target[j].hide)
+                        if (target[j].hide == False):
+                            hideFrameByScale(target[j], i, False)
+                #turn off all hide keyframes
+                for i in range(start, end):
+                    goToFrame(i)
+                    for j in range(0, len(target)):
+                        if (target[j].hide == True):
+                            hideFrameByScale(target[j], i, True)
+                            hideFrame(target[j], i, False) 
     #~
     #if (_bakeMesh==True and _caps==True and _saveLayers==False):
     if (_caps==True):

@@ -583,7 +583,7 @@ def hideFrame(_obj, _frame, _hide):
 
 def hideFrameByScale(_obj, _frame, _hide):
     showScaleVal = 1
-    hideScaleVal = 0.0001
+    hideScaleVal = 0.001
     if (_hide == True):
         _obj.scale = [hideScaleVal, hideScaleVal, hideScaleVal]
     else:
@@ -591,12 +591,14 @@ def hideFrameByScale(_obj, _frame, _hide):
     _obj.keyframe_insert(data_path="location", frame=_frame)
     _obj.keyframe_insert(data_path="rotation_quaternion", frame=_frame)
     _obj.keyframe_insert(data_path="scale", frame=_frame)
+    '''
     if (_obj.hide == True):
         _obj.hide = False
         _obj.keyframe_insert(data_path="hide", frame=_frame)
     if (_obj.hide_render == True):
         _obj.hide_render = False
         _obj.keyframe_insert(data_path="hide_render", frame=_frame)
+    '''
     
 def deleteAnimationPath(target=None, paths=["hide", "hide_render"]):
     if not target:

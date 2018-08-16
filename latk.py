@@ -656,7 +656,7 @@ def hideFrame(_obj, _frame, _hide):
 
 def hideFrameByScale(_obj, _frame, _hide):
     showScaleVal = 1
-    hideScaleVal = 0.0001
+    hideScaleVal = 0.001
     if (_hide == True):
         _obj.scale = [hideScaleVal, hideScaleVal, hideScaleVal]
     else:
@@ -664,12 +664,14 @@ def hideFrameByScale(_obj, _frame, _hide):
     _obj.keyframe_insert(data_path="location", frame=_frame)
     _obj.keyframe_insert(data_path="rotation_quaternion", frame=_frame)
     _obj.keyframe_insert(data_path="scale", frame=_frame)
+    '''
     if (_obj.hide == True):
         _obj.hide = False
         _obj.keyframe_insert(data_path="hide", frame=_frame)
     if (_obj.hide_render == True):
         _obj.hide_render = False
         _obj.keyframe_insert(data_path="hide_render", frame=_frame)
+    '''
     
 def deleteAnimationPath(target=None, paths=["hide", "hide_render"]):
     if not target:
@@ -2696,7 +2698,15 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
                 for i in range(start, end):
                     goToFrame(i)
                     for j in range(0, len(target)):
-                        hideFrameByScale(target[j], i, target[j].hide)
+                        if (target[j].hide == False):
+                            hideFrameByScale(target[j], i, False)
+                #turn off all hide keyframes
+                for i in range(start, end):
+                    goToFrame(i)
+                    for j in range(0, len(target)):
+                        if (target[j].hide == True):
+                            hideFrameByScale(target[j], i, True)
+                            hideFrame(target[j], i, False) 
     #~
     #if (_bakeMesh==True and _caps==True and _saveLayers==False):
     if (_caps==True):
