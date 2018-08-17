@@ -32,6 +32,7 @@ along with the Lightning Artist Toolkit (Blender).  If not, see
 bl_info = {
     "name": "Lightning Artist Toolkit (Latk)", 
     "author": "Nick Fox-Gieg",
+    "description": "Import and export latk format",
     "category": "Animation"
 }
 
@@ -64,6 +65,7 @@ from freestyle.types import Operators, StrokeShader, StrokeVertex
 from freestyle.chainingiterators import ChainSilhouetteIterator, ChainPredicateIterator
 from freestyle.functions import *
 #~
+from bpy.types import Operator, AddonPreferences
 from bpy.props import (BoolProperty, FloatProperty, StringProperty, IntProperty, PointerProperty, EnumProperty)
 from bpy_extras.io_utils import (ImportHelper, ExportHelper)
 
@@ -3875,6 +3877,32 @@ def testDrawPoints():
 
 # 10 of 10. UI
 
+class LightningArtistToolkitPreferences(bpy.types.AddonPreferences):
+    bl_idname = __name__
+    
+    extraFormats = bpy.props.BoolProperty(
+        name = 'Third-Party Formats',
+        description = "Add menu items to import and export third-party formats."
+    )
+
+    def draw(self, context):
+        layout = self.layout
+        layout.label("Add menu items to import and export third-party formats:")
+        layout.prop(self, "extraFormats")
+
+'''
+class OBJECT_OT_latk_prefs(Operator):
+    """Display example preferences"""
+    bl_idname = "object.latk_prefs"
+    bl_label = "Latk Preferences"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        user_preferences = context.user_preferences
+        addon_prefs = user_preferences.addons[__name__].preferences
+        return {'FINISHED'}
+'''
+
 class ImportLatk(bpy.types.Operator, ImportHelper):
     """Load a Latk File"""
     bl_idname = "import_scene.latk"
@@ -4332,7 +4360,7 @@ class LatkProperties(bpy.types.PropertyGroup):
     )
 
     material_set_mode = EnumProperty(
-        name="Material Set",
+        name="Affects",
         items=(
             ("ALL", "All", "All materials", 0),
             ("SELECTED", "Selected", "Selected materials", 1)
@@ -4388,6 +4416,7 @@ class LatkProperties_Panel(bpy.types.Panel):
 
         row = layout.row()
         row.prop(latk, "remesh_mode", expand=True)
+
         # ~ ~ ~ 
 
         row = layout.row()
@@ -4411,6 +4440,7 @@ class LatkProperties_Panel(bpy.types.Panel):
         row = layout.row()
         row.operator("latk_button.bakeselected")
         row.operator("latk_button.bakeall")
+        row.operator("latk_button.strokesfrommesh")
 
         row = layout.row()
         row.prop(latk, "bakeMesh")
@@ -4437,6 +4467,17 @@ class Latk_Button_WriteOnStrokes(bpy.types.Operator):
     def execute(self, context):
         latk_settings = bpy.context.scene.latk_settings
         writeOnStrokes(step=latk_settings.writeStrokeSteps, pointStep=latk_settings.writeStrokePoints)
+        return {'FINISHED'}
+
+class Latk_Button_StrokesFromMesh(bpy.types.Operator):
+    """Generate strokes from mesh"""
+    bl_idname = "latk_button.strokesfrommesh"
+    bl_label = "Strokes from Mesh"
+    bl_options = {'UNDO'}
+    
+    def execute(self, context):
+        latk_settings = bpy.context.scene.latk_settings
+        meshToGp()
         return {'FINISHED'}
 
 class Latk_Button_BakeSelected(bpy.types.Operator):
@@ -4497,7 +4538,7 @@ class Latk_Button_Splf(bpy.types.Operator):
 class Latk_Button_MtlShader(bpy.types.Operator):
     """Set Material Shaders"""
     bl_idname = "latk_button.mtlshader"
-    bl_label = "Set Material Shaders"
+    bl_label = "Material Set"
     bl_options = {'UNDO'}
     
     def execute(self, context):
@@ -4512,24 +4553,26 @@ class Latk_Button_MtlShader(bpy.types.Operator):
 
 def menu_func_import(self, context):
     self.layout.operator(ImportLatk.bl_idname, text="Latk Animation (.latk, .json)")
-    self.layout.operator(ImportGml.bl_idname, text="Latk - GML (.gml)")
-    self.layout.operator(ImportNorman.bl_idname, text="Latk - Norman (.json)")
+    if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats == True):
+        self.layout.operator(ImportGml.bl_idname, text="Latk - GML (.gml)")
+        self.layout.operator(ImportNorman.bl_idname, text="Latk - Norman (.json)")
 
 def menu_func_export(self, context):
     self.layout.operator(ExportLatkJson.bl_idname, text="Latk Animation (.json)")
     self.layout.operator(ExportLatk.bl_idname, text="Latk Animation (.latk)")
-    #self.layout.operator(ExportGml.bl_idname, text="Latk - GML (.gml)")
-    self.layout.operator(ExportSvg.bl_idname, text="Latk - SVG SMIL (.svg)")
-    self.layout.operator(ExportPainter.bl_idname, text="Latk - Corel Painter (.txt)")
+    if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats == True):
+        #self.layout.operator(ExportGml.bl_idname, text="Latk - GML (.gml)")
+        self.layout.operator(ExportSvg.bl_idname, text="Latk - SVG SMIL (.svg)")
+        self.layout.operator(ExportPainter.bl_idname, text="Latk - Corel Painter (.txt)")
 
 #classes = (FreestyleGPencil, FreestyleGPencil_Panel)
 
 def register():
     bpy.utils.register_module(__name__)
 
+    bpy.types.Scene.latk_settings = PointerProperty(type=LatkProperties)
     bpy.types.INFO_MT_file_import.append(menu_func_import)
     bpy.types.INFO_MT_file_export.append(menu_func_export)
-    bpy.types.Scene.latk_settings = PointerProperty(type=LatkProperties)
 
     # freestyle
     #for cls in classes:
@@ -4544,9 +4587,9 @@ def register():
 def unregister():
     bpy.utils.unregister_module(__name__)
 
+    del bpy.types.Scene.latk_settings
     bpy.types.INFO_MT_file_import.remove(menu_func_import)
     bpy.types.INFO_MT_file_export.remove(menu_func_export)
-    del bpy.types.Scene.latk_settings
 
     # freestyle
     #for cls in classes:

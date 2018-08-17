@@ -32,6 +32,7 @@ along with the Lightning Artist Toolkit (Blender).  If not, see
 bl_info = {
     "name": "Lightning Artist Toolkit (Latk)", 
     "author": "Nick Fox-Gieg",
+    "description": "Import and export latk format",
     "category": "Animation"
 }
 
@@ -64,6 +65,7 @@ from freestyle.types import Operators, StrokeShader, StrokeVertex
 from freestyle.chainingiterators import ChainSilhouetteIterator, ChainPredicateIterator
 from freestyle.functions import *
 #~
+from bpy.types import Operator, AddonPreferences
 from bpy.props import (BoolProperty, FloatProperty, StringProperty, IntProperty, PointerProperty, EnumProperty)
 from bpy_extras.io_utils import (ImportHelper, ExportHelper)
 
