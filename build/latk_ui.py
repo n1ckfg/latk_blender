@@ -28,6 +28,8 @@ class OBJECT_OT_latk_prefs(Operator):
 
 class ImportLatk(bpy.types.Operator, ImportHelper):
     """Load a Latk File"""
+    resizeTimeline = BoolProperty(name="Resize Timeline", description="Set in and out points", default=True)
+
     bl_idname = "import_scene.latk"
     bl_label = "Import Latk"
     bl_options = {'PRESET', 'UNDO'}
@@ -40,11 +42,12 @@ class ImportLatk(bpy.types.Operator, ImportHelper):
 
     def execute(self, context):
         import latk as la
-        keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode"))
+        keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "resizeTimeline"))
         if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
             import os
             #keywords["relpath"] = os.path.dirname(bpy.data.filepath)
         #~
+        keywords["resizeTimeline"] = self.resizeTimeline
         la.readBrushStrokes(**keywords)
         return {'FINISHED'}
 

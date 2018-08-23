@@ -252,7 +252,7 @@ def writeBrushStrokes(filepath=None, bake=True, zipped=False):
     #~                
     return {'FINISHED'}
     
-def readBrushStrokes(filepath=None):
+def readBrushStrokes(filepath=None, resizeTimeline=True):
     url = filepath # compatibility with gui keywords
     #~
     gp = getActiveGp()
