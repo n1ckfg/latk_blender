@@ -4078,7 +4078,7 @@ class ImportNorman(bpy.types.Operator, ImportHelper):
         return {'FINISHED'} 
 
 class ImportGml(bpy.types.Operator, ImportHelper):
-    """Load a Gml File"""
+    """Load a GML File"""
     bl_idname = "import_scene.gml"
     bl_label = "Import Gml"
     bl_options = {'PRESET', 'UNDO'}
@@ -4104,7 +4104,7 @@ class ImportGml(bpy.types.Operator, ImportHelper):
         return {'FINISHED'} 
 
 class ExportGml(bpy.types.Operator, ExportHelper):
-    """Save an SVG SMIL File"""
+    """Save a GML File"""
 
     bl_idname = "export_scene.gml"
     bl_label = 'Export Gml'
@@ -4160,7 +4160,7 @@ class ExportSvg(bpy.types.Operator, ExportHelper):
         return {'FINISHED'} 
 
 class ExportPainter(bpy.types.Operator, ExportHelper):
-    """Save an SVG SMIL File"""
+    """Save a Painter script"""
 
     bl_idname = "export_scene.painter"
     bl_label = 'Export Painter'
@@ -4190,7 +4190,7 @@ class ExportPainter(bpy.types.Operator, ExportHelper):
 # ~ ~ ~ 
 
 class FreestyleGPencil(bpy.types.PropertyGroup):
-    """Implements the properties for the Freestyle to Grease Pencil exporter"""
+    """Properties for the Freestyle to Grease Pencil exporter"""
     bl_idname = "RENDER_PT_gpencil_export"
 
     use_freestyle_gpencil_export = BoolProperty(
@@ -4291,7 +4291,7 @@ class FreestyleGPencil_Panel(bpy.types.Panel):
 # ~ ~ ~ 
 
 class LatkProperties(bpy.types.PropertyGroup):
-    """Implements the properties for the Freestyle to Grease Pencil exporter"""
+    """Properties for Latk"""
     bl_idname = "GREASE_PENCIL_PT_LatkProperties"
 
     bakeMesh = BoolProperty(
@@ -4397,7 +4397,7 @@ class LatkProperties(bpy.types.PropertyGroup):
 
 # https://docs.blender.org/api/blender_python_api_2_78_release/bpy.types.Panel.html
 class LatkProperties_Panel(bpy.types.Panel):
-    """Creates a Panel in the render context of the properties editor"""
+    """Creates a Panel in the 3D View context"""
     bl_idname = "GREASE_PENCIL_PT_LatkPropertiesPanel"
     bl_space_type = 'VIEW_3D'
     bl_label = "Lightning Artist Toolkit"
@@ -4465,7 +4465,7 @@ class LatkProperties_Panel(bpy.types.Panel):
         row.prop(latk, "vertexColorName")
 
 class Latk_Button_Gpmesh(bpy.types.Operator):
-    """Mesh all GP strokes. Takes a while."""
+    """Mesh all GP strokes. Takes a while.."""
     bl_idname = "latk_button.gpmesh"
     bl_label = "MESH ALL"
     bl_options = {'UNDO'}
@@ -4476,7 +4476,7 @@ class Latk_Button_Gpmesh(bpy.types.Operator):
         return {'FINISHED'}
 
 class Latk_Button_WriteOnStrokes(bpy.types.Operator):
-    """Create a sequence of write-on GP strokes."""
+    """Create a sequence of write-on GP strokes"""
     bl_idname = "latk_button.writeonstrokes"
     bl_label = "Write-On"
     bl_options = {'UNDO'}
@@ -4487,7 +4487,7 @@ class Latk_Button_WriteOnStrokes(bpy.types.Operator):
         return {'FINISHED'}
 
 class Latk_Button_StrokesFromMesh(bpy.types.Operator):
-    """Generate GP strokes from a mesh."""
+    """Generate GP strokes from a mesh"""
     bl_idname = "latk_button.strokesfrommesh"
     bl_label = "Strokes from Mesh"
     bl_options = {'UNDO'}
@@ -4498,7 +4498,7 @@ class Latk_Button_StrokesFromMesh(bpy.types.Operator):
         return {'FINISHED'}
 
 class Latk_Button_BakeSelected(bpy.types.Operator):
-    """Bake selected curves to exportable meshes."""
+    """Bake selected curves to exportable meshes"""
     bl_idname = "latk_button.bakeselected"
     bl_label = "Bake Curve"
     bl_options = {'UNDO'}
@@ -4510,7 +4510,7 @@ class Latk_Button_BakeSelected(bpy.types.Operator):
 
 '''
 class Latk_Button_BakeAllCurves(bpy.types.Operator):
-    """Bake all curves to exportable meshes."""
+    """Bake all curves to exportable meshes"""
     bl_idname = "latk_button.bakeall"
     bl_label = "Bake All Curves"
     bl_options = {'UNDO'}
@@ -4523,7 +4523,7 @@ class Latk_Button_BakeAllCurves(bpy.types.Operator):
 '''
 
 class Latk_Button_Gpmesh_SingleFrame(bpy.types.Operator):
-    """Mesh a single frame. Great for fast previews."""
+    """Mesh a single frame. Great for fast previews"""
     bl_idname = "latk_button.gpmesh_singleframe"
     bl_label = "Mesh Frame"
     bl_options = {'UNDO'}
@@ -4534,7 +4534,7 @@ class Latk_Button_Gpmesh_SingleFrame(bpy.types.Operator):
         return {'FINISHED'}
 
 class Latk_Button_Dn(bpy.types.Operator):
-    """Delete all Latk-generated meshes."""
+    """Delete all Latk-generated curves and meshes"""
     bl_idname = "latk_button.dn"
     bl_label = "Delete All"
     bl_options = {'UNDO'}
@@ -4544,7 +4544,7 @@ class Latk_Button_Dn(bpy.types.Operator):
         return {'FINISHED'}
 
 class Latk_Button_Splf(bpy.types.Operator):
-    """Split GP stroke layers. Layers with fewer frames mesh faster."""
+    """Split GP stroke layers. Layers with fewer frames mesh faster"""
     bl_idname = "latk_button.splf"
     bl_label = "Split Layers"
     bl_options = {'UNDO'}
@@ -4555,7 +4555,7 @@ class Latk_Button_Splf(bpy.types.Operator):
         return {'FINISHED'}
 
 class Latk_Button_MtlShader(bpy.types.Operator):
-    """Switch between Principled and Diffuse (default) shaders without losing settings."""
+    """Transfer parameters between Principled and Diffuse (default) shaders"""
     bl_idname = "latk_button.mtlshader"
     bl_label = "Material Set"
     bl_options = {'UNDO'}
