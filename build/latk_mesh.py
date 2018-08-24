@@ -142,7 +142,7 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
                     pressures = [ point.pressure for point in stroke_points ]
                     #~
                     latk_ob = makeCurve(name="latk_" + getLayerInfo(layer) + "_" + str(layer.frames[c].frame_number), coords=coords, pressures=pressures, curveType=_curveType, resolution=_resolution, thickness=_thickness, bevelResolution=_bevelResolution, parent=layer.parent, capsObj=capsObj, useUvs=_uvStroke, usePressure=_usePressure)
-                    centerOrigin(latk_ob)
+                    #centerOrigin(latk_ob)
                     strokeColor = (0.5,0.5,0.5)
                     if (_useColors==True):
                         strokeColor = palette.colors[stroke.colorname].color
