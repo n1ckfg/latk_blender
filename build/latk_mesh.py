@@ -268,6 +268,7 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
                 #~
                 gpMeshCleanup(getLayerInfo(layer))
             #~
+            '''
             if (_hideMode=="scale"): 
                 target = matchName("latk_")
                 for i in range(start, end):
@@ -282,6 +283,7 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
                         if (target[j].hide == True):
                             hideFrameByScale(target[j], i, True)
                             hideFrame(target[j], i, False) 
+            '''
     #~
     #if (_bakeMesh==True and _caps==True and _saveLayers==False):
     if (_caps==True):
@@ -304,15 +306,21 @@ def gpMeshCleanup(target):
     removeGroup(target, allGroups=True)
     dn()
 
-def decimateAndBake(target=None, _decimate=0.1):
-    if not target:
-        target = s()
+def decimateAndBake(target=None, _decimate=0.1, _selectAll=False):
+    if (target == None):
+        if (_selectAll == False):
+            target = s()
+        elif (_selectAll == True):
+            target = selectAll()
     for obj in target:
-        if (obj.type == "CURVE"):
-            setActiveObject(obj)
-            bpy.ops.object.modifier_add(type='DECIMATE')
-            bpy.context.object.modifiers["Decimate"].ratio = _decimate     
-            meshObj = applyModifiers(obj)
+        try:
+            if (obj.type == "CURVE"):
+                setActiveObject(obj)
+                bpy.ops.object.modifier_add(type='DECIMATE')
+                bpy.context.object.modifiers["Decimate"].ratio = _decimate     
+                meshObj = applyModifiers(obj)
+        except:
+            pass
 
 def remesher(obj, bake=True, mode="blocks", octree=6, threshold=0.0001, smoothShade=False, removeDisconnected=False):
         bpy.context.scene.objects.active = obj

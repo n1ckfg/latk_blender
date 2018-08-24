@@ -1497,12 +1497,15 @@ def readBrushStrokes(filepath=None, resizeTimeline=True):
             data = json.load(data_file)
             print("Read " + str(len(data["grease_pencil"][0]["layers"][0]["frames"])) + " frames on first layer.")
     #~
+    longestFrameNum = 1
     for h in range(0, len(data["grease_pencil"][0]["layers"])):
         layer = gp.layers.new(data["grease_pencil"][0]["layers"][h]["name"], set_active=True)
         palette = getActivePalette()    
         #~
         for i in range(0, len(data["grease_pencil"][0]["layers"][h]["frames"])):
             frame = layer.frames.new(i) # frame number 5
+            if (frame.frame_number > longestFrameNum):
+                longestFrameNum = frame.frame_number
             for j in range(0, len(data["grease_pencil"][0]["layers"][h]["frames"][i]["strokes"])):
                 strokeColor = (0,0,0)
                 try:
@@ -1534,7 +1537,9 @@ def readBrushStrokes(filepath=None, resizeTimeline=True):
                         strength = data["grease_pencil"][0]["layers"][h]["frames"][i]["strokes"][j]["points"][l]["strength"]
                     #stroke.points[l].co = (x, y, z)
                     createPoint(stroke, l, (x, y, z), pressure, strength)
-    #~                
+    #~  
+    if (resizeTimeline == True):
+        setStartEnd(0, longestFrameNum, pad=False)              
     return {'FINISHED'}
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
@@ -2698,6 +2703,7 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
                 #~
                 gpMeshCleanup(getLayerInfo(layer))
             #~
+            '''
             if (_hideMode=="scale"): 
                 target = matchName("latk_")
                 for i in range(start, end):
@@ -2712,6 +2718,7 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
                         if (target[j].hide == True):
                             hideFrameByScale(target[j], i, True)
                             hideFrame(target[j], i, False) 
+            '''
     #~
     #if (_bakeMesh==True and _caps==True and _saveLayers==False):
     if (_caps==True):
@@ -2734,15 +2741,21 @@ def gpMeshCleanup(target):
     removeGroup(target, allGroups=True)
     dn()
 
-def decimateAndBake(target=None, _decimate=0.1):
-    if not target:
-        target = s()
+def decimateAndBake(target=None, _decimate=0.1, _selectAll=False):
+    if (target == None):
+        if (_selectAll == False):
+            target = s()
+        elif (_selectAll == True):
+            target = selectAll()
     for obj in target:
-        if (obj.type == "CURVE"):
-            setActiveObject(obj)
-            bpy.ops.object.modifier_add(type='DECIMATE')
-            bpy.context.object.modifiers["Decimate"].ratio = _decimate     
-            meshObj = applyModifiers(obj)
+        try:
+            if (obj.type == "CURVE"):
+                setActiveObject(obj)
+                bpy.ops.object.modifier_add(type='DECIMATE')
+                bpy.context.object.modifiers["Decimate"].ratio = _decimate     
+                meshObj = applyModifiers(obj)
+        except:
+            pass
 
 def remesher(obj, bake=True, mode="blocks", octree=6, threshold=0.0001, smoothShade=False, removeDisconnected=False):
         bpy.context.scene.objects.active = obj
@@ -4287,13 +4300,13 @@ class LatkProperties(bpy.types.PropertyGroup):
 
     bakeMesh = BoolProperty(
     	name="Auto Bake Curves",
-    	description="Bake generated curves to mesh",
+    	description="On: slow but keeps everything exportable. Off: major speedup if you're staying in Blender.",
     	default=True
     )
 
     saveLayers = BoolProperty(
     	name="Save Layers",
-    	description="Save every layer to its own file",
+    	description="Save every layer to its own file.",
     	default=False
     )
 
@@ -4454,7 +4467,7 @@ class LatkProperties_Panel(bpy.types.Panel):
         row.prop(latk, "vertexColorName")
 
 class Latk_Button_Gpmesh(bpy.types.Operator):
-    """Mesh all GP strokes"""
+    """Mesh all GP strokes. Takes a while."""
     bl_idname = "latk_button.gpmesh"
     bl_label = "MESH ALL"
     bl_options = {'UNDO'}
@@ -4465,7 +4478,7 @@ class Latk_Button_Gpmesh(bpy.types.Operator):
         return {'FINISHED'}
 
 class Latk_Button_WriteOnStrokes(bpy.types.Operator):
-    """Sequence write-on strokes"""
+    """Create a sequence of write-on GP strokes."""
     bl_idname = "latk_button.writeonstrokes"
     bl_label = "Write-On"
     bl_options = {'UNDO'}
@@ -4476,7 +4489,7 @@ class Latk_Button_WriteOnStrokes(bpy.types.Operator):
         return {'FINISHED'}
 
 class Latk_Button_StrokesFromMesh(bpy.types.Operator):
-    """Generate strokes from mesh"""
+    """Generate GP strokes from a mesh."""
     bl_idname = "latk_button.strokesfrommesh"
     bl_label = "Strokes from Mesh"
     bl_options = {'UNDO'}
@@ -4487,7 +4500,7 @@ class Latk_Button_StrokesFromMesh(bpy.types.Operator):
         return {'FINISHED'}
 
 class Latk_Button_BakeSelected(bpy.types.Operator):
-    """Bake selected curves to meshes"""
+    """Bake selected curves to exportable meshes."""
     bl_idname = "latk_button.bakeselected"
     bl_label = "Bake Curve"
     bl_options = {'UNDO'}
@@ -4498,7 +4511,7 @@ class Latk_Button_BakeSelected(bpy.types.Operator):
         return {'FINISHED'}
 
 class Latk_Button_BakeAllCurves(bpy.types.Operator):
-    """Bake all curves to meshes"""
+    """Bake all curves to exportable meshes."""
     bl_idname = "latk_button.bakeall"
     bl_label = "Bake All Curves"
     bl_options = {'UNDO'}
@@ -4506,11 +4519,11 @@ class Latk_Button_BakeAllCurves(bpy.types.Operator):
     def execute(self, context):
         latk_settings = bpy.context.scene.latk_settings
         target = matchName("latk")
-        decimateAndBake(target, _decimate=latk_settings.decimate)
+        decimateAndBake(target, _decimate=latk_settings.decimate, _selectAll=True)
         return {'FINISHED'}
 
 class Latk_Button_Gpmesh_SingleFrame(bpy.types.Operator):
-    """Mesh a single frame"""
+    """Mesh a single frame. Great for fast previews."""
     bl_idname = "latk_button.gpmesh_singleframe"
     bl_label = "Mesh Frame"
     bl_options = {'UNDO'}
@@ -4521,7 +4534,7 @@ class Latk_Button_Gpmesh_SingleFrame(bpy.types.Operator):
         return {'FINISHED'}
 
 class Latk_Button_Dn(bpy.types.Operator):
-    """Delete generated meshes"""
+    """Delete all Latk-generated meshes."""
     bl_idname = "latk_button.dn"
     bl_label = "Delete All"
     bl_options = {'UNDO'}
@@ -4531,7 +4544,7 @@ class Latk_Button_Dn(bpy.types.Operator):
         return {'FINISHED'}
 
 class Latk_Button_Splf(bpy.types.Operator):
-    """Split GP stroke layers"""
+    """Split GP stroke layers. Layers with fewer frames mesh faster."""
     bl_idname = "latk_button.splf"
     bl_label = "Split Layers"
     bl_options = {'UNDO'}
@@ -4542,7 +4555,7 @@ class Latk_Button_Splf(bpy.types.Operator):
         return {'FINISHED'}
 
 class Latk_Button_MtlShader(bpy.types.Operator):
-    """Set Material Shaders"""
+    """Switch between Principled and Diffuse (default) shaders without losing settings."""
     bl_idname = "latk_button.mtlshader"
     bl_label = "Material Set"
     bl_options = {'UNDO'}

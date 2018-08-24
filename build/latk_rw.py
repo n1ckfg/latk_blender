@@ -275,12 +275,15 @@ def readBrushStrokes(filepath=None, resizeTimeline=True):
             data = json.load(data_file)
             print("Read " + str(len(data["grease_pencil"][0]["layers"][0]["frames"])) + " frames on first layer.")
     #~
+    longestFrameNum = 1
     for h in range(0, len(data["grease_pencil"][0]["layers"])):
         layer = gp.layers.new(data["grease_pencil"][0]["layers"][h]["name"], set_active=True)
         palette = getActivePalette()    
         #~
         for i in range(0, len(data["grease_pencil"][0]["layers"][h]["frames"])):
             frame = layer.frames.new(i) # frame number 5
+            if (frame.frame_number > longestFrameNum):
+                longestFrameNum = frame.frame_number
             for j in range(0, len(data["grease_pencil"][0]["layers"][h]["frames"][i]["strokes"])):
                 strokeColor = (0,0,0)
                 try:
@@ -312,7 +315,9 @@ def readBrushStrokes(filepath=None, resizeTimeline=True):
                         strength = data["grease_pencil"][0]["layers"][h]["frames"][i]["strokes"][j]["points"][l]["strength"]
                     #stroke.points[l].co = (x, y, z)
                     createPoint(stroke, l, (x, y, z), pressure, strength)
-    #~                
+    #~  
+    if (resizeTimeline == True):
+        setStartEnd(0, longestFrameNum, pad=False)              
     return {'FINISHED'}
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
