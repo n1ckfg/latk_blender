@@ -8,6 +8,17 @@ def gpWorldRoot(name="Empty"):
     for layer in layers:
         layer.parent = target
     return target
+
+def pressureRange(_min=0.1, _max=1.0):
+    gp = getActiveGp()
+    for layer in gp.layers:
+        for frame in layer.frames:
+            for stroke in frame.strokes:
+                for point in stroke.points:
+                    if (point.pressure < _min):
+                        point.pressure = _min
+                    elif (point.pressure > _max):
+                        point.pressure = _max
     
 def cameraArray(target=None, hideTarget=True, removeCameras=True, removeLayers=True): 
     if not target:
