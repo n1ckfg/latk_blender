@@ -407,13 +407,34 @@ class LatkProperties(bpy.types.PropertyGroup):
 
     bakeMesh = BoolProperty(
     	name="Auto Bake Curves",
-    	description="Off: major speedup if you're staying in Blender. On: slow but keeps everything exportable.",
+    	description="Off: major speedup if you're staying in Blender. On: slow but keeps everything exportable",
     	default=False
+    )
+
+    minRemapPressure = FloatProperty(
+        name="Min",
+        description="Minimum Remap Pressure",
+        default=0.1
+    )
+
+    maxRemapPressure = FloatProperty(
+        name="Max",
+        description="Maximum Remap Pressure",
+        default=1.0
+    )
+
+    remapPressureMode = EnumProperty(
+        name="",
+        items=(
+            ("CLAMP", "Clamp", "Clamp values below min or above max", 0),
+            ("REMAP", "Remap", "Remap values from 0-1 to min-max", 1)
+        ),
+        default="CLAMP"
     )
 
     saveLayers = BoolProperty(
     	name="Save Layers",
-    	description="Save every layer to its own file.",
+    	description="Save every layer to its own file",
     	default=False
     )
 
@@ -571,6 +592,12 @@ class LatkProperties_Panel(bpy.types.Panel):
         row.operator("latk_button.strokesfrommesh")
 
         row = layout.row()
+        row.prop(latk, "minRemapPressure")
+        row.prop(latk, "maxRemapPressure")
+        row.prop(latk, "remapPressureMode")
+        row.operator("latk_button.remappressure")
+
+        row = layout.row()
         row.prop(latk, "bakeMesh")
         row.prop(latk, "saveLayers")
         row.prop(latk, "vertexColorName")
@@ -585,6 +612,18 @@ class Latk_Button_Gpmesh(bpy.types.Operator):
         latk_settings = bpy.context.scene.latk_settings
         gpMesh(_thickness=latk_settings.thickness, _remesh=latk_settings.remesh_mode.lower(), _resolution=latk_settings.resolution, _bevelResolution=latk_settings.bevelResolution, _decimate=latk_settings.decimate, _bakeMesh=latk_settings.bakeMesh, _joinMesh=latk_settings.bakeMesh, _saveLayers=False, _vertexColorName=latk_settings.vertexColorName)
         return {'FINISHED'}
+
+class Latk_Button_RemapPressure(bpy.types.Operator):
+    """Mesh all GP strokes. Takes a while.."""
+    bl_idname = "latk_button.remappressure"
+    bl_label = "Pressure"
+    bl_options = {'UNDO'}
+    
+    def execute(self, context):
+        latk_settings = bpy.context.scene.latk_settings
+        pressureRange(latk_settings.minRemapPressure, latk_settings.maxRemapPressure, latk_settings.remapPressureMode.lower())
+        return {'FINISHED'}
+
 
 class Latk_Button_WriteOnStrokes(bpy.types.Operator):
     """Create a sequence of write-on GP strokes"""
