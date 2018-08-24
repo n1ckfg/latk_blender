@@ -2521,7 +2521,7 @@ def assembleMesh(export=False, createPalette=True):
 def gpMeshQ(val = 0.1):
     gpMesh(_decimate=val, _saveLayers=True)
 
-def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _decimate = 0.1, _curveType="nurbs", _useColors=True, _saveLayers=False, _singleFrame=False, _vertexColors=True, _vertexColorName="rgba", _animateFrames=True, _solidify=False, _subd=0, _remesh="none", _consolidateMtl=True, _caps=True, _joinMesh=True, _uvStroke=True, _uvFill=True, _usePressure=True, _hideMode="hide"):
+def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _decimate = 0.1, _curveType="nurbs", _useColors=True, _saveLayers=False, _singleFrame=False, _vertexColors=True, _vertexColorName="rgba", _animateFrames=True, _remesh="none", _consolidateMtl=True, _caps=True, _joinMesh=True, _uvStroke=True, _uvFill=True, _usePressure=True):
     if (_joinMesh==True or _remesh != "none"):
         _bakeMesh=True
     #~
@@ -2599,6 +2599,7 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
                     #~   
                     bpy.context.scene.objects.active = latk_ob
                     #~
+                    '''
                     # solidify replaced by curve bevel
                     if (_solidify==True):
                         bpy.ops.object.modifier_add(type='SOLIDIFY')
@@ -2615,6 +2616,7 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
                         except:
                             pass
                     #~  
+                    '''
                     if (_bakeMesh==True): #or _remesh==True):
                         bpy.ops.object.modifier_add(type='DECIMATE')
                         bpy.context.object.modifiers["Decimate"].ratio = _decimate     
@@ -2741,21 +2743,15 @@ def gpMeshCleanup(target):
     removeGroup(target, allGroups=True)
     dn()
 
-def decimateAndBake(target=None, _decimate=0.1, _selectAll=False):
-    if (target == None):
-        if (_selectAll == False):
-            target = s()
-        elif (_selectAll == True):
-            target = selectAll()
+def decimateAndBake(target=None, _decimate=0.1):
+    if not target:
+        target = s()
     for obj in target:
-        try:
-            if (obj.type == "CURVE"):
-                setActiveObject(obj)
-                bpy.ops.object.modifier_add(type='DECIMATE')
-                bpy.context.object.modifiers["Decimate"].ratio = _decimate     
-                meshObj = applyModifiers(obj)
-        except:
-            pass
+        if (obj.type == "CURVE"):
+            setActiveObject(obj)
+            bpy.ops.object.modifier_add(type='DECIMATE')
+            bpy.context.object.modifiers["Decimate"].ratio = _decimate     
+            meshObj = applyModifiers(obj)
 
 def remesher(obj, bake=True, mode="blocks", octree=6, threshold=0.0001, smoothShade=False, removeDisconnected=False):
         bpy.context.scene.objects.active = obj
@@ -4300,8 +4296,8 @@ class LatkProperties(bpy.types.PropertyGroup):
 
     bakeMesh = BoolProperty(
     	name="Auto Bake Curves",
-    	description="On: slow but keeps everything exportable. Off: major speedup if you're staying in Blender.",
-    	default=True
+    	description="Off: major speedup if you're staying in Blender. On: slow but keeps everything exportable.",
+    	default=False
     )
 
     saveLayers = BoolProperty(
@@ -4369,6 +4365,7 @@ class LatkProperties(bpy.types.PropertyGroup):
         default="NONE"
     )
 
+    '''
     hide_mode = EnumProperty(
         name="Hide Mode",
         items=(
@@ -4377,6 +4374,7 @@ class LatkProperties(bpy.types.PropertyGroup):
         ),
         default="HIDE"
     )
+    '''
 
     material_set_mode = EnumProperty(
         name="Affects",
@@ -4458,7 +4456,7 @@ class LatkProperties_Panel(bpy.types.Panel):
 
         row = layout.row()
         row.operator("latk_button.bakeselected")
-        row.operator("latk_button.bakeall")
+        #row.operator("latk_button.bakeall")
         row.operator("latk_button.strokesfrommesh")
 
         row = layout.row()
@@ -4474,7 +4472,7 @@ class Latk_Button_Gpmesh(bpy.types.Operator):
     
     def execute(self, context):
         latk_settings = bpy.context.scene.latk_settings
-        gpMesh(_thickness=latk_settings.thickness, _remesh=latk_settings.remesh_mode.lower(), _resolution=latk_settings.resolution, _bevelResolution=latk_settings.bevelResolution, _decimate=latk_settings.decimate, _bakeMesh=latk_settings.bakeMesh, _joinMesh=latk_settings.bakeMesh, _saveLayers=False, _vertexColorName=latk_settings.vertexColorName, _hideMode=latk_settings.hide_mode.lower())
+        gpMesh(_thickness=latk_settings.thickness, _remesh=latk_settings.remesh_mode.lower(), _resolution=latk_settings.resolution, _bevelResolution=latk_settings.bevelResolution, _decimate=latk_settings.decimate, _bakeMesh=latk_settings.bakeMesh, _joinMesh=latk_settings.bakeMesh, _saveLayers=False, _vertexColorName=latk_settings.vertexColorName)
         return {'FINISHED'}
 
 class Latk_Button_WriteOnStrokes(bpy.types.Operator):
@@ -4510,6 +4508,7 @@ class Latk_Button_BakeSelected(bpy.types.Operator):
         decimateAndBake(_decimate=latk_settings.decimate)
         return {'FINISHED'}
 
+'''
 class Latk_Button_BakeAllCurves(bpy.types.Operator):
     """Bake all curves to exportable meshes."""
     bl_idname = "latk_button.bakeall"
@@ -4519,8 +4518,9 @@ class Latk_Button_BakeAllCurves(bpy.types.Operator):
     def execute(self, context):
         latk_settings = bpy.context.scene.latk_settings
         target = matchName("latk")
-        decimateAndBake(target, _decimate=latk_settings.decimate, _selectAll=True)
+        decimateAndBake(target, _decimate=latk_settings.decimate)
         return {'FINISHED'}
+'''
 
 class Latk_Button_Gpmesh_SingleFrame(bpy.types.Operator):
     """Mesh a single frame. Great for fast previews."""

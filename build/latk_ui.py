@@ -407,8 +407,8 @@ class LatkProperties(bpy.types.PropertyGroup):
 
     bakeMesh = BoolProperty(
     	name="Auto Bake Curves",
-    	description="On: slow but keeps everything exportable. Off: major speedup if you're staying in Blender.",
-    	default=True
+    	description="Off: major speedup if you're staying in Blender. On: slow but keeps everything exportable.",
+    	default=False
     )
 
     saveLayers = BoolProperty(
@@ -476,6 +476,7 @@ class LatkProperties(bpy.types.PropertyGroup):
         default="NONE"
     )
 
+    '''
     hide_mode = EnumProperty(
         name="Hide Mode",
         items=(
@@ -484,6 +485,7 @@ class LatkProperties(bpy.types.PropertyGroup):
         ),
         default="HIDE"
     )
+    '''
 
     material_set_mode = EnumProperty(
         name="Affects",
@@ -565,7 +567,7 @@ class LatkProperties_Panel(bpy.types.Panel):
 
         row = layout.row()
         row.operator("latk_button.bakeselected")
-        row.operator("latk_button.bakeall")
+        #row.operator("latk_button.bakeall")
         row.operator("latk_button.strokesfrommesh")
 
         row = layout.row()
@@ -581,7 +583,7 @@ class Latk_Button_Gpmesh(bpy.types.Operator):
     
     def execute(self, context):
         latk_settings = bpy.context.scene.latk_settings
-        gpMesh(_thickness=latk_settings.thickness, _remesh=latk_settings.remesh_mode.lower(), _resolution=latk_settings.resolution, _bevelResolution=latk_settings.bevelResolution, _decimate=latk_settings.decimate, _bakeMesh=latk_settings.bakeMesh, _joinMesh=latk_settings.bakeMesh, _saveLayers=False, _vertexColorName=latk_settings.vertexColorName, _hideMode=latk_settings.hide_mode.lower())
+        gpMesh(_thickness=latk_settings.thickness, _remesh=latk_settings.remesh_mode.lower(), _resolution=latk_settings.resolution, _bevelResolution=latk_settings.bevelResolution, _decimate=latk_settings.decimate, _bakeMesh=latk_settings.bakeMesh, _joinMesh=latk_settings.bakeMesh, _saveLayers=False, _vertexColorName=latk_settings.vertexColorName)
         return {'FINISHED'}
 
 class Latk_Button_WriteOnStrokes(bpy.types.Operator):
@@ -617,6 +619,7 @@ class Latk_Button_BakeSelected(bpy.types.Operator):
         decimateAndBake(_decimate=latk_settings.decimate)
         return {'FINISHED'}
 
+'''
 class Latk_Button_BakeAllCurves(bpy.types.Operator):
     """Bake all curves to exportable meshes."""
     bl_idname = "latk_button.bakeall"
@@ -626,8 +629,9 @@ class Latk_Button_BakeAllCurves(bpy.types.Operator):
     def execute(self, context):
         latk_settings = bpy.context.scene.latk_settings
         target = matchName("latk")
-        decimateAndBake(target, _decimate=latk_settings.decimate, _selectAll=True)
+        decimateAndBake(target, _decimate=latk_settings.decimate)
         return {'FINISHED'}
+'''
 
 class Latk_Button_Gpmesh_SingleFrame(bpy.types.Operator):
     """Mesh a single frame. Great for fast previews."""

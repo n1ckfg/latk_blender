@@ -86,7 +86,7 @@ def assembleMesh(export=False, createPalette=True):
 def gpMeshQ(val = 0.1):
     gpMesh(_decimate=val, _saveLayers=True)
 
-def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _decimate = 0.1, _curveType="nurbs", _useColors=True, _saveLayers=False, _singleFrame=False, _vertexColors=True, _vertexColorName="rgba", _animateFrames=True, _solidify=False, _subd=0, _remesh="none", _consolidateMtl=True, _caps=True, _joinMesh=True, _uvStroke=True, _uvFill=True, _usePressure=True, _hideMode="hide"):
+def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _decimate = 0.1, _curveType="nurbs", _useColors=True, _saveLayers=False, _singleFrame=False, _vertexColors=True, _vertexColorName="rgba", _animateFrames=True, _remesh="none", _consolidateMtl=True, _caps=True, _joinMesh=True, _uvStroke=True, _uvFill=True, _usePressure=True):
     if (_joinMesh==True or _remesh != "none"):
         _bakeMesh=True
     #~
@@ -164,6 +164,7 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
                     #~   
                     bpy.context.scene.objects.active = latk_ob
                     #~
+                    '''
                     # solidify replaced by curve bevel
                     if (_solidify==True):
                         bpy.ops.object.modifier_add(type='SOLIDIFY')
@@ -180,6 +181,7 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
                         except:
                             pass
                     #~  
+                    '''
                     if (_bakeMesh==True): #or _remesh==True):
                         bpy.ops.object.modifier_add(type='DECIMATE')
                         bpy.context.object.modifiers["Decimate"].ratio = _decimate     
@@ -306,21 +308,15 @@ def gpMeshCleanup(target):
     removeGroup(target, allGroups=True)
     dn()
 
-def decimateAndBake(target=None, _decimate=0.1, _selectAll=False):
-    if (target == None):
-        if (_selectAll == False):
-            target = s()
-        elif (_selectAll == True):
-            target = selectAll()
+def decimateAndBake(target=None, _decimate=0.1):
+    if not target:
+        target = s()
     for obj in target:
-        try:
-            if (obj.type == "CURVE"):
-                setActiveObject(obj)
-                bpy.ops.object.modifier_add(type='DECIMATE')
-                bpy.context.object.modifiers["Decimate"].ratio = _decimate     
-                meshObj = applyModifiers(obj)
-        except:
-            pass
+        if (obj.type == "CURVE"):
+            setActiveObject(obj)
+            bpy.ops.object.modifier_add(type='DECIMATE')
+            bpy.context.object.modifiers["Decimate"].ratio = _decimate     
+            meshObj = applyModifiers(obj)
 
 def remesher(obj, bake=True, mode="blocks", octree=6, threshold=0.0001, smoothShade=False, removeDisconnected=False):
         bpy.context.scene.objects.active = obj
