@@ -13,19 +13,6 @@ class LightningArtistToolkitPreferences(bpy.types.AddonPreferences):
         layout.label("Add menu items to import and export third-party formats:")
         layout.prop(self, "extraFormats")
 
-'''
-class OBJECT_OT_latk_prefs(Operator):
-    """Display example preferences"""
-    bl_idname = "object.latk_prefs"
-    bl_label = "Latk Preferences"
-    bl_options = {'REGISTER', 'UNDO'}
-
-    def execute(self, context):
-        user_preferences = context.user_preferences
-        addon_prefs = user_preferences.addons[__name__].preferences
-        return {'FINISHED'}
-'''
-
 class ImportLatk(bpy.types.Operator, ImportHelper):
     """Load a Latk File"""
     resizeTimeline = BoolProperty(name="Resize Timeline", description="Set in and out points", default=True)
@@ -45,43 +32,10 @@ class ImportLatk(bpy.types.Operator, ImportHelper):
         keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "resizeTimeline"))
         if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
             import os
-            #keywords["relpath"] = os.path.dirname(bpy.data.filepath)
         #~
         keywords["resizeTimeline"] = self.resizeTimeline
         la.readBrushStrokes(**keywords)
         return {'FINISHED'}
-
-    '''
-    def execute(self, context):
-        # print("Selected: " + context.active_object.name)
-        from . import import_obj
-
-        if self.split_mode == 'OFF':
-            self.use_split_objects = False
-            self.use_split_groups = False
-        else:
-            self.use_groups_as_vgroups = False
-
-        keywords = self.as_keywords(ignore=("axis_forward",
-                                            "axis_up",
-                                            "filter_glob",
-                                            "split_mode",
-                                            ))
-
-        global_matrix = axis_conversion(from_forward=self.axis_forward,
-                                        from_up=self.axis_up,
-                                        ).to_4x4()
-        keywords["global_matrix"] = global_matrix
-
-        if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
-            import os
-            keywords["relpath"] = os.path.dirname(bpy.data.filepath)
-
-        return import_obj.load(context, **keywords)
-
-    def draw(self, context):
-        layout = self.layout
-    '''
 
 class ExportLatkJson(bpy.types.Operator, ExportHelper): # TODO combine into one class
     """Save a Latk Json File"""
@@ -104,7 +58,6 @@ class ExportLatkJson(bpy.types.Operator, ExportHelper): # TODO combine into one 
         keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "check_existing", "bake"))
         if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
             import os
-            #keywords["relpath"] = os.path.dirname(bpy.data.filepath)
         #~
         keywords["bake"] = self.bake
         #~
@@ -114,7 +67,7 @@ class ExportLatkJson(bpy.types.Operator, ExportHelper): # TODO combine into one 
 class ExportLatk(bpy.types.Operator, ExportHelper):  # TODO combine into one class
     """Save a Latk File"""
 
-    bake = BoolProperty(name="Bake Frames", description="Bake Keyframes to All Frames", default=True)
+    bake = BoolProperty(name="Bake Frames", description="Bake Keyframes to All Frames", default=False)
 
     bl_idname = "export_scene.latk"
     bl_label = 'Export Latk'
@@ -132,37 +85,11 @@ class ExportLatk(bpy.types.Operator, ExportHelper):  # TODO combine into one cla
         keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "check_existing", "bake"))
         if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
             import os
-            #keywords["relpath"] = os.path.dirname(bpy.data.filepath)
         #~
         keywords["bake"] = self.bake
         #~
         la.writeBrushStrokes(**keywords, zipped=True)
         return {'FINISHED'}
-
-    '''
-    path_mode = path_reference_mode
-
-    check_extension = True
-
-    def execute(self, context):
-        from . import export_obj
-
-        from mathutils import Matrix
-        keywords = self.as_keywords(ignore=("axis_forward",
-                                            "axis_up",
-                                            "global_scale",
-                                            "check_existing",
-                                            "filter_glob",
-                                            ))
-
-        global_matrix = (Matrix.Scale(self.global_scale, 4) *
-                         axis_conversion(to_forward=self.axis_forward,
-                                         to_up=self.axis_up,
-                                         ).to_4x4())
-
-        keywords["global_matrix"] = global_matrix
-        return export_obj.save(context, **keywords)
-    '''
 
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ 
 
@@ -183,7 +110,6 @@ class ImportNorman(bpy.types.Operator, ImportHelper):
         keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode"))
         if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
             import os
-            #keywords["relpath"] = os.path.dirname(bpy.data.filepath)
         #~
         la.importNorman(**keywords)
         return {'FINISHED'} 
@@ -207,7 +133,6 @@ class ImportGml(bpy.types.Operator, ImportHelper):
         keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "splitStrokes"))
         if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
             import os
-            #keywords["relpath"] = os.path.dirname(bpy.data.filepath)
         #~
         keywords["splitStrokes"] = self.splitStrokes
         #~
@@ -231,11 +156,9 @@ class ExportGml(bpy.types.Operator, ExportHelper):
 
     def execute(self, context):
         import latk as la
-        #keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "check_existing", "bake"))
         keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "check_existing"))
         if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
             import os
-            #keywords["relpath"] = os.path.dirname(bpy.data.filepath)
         #~
         keywords["make2d"] = self.make2d
         #~
@@ -255,17 +178,12 @@ class ExportSvg(bpy.types.Operator, ExportHelper):
             options={'HIDDEN'},
             )
 
-    #bake = BoolProperty(name="Bake Frames", description="Bake Keyframes to All Frames", default=True)
-
     def execute(self, context):
         import latk as la
         #keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "check_existing", "bake"))
         keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "check_existing"))
         if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
             import os
-            #keywords["relpath"] = os.path.dirname(bpy.data.filepath)
-        #~
-        #keywords["bake"] = self.bake
         #~
         la.writeSvg(**keywords)
         return {'FINISHED'} 
@@ -283,17 +201,12 @@ class ExportPainter(bpy.types.Operator, ExportHelper):
             options={'HIDDEN'},
             )
 
-    #bake = BoolProperty(name="Bake Frames", description="Bake Keyframes to All Frames", default=True)
-
     def execute(self, context):
         import latk as la
         #keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "check_existing", "bake"))
         keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "check_existing"))
         if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
             import os
-            #keywords["relpath"] = os.path.dirname(bpy.data.filepath)
-        #~
-        #keywords["bake"] = self.bake
         #~
         la.writePainter(**keywords)
         return {'FINISHED'} 
@@ -308,53 +221,49 @@ class FreestyleGPencil(bpy.types.PropertyGroup):
         name="Grease Pencil Export",
         description="Export Freestyle edges to Grease Pencil"
     )
-    '''
-    draw_mode = EnumProperty(
-        name="Draw Mode",
-        items=(
-            # ('2DSPACE', "2D Space", "Export a single frame", 0),
-            ('3DSPACE', "3D Space", "Export an animation", 1),
-            # ('2DIMAGE', "2D Image", "", 2),
-            ('SCREEN', "Screen", "", 3),
-            ),
-        default='3DSPACE'
-    )
-    '''
+
     use_fill = BoolProperty(
         name="Fill",
         description="Fill the contour with the object's material color",
         default=False
     )
+
     use_connecting = BoolProperty(
         name="Connecting Strokes",
         description="Connect all vertices with strokes",
         default=False
     )
+
     visible_only = BoolProperty(
         name="Visible Only",
         description="Only render visible lines",
         default=True
     )
+
     use_overwrite = BoolProperty(
         name="Overwrite",
         description="Remove the GPencil strokes from previous renders before a new render",
         default=False
     )
+
     vertexHitbox = FloatProperty(
         name="Vertex Hitbox",
         description="How close a GP stroke needs to be to a vertex",
         default=1.5
     )
+
     numColPlaces = IntProperty(
         name="Color Places",
         description="How many decimal places used to find matching colors",
         default=5,
     )
+
     numMaxColors = IntProperty(
         name="Max Colors",
         description="How many colors are in the Grease Pencil palette",
         default=16
     )
+
     doClearPalette = BoolProperty(
         name="Clear Palette",
         description="Delete palette before beginning a new render",
@@ -380,9 +289,6 @@ class FreestyleGPencil_Panel(bpy.types.Panel):
         freestyle = scene.render.layers.active.freestyle_settings
 
         layout.active = (gp.use_freestyle_gpencil_export and freestyle.mode != 'SCRIPT')
-
-        #row = layout.row()
-        #row.prop(gp, "draw_mode", expand=True)
 
         row = layout.row()
         row.prop(gp, "numColPlaces")
@@ -509,7 +415,7 @@ class LatkProperties(bpy.types.PropertyGroup):
     '''
 
     material_set_mode = EnumProperty(
-        name="Affects",
+        name="Affect",
         items=(
             ("ALL", "All", "All materials", 0),
             ("SELECTED", "Selected", "Selected materials", 1)
@@ -518,7 +424,7 @@ class LatkProperties(bpy.types.PropertyGroup):
     )
 
     material_shader_mode = EnumProperty(
-        name="Shader",
+        name="Type",
         items=(
             ("DIFFUSE", "Diffuse", "Diffuse shader", 0),
             #("EMISSION", "Emission", "Emission shader", 1),
@@ -566,14 +472,22 @@ class LatkProperties_Panel(bpy.types.Panel):
         row = layout.row()
         row.prop(latk, "remesh_mode", expand=True)
 
-        # ~ ~ ~ 
+        row = layout.row()
+        row.operator("latk_button.bakeselected")
+        row.operator("latk_button.bakeall")
+        row.operator("latk_button.strokesfrommesh")
 
         row = layout.row()
-        row.operator("latk_button.mtlshader")
+        row.prop(latk, "bakeMesh")
+        row.prop(latk, "saveLayers")
+        row.prop(latk, "vertexColorName")
+
+        # ~ ~ ~ 
 
         row = layout.row()
         row.prop(latk, "material_set_mode")
         row.prop(latk, "material_shader_mode")
+        row.operator("latk_button.mtlshader")
 
         # ~ ~ ~ 
 
@@ -587,20 +501,10 @@ class LatkProperties_Panel(bpy.types.Panel):
         row.operator("latk_button.splf")
 
         row = layout.row()
-        row.operator("latk_button.bakeselected")
-        #row.operator("latk_button.bakeall")
-        row.operator("latk_button.strokesfrommesh")
-
-        row = layout.row()
         row.prop(latk, "minRemapPressure")
         row.prop(latk, "maxRemapPressure")
         row.prop(latk, "remapPressureMode")
         row.operator("latk_button.remappressure")
-
-        row = layout.row()
-        row.prop(latk, "bakeMesh")
-        row.prop(latk, "saveLayers")
-        row.prop(latk, "vertexColorName")
 
 class Latk_Button_Gpmesh(bpy.types.Operator):
     """Mesh all GP strokes. Takes a while.."""
@@ -658,7 +562,6 @@ class Latk_Button_BakeSelected(bpy.types.Operator):
         decimateAndBake(_decimate=latk_settings.decimate)
         return {'FINISHED'}
 
-'''
 class Latk_Button_BakeAllCurves(bpy.types.Operator):
     """Bake all curves to exportable meshes"""
     bl_idname = "latk_button.bakeall"
@@ -667,10 +570,8 @@ class Latk_Button_BakeAllCurves(bpy.types.Operator):
     
     def execute(self, context):
         latk_settings = bpy.context.scene.latk_settings
-        target = matchName("latk")
-        decimateAndBake(target, _decimate=latk_settings.decimate)
+        bakeAllCurvesToMesh(_decimate=latk_settings.decimate)
         return {'FINISHED'}
-'''
 
 class Latk_Button_Gpmesh_SingleFrame(bpy.types.Operator):
     """Mesh a single frame. Great for fast previews"""
@@ -707,7 +608,7 @@ class Latk_Button_Splf(bpy.types.Operator):
 class Latk_Button_MtlShader(bpy.types.Operator):
     """Transfer parameters between Principled and Diffuse (default) shaders"""
     bl_idname = "latk_button.mtlshader"
-    bl_label = "Material Set"
+    bl_label = "Shader"
     bl_options = {'UNDO'}
     
     def execute(self, context):

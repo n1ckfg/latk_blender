@@ -1,5 +1,22 @@
 # 5 of 10. MESHES / GEOMETRY
 
+# TODO does not work, context error with decimate
+def bakeAllCurvesToMesh(_decimate=0.1):
+    start, end = getStartEnd()
+    for i in range(start, end):
+        goToFrame(i)
+        refresh()
+        deselect()
+        targetAll = matchName("_latk")
+        target = []
+        for obj in targetAll:
+            if (obj.hide==False):
+                target.append(obj)
+        for obj in target:
+            select(obj)
+            setActiveObject(obj)
+            applyModifiers(obj)   
+
 def joinObjects(target=None, center=False):
     if not target:
         target = s()
@@ -42,11 +59,10 @@ def assembleMesh(export=False, createPalette=True):
     masterUrlList = []
     masterGroupList = []
     #~
-    pencil = getActiveGp()
+    gp = getActiveGp()
     palette = getActivePalette()
     #~
-    for b in range(0, len(pencil.layers)):
-        layer = pencil.layers[b]
+    for b, layer in enumerate(gp.layers):
         url = origFileName + "_layer_" + layer.info
         masterGroupList.append(getLayerInfo(layer))
         masterUrlList.append(url)
@@ -103,7 +119,7 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
     start = bpy.context.scene.frame_start
     end = bpy.context.scene.frame_end + 1
     #~
-    pencil = getActiveGp()
+    gp = getActiveGp()
     palette = getActivePalette()
     #~
     capsObj = None
@@ -116,8 +132,7 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
         capsObj.name="caps_ob"
         capsObj.data.resolution_u = _bevelResolution
     #~
-    for b in range(0, len(pencil.layers)):
-        layer = pencil.layers[b]
+    for b, layer in enumerate(gp.layers):
         url = origFileName + "_layer_" + layer.info
         if (layer.lock==False):
             rangeStart = 0
@@ -126,7 +141,7 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
                 rangeStart = getActiveFrameNum(layer)
                 rangeEnd = rangeStart + 1
             for c in range(rangeStart, rangeEnd):
-                print("\n" + "*** gp layer " + str(b+1) + " of " + str(len(pencil.layers)) + " | gp frame " + str(c+1) + " of " + str(rangeEnd) + " ***")
+                print("\n" + "*** gp layer " + str(b+1) + " of " + str(len(gp.layers)) + " | gp frame " + str(c+1) + " of " + str(rangeEnd) + " ***")
                 frameList = []
                 for stroke in layer.frames[c].strokes:
                     origParent = None
@@ -164,24 +179,6 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
                     #~   
                     bpy.context.scene.objects.active = latk_ob
                     #~
-                    '''
-                    # solidify replaced by curve bevel
-                    if (_solidify==True):
-                        bpy.ops.object.modifier_add(type='SOLIDIFY')
-                        bpy.context.object.modifiers["Solidify"].thickness = _extrude * 2
-                        bpy.context.object.modifiers["Solidify"].offset = 0
-                    #~
-                    # *** careful, huge speed hit here.
-                    if (_subd > 0):
-                        bpy.ops.object.modifier_add(type='SUBSURF')
-                        bpy.context.object.modifiers["Subsurf"].levels = _subd
-                        bpy.context.object.modifiers["Subsurf"].render_levels = _subd
-                        try:
-                            bpy.context.object.modifiers["Subsurf"].use_opensubdiv = 1 # GPU if supported
-                        except:
-                            pass
-                    #~  
-                    '''
                     if (_bakeMesh==True): #or _remesh==True):
                         bpy.ops.object.modifier_add(type='DECIMATE')
                         bpy.context.object.modifiers["Decimate"].ratio = _decimate     
@@ -269,25 +266,7 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
                 masterUrlList.append(url)
                 #~
                 gpMeshCleanup(getLayerInfo(layer))
-            #~
-            '''
-            if (_hideMode=="scale"): 
-                target = matchName("latk_")
-                for i in range(start, end):
-                    goToFrame(i)
-                    for j in range(0, len(target)):
-                        if (target[j].hide == False):
-                            hideFrameByScale(target[j], i, False)
-                #turn off all hide keyframes
-                for i in range(start, end):
-                    goToFrame(i)
-                    for j in range(0, len(target)):
-                        if (target[j].hide == True):
-                            hideFrameByScale(target[j], i, True)
-                            hideFrame(target[j], i, False) 
-            '''
     #~
-    #if (_bakeMesh==True and _caps==True and _saveLayers==False):
     if (_caps==True):
         delete(capsObj)
     #~
@@ -302,6 +281,29 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
         consolidateGroups()
         #~
         saveFile(origFileName + "_ASSEMBLY")
+
+def applySolidify(target=None, _extrude=1):
+    if not target:
+        target = s()
+    for obj in target:
+        setActiveObject(obj)
+        bpy.ops.object.modifier_add(type='SOLIDIFY')
+        bpy.context.object.modifiers["Solidify"].thickness = _extrude * 2
+        bpy.context.object.modifiers["Solidify"].offset = 0
+
+def applySubdiv(target=None, _subd=1):
+    if (_subd > 0):
+        if not target:
+            target = s()
+        for obj in target:
+            setActiveObject(obj)
+            bpy.ops.object.modifier_add(type='SUBSURF')
+            bpy.context.object.modifiers["Subsurf"].levels = _subd
+            bpy.context.object.modifiers["Subsurf"].render_levels = _subd
+            try:
+                bpy.context.object.modifiers["Subsurf"].use_opensubdiv = 1 # GPU if supported
+            except:
+                pass
 
 def gpMeshCleanup(target):
     gc.collect()

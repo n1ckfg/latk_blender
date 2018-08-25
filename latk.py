@@ -1391,63 +1391,56 @@ def writeBrushStrokes(filepath=None, bake=True, zipped=False):
     sg.append("\t\t\t\"layers\": [")
     #~
     sl = []
-    for f in range(0, len(gp.layers)):
+    for f, layer in enumerate(gp.layers):
         sb = []
-        layer = gp.layers[f]
-        for h in range(0, len(layer.frames)):
+        for h, frame in enumerate(layer.frames):
             currentFrame = h
             goToFrame(h)
             sb.append("\t\t\t\t\t\t{") # one frame
-            sb.append("\t\t\t\t\t\t\t\"frame_number\": " + str(layer.frames[currentFrame].frame_number) + ",")
+            sb.append("\t\t\t\t\t\t\t\"frame_number\": " + str(frame.frame_number) + ",")
             if (layer.parent):
                 sb.append("\t\t\t\t\t\t\t\"parent_location\": " + "[" + str(layer.parent.location[0]) + ", " + str(layer.parent.location[1]) + ", " + str(layer.parent.location[2]) + "],")
             sb.append("\t\t\t\t\t\t\t\"strokes\": [")
-            if (len(layer.frames[currentFrame].strokes) > 0):
+            if (len(frame.strokes) > 0):
                 sb.append("\t\t\t\t\t\t\t\t{") # one stroke
-                for i in range(0, len(layer.frames[currentFrame].strokes)):
+                for i, stroke in enumerate(frame.strokes):
                     color = (0,0,0)
                     try:
-                        color = palette.colors[layer.frames[currentFrame].strokes[i].colorname].color
+                        color = palette.colors[stroke.colorname].color
                     except:
                         pass
                     sb.append("\t\t\t\t\t\t\t\t\t\"color\": [" + str(color[0]) + ", " + str(color[1]) + ", " + str(color[2])+ "],")
                     sb.append("\t\t\t\t\t\t\t\t\t\"points\": [")
-                    for j in range(0, len(layer.frames[currentFrame].strokes[i].points)):
-                        x = 0.0
-                        y = 0.0
-                        z = 0.0
+                    for j, point in enumerate(stroke.points):
+                        x = point.co.x
+                        y = point.co.z
+                        z = point.co.y
                         pressure = 1.0
+                        pressure = point.pressure
                         strength = 1.0
-                        #~
-                        point = layer.frames[currentFrame].strokes[i].points[j].co
-                        pressure = layer.frames[currentFrame].strokes[i].points[j].pressure
-                        strength = layer.frames[currentFrame].strokes[i].points[j].strength
+                        strength = point.strength
                         #~
                         if useScaleAndOffset == True:
-                            x = (point.x * globalScale.x) + globalOffset.x
-                            y = (point.z * globalScale.y) + globalOffset.y
-                            z = (point.y * globalScale.z) + globalOffset.z
-                        else:
-                            x = point.x
-                            y = point.z
-                            z = point.y
+                            x = (x * globalScale.x) + globalOffset.x
+                            y = (y * globalScale.y) + globalOffset.y
+                            z = (z * globalScale.z) + globalOffset.z
                         #~
                         if roundValues == True:
                             sb.append("\t\t\t\t\t\t\t\t\t\t{\"co\": [" + roundVal(x, numPlaces) + ", " + roundVal(y, numPlaces) + ", " + roundVal(z, numPlaces) + "], \"pressure\": " + roundVal(pressure, numPlaces) + ", \"strength\": " + roundVal(strength, numPlaces))
                         else:
                             sb.append("\t\t\t\t\t\t\t\t\t\t{\"co\": [" + str(x) + ", " + str(y) + ", " + str(z) + "], \"pressure\": " + pressure + ", \"strength\": " + strength)                  
                         #~
-                        if j == len(layer.frames[currentFrame].strokes[i].points) - 1:
+                        if j == len(stroke.points) - 1:
                             sb[len(sb)-1] +="}"
                             sb.append("\t\t\t\t\t\t\t\t\t]")
-                            if (i == len(layer.frames[currentFrame].strokes) - 1):
+                            if (i == len(frame.strokes) - 1):
                                 sb.append("\t\t\t\t\t\t\t\t}") # last stroke for this frame
                             else:
                                 sb.append("\t\t\t\t\t\t\t\t},") # end stroke
                                 sb.append("\t\t\t\t\t\t\t\t{") # begin stroke
                         else:
                             sb[len(sb)-1] += "},"
-                    if i == len(layer.frames[currentFrame].strokes) - 1:
+                    if i == len(frame.strokes) - 1:
                         sb.append("\t\t\t\t\t\t\t]")
             else:
                 sb.append("\t\t\t\t\t\t\t]")
@@ -1513,46 +1506,44 @@ def readBrushStrokes(filepath=None, resizeTimeline=True):
     else:
         with open(url) as data_file:    
             data = json.load(data_file)
-            print("Read " + str(len(data["grease_pencil"][0]["layers"][0]["frames"])) + " frames on first layer.")
     #~
     longestFrameNum = 1
-    for h in range(0, len(data["grease_pencil"][0]["layers"])):
-        layer = gp.layers.new(data["grease_pencil"][0]["layers"][h]["name"], set_active=True)
+    for layerJson in data["grease_pencil"][0]["layers"]:
+        layer = gp.layers.new(layerJson["name"], set_active=True)
         palette = getActivePalette()    
         #~
-        for i in range(0, len(data["grease_pencil"][0]["layers"][h]["frames"])):
+        for i, frameJson in enumerate(layerJson["frames"]):
             frame = layer.frames.new(i) # frame number 5
             if (frame.frame_number > longestFrameNum):
                 longestFrameNum = frame.frame_number
-            for j in range(0, len(data["grease_pencil"][0]["layers"][h]["frames"][i]["strokes"])):
+            for strokeJson in frameJson["strokes"]:
                 strokeColor = (0,0,0)
                 try:
-                    strokeColor = (data["grease_pencil"][0]["layers"][h]["frames"][i]["strokes"][j]["color"][0], data["grease_pencil"][0]["layers"][h]["frames"][i]["strokes"][j]["color"][1], data["grease_pencil"][0]["layers"][h]["frames"][i]["strokes"][j]["color"][2])
+                    colorJson = strokeJson["color"]
+                    strokeColor = (colorJson[0], colorJson[1], colorJson[2])
                 except:
                     pass
                 createColor(strokeColor)
                 stroke = frame.strokes.new(getActiveColor().name)
                 stroke.draw_mode = "3DSPACE" # either of ("SCREEN", "3DSPACE", "2DSPACE", "2DIMAGE")
-                stroke.points.add(len(data["grease_pencil"][0]["layers"][h]["frames"][i]["strokes"][j]["points"])) # add 4 points
-                for l in range(0, len(data["grease_pencil"][0]["layers"][h]["frames"][i]["strokes"][j]["points"])):
-                    x = 0.0
-                    y = 0.0
-                    z = 0.0
+                pointsJson = strokeJson["points"]
+                stroke.points.add(len(pointsJson)) # add 4 points
+                for l, pointJson in enumerate(pointsJson):
+                    coJson = pointJson["co"] 
+                    x = coJson[0]
+                    y = coJson[2]
+                    z = coJson[1]
                     pressure = 1.0
                     strength = 1.0
-                    if useScaleAndOffset == True:
-                        x = (data["grease_pencil"][0]["layers"][h]["frames"][i]["strokes"][j]["points"][l]["co"][0] * globalScale.x) + globalOffset.x
-                        y = (data["grease_pencil"][0]["layers"][h]["frames"][i]["strokes"][j]["points"][l]["co"][2] * globalScale.y) + globalOffset.y
-                        z = (data["grease_pencil"][0]["layers"][h]["frames"][i]["strokes"][j]["points"][l]["co"][1] * globalScale.z) + globalOffset.z
-                    else:
-                        x = data["grease_pencil"][0]["layers"][h]["frames"][i]["strokes"][j]["points"][l]["co"][0]
-                        y = data["grease_pencil"][0]["layers"][h]["frames"][i]["strokes"][j]["points"][l]["co"][2]
-                        z = data["grease_pencil"][0]["layers"][h]["frames"][i]["strokes"][j]["points"][l]["co"][1]
+                    if (useScaleAndOffset == True):
+                        x = (x * globalScale.x) + globalOffset.x
+                        y = (y * globalScale.y) + globalOffset.y
+                        z = (z * globalScale.z) + globalOffset.z
                     #~
-                    if ("pressure" in data["grease_pencil"][0]["layers"][h]["frames"][i]["strokes"][j]["points"][l]):
-                        pressure = data["grease_pencil"][0]["layers"][h]["frames"][i]["strokes"][j]["points"][l]["pressure"]
-                    if ("strength" in data["grease_pencil"][0]["layers"][h]["frames"][i]["strokes"][j]["points"][l]):
-                        strength = data["grease_pencil"][0]["layers"][h]["frames"][i]["strokes"][j]["points"][l]["strength"]
+                    if ("pressure" in pointJson):
+                        pressure = pointJson["pressure"]
+                    if ("strength" in pointJson):
+                        strength = pointJson["strength"]
                     #stroke.points[l].co = (x, y, z)
                     createPoint(stroke, l, (x, y, z), pressure, strength)
     #~  
@@ -2453,6 +2444,23 @@ def getPixelFromUvArray(img, u, v):
 
 # 5 of 10. MESHES / GEOMETRY
 
+# TODO does not work, context error with decimate
+def bakeAllCurvesToMesh(_decimate=0.1):
+    start, end = getStartEnd()
+    for i in range(start, end):
+        goToFrame(i)
+        refresh()
+        deselect()
+        targetAll = matchName("_latk")
+        target = []
+        for obj in targetAll:
+            if (obj.hide==False):
+                target.append(obj)
+        for obj in target:
+            select(obj)
+            setActiveObject(obj)
+            applyModifiers(obj)   
+
 def joinObjects(target=None, center=False):
     if not target:
         target = s()
@@ -2495,11 +2503,10 @@ def assembleMesh(export=False, createPalette=True):
     masterUrlList = []
     masterGroupList = []
     #~
-    pencil = getActiveGp()
+    gp = getActiveGp()
     palette = getActivePalette()
     #~
-    for b in range(0, len(pencil.layers)):
-        layer = pencil.layers[b]
+    for b, layer in enumerate(gp.layers):
         url = origFileName + "_layer_" + layer.info
         masterGroupList.append(getLayerInfo(layer))
         masterUrlList.append(url)
@@ -2556,7 +2563,7 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
     start = bpy.context.scene.frame_start
     end = bpy.context.scene.frame_end + 1
     #~
-    pencil = getActiveGp()
+    gp = getActiveGp()
     palette = getActivePalette()
     #~
     capsObj = None
@@ -2569,8 +2576,7 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
         capsObj.name="caps_ob"
         capsObj.data.resolution_u = _bevelResolution
     #~
-    for b in range(0, len(pencil.layers)):
-        layer = pencil.layers[b]
+    for b, layer in enumerate(gp.layers):
         url = origFileName + "_layer_" + layer.info
         if (layer.lock==False):
             rangeStart = 0
@@ -2579,7 +2585,7 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
                 rangeStart = getActiveFrameNum(layer)
                 rangeEnd = rangeStart + 1
             for c in range(rangeStart, rangeEnd):
-                print("\n" + "*** gp layer " + str(b+1) + " of " + str(len(pencil.layers)) + " | gp frame " + str(c+1) + " of " + str(rangeEnd) + " ***")
+                print("\n" + "*** gp layer " + str(b+1) + " of " + str(len(gp.layers)) + " | gp frame " + str(c+1) + " of " + str(rangeEnd) + " ***")
                 frameList = []
                 for stroke in layer.frames[c].strokes:
                     origParent = None
@@ -2617,24 +2623,6 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
                     #~   
                     bpy.context.scene.objects.active = latk_ob
                     #~
-                    '''
-                    # solidify replaced by curve bevel
-                    if (_solidify==True):
-                        bpy.ops.object.modifier_add(type='SOLIDIFY')
-                        bpy.context.object.modifiers["Solidify"].thickness = _extrude * 2
-                        bpy.context.object.modifiers["Solidify"].offset = 0
-                    #~
-                    # *** careful, huge speed hit here.
-                    if (_subd > 0):
-                        bpy.ops.object.modifier_add(type='SUBSURF')
-                        bpy.context.object.modifiers["Subsurf"].levels = _subd
-                        bpy.context.object.modifiers["Subsurf"].render_levels = _subd
-                        try:
-                            bpy.context.object.modifiers["Subsurf"].use_opensubdiv = 1 # GPU if supported
-                        except:
-                            pass
-                    #~  
-                    '''
                     if (_bakeMesh==True): #or _remesh==True):
                         bpy.ops.object.modifier_add(type='DECIMATE')
                         bpy.context.object.modifiers["Decimate"].ratio = _decimate     
@@ -2722,25 +2710,7 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
                 masterUrlList.append(url)
                 #~
                 gpMeshCleanup(getLayerInfo(layer))
-            #~
-            '''
-            if (_hideMode=="scale"): 
-                target = matchName("latk_")
-                for i in range(start, end):
-                    goToFrame(i)
-                    for j in range(0, len(target)):
-                        if (target[j].hide == False):
-                            hideFrameByScale(target[j], i, False)
-                #turn off all hide keyframes
-                for i in range(start, end):
-                    goToFrame(i)
-                    for j in range(0, len(target)):
-                        if (target[j].hide == True):
-                            hideFrameByScale(target[j], i, True)
-                            hideFrame(target[j], i, False) 
-            '''
     #~
-    #if (_bakeMesh==True and _caps==True and _saveLayers==False):
     if (_caps==True):
         delete(capsObj)
     #~
@@ -2755,6 +2725,29 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
         consolidateGroups()
         #~
         saveFile(origFileName + "_ASSEMBLY")
+
+def applySolidify(target=None, _extrude=1):
+    if not target:
+        target = s()
+    for obj in target:
+        setActiveObject(obj)
+        bpy.ops.object.modifier_add(type='SOLIDIFY')
+        bpy.context.object.modifiers["Solidify"].thickness = _extrude * 2
+        bpy.context.object.modifiers["Solidify"].offset = 0
+
+def applySubdiv(target=None, _subd=1):
+    if (_subd > 0):
+        if not target:
+            target = s()
+        for obj in target:
+            setActiveObject(obj)
+            bpy.ops.object.modifier_add(type='SUBSURF')
+            bpy.context.object.modifiers["Subsurf"].levels = _subd
+            bpy.context.object.modifiers["Subsurf"].render_levels = _subd
+            try:
+                bpy.context.object.modifiers["Subsurf"].use_opensubdiv = 1 # GPU if supported
+            except:
+                pass
 
 def gpMeshCleanup(target):
     gc.collect()
@@ -3920,19 +3913,6 @@ class LightningArtistToolkitPreferences(bpy.types.AddonPreferences):
         layout.label("Add menu items to import and export third-party formats:")
         layout.prop(self, "extraFormats")
 
-'''
-class OBJECT_OT_latk_prefs(Operator):
-    """Display example preferences"""
-    bl_idname = "object.latk_prefs"
-    bl_label = "Latk Preferences"
-    bl_options = {'REGISTER', 'UNDO'}
-
-    def execute(self, context):
-        user_preferences = context.user_preferences
-        addon_prefs = user_preferences.addons[__name__].preferences
-        return {'FINISHED'}
-'''
-
 class ImportLatk(bpy.types.Operator, ImportHelper):
     """Load a Latk File"""
     resizeTimeline = BoolProperty(name="Resize Timeline", description="Set in and out points", default=True)
@@ -3952,43 +3932,10 @@ class ImportLatk(bpy.types.Operator, ImportHelper):
         keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "resizeTimeline"))
         if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
             import os
-            #keywords["relpath"] = os.path.dirname(bpy.data.filepath)
         #~
         keywords["resizeTimeline"] = self.resizeTimeline
         la.readBrushStrokes(**keywords)
         return {'FINISHED'}
-
-    '''
-    def execute(self, context):
-        # print("Selected: " + context.active_object.name)
-        from . import import_obj
-
-        if self.split_mode == 'OFF':
-            self.use_split_objects = False
-            self.use_split_groups = False
-        else:
-            self.use_groups_as_vgroups = False
-
-        keywords = self.as_keywords(ignore=("axis_forward",
-                                            "axis_up",
-                                            "filter_glob",
-                                            "split_mode",
-                                            ))
-
-        global_matrix = axis_conversion(from_forward=self.axis_forward,
-                                        from_up=self.axis_up,
-                                        ).to_4x4()
-        keywords["global_matrix"] = global_matrix
-
-        if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
-            import os
-            keywords["relpath"] = os.path.dirname(bpy.data.filepath)
-
-        return import_obj.load(context, **keywords)
-
-    def draw(self, context):
-        layout = self.layout
-    '''
 
 class ExportLatkJson(bpy.types.Operator, ExportHelper): # TODO combine into one class
     """Save a Latk Json File"""
@@ -4011,7 +3958,6 @@ class ExportLatkJson(bpy.types.Operator, ExportHelper): # TODO combine into one 
         keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "check_existing", "bake"))
         if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
             import os
-            #keywords["relpath"] = os.path.dirname(bpy.data.filepath)
         #~
         keywords["bake"] = self.bake
         #~
@@ -4021,7 +3967,7 @@ class ExportLatkJson(bpy.types.Operator, ExportHelper): # TODO combine into one 
 class ExportLatk(bpy.types.Operator, ExportHelper):  # TODO combine into one class
     """Save a Latk File"""
 
-    bake = BoolProperty(name="Bake Frames", description="Bake Keyframes to All Frames", default=True)
+    bake = BoolProperty(name="Bake Frames", description="Bake Keyframes to All Frames", default=False)
 
     bl_idname = "export_scene.latk"
     bl_label = 'Export Latk'
@@ -4039,37 +3985,11 @@ class ExportLatk(bpy.types.Operator, ExportHelper):  # TODO combine into one cla
         keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "check_existing", "bake"))
         if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
             import os
-            #keywords["relpath"] = os.path.dirname(bpy.data.filepath)
         #~
         keywords["bake"] = self.bake
         #~
         la.writeBrushStrokes(**keywords, zipped=True)
         return {'FINISHED'}
-
-    '''
-    path_mode = path_reference_mode
-
-    check_extension = True
-
-    def execute(self, context):
-        from . import export_obj
-
-        from mathutils import Matrix
-        keywords = self.as_keywords(ignore=("axis_forward",
-                                            "axis_up",
-                                            "global_scale",
-                                            "check_existing",
-                                            "filter_glob",
-                                            ))
-
-        global_matrix = (Matrix.Scale(self.global_scale, 4) *
-                         axis_conversion(to_forward=self.axis_forward,
-                                         to_up=self.axis_up,
-                                         ).to_4x4())
-
-        keywords["global_matrix"] = global_matrix
-        return export_obj.save(context, **keywords)
-    '''
 
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ 
 
@@ -4090,7 +4010,6 @@ class ImportNorman(bpy.types.Operator, ImportHelper):
         keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode"))
         if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
             import os
-            #keywords["relpath"] = os.path.dirname(bpy.data.filepath)
         #~
         la.importNorman(**keywords)
         return {'FINISHED'} 
@@ -4114,7 +4033,6 @@ class ImportGml(bpy.types.Operator, ImportHelper):
         keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "splitStrokes"))
         if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
             import os
-            #keywords["relpath"] = os.path.dirname(bpy.data.filepath)
         #~
         keywords["splitStrokes"] = self.splitStrokes
         #~
@@ -4138,11 +4056,9 @@ class ExportGml(bpy.types.Operator, ExportHelper):
 
     def execute(self, context):
         import latk as la
-        #keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "check_existing", "bake"))
         keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "check_existing"))
         if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
             import os
-            #keywords["relpath"] = os.path.dirname(bpy.data.filepath)
         #~
         keywords["make2d"] = self.make2d
         #~
@@ -4162,17 +4078,12 @@ class ExportSvg(bpy.types.Operator, ExportHelper):
             options={'HIDDEN'},
             )
 
-    #bake = BoolProperty(name="Bake Frames", description="Bake Keyframes to All Frames", default=True)
-
     def execute(self, context):
         import latk as la
         #keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "check_existing", "bake"))
         keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "check_existing"))
         if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
             import os
-            #keywords["relpath"] = os.path.dirname(bpy.data.filepath)
-        #~
-        #keywords["bake"] = self.bake
         #~
         la.writeSvg(**keywords)
         return {'FINISHED'} 
@@ -4190,17 +4101,12 @@ class ExportPainter(bpy.types.Operator, ExportHelper):
             options={'HIDDEN'},
             )
 
-    #bake = BoolProperty(name="Bake Frames", description="Bake Keyframes to All Frames", default=True)
-
     def execute(self, context):
         import latk as la
         #keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "check_existing", "bake"))
         keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "check_existing"))
         if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
             import os
-            #keywords["relpath"] = os.path.dirname(bpy.data.filepath)
-        #~
-        #keywords["bake"] = self.bake
         #~
         la.writePainter(**keywords)
         return {'FINISHED'} 
@@ -4215,53 +4121,49 @@ class FreestyleGPencil(bpy.types.PropertyGroup):
         name="Grease Pencil Export",
         description="Export Freestyle edges to Grease Pencil"
     )
-    '''
-    draw_mode = EnumProperty(
-        name="Draw Mode",
-        items=(
-            # ('2DSPACE', "2D Space", "Export a single frame", 0),
-            ('3DSPACE', "3D Space", "Export an animation", 1),
-            # ('2DIMAGE', "2D Image", "", 2),
-            ('SCREEN', "Screen", "", 3),
-            ),
-        default='3DSPACE'
-    )
-    '''
+
     use_fill = BoolProperty(
         name="Fill",
         description="Fill the contour with the object's material color",
         default=False
     )
+
     use_connecting = BoolProperty(
         name="Connecting Strokes",
         description="Connect all vertices with strokes",
         default=False
     )
+
     visible_only = BoolProperty(
         name="Visible Only",
         description="Only render visible lines",
         default=True
     )
+
     use_overwrite = BoolProperty(
         name="Overwrite",
         description="Remove the GPencil strokes from previous renders before a new render",
         default=False
     )
+
     vertexHitbox = FloatProperty(
         name="Vertex Hitbox",
         description="How close a GP stroke needs to be to a vertex",
         default=1.5
     )
+
     numColPlaces = IntProperty(
         name="Color Places",
         description="How many decimal places used to find matching colors",
         default=5,
     )
+
     numMaxColors = IntProperty(
         name="Max Colors",
         description="How many colors are in the Grease Pencil palette",
         default=16
     )
+
     doClearPalette = BoolProperty(
         name="Clear Palette",
         description="Delete palette before beginning a new render",
@@ -4287,9 +4189,6 @@ class FreestyleGPencil_Panel(bpy.types.Panel):
         freestyle = scene.render.layers.active.freestyle_settings
 
         layout.active = (gp.use_freestyle_gpencil_export and freestyle.mode != 'SCRIPT')
-
-        #row = layout.row()
-        #row.prop(gp, "draw_mode", expand=True)
 
         row = layout.row()
         row.prop(gp, "numColPlaces")
@@ -4416,7 +4315,7 @@ class LatkProperties(bpy.types.PropertyGroup):
     '''
 
     material_set_mode = EnumProperty(
-        name="Affects",
+        name="Affect",
         items=(
             ("ALL", "All", "All materials", 0),
             ("SELECTED", "Selected", "Selected materials", 1)
@@ -4425,7 +4324,7 @@ class LatkProperties(bpy.types.PropertyGroup):
     )
 
     material_shader_mode = EnumProperty(
-        name="Shader",
+        name="Type",
         items=(
             ("DIFFUSE", "Diffuse", "Diffuse shader", 0),
             #("EMISSION", "Emission", "Emission shader", 1),
@@ -4473,14 +4372,22 @@ class LatkProperties_Panel(bpy.types.Panel):
         row = layout.row()
         row.prop(latk, "remesh_mode", expand=True)
 
-        # ~ ~ ~ 
+        row = layout.row()
+        row.operator("latk_button.bakeselected")
+        row.operator("latk_button.bakeall")
+        row.operator("latk_button.strokesfrommesh")
 
         row = layout.row()
-        row.operator("latk_button.mtlshader")
+        row.prop(latk, "bakeMesh")
+        row.prop(latk, "saveLayers")
+        row.prop(latk, "vertexColorName")
+
+        # ~ ~ ~ 
 
         row = layout.row()
         row.prop(latk, "material_set_mode")
         row.prop(latk, "material_shader_mode")
+        row.operator("latk_button.mtlshader")
 
         # ~ ~ ~ 
 
@@ -4494,20 +4401,10 @@ class LatkProperties_Panel(bpy.types.Panel):
         row.operator("latk_button.splf")
 
         row = layout.row()
-        row.operator("latk_button.bakeselected")
-        #row.operator("latk_button.bakeall")
-        row.operator("latk_button.strokesfrommesh")
-
-        row = layout.row()
         row.prop(latk, "minRemapPressure")
         row.prop(latk, "maxRemapPressure")
         row.prop(latk, "remapPressureMode")
         row.operator("latk_button.remappressure")
-
-        row = layout.row()
-        row.prop(latk, "bakeMesh")
-        row.prop(latk, "saveLayers")
-        row.prop(latk, "vertexColorName")
 
 class Latk_Button_Gpmesh(bpy.types.Operator):
     """Mesh all GP strokes. Takes a while.."""
@@ -4565,7 +4462,6 @@ class Latk_Button_BakeSelected(bpy.types.Operator):
         decimateAndBake(_decimate=latk_settings.decimate)
         return {'FINISHED'}
 
-'''
 class Latk_Button_BakeAllCurves(bpy.types.Operator):
     """Bake all curves to exportable meshes"""
     bl_idname = "latk_button.bakeall"
@@ -4574,10 +4470,8 @@ class Latk_Button_BakeAllCurves(bpy.types.Operator):
     
     def execute(self, context):
         latk_settings = bpy.context.scene.latk_settings
-        target = matchName("latk")
-        decimateAndBake(target, _decimate=latk_settings.decimate)
+        bakeAllCurvesToMesh(_decimate=latk_settings.decimate)
         return {'FINISHED'}
-'''
 
 class Latk_Button_Gpmesh_SingleFrame(bpy.types.Operator):
     """Mesh a single frame. Great for fast previews"""
@@ -4614,7 +4508,7 @@ class Latk_Button_Splf(bpy.types.Operator):
 class Latk_Button_MtlShader(bpy.types.Operator):
     """Transfer parameters between Principled and Diffuse (default) shaders"""
     bl_idname = "latk_button.mtlshader"
-    bl_label = "Material Set"
+    bl_label = "Shader"
     bl_options = {'UNDO'}
     
     def execute(self, context):

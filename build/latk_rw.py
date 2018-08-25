@@ -151,63 +151,56 @@ def writeBrushStrokes(filepath=None, bake=True, zipped=False):
     sg.append("\t\t\t\"layers\": [")
     #~
     sl = []
-    for f in range(0, len(gp.layers)):
+    for f, layer in enumerate(gp.layers):
         sb = []
-        layer = gp.layers[f]
-        for h in range(0, len(layer.frames)):
+        for h, frame in enumerate(layer.frames):
             currentFrame = h
             goToFrame(h)
             sb.append("\t\t\t\t\t\t{") # one frame
-            sb.append("\t\t\t\t\t\t\t\"frame_number\": " + str(layer.frames[currentFrame].frame_number) + ",")
+            sb.append("\t\t\t\t\t\t\t\"frame_number\": " + str(frame.frame_number) + ",")
             if (layer.parent):
                 sb.append("\t\t\t\t\t\t\t\"parent_location\": " + "[" + str(layer.parent.location[0]) + ", " + str(layer.parent.location[1]) + ", " + str(layer.parent.location[2]) + "],")
             sb.append("\t\t\t\t\t\t\t\"strokes\": [")
-            if (len(layer.frames[currentFrame].strokes) > 0):
+            if (len(frame.strokes) > 0):
                 sb.append("\t\t\t\t\t\t\t\t{") # one stroke
-                for i in range(0, len(layer.frames[currentFrame].strokes)):
+                for i, stroke in enumerate(frame.strokes):
                     color = (0,0,0)
                     try:
-                        color = palette.colors[layer.frames[currentFrame].strokes[i].colorname].color
+                        color = palette.colors[stroke.colorname].color
                     except:
                         pass
                     sb.append("\t\t\t\t\t\t\t\t\t\"color\": [" + str(color[0]) + ", " + str(color[1]) + ", " + str(color[2])+ "],")
                     sb.append("\t\t\t\t\t\t\t\t\t\"points\": [")
-                    for j in range(0, len(layer.frames[currentFrame].strokes[i].points)):
-                        x = 0.0
-                        y = 0.0
-                        z = 0.0
+                    for j, point in enumerate(stroke.points):
+                        x = point.co.x
+                        y = point.co.z
+                        z = point.co.y
                         pressure = 1.0
+                        pressure = point.pressure
                         strength = 1.0
-                        #~
-                        point = layer.frames[currentFrame].strokes[i].points[j].co
-                        pressure = layer.frames[currentFrame].strokes[i].points[j].pressure
-                        strength = layer.frames[currentFrame].strokes[i].points[j].strength
+                        strength = point.strength
                         #~
                         if useScaleAndOffset == True:
-                            x = (point.x * globalScale.x) + globalOffset.x
-                            y = (point.z * globalScale.y) + globalOffset.y
-                            z = (point.y * globalScale.z) + globalOffset.z
-                        else:
-                            x = point.x
-                            y = point.z
-                            z = point.y
+                            x = (x * globalScale.x) + globalOffset.x
+                            y = (y * globalScale.y) + globalOffset.y
+                            z = (z * globalScale.z) + globalOffset.z
                         #~
                         if roundValues == True:
                             sb.append("\t\t\t\t\t\t\t\t\t\t{\"co\": [" + roundVal(x, numPlaces) + ", " + roundVal(y, numPlaces) + ", " + roundVal(z, numPlaces) + "], \"pressure\": " + roundVal(pressure, numPlaces) + ", \"strength\": " + roundVal(strength, numPlaces))
                         else:
                             sb.append("\t\t\t\t\t\t\t\t\t\t{\"co\": [" + str(x) + ", " + str(y) + ", " + str(z) + "], \"pressure\": " + pressure + ", \"strength\": " + strength)                  
                         #~
-                        if j == len(layer.frames[currentFrame].strokes[i].points) - 1:
+                        if j == len(stroke.points) - 1:
                             sb[len(sb)-1] +="}"
                             sb.append("\t\t\t\t\t\t\t\t\t]")
-                            if (i == len(layer.frames[currentFrame].strokes) - 1):
+                            if (i == len(frame.strokes) - 1):
                                 sb.append("\t\t\t\t\t\t\t\t}") # last stroke for this frame
                             else:
                                 sb.append("\t\t\t\t\t\t\t\t},") # end stroke
                                 sb.append("\t\t\t\t\t\t\t\t{") # begin stroke
                         else:
                             sb[len(sb)-1] += "},"
-                    if i == len(layer.frames[currentFrame].strokes) - 1:
+                    if i == len(frame.strokes) - 1:
                         sb.append("\t\t\t\t\t\t\t]")
             else:
                 sb.append("\t\t\t\t\t\t\t]")
@@ -273,46 +266,44 @@ def readBrushStrokes(filepath=None, resizeTimeline=True):
     else:
         with open(url) as data_file:    
             data = json.load(data_file)
-            print("Read " + str(len(data["grease_pencil"][0]["layers"][0]["frames"])) + " frames on first layer.")
     #~
     longestFrameNum = 1
-    for h in range(0, len(data["grease_pencil"][0]["layers"])):
-        layer = gp.layers.new(data["grease_pencil"][0]["layers"][h]["name"], set_active=True)
+    for layerJson in data["grease_pencil"][0]["layers"]:
+        layer = gp.layers.new(layerJson["name"], set_active=True)
         palette = getActivePalette()    
         #~
-        for i in range(0, len(data["grease_pencil"][0]["layers"][h]["frames"])):
+        for i, frameJson in enumerate(layerJson["frames"]):
             frame = layer.frames.new(i) # frame number 5
             if (frame.frame_number > longestFrameNum):
                 longestFrameNum = frame.frame_number
-            for j in range(0, len(data["grease_pencil"][0]["layers"][h]["frames"][i]["strokes"])):
+            for strokeJson in frameJson["strokes"]:
                 strokeColor = (0,0,0)
                 try:
-                    strokeColor = (data["grease_pencil"][0]["layers"][h]["frames"][i]["strokes"][j]["color"][0], data["grease_pencil"][0]["layers"][h]["frames"][i]["strokes"][j]["color"][1], data["grease_pencil"][0]["layers"][h]["frames"][i]["strokes"][j]["color"][2])
+                    colorJson = strokeJson["color"]
+                    strokeColor = (colorJson[0], colorJson[1], colorJson[2])
                 except:
                     pass
                 createColor(strokeColor)
                 stroke = frame.strokes.new(getActiveColor().name)
                 stroke.draw_mode = "3DSPACE" # either of ("SCREEN", "3DSPACE", "2DSPACE", "2DIMAGE")
-                stroke.points.add(len(data["grease_pencil"][0]["layers"][h]["frames"][i]["strokes"][j]["points"])) # add 4 points
-                for l in range(0, len(data["grease_pencil"][0]["layers"][h]["frames"][i]["strokes"][j]["points"])):
-                    x = 0.0
-                    y = 0.0
-                    z = 0.0
+                pointsJson = strokeJson["points"]
+                stroke.points.add(len(pointsJson)) # add 4 points
+                for l, pointJson in enumerate(pointsJson):
+                    coJson = pointJson["co"] 
+                    x = coJson[0]
+                    y = coJson[2]
+                    z = coJson[1]
                     pressure = 1.0
                     strength = 1.0
-                    if useScaleAndOffset == True:
-                        x = (data["grease_pencil"][0]["layers"][h]["frames"][i]["strokes"][j]["points"][l]["co"][0] * globalScale.x) + globalOffset.x
-                        y = (data["grease_pencil"][0]["layers"][h]["frames"][i]["strokes"][j]["points"][l]["co"][2] * globalScale.y) + globalOffset.y
-                        z = (data["grease_pencil"][0]["layers"][h]["frames"][i]["strokes"][j]["points"][l]["co"][1] * globalScale.z) + globalOffset.z
-                    else:
-                        x = data["grease_pencil"][0]["layers"][h]["frames"][i]["strokes"][j]["points"][l]["co"][0]
-                        y = data["grease_pencil"][0]["layers"][h]["frames"][i]["strokes"][j]["points"][l]["co"][2]
-                        z = data["grease_pencil"][0]["layers"][h]["frames"][i]["strokes"][j]["points"][l]["co"][1]
+                    if (useScaleAndOffset == True):
+                        x = (x * globalScale.x) + globalOffset.x
+                        y = (y * globalScale.y) + globalOffset.y
+                        z = (z * globalScale.z) + globalOffset.z
                     #~
-                    if ("pressure" in data["grease_pencil"][0]["layers"][h]["frames"][i]["strokes"][j]["points"][l]):
-                        pressure = data["grease_pencil"][0]["layers"][h]["frames"][i]["strokes"][j]["points"][l]["pressure"]
-                    if ("strength" in data["grease_pencil"][0]["layers"][h]["frames"][i]["strokes"][j]["points"][l]):
-                        strength = data["grease_pencil"][0]["layers"][h]["frames"][i]["strokes"][j]["points"][l]["strength"]
+                    if ("pressure" in pointJson):
+                        pressure = pointJson["pressure"]
+                    if ("strength" in pointJson):
+                        strength = pointJson["strength"]
                     #stroke.points[l].co = (x, y, z)
                     createPoint(stroke, l, (x, y, z), pressure, strength)
     #~  
