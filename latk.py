@@ -3907,13 +3907,13 @@ class LightningArtistToolkitPreferences(bpy.types.AddonPreferences):
     bl_idname = __name__
     
     extraFormats = bpy.props.BoolProperty(
-        name = 'Third-Party Formats',
-        description = "Add menu items to import and export third-party formats."
+        name = 'Additional Formats',
+        description = "Add menu items to import and export more formats."
     )
 
     def draw(self, context):
         layout = self.layout
-        layout.label("Add menu items to import and export third-party formats:")
+        layout.label("Add menu items to import and export more formats:")
         layout.prop(self, "extraFormats")
 
 class ImportLatk(bpy.types.Operator, ImportHelper):
@@ -4541,9 +4541,9 @@ def menu_func_import(self, context):
         self.layout.operator(ImportNorman.bl_idname, text="Latk - Norman (.json)")
 
 def menu_func_export(self, context):
-    self.layout.operator(ExportLatkJson.bl_idname, text="Latk Animation (.json)")
     self.layout.operator(ExportLatk.bl_idname, text="Latk Animation (.latk)")
     if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats == True):
+        self.layout.operator(ExportLatkJson.bl_idname, text="Latk Animation (.json)")
         #self.layout.operator(ExportGml.bl_idname, text="Latk - GML (.gml)")
         self.layout.operator(ExportSvg.bl_idname, text="Latk - SVG SMIL (.svg)")
         self.layout.operator(ExportPainter.bl_idname, text="Latk - Corel Painter (.txt)")
