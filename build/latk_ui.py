@@ -474,7 +474,7 @@ class LatkProperties_Panel(bpy.types.Panel):
 
         row = layout.row()
         row.operator("latk_button.bakeselected")
-        row.operator("latk_button.bakeall")
+        row.operator("latk_button.booleanmod") #"latk_button.bakeall")
         row.operator("latk_button.strokesfrommesh")
 
         row = layout.row()
@@ -505,6 +505,16 @@ class LatkProperties_Panel(bpy.types.Panel):
         row.prop(latk, "maxRemapPressure")
         row.prop(latk, "remapPressureMode")
         row.operator("latk_button.remappressure")
+
+class Latk_Button_BooleanMod(bpy.types.Operator):
+    """Mesh all GP strokes. Takes a while.."""
+    bl_idname = "latk_button.booleanmod"
+    bl_label = "Bool"
+    bl_options = {'UNDO'}
+    
+    def execute(self, context):
+        booleanMod()
+        return {'FINISHED'}
 
 class Latk_Button_Gpmesh(bpy.types.Operator):
     """Mesh all GP strokes. Takes a while.."""
