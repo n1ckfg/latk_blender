@@ -867,7 +867,7 @@ def tiltBrushJson_DecodeData(obj, dataType="v"):
         return(data_grouped)
 
 def importTiltBrush(filepath=None, vertSkip=1):
-    globalScale = Vector((-1, 1, 1))
+    globalScale = Vector((1, 1, 1))
     globalOffset = Vector((0, 0, 0))
     useScaleAndOffset = True
     gp = getActiveGp()
@@ -888,34 +888,39 @@ def importTiltBrush(filepath=None, vertSkip=1):
                 strokeColor = (tstroke.brush_color[0], tstroke.brush_color[1], tstroke.brush_color[2])
             except:
                 pass
-            for controlpoint in tstroke.controlpoints:
+            for i in range(0, len(tstroke.controlpoints), vertSkip):
+                controlpoint = tstroke.controlpoints[i]
+                last_controlpoint = tstroke.controlpoints[i-1]
                 x = 0.0
                 y = 0.0
                 z = 0.0
                 #~
                 point = controlpoint.position
-                pressure = 1.0
-                strength = 1.0
-                try:
-                    pressure = controlpoint.extension[0]
-                except:
-                    pass
-                #~
-                x = point[0]
-                y = point[2]
-                z = point[1]
-                if useScaleAndOffset == True:
-                    x = (x * globalScale[0]) + globalOffset[0]
-                    y = (y * globalScale[1]) + globalOffset[1]
-                    z = (z * globalScale[2]) + globalOffset[2]
-                pointGroup.append((x, y, z, pressure, strength))
-                #~
-                createColor(strokeColor)
-                stroke = frame.strokes.new(getActiveColor().name)
-                stroke.points.add(len(pointGroup)) # add 4 points
-                stroke.draw_mode = "3DSPACE" # either of ("SCREEN", "3DSPACE", "2DSPACE", "2DIMAGE")  
-                for l, point in enumerate(pointGroup):
-                    createPoint(stroke, l, (point[0], point[1], point[2]), point[3], point[4])
+                last_point = last_controlpoint.position
+                if (i==0 or point != last_point): # try to prevent duplicate points
+                    pressure = 1.0
+                    strength = 1.0
+                    try:
+                        pressure = controlpoint.extension[0]
+                        # TODO strength?
+                    except:
+                        pass
+                    #~
+                    x = point[0]
+                    y = point[2]
+                    z = point[1]
+                    if useScaleAndOffset == True:
+                        x = (x * globalScale[0]) + globalOffset[0]
+                        y = (y * globalScale[1]) + globalOffset[1]
+                        z = (z * globalScale[2]) + globalOffset[2]
+                    pointGroup.append((x, y, z, pressure, strength))
+                    #~
+                    createColor(strokeColor)
+                    stroke = frame.strokes.new(getActiveColor().name)
+                    stroke.points.add(len(pointGroup)) # add 4 points
+                    stroke.draw_mode = "3DSPACE" # either of ("SCREEN", "3DSPACE", "2DSPACE", "2DIMAGE")  
+                    for l, point in enumerate(pointGroup):
+                        createPoint(stroke, l, (point[0], point[1], point[2]), point[3], point[4])
         # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
         """Prints out some rough information about the strokes.
         Pass a tiltbrush.tilt.Sketch instance."""
@@ -974,7 +979,7 @@ def importTiltBrush(filepath=None, vertSkip=1):
                             pass
                         else:
                             try:
-                                x = vert[0]
+                                x = -vert[0]
                                 y = vert[2]
                                 z = vert[1]
                                 if (useScaleAndOffset == True):
