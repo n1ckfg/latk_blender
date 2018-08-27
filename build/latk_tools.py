@@ -1,5 +1,8 @@
 # 2 of 10. TOOLS
 
+def loadJson(url):
+    return json.load(open(url))
+
 def gpWorldRoot(name="Empty"):
     bpy.ops.object.empty_add(type="PLAIN_AXES")
     target = ss()

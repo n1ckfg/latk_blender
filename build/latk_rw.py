@@ -250,9 +250,9 @@ def readBrushStrokes(filepath=None, resizeTimeline=True):
     #~
     gp = getActiveGp()
     #~
+    useScaleAndOffset = True
     globalScale = Vector((10, 10, 10))
     globalOffset = Vector((0, 0, 0))
-    useScaleAndOffset = True
     #~
     data = None
 
@@ -312,55 +312,54 @@ def readBrushStrokes(filepath=None, resizeTimeline=True):
             setStartEnd(0, longestFrameNum, pad=False)              
         return {'FINISHED'}
     elif (getKeyByIndex(data) == "strokes"): # Tilt Brush
+        globalScale = Vector((1, 1, 1))
         layer = gp.layers.new("TiltBrush", set_active=True)
         palette = getActivePalette()    
+        pressure = 1.0
+        strength = 1.0
         #~
-        frame = layer.frames.new(0) # frame number 5
+        frame = layer.frames.new(1)
         for strokeJson in data["strokes"]:
-            vertGroupRaw = tiltBrushDecodeData(strokeJson["v"], "v")
-            colorGroup = tiltBrushDecodeData(strokeJson["c"], "c")
-            if (vertGroupRaw != None):
-                try:
-                    vertGroup = []
+            strokeColor = (0,0,0)
+            try:
+                colorGroup = tiltBrushDecodeData(strokeJson["c"], "c")
+                strokeColor = (colorGroup[0][0], colorGroup[0][1], colorGroup[0][2])
+            except:
+                pass
+            #~
+            vertsFailed = False
+            vertGroup = []
+            pointGroup = []
+            try:
+                vertGroup = tiltBrushDecodeData(strokeJson["v"], "v")
+            except:
+                vertsFailed = True
 
-                    for j in range(0, len(vertGroupRaw), 3):
-                        if (checkForZero(vertGroupRaw[j+2])==False):
-                            vertGroup.append(vertGroupRaw[j+2])
-
-                    strokeColor = (0,0,0)
+            if (vertsFailed==False and len(vertGroup) > 0):
+                for vert in vertGroup:
                     try:
-                        strokeColor = (colorGroup[0][0], colorGroup[0][1], colorGroup[0][2])
-                    except:
-                        pass
-                    createColor(strokeColor)
-                    stroke = frame.strokes.new(getActiveColor().name)
-                    stroke.draw_mode = "3DSPACE" # either of ("SCREEN", "3DSPACE", "2DSPACE", "2DIMAGE")
-                    stroke.points.add(len(vertGroup)) # add 4 points
-
-                    for l, point in enumerate(vertGroup):
-                        x = point[0]
-                        y = point[2]
-                        z = point[1]
-                        pressure = 1.0
-                        strength = 1.0
+                        x = -vert[0]
+                        y = vert[2]
+                        z = vert[1]
                         if (useScaleAndOffset == True):
                             x = (x * globalScale.x) + globalOffset.x
                             y = (y * globalScale.y) + globalOffset.y
                             z = (z * globalScale.z) + globalOffset.z
-                        #~
-                        # TODO implement pressure and strength if available
-                        '''
-                        if ("pressure" in pointJson):
-                            pressure = pointJson["pressure"]
-                        if ("strength" in pointJson):
-                            strength = pointJson["strength"]
-                        '''
-                        createPoint(stroke, l, (x, y, z), pressure, strength)
-                except:
-                    pass
+                        pointGroup.append((x,y,z))
+                    except:
+                        pass
+
+            if (vertsFailed==False):
+                createColor(strokeColor)
+                stroke = frame.strokes.new(getActiveColor().name)
+                stroke.points.add(len(vertGroup)) # add 4 points
+                stroke.draw_mode = "3DSPACE" # either of ("SCREEN", "3DSPACE", "2DSPACE", "2DIMAGE")                for vert in vertGroup:
+                for l, point in enumerate(pointGroup):
+                    createPoint(stroke, l, (point[0], point[1], point[2]), pressure, strength)
+                
         if (resizeTimeline == True):
             start, end = getStartEnd()
-            setStartEnd(0, end, pad=False)              
+            setStartEnd(1, end, pad=False)              
         return {'FINISHED'}
 
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
@@ -885,20 +884,24 @@ def tiltBrushDecodeData(obj, dataType="v"):
         ('t',  'f', 4),
     ]
     '''
-    if (dataType=="v"):
+    if (dataType=="v" or dataType=="n" or dataType=="t"):
         typeChar = "f"
     elif (dataType=="c"):
         typeChar = "I"
 
-    num_verts = 0
+    num_verts = 1
     empty = None
     data_grouped = []
     
     data_bytes = base64.b64decode(obj)
     fmt = "<%d%c" % (len(data_bytes) / 4, typeChar)
     data_words = struct.unpack(fmt, data_bytes)
-    num_verts = len(data_words) / 3
     
+    if (dataType=="v" or dataType=="n"):
+        num_verts = len(data_words) / 3
+    elif (dataType=="t"):
+        num_verts = len(data_words) / 4
+
     if (len(data_words) % num_verts != 0):
         return None
     else: 
