@@ -93,6 +93,27 @@ class ExportLatk(bpy.types.Operator, ExportHelper):  # TODO combine into one cla
 
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ 
 
+class ImportTiltBrushJson(bpy.types.Operator, ImportHelper):
+    """Load a Norman File"""
+    bl_idname = "import_scene.tbjson"
+    bl_label = "Import Tilt Brush Json"
+    bl_options = {'PRESET', 'UNDO'}
+
+    filename_ext = ".json"
+    filter_glob = StringProperty(
+            default="*.json",
+            options={'HIDDEN'},
+            )
+
+    def execute(self, context):
+        import latk as la
+        keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode"))
+        if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
+            import os
+        #~
+        la.importTiltBrushJson(**keywords)
+        return {'FINISHED'} 
+
 class ImportNorman(bpy.types.Operator, ImportHelper):
     """Load a Norman File"""
     bl_idname = "import_scene.norman"
@@ -633,14 +654,15 @@ class Latk_Button_MtlShader(bpy.types.Operator):
 
 def menu_func_import(self, context):
     self.layout.operator(ImportLatk.bl_idname, text="Latk Animation (.latk, .json)")
+    self.layout.operator(ImportTiltBrushJson.bl_idname, text="Tilt Brush (.json)")
     if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats == True):
         self.layout.operator(ImportGml.bl_idname, text="Latk - GML (.gml)")
         self.layout.operator(ImportNorman.bl_idname, text="Latk - Norman (.json)")
 
 def menu_func_export(self, context):
     self.layout.operator(ExportLatk.bl_idname, text="Latk Animation (.latk)")
+    self.layout.operator(ExportLatkJson.bl_idname, text="Latk Animation (.json)")
     if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats == True):
-        self.layout.operator(ExportLatkJson.bl_idname, text="Latk Animation (.json)")
         #self.layout.operator(ExportGml.bl_idname, text="Latk - GML (.gml)")
         self.layout.operator(ExportSvg.bl_idname, text="Latk - SVG SMIL (.svg)")
         self.layout.operator(ExportPainter.bl_idname, text="Latk - Corel Painter (.txt)")
