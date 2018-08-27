@@ -472,6 +472,11 @@ def deleteName(_name="latk"):
         except:
             print("error deleting " + obj.name)
 
+def getKeyByIndex(data, index=0):
+    for i, key in enumerate(data.keys()):
+        if (i == index):
+            return key
+
 def roundVal(a, b):
     formatter = "{0:." + str(b) + "f}"
     return formatter.format(a)
@@ -646,6 +651,14 @@ def rgbToHex(color, normalized=False):
     else:
         return "#%02x%02x%02x" % (int(color[0]), int(color[1]), int(color[2]))
 
+def rgbIntToTuple(rgbint, normalized=False):
+    rgbVals = [ rgbint // 256 // 256 % 256, rgbint // 256 % 256, rgbint % 256 ]
+    if (normalized == True):
+        for i in range(0, len(rgbVals)):
+            c = float(rgbVals[i]) / 255.0
+            rgbVals[i] = c;
+    return (rgbVals[2], rgbVals[1], rgbVals[0])
+
 def normRgbToHex(color):
     return rgbToHex(color, normalized=True)
 
@@ -798,6 +811,12 @@ def getActiveFrameNum():
             returns = i
     return returns
 '''
+
+def checkForZero(v, hitRange=0.005):
+    if (abs(v[0]) < hitRange and abs(v[1]) < hitRange and abs(v[2]) < hitRange):
+        return True
+    else:
+        return False
 
 def getActiveFrameTimelineNum():
     return getActiveLayer().frames[getActiveFrameNum()].frame_number

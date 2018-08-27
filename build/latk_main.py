@@ -44,6 +44,9 @@ from mathutils import Vector, Matrix
 from math import sqrt
 import math
 import json
+import struct
+import base64
+from itertools import zip_longest
 import re
 from bpy_extras.io_utils import unpack_list
 import parameter_editor

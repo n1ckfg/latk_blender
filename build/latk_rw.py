@@ -267,49 +267,102 @@ def readBrushStrokes(filepath=None, resizeTimeline=True):
         with open(url) as data_file:    
             data = json.load(data_file)
     #~
-    longestFrameNum = 1
-    for layerJson in data["grease_pencil"][0]["layers"]:
-        layer = gp.layers.new(layerJson["name"], set_active=True)
+    if (getKeyByIndex(data) == "grease_pencil"): # Latk format
+        longestFrameNum = 1
+        for layerJson in data["grease_pencil"][0]["layers"]:
+            layer = gp.layers.new(layerJson["name"], set_active=True)
+            palette = getActivePalette()    
+            #~
+            for i, frameJson in enumerate(layerJson["frames"]):
+                frame = layer.frames.new(i) # frame number 5
+                if (frame.frame_number > longestFrameNum):
+                    longestFrameNum = frame.frame_number
+                for strokeJson in frameJson["strokes"]:
+                    strokeColor = (0,0,0)
+                    try:
+                        colorJson = strokeJson["color"]
+                        strokeColor = (colorJson[0], colorJson[1], colorJson[2])
+                    except:
+                        pass
+                    createColor(strokeColor)
+                    stroke = frame.strokes.new(getActiveColor().name)
+                    stroke.draw_mode = "3DSPACE" # either of ("SCREEN", "3DSPACE", "2DSPACE", "2DIMAGE")
+                    pointsJson = strokeJson["points"]
+                    stroke.points.add(len(pointsJson)) # add 4 points
+                    for l, pointJson in enumerate(pointsJson):
+                        coJson = pointJson["co"] 
+                        x = coJson[0]
+                        y = coJson[2]
+                        z = coJson[1]
+                        pressure = 1.0
+                        strength = 1.0
+                        if (useScaleAndOffset == True):
+                            x = (x * globalScale.x) + globalOffset.x
+                            y = (y * globalScale.y) + globalOffset.y
+                            z = (z * globalScale.z) + globalOffset.z
+                        #~
+                        if ("pressure" in pointJson):
+                            pressure = pointJson["pressure"]
+                        if ("strength" in pointJson):
+                            strength = pointJson["strength"]
+                        #stroke.points[l].co = (x, y, z)
+                        createPoint(stroke, l, (x, y, z), pressure, strength)
+        #~  
+        if (resizeTimeline == True):
+            setStartEnd(0, longestFrameNum, pad=False)              
+        return {'FINISHED'}
+    elif (getKeyByIndex(data) == "strokes"): # Tilt Brush
+        layer = gp.layers.new("TiltBrush", set_active=True)
         palette = getActivePalette()    
         #~
-        for i, frameJson in enumerate(layerJson["frames"]):
-            frame = layer.frames.new(i) # frame number 5
-            if (frame.frame_number > longestFrameNum):
-                longestFrameNum = frame.frame_number
-            for strokeJson in frameJson["strokes"]:
-                strokeColor = (0,0,0)
+        frame = layer.frames.new(0) # frame number 5
+        for strokeJson in data["strokes"]:
+            vertGroupRaw = tiltBrushDecodeData(strokeJson["v"], "v")
+            colorGroup = tiltBrushDecodeData(strokeJson["c"], "c")
+            if (vertGroupRaw != None):
                 try:
-                    colorJson = strokeJson["color"]
-                    strokeColor = (colorJson[0], colorJson[1], colorJson[2])
+                    vertGroup = []
+
+                    for j in range(0, len(vertGroupRaw), 3):
+                        if (checkForZero(vertGroupRaw[j+2])==False):
+                            vertGroup.append(vertGroupRaw[j+2])
+
+                    strokeColor = (0,0,0)
+                    try:
+                        strokeColor = (colorGroup[0][0], colorGroup[0][1], colorGroup[0][2])
+                    except:
+                        pass
+                    createColor(strokeColor)
+                    stroke = frame.strokes.new(getActiveColor().name)
+                    stroke.draw_mode = "3DSPACE" # either of ("SCREEN", "3DSPACE", "2DSPACE", "2DIMAGE")
+                    stroke.points.add(len(vertGroup)) # add 4 points
+
+                    for l, point in enumerate(vertGroup):
+                        x = point[0]
+                        y = point[2]
+                        z = point[1]
+                        pressure = 1.0
+                        strength = 1.0
+                        if (useScaleAndOffset == True):
+                            x = (x * globalScale.x) + globalOffset.x
+                            y = (y * globalScale.y) + globalOffset.y
+                            z = (z * globalScale.z) + globalOffset.z
+                        #~
+                        # TODO implement pressure and strength if available
+                        '''
+                        if ("pressure" in pointJson):
+                            pressure = pointJson["pressure"]
+                        if ("strength" in pointJson):
+                            strength = pointJson["strength"]
+                        '''
+                        createPoint(stroke, l, (x, y, z), pressure, strength)
                 except:
                     pass
-                createColor(strokeColor)
-                stroke = frame.strokes.new(getActiveColor().name)
-                stroke.draw_mode = "3DSPACE" # either of ("SCREEN", "3DSPACE", "2DSPACE", "2DIMAGE")
-                pointsJson = strokeJson["points"]
-                stroke.points.add(len(pointsJson)) # add 4 points
-                for l, pointJson in enumerate(pointsJson):
-                    coJson = pointJson["co"] 
-                    x = coJson[0]
-                    y = coJson[2]
-                    z = coJson[1]
-                    pressure = 1.0
-                    strength = 1.0
-                    if (useScaleAndOffset == True):
-                        x = (x * globalScale.x) + globalOffset.x
-                        y = (y * globalScale.y) + globalOffset.y
-                        z = (z * globalScale.z) + globalOffset.z
-                    #~
-                    if ("pressure" in pointJson):
-                        pressure = pointJson["pressure"]
-                    if ("strength" in pointJson):
-                        strength = pointJson["strength"]
-                    #stroke.points[l].co = (x, y, z)
-                    createPoint(stroke, l, (x, y, z), pressure, strength)
-    #~  
-    if (resizeTimeline == True):
-        setStartEnd(0, longestFrameNum, pad=False)              
-    return {'FINISHED'}
+        if (resizeTimeline == True):
+            start, end = getStartEnd()
+            setStartEnd(0, end, pad=False)              
+        return {'FINISHED'}
+
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 
@@ -812,6 +865,54 @@ class InMemoryZip(object):
         f = open(filename, "wb")
         f.write(self.readFromMemory())
         f.close()
+
+# ~ ~ ~
+
+def tiltBrushGrouper(n, iterable, fillvalue=None):
+  """grouper(3, 'ABCDEFG', 'x') --> ABC DEF Gxx"""
+  args = [iter(iterable)] * n
+  return zip_longest(fillvalue=fillvalue, *args)
+
+def tiltBrushDecodeData(obj, dataType="v"):
+    '''    
+    VERTEX_ATTRIBUTES = [
+        # Attribute name, type code
+        ('v',  'f', None),
+        ('n',  'f', 3),
+        ('uv0','f', None),
+        ('uv1','f', None),
+        ('c',  'I', 1),
+        ('t',  'f', 4),
+    ]
+    '''
+    if (dataType=="v"):
+        typeChar = "f"
+    elif (dataType=="c"):
+        typeChar = "I"
+
+    num_verts = 0
+    empty = None
+    data_grouped = []
+    
+    data_bytes = base64.b64decode(obj)
+    fmt = "<%d%c" % (len(data_bytes) / 4, typeChar)
+    data_words = struct.unpack(fmt, data_bytes)
+    num_verts = len(data_words) / 3
+    
+    if (len(data_words) % num_verts != 0):
+        return None
+    else: 
+        stride_words = int(len(data_words) / num_verts)
+        if stride_words > 1:
+            data_grouped = list(tiltBrushGrouper(stride_words, data_words))
+        else:
+            data_grouped = list(data_words)
+
+        if (dataType == "c"):
+            for i in range(0, len(data_grouped)):
+                data_grouped[i] = rgbIntToTuple(data_grouped[i][0], normalized=True)
+
+        return(data_grouped)
 
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
