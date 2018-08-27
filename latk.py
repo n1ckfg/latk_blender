@@ -2131,7 +2131,7 @@ def tiltBrushDecodeData(obj, dataType="v"):
 
         return(data_grouped)
 
-def importTiltBrushJson(filepath=None):
+def importTiltBrushJson(filepath=None, vertSkip=1):
     globalScale = Vector((1, 1, 1))
     globalOffset = Vector((0, 0, 0))
     useScaleAndOffset = True
@@ -2163,22 +2163,23 @@ def importTiltBrushJson(filepath=None):
             vertsFailed = True
 
         if (vertsFailed==False and len(vertGroup) > 0):
-            for j, vert in enumerate(vertGroup):
-            	if (j==0 or vertGroup[j] != vertGroup[j-1]): # try to prevent duplicate points
-	                if (vert[0] == 0 and vert[1] == 0 and vert[2] == 0):
-	                	pass
-	                else:
-		                try:
-		                    x = -vert[0]
-		                    y = vert[2]
-		                    z = vert[1]
-		                    if (useScaleAndOffset == True):
-		                        x = (x * globalScale.x) + globalOffset.x
-		                        y = (y * globalScale.y) + globalOffset.y
-		                        z = (z * globalScale.z) + globalOffset.z
-		                    pointGroup.append((x,y,z))
-		                except:
-		                    pass
+            for j in range(0, len(vertGroup), vertSkip):
+                if (j==0 or vertGroup[j] != vertGroup[j-1]): # try to prevent duplicate points
+                    vert = vertGroup[j]
+                    if (vert[0] == 0 and vert[1] == 0 and vert[2] == 0):
+                        pass
+                    else:
+                        try:
+                            x = -vert[0]
+                            y = vert[2]
+                            z = vert[1]
+                            if (useScaleAndOffset == True):
+                                x = (x * globalScale.x) + globalOffset.x
+                                y = (y * globalScale.y) + globalOffset.y
+                                z = (z * globalScale.z) + globalOffset.z
+                            pointGroup.append((x,y,z))
+                        except:
+                            pass
 
         if (vertsFailed==False):
             createColor(strokeColor)
@@ -4145,12 +4146,15 @@ class ImportTiltBrushJson(bpy.types.Operator, ImportHelper):
             options={'HIDDEN'},
             )
 
+    vertSkip = IntProperty(name="Read Vertices", description="Read every n vertices", default=1)
+
     def execute(self, context):
         import latk as la
         keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode"))
         if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
             import os
         #~
+        keywords["vertSkip"] = self.vertSkip
         la.importTiltBrushJson(**keywords)
         return {'FINISHED'} 
 

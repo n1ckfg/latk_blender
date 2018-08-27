@@ -105,12 +105,15 @@ class ImportTiltBrushJson(bpy.types.Operator, ImportHelper):
             options={'HIDDEN'},
             )
 
+    vertSkip = IntProperty(name="Read Vertices", description="Read every n vertices", default=1)
+
     def execute(self, context):
         import latk as la
         keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode"))
         if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
             import os
         #~
+        keywords["vertSkip"] = self.vertSkip
         la.importTiltBrushJson(**keywords)
         return {'FINISHED'} 
 
