@@ -1,4 +1,4 @@
-# 9 of 10. TILT BRUSH
+# 9 of 10. TILT BRUSH binary reader -- use of Blender Python API stops here.
 
 # Copyright 2016 Google Inc. All Rights Reserved.
 # 
@@ -559,3 +559,5 @@ class ControlPoint(object):
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
+
+# END
