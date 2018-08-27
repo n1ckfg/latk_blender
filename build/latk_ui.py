@@ -312,9 +312,9 @@ class LatkProperties(bpy.types.PropertyGroup):
     bl_idname = "GREASE_PENCIL_PT_LatkProperties"
 
     bakeMesh = BoolProperty(
-    	name="Auto Bake Curves",
-    	description="Off: major speedup if you're staying in Blender. On: slow but keeps everything exportable",
-    	default=False
+        name="Auto Bake Curves",
+        description="Off: major speedup if you're staying in Blender. On: slow but keeps everything exportable",
+        default=False
     )
 
     minRemapPressure = FloatProperty(
@@ -339,9 +339,9 @@ class LatkProperties(bpy.types.PropertyGroup):
     )
 
     saveLayers = BoolProperty(
-    	name="Save Layers",
-    	description="Save every layer to its own file",
-    	default=False
+        name="Save Layers",
+        description="Save every layer to its own file",
+        default=False
     )
 
     thickness = FloatProperty(

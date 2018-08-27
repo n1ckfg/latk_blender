@@ -112,9 +112,9 @@ def cameraArray(target=None, hideTarget=True, removeCameras=True, removeLayers=T
     if not target:
         target = ss()
     if (removeCameras == True):
-    	cams = matchName("Camera")
-    	for cam in cams:
-    		delete(cam)
+        cams = matchName("Camera")
+        for cam in cams:
+            delete(cam)
     #~
     scene = bpy.context.scene
     render = scene.render
@@ -1055,9 +1055,9 @@ def reprojectAllStrokes():
     for stroke in strokes:
         points = getStrokePoints(stroke)
         try:
-        	drawPoints(points)
+            drawPoints(points)
         except:
-        	pass
+            pass
 
 def compareTuple(t1, t2, numPlaces=5):
     if (roundVal(t1[0], numPlaces) == roundVal(t2[0], numPlaces) and roundVal(t1[1], numPlaces) == roundVal(t2[1], numPlaces) and roundVal(t1[2], numPlaces) == roundVal(t2[2], numPlaces)):
@@ -3938,7 +3938,7 @@ def gp():
 
 def gs():
     gpMesh(_singleFrame=True)
-	
+    
 def gb():
     dn()
     gpMesh(_bakeMesh=True)
@@ -4344,9 +4344,9 @@ class LatkProperties(bpy.types.PropertyGroup):
     bl_idname = "GREASE_PENCIL_PT_LatkProperties"
 
     bakeMesh = BoolProperty(
-    	name="Auto Bake Curves",
-    	description="Off: major speedup if you're staying in Blender. On: slow but keeps everything exportable",
-    	default=False
+        name="Auto Bake Curves",
+        description="Off: major speedup if you're staying in Blender. On: slow but keeps everything exportable",
+        default=False
     )
 
     minRemapPressure = FloatProperty(
@@ -4371,9 +4371,9 @@ class LatkProperties(bpy.types.PropertyGroup):
     )
 
     saveLayers = BoolProperty(
-    	name="Save Layers",
-    	description="Save every layer to its own file",
-    	default=False
+        name="Save Layers",
+        description="Save every layer to its own file",
+        default=False
     )
 
     thickness = FloatProperty(

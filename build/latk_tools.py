@@ -34,9 +34,9 @@ def cameraArray(target=None, hideTarget=True, removeCameras=True, removeLayers=T
     if not target:
         target = ss()
     if (removeCameras == True):
-    	cams = matchName("Camera")
-    	for cam in cams:
-    		delete(cam)
+        cams = matchName("Camera")
+        for cam in cams:
+            delete(cam)
     #~
     scene = bpy.context.scene
     render = scene.render
@@ -977,9 +977,9 @@ def reprojectAllStrokes():
     for stroke in strokes:
         points = getStrokePoints(stroke)
         try:
-        	drawPoints(points)
+            drawPoints(points)
         except:
-        	pass
+            pass
 
 def compareTuple(t1, t2, numPlaces=5):
     if (roundVal(t1[0], numPlaces) == roundVal(t2[0], numPlaces) and roundVal(t1[1], numPlaces) == roundVal(t2[1], numPlaces) and roundVal(t1[2], numPlaces) == roundVal(t2[2], numPlaces)):
