@@ -898,30 +898,31 @@ def importTiltBrushJson(filepath=None):
             vertsFailed = True
 
         if (vertsFailed==False and len(vertGroup) > 0):
-            for vert in vertGroup:
-                try:
-                    x = -vert[0]
-                    y = vert[2]
-                    z = vert[1]
-                    if (useScaleAndOffset == True):
-                        x = (x * globalScale.x) + globalOffset.x
-                        y = (y * globalScale.y) + globalOffset.y
-                        z = (z * globalScale.z) + globalOffset.z
-                    pointGroup.append((x,y,z))
-                except:
-                    pass
+            for j, vert in enumerate(vertGroup):
+            	if (j==0 or vertGroup[j] != vertGroup[j-1]): # try to prevent duplicate points
+	                if (vert[0] == 0 and vert[1] == 0 and vert[2] == 0):
+	                	pass
+	                else:
+		                try:
+		                    x = -vert[0]
+		                    y = vert[2]
+		                    z = vert[1]
+		                    if (useScaleAndOffset == True):
+		                        x = (x * globalScale.x) + globalOffset.x
+		                        y = (y * globalScale.y) + globalOffset.y
+		                        z = (z * globalScale.z) + globalOffset.z
+		                    pointGroup.append((x,y,z))
+		                except:
+		                    pass
 
         if (vertsFailed==False):
             createColor(strokeColor)
             stroke = frame.strokes.new(getActiveColor().name)
-            stroke.points.add(len(vertGroup)) # add 4 points
-            stroke.draw_mode = "3DSPACE" # either of ("SCREEN", "3DSPACE", "2DSPACE", "2DIMAGE")                
+            stroke.points.add(len(pointGroup)) # add 4 points
+            stroke.draw_mode = "3DSPACE" # either of ("SCREEN", "3DSPACE", "2DSPACE", "2DIMAGE")  
             for l, point in enumerate(pointGroup):
                 createPoint(stroke, l, (point[0], point[1], point[2]), pressure, strength)
-            
-    if (resizeTimeline == True):
-        start, end = getStartEnd()
-        setStartEnd(1, end, pad=False)              
+           
     return {'FINISHED'}
 
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
