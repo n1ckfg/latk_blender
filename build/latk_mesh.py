@@ -517,6 +517,10 @@ def makeCurve(coords, pressures, resolution=2, thickness=0.1, bevelResolution=1,
             #coords.append((vec.x, vec.y, vec.z))
     '''
     #~
+    # adding an extra point to the beginning helps with smoothing
+    coords.insert(0, coords[0])
+    pressures.insert(0, pressures[0])
+
     curveData = bpy.data.curves.new('latk', type='CURVE')
     curveData.dimensions = '3D'
     curveData.fill_mode = 'FULL'
@@ -531,6 +535,7 @@ def makeCurve(coords, pressures, resolution=2, thickness=0.1, bevelResolution=1,
     # map coords to spline
     curveType=curveType.upper()
     polyline = curveData.splines.new(curveType)
+    #~
     if (curveType=="NURBS"):
         polyline.points.add(len(coords))#-1)
         for i, coord in enumerate(coords):
