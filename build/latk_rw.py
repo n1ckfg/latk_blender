@@ -915,12 +915,12 @@ def importTiltBrush(filepath=None, vertSkip=1):
                         z = (z * globalScale[2]) + globalOffset[2]
                     pointGroup.append((x, y, z, pressure, strength))
                     #~
-                    createColor(strokeColor)
-                    stroke = frame.strokes.new(getActiveColor().name)
-                    stroke.points.add(len(pointGroup)) # add 4 points
-                    stroke.draw_mode = "3DSPACE" # either of ("SCREEN", "3DSPACE", "2DSPACE", "2DIMAGE")  
-                    for l, point in enumerate(pointGroup):
-                        createPoint(stroke, l, (point[0], point[1], point[2]), point[3], point[4])
+            createColor(strokeColor)
+            stroke = frame.strokes.new(getActiveColor().name)
+            stroke.points.add(len(pointGroup)) # add 4 points
+            stroke.draw_mode = "3DSPACE" # either of ("SCREEN", "3DSPACE", "2DSPACE", "2DIMAGE")  
+            for l, point in enumerate(pointGroup):
+                createPoint(stroke, l, (point[0], point[1], point[2]), point[3], point[4])
         # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
         """Prints out some rough information about the strokes.
         Pass a tiltbrush.tilt.Sketch instance."""
