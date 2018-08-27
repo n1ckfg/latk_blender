@@ -5,7 +5,7 @@ class LightningArtistToolkitPreferences(bpy.types.AddonPreferences):
     
     extraFormats = bpy.props.BoolProperty(
         name = 'Additional Formats',
-        description = "Add menu items to import and export more formats."
+        description = "GML, Norman, Painter, SVG"
     )
 
     def draw(self, context):
@@ -93,15 +93,15 @@ class ExportLatk(bpy.types.Operator, ExportHelper):  # TODO combine into one cla
 
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ 
 
-class ImportTiltBrushJson(bpy.types.Operator, ImportHelper):
+class ImportTiltBrush(bpy.types.Operator, ImportHelper):
     """Load a Norman File"""
     bl_idname = "import_scene.tbjson"
-    bl_label = "Import Tilt Brush Json"
+    bl_label = "Import Tilt Brush"
     bl_options = {'PRESET', 'UNDO'}
 
     filename_ext = ".json"
     filter_glob = StringProperty(
-            default="*.json",
+            default="*.tilt;*.json;*.zip",
             options={'HIDDEN'},
             )
 
@@ -114,7 +114,7 @@ class ImportTiltBrushJson(bpy.types.Operator, ImportHelper):
             import os
         #~
         keywords["vertSkip"] = self.vertSkip
-        la.importTiltBrushJson(**keywords)
+        la.importTiltBrush(**keywords)
         return {'FINISHED'} 
 
 class ImportNorman(bpy.types.Operator, ImportHelper):
@@ -657,7 +657,7 @@ class Latk_Button_MtlShader(bpy.types.Operator):
 
 def menu_func_import(self, context):
     self.layout.operator(ImportLatk.bl_idname, text="Latk Animation (.latk, .json)")
-    self.layout.operator(ImportTiltBrushJson.bl_idname, text="Tilt Brush (.json)")
+    self.layout.operator(ImportTiltBrush.bl_idname, text="Tilt Brush (.tilt, .json)")
     if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats == True):
         self.layout.operator(ImportGml.bl_idname, text="Latk - GML (.gml)")
         self.layout.operator(ImportNorman.bl_idname, text="Latk - Norman (.json)")

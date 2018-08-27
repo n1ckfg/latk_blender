@@ -816,12 +816,12 @@ class InMemoryZip(object):
 
 # ~ ~ ~
 
-def tiltBrushGrouper(n, iterable, fillvalue=None):
+def tiltBrushJson_Grouper(n, iterable, fillvalue=None):
   """grouper(3, 'ABCDEFG', 'x') --> ABC DEF Gxx"""
   args = [iter(iterable)] * n
   return zip_longest(fillvalue=fillvalue, *args)
 
-def tiltBrushDecodeData(obj, dataType="v"):
+def tiltBrushJson_DecodeData(obj, dataType="v"):
     '''    
     VERTEX_ATTRIBUTES = [
         # Attribute name, type code
@@ -856,7 +856,7 @@ def tiltBrushDecodeData(obj, dataType="v"):
     else: 
         stride_words = int(len(data_words) / num_verts)
         if stride_words > 1:
-            data_grouped = list(tiltBrushGrouper(stride_words, data_words))
+            data_grouped = list(tiltBrushJson_Grouper(stride_words, data_words))
         else:
             data_grouped = list(data_words)
 
@@ -866,63 +866,132 @@ def tiltBrushDecodeData(obj, dataType="v"):
 
         return(data_grouped)
 
-def importTiltBrushJson(filepath=None, vertSkip=1):
-    globalScale = Vector((1, 1, 1))
+def importTiltBrush(filepath=None, vertSkip=1):
+    globalScale = Vector((-1, 1, 1))
     globalOffset = Vector((0, 0, 0))
     useScaleAndOffset = True
     gp = getActiveGp()
     palette = getActivePalette()    
-    pressure = 1.0
-    strength = 1.0
-    #~
-    with open(filepath) as data_file: 
-        data = json.load(data_file)
-    #~
-    layer = gp.layers.new("TiltBrush", set_active=True)
-    #~
-    frame = layer.frames.new(1)
-    for strokeJson in data["strokes"]:
-        strokeColor = (0,0,0)
-        try:
-            colorGroup = tiltBrushDecodeData(strokeJson["c"], "c")
-            strokeColor = (colorGroup[0][0], colorGroup[0][1], colorGroup[0][2])
-        except:
-            pass
+
+    filename = os.path.split(filepath)[1].split(".")
+    filetype = filename[len(filename)-1].lower()
+    if (filetype == "tilt" or filetype == "zip"): # Tilt Brush binary file with original stroke data
+        t = Tilt(filepath)
         #~
-        vertsFailed = False
-        vertGroup = []
-        pointGroup = []
-        try:
-            vertGroup = tiltBrushDecodeData(strokeJson["v"], "v")
-        except:
-            vertsFailed = True
+        layer = gp.layers.new("TiltBrush", set_active=True)
+        frame = layer.frames.new(1)
+        #~
+        for tstroke in t.sketch.strokes:
+            strokeColor = (0,0,0)
+            pointGroup = []
+            try:
+                strokeColor = (tstroke.brush_color[0], tstroke.brush_color[1], tstroke.brush_color[2])
+            except:
+                pass
+            for controlpoint in tstroke.controlpoints:
+                x = 0.0
+                y = 0.0
+                z = 0.0
+                #~
+                point = controlpoint.position
+                pressure = 1.0
+                strength = 1.0
+                try:
+                    pressure = controlpoint.extension[0]
+                except:
+                    pass
+                #~
+                x = point[0]
+                y = point[2]
+                z = point[1]
+                if useScaleAndOffset == True:
+                    x = (x * globalScale[0]) + globalOffset[0]
+                    y = (y * globalScale[1]) + globalOffset[1]
+                    z = (z * globalScale[2]) + globalOffset[2]
+                pointGroup.append((x, y, z, pressure, strength))
+                #~
+                createColor(strokeColor)
+                stroke = frame.strokes.new(getActiveColor().name)
+                stroke.points.add(len(pointGroup)) # add 4 points
+                stroke.draw_mode = "3DSPACE" # either of ("SCREEN", "3DSPACE", "2DSPACE", "2DIMAGE")  
+                for l, point in enumerate(pointGroup):
+                    createPoint(stroke, l, (point[0], point[1], point[2]), point[3], point[4])
+        # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
+        """Prints out some rough information about the strokes.
+        Pass a tiltbrush.tilt.Sketch instance."""
+        '''
+        cooky, version, unused = sketch.header[0:3]
+        '''
+        #output += 'Cooky:0x%08x    Version:%s    Unused:%s    Extra:(%d bytes)' % (
+            #cooky, version, unused, len(sketch.additional_header))
+        '''
+        if len(sketch.strokes):
+            stroke = sketch.strokes[0]    # choose one representative one
+            def extension_names(lookup):
+                # lookup is a dict mapping name -> idx
+                extensions = sorted(lookup.items(), key=lambda (n,i): i)
+                return ', '.join(name for (name, idx) in extensions)
+            #output += "Stroke Ext: %s" % extension_names(stroke.stroke_ext_lookup)
+            #if len(stroke.controlpoints):
+                #output += "CPoint Ext: %s" % extension_names(stroke.cp_ext_lookup)
+        '''
+        '''
+        for (i, stroke) in enumerate(sketch.strokes):
+            #output += "%3d: " % i,
+            output += dump_stroke(stroke)
+        '''
+    else: # Tilt Brush JSON export file, not original stroke data
+        pressure = 1.0
+        strength = 1.0
+        #~
+        with open(filepath) as data_file: 
+            data = json.load(data_file)
+        #~
+        layer = gp.layers.new("TiltBrush", set_active=True)
+        frame = layer.frames.new(1)
+        #~
+        for strokeJson in data["strokes"]:
+            strokeColor = (0,0,0)
+            try:
+                colorGroup = tiltBrushJson_DecodeData(strokeJson["c"], "c")
+                strokeColor = (colorGroup[0][0], colorGroup[0][1], colorGroup[0][2])
+            except:
+                pass
+            #~
+            vertsFailed = False
+            vertGroup = []
+            pointGroup = []
+            try:
+                vertGroup = tiltBrushJson_DecodeData(strokeJson["v"], "v")
+            except:
+                vertsFailed = True
 
-        if (vertsFailed==False and len(vertGroup) > 0):
-            for j in range(0, len(vertGroup), vertSkip):
-                if (j==0 or vertGroup[j] != vertGroup[j-1]): # try to prevent duplicate points
-                    vert = vertGroup[j]
-                    if (vert[0] == 0 and vert[1] == 0 and vert[2] == 0):
-                        pass
-                    else:
-                        try:
-                            x = -vert[0]
-                            y = vert[2]
-                            z = vert[1]
-                            if (useScaleAndOffset == True):
-                                x = (x * globalScale.x) + globalOffset.x
-                                y = (y * globalScale.y) + globalOffset.y
-                                z = (z * globalScale.z) + globalOffset.z
-                            pointGroup.append((x,y,z))
-                        except:
+            if (vertsFailed==False and len(vertGroup) > 0):
+                for j in range(0, len(vertGroup), vertSkip):
+                    if (j==0 or vertGroup[j] != vertGroup[j-1]): # try to prevent duplicate points
+                        vert = vertGroup[j]
+                        if (vert[0] == 0 and vert[1] == 0 and vert[2] == 0):
                             pass
+                        else:
+                            try:
+                                x = vert[0]
+                                y = vert[2]
+                                z = vert[1]
+                                if (useScaleAndOffset == True):
+                                    x = (x * globalScale.x) + globalOffset.x
+                                    y = (y * globalScale.y) + globalOffset.y
+                                    z = (z * globalScale.z) + globalOffset.z
+                                pointGroup.append((x, y, z, pressure, strength))
+                            except:
+                                pass
 
-        if (vertsFailed==False):
-            createColor(strokeColor)
-            stroke = frame.strokes.new(getActiveColor().name)
-            stroke.points.add(len(pointGroup)) # add 4 points
-            stroke.draw_mode = "3DSPACE" # either of ("SCREEN", "3DSPACE", "2DSPACE", "2DIMAGE")  
-            for l, point in enumerate(pointGroup):
-                createPoint(stroke, l, (point[0], point[1], point[2]), pressure, strength)
+            if (vertsFailed==False):
+                createColor(strokeColor)
+                stroke = frame.strokes.new(getActiveColor().name)
+                stroke.points.add(len(pointGroup)) # add 4 points
+                stroke.draw_mode = "3DSPACE" # either of ("SCREEN", "3DSPACE", "2DSPACE", "2DIMAGE")  
+                for l, point in enumerate(pointGroup):
+                    createPoint(stroke, l, (point[0], point[1], point[2]), point[3], point[4])
            
     return {'FINISHED'}
 

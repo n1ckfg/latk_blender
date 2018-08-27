@@ -32,35 +32,18 @@ along with the Lightning Artist Toolkit (Blender).  If not, see
 bl_info = {
     "name": "Lightning Artist Toolkit (Latk)", 
     "author": "Nick Fox-Gieg",
-    "description": "Import and export latk format",
+    "description": "Import and export Latk format",
     "category": "Animation"
 }
 
 import bpy
+import bmesh
 import bpy_extras
 from bpy_extras import view3d_utils
-from mathutils import *
-from mathutils import Vector, Matrix
-from math import sqrt
-import math
-import json
-import struct
-import base64
-from itertools import zip_longest
-import re
 from bpy_extras.io_utils import unpack_list
-import parameter_editor
-#from curve_simplify import *
-import random
-import bmesh
-import sys
-import gc
-import xml.etree.ElementTree as etree
-from operator import itemgetter
-#~
-import zipfile
-from io import BytesIO
-import os
+from bpy.types import Operator, AddonPreferences
+from bpy.props import (BoolProperty, FloatProperty, StringProperty, IntProperty, PointerProperty, EnumProperty)
+from bpy_extras.io_utils import (ImportHelper, ExportHelper)
 #~
 from freestyle.shaders import *
 from freestyle.predicates import *
@@ -68,9 +51,31 @@ from freestyle.types import Operators, StrokeShader, StrokeVertex
 from freestyle.chainingiterators import ChainSilhouetteIterator, ChainPredicateIterator
 from freestyle.functions import *
 #~
-from bpy.types import Operator, AddonPreferences
-from bpy.props import (BoolProperty, FloatProperty, StringProperty, IntProperty, PointerProperty, EnumProperty)
-from bpy_extras.io_utils import (ImportHelper, ExportHelper)
+import math
+from math import sqrt
+from mathutils import *
+from mathutils import Vector, Matrix
+#~
+import json
+import xml.etree.ElementTree as etree
+import base64
+#~
+import re
+import parameter_editor
+import random
+import sys
+import gc
+import struct
+import uuid
+import contextlib
+from collections import defaultdict
+from itertools import zip_longest
+from operator import itemgetter
+#~
+import os
+import zipfile
+import io
+from io import BytesIO
 
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
