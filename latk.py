@@ -4073,7 +4073,7 @@ class ImportLatk(bpy.types.Operator, ImportHelper):
 
     filename_ext = ".json"
     filter_glob = StringProperty(
-            default="*.latk;*.json;*.zip",
+            default="*.latk;*.json",
             options={'HIDDEN'},
             )
 
@@ -4151,7 +4151,7 @@ class ImportTiltBrush(bpy.types.Operator, ImportHelper):
 
     filename_ext = ".json"
     filter_glob = StringProperty(
-            default="*.tilt;*.json;*.zip",
+            default="*.tilt;*.json",
             options={'HIDDEN'},
             )
 
