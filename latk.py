@@ -1749,6 +1749,51 @@ def painterPoint(point):
 
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 
+def importVRDoodler(filepath=None):
+    globalScale = Vector((1, 1, 1))
+    globalOffset = Vector((0, 0, 0))
+    useScaleAndOffset = True
+    numPlaces = 7
+    roundValues = True
+
+    with open(filepath) as data_file: 
+        data = data_file.readlines()
+
+    vrd_strokes = []
+    vrd_points = []
+    for line in data:
+        if str(line).startswith("l") == True:
+            if (len(vrd_points) > 0):
+                vrd_strokes.append(vrd_points)
+                vrd_points = []
+        elif str(line).startswith("v") == True:
+            vrd_pointRaw = line.split()
+            vrd_point = (-1 * float(vrd_pointRaw[1]), float(vrd_pointRaw[2]), float(vrd_pointRaw[3]))
+            vrd_points.append(vrd_point)
+
+    gp = getActiveGp()
+    layer = gp.layers.new("VRDoodler_layer", set_active=True)
+    start, end = getStartEnd()
+    frame = layer.frames.new(start)
+    for vrd_stroke in vrd_strokes:
+        strokeColor = (0.5,0.5,0.5)
+        createColor(strokeColor)
+        stroke = frame.strokes.new(getActiveColor().name)
+        stroke.draw_mode = "3DSPACE" # either of ("SCREEN", "3DSPACE", "2DSPACE", "2DIMAGE")
+        stroke.points.add(len(vrd_stroke)) # add 4 points
+        for l, vrd_point in enumerate(vrd_stroke):
+            x = vrd_point[0]
+            y = vrd_point[2]
+            z = vrd_point[1]
+            pressure = 1.0
+            strength = 1.0
+            if useScaleAndOffset == True:
+                x = (x * globalScale.x) + globalOffset.x
+                y = (y * globalScale.y) + globalOffset.y
+                z = (z * globalScale.z) + globalOffset.z
+            #~
+            createPoint(stroke, l, (x, y, z), pressure, strength)
+
 def importNorman(filepath=None):
     globalScale = Vector((1, 1, 1))
     globalOffset = Vector((0, 0, 0))
@@ -1914,24 +1959,26 @@ def writeGml(filepath=None, make2d=False):
     timeCounter = 0
     timeIncrement = 0.01
     #~
-    globalScale = (10, 10, 10)
+    globalScale = (1, 1, 1)
     globalOffset = (0, 0, 0)
     useScaleAndOffset = True
     numPlaces = 7
     roundValues = True
     #~
+    frame = getActiveFrame()
+    strokes = frame.strokes
     # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
     sg = gmlHeader((512,512,512))
-    for i in range(0,len(strokes)):
-        sg += gmlStroke(strokes[i])
+    for stroke in strokes:
+        coords = []
+        for point in stroke.points:
+            coords.append(point.co)
+        returnString, timeCounter = gmlStroke(coords, timeCounter, timeIncrement)
+        sg += returnString
     sg += gmlFooter()
     # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
-    #~
-    url = filename + ".gml"
-    with open(url, "w") as f:
-        f.write(sg)
-        f.closed
-        print("Wrote " + url)    
+    writeTextFile(filepath, sg)
+    return {'FINISHED'}
 
 def gmlHeader(dim=(1024,1024,1024)):
     s = "<gml spec=\"0.1b\">\r"
@@ -1962,16 +2009,15 @@ def gmlFooter():
     s += "</gml>\r"
     return s
 
-def gmlStroke(points):
+def gmlStroke(points, timeCounter, timeIncrement):
     s = "\t\t\t<stroke>\r"
     for point in points:
-        s += gmlPoint(point)
+        returnString, timeCounter = gmlPoint(point, timeCounter, timeIncrement)
+        s += returnString
     s += "\t\t\t</stroke>\r"
-    return s
+    return s, timeCounter
 
-def gmlPoint(point):
-    global timeCounter
-    global timeIncrement
+def gmlPoint(point, timeCounter, timeIncrement):
     s = "\t\t\t\t<pt>\r"
     s += "\t\t\t\t\t<x>" + str(point[0]) + "</x>\r"
     s += "\t\t\t\t\t<y>" + str(point[1]) + "</y>\r"
@@ -1979,7 +2025,7 @@ def gmlPoint(point):
     s += "\t\t\t\t\t<time>" + str(timeCounter) + "</time>\r"
     s += "\t\t\t\t</pt>\r"
     timeCounter += timeIncrement
-    return s
+    return s, timeCounter
 
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 
@@ -4053,15 +4099,54 @@ splf = splitLayersAboveFrameLimit
 class LightningArtistToolkitPreferences(bpy.types.AddonPreferences):
     bl_idname = __name__
     
-    extraFormats = bpy.props.BoolProperty(
-        name = 'Additional Formats',
-        description = "GML, Norman, Painter, SVG"
+    extraFormats_TiltBrush = bpy.props.BoolProperty(
+        name = 'Tilt Brush',
+        description = "Tilt Brush import",
+        default = True
+    )
+
+    extraFormats_GML = bpy.props.BoolProperty(
+        name = 'GML',
+        description = "Graffiti Markup Language import",
+        default = False
+    )
+
+    extraFormats_Painter = bpy.props.BoolProperty(
+        name = 'Corel Painter',
+        description = "Corel Painter script export",
+        default = False
+    )
+
+    extraFormats_SVG = bpy.props.BoolProperty(
+        name = 'SVG SMIL',
+        description = "SVG SMIL export (experimental)",
+        default = False
+    )
+
+    extraFormats_Norman = bpy.props.BoolProperty(
+        name = 'NormanVR',
+        description = "NormanVR import (experimental)",
+        default = False
+    )
+
+    extraFormats_VRDoodler = bpy.props.BoolProperty(
+        name = 'VRDoodler',
+        description = "VRDoodler import",
+        default = False
     )
 
     def draw(self, context):
         layout = self.layout
-        layout.label("Add menu items to import and export more formats:")
-        layout.prop(self, "extraFormats")
+        layout.label("Add menu items to import:")
+        layout.prop(self, "extraFormats_TiltBrush")
+        layout.prop(self, "extraFormats_GML")
+        layout.prop(self, "extraFormats_Norman")
+        layout.prop(self, "extraFormats_VRDoodler")
+        #~
+        layout.label("Add menu items to export:")
+        layout.prop(self, "extraFormats_GML")
+        layout.prop(self, "extraFormats_Painter")
+        layout.prop(self, "extraFormats_SVG")
 
 class ImportLatk(bpy.types.Operator, ImportHelper):
     """Load a Latk File"""
@@ -4188,6 +4273,27 @@ class ImportNorman(bpy.types.Operator, ImportHelper):
         la.importNorman(**keywords)
         return {'FINISHED'} 
 
+class ImportVRDoodler(bpy.types.Operator, ImportHelper):
+    """Load a VRDoodler File"""
+    bl_idname = "import_scene.vrdoodler"
+    bl_label = "Import VRDoodler"
+    bl_options = {'PRESET', 'UNDO'}
+
+    filename_ext = ".obj"
+    filter_glob = StringProperty(
+            default="*.obj",
+            options={'HIDDEN'},
+            )
+
+    def execute(self, context):
+        import latk as la
+        keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode"))
+        if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
+            import os
+        #~
+        la.importVRDoodler(**keywords)
+        return {'FINISHED'} 
+
 class ImportGml(bpy.types.Operator, ImportHelper):
     """Load a GML File"""
     bl_idname = "import_scene.gml"
@@ -4200,7 +4306,7 @@ class ImportGml(bpy.types.Operator, ImportHelper):
             options={'HIDDEN'},
             )
 
-    splitStrokes = BoolProperty(name="Split Strokes", description="Split Strokes on Layers", default=True)
+    splitStrokes = BoolProperty(name="Split Strokes", description="Split Strokes on Layers", default=False)
 
     def execute(self, context):
         import latk as la
@@ -4226,7 +4332,7 @@ class ExportGml(bpy.types.Operator, ExportHelper):
             options={'HIDDEN'},
             )
 
-    make2d = BoolProperty(name="Make 2D", description="Project Coordinates to Camera View", default=True)
+    make2d = BoolProperty(name="Make 2D", description="Project Coordinates to Camera View", default=False)
 
     def execute(self, context):
         import latk as la
@@ -4707,17 +4813,25 @@ class Latk_Button_MtlShader(bpy.types.Operator):
 
 def menu_func_import(self, context):
     self.layout.operator(ImportLatk.bl_idname, text="Latk Animation (.latk, .json)")
-    self.layout.operator(ImportTiltBrush.bl_idname, text="Tilt Brush (.tilt, .json)")
-    if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats == True):
+    #~
+    if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_TiltBrush == True):
+        self.layout.operator(ImportTiltBrush.bl_idname, text="Latk - Tilt Brush (.tilt, .json)")
+    if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_GML == True):
         self.layout.operator(ImportGml.bl_idname, text="Latk - GML (.gml)")
+    if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_Norman == True):
         self.layout.operator(ImportNorman.bl_idname, text="Latk - Norman (.json)")
+    if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_VRDoodler == True):
+        self.layout.operator(ImportVRDoodler.bl_idname, text="Latk - VRDoodler (.obj)")
 
 def menu_func_export(self, context):
     self.layout.operator(ExportLatk.bl_idname, text="Latk Animation (.latk)")
     self.layout.operator(ExportLatkJson.bl_idname, text="Latk Animation (.json)")
-    if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats == True):
-        #self.layout.operator(ExportGml.bl_idname, text="Latk - GML (.gml)")
+    #~
+    if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_GML == True):
+        self.layout.operator(ExportGml.bl_idname, text="Latk - GML (.gml)")
+    if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_SVG == True):
         self.layout.operator(ExportSvg.bl_idname, text="Latk - SVG SMIL (.svg)")
+    if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_Painter == True):
         self.layout.operator(ExportPainter.bl_idname, text="Latk - Corel Painter (.txt)")
 
 #classes = (FreestyleGPencil, FreestyleGPencil_Panel)

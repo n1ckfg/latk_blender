@@ -3,15 +3,54 @@
 class LightningArtistToolkitPreferences(bpy.types.AddonPreferences):
     bl_idname = __name__
     
-    extraFormats = bpy.props.BoolProperty(
-        name = 'Additional Formats',
-        description = "GML, Norman, Painter, SVG"
+    extraFormats_TiltBrush = bpy.props.BoolProperty(
+        name = 'Tilt Brush',
+        description = "Tilt Brush import",
+        default = True
+    )
+
+    extraFormats_GML = bpy.props.BoolProperty(
+        name = 'GML',
+        description = "Graffiti Markup Language import",
+        default = False
+    )
+
+    extraFormats_Painter = bpy.props.BoolProperty(
+        name = 'Corel Painter',
+        description = "Corel Painter script export",
+        default = False
+    )
+
+    extraFormats_SVG = bpy.props.BoolProperty(
+        name = 'SVG SMIL',
+        description = "SVG SMIL export (experimental)",
+        default = False
+    )
+
+    extraFormats_Norman = bpy.props.BoolProperty(
+        name = 'NormanVR',
+        description = "NormanVR import (experimental)",
+        default = False
+    )
+
+    extraFormats_VRDoodler = bpy.props.BoolProperty(
+        name = 'VRDoodler',
+        description = "VRDoodler import",
+        default = False
     )
 
     def draw(self, context):
         layout = self.layout
-        layout.label("Add menu items to import and export more formats:")
-        layout.prop(self, "extraFormats")
+        layout.label("Add menu items to import:")
+        layout.prop(self, "extraFormats_TiltBrush")
+        layout.prop(self, "extraFormats_GML")
+        layout.prop(self, "extraFormats_Norman")
+        layout.prop(self, "extraFormats_VRDoodler")
+        #~
+        layout.label("Add menu items to export:")
+        layout.prop(self, "extraFormats_GML")
+        layout.prop(self, "extraFormats_Painter")
+        layout.prop(self, "extraFormats_SVG")
 
 class ImportLatk(bpy.types.Operator, ImportHelper):
     """Load a Latk File"""
@@ -138,6 +177,27 @@ class ImportNorman(bpy.types.Operator, ImportHelper):
         la.importNorman(**keywords)
         return {'FINISHED'} 
 
+class ImportVRDoodler(bpy.types.Operator, ImportHelper):
+    """Load a VRDoodler File"""
+    bl_idname = "import_scene.vrdoodler"
+    bl_label = "Import VRDoodler"
+    bl_options = {'PRESET', 'UNDO'}
+
+    filename_ext = ".obj"
+    filter_glob = StringProperty(
+            default="*.obj",
+            options={'HIDDEN'},
+            )
+
+    def execute(self, context):
+        import latk as la
+        keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode"))
+        if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
+            import os
+        #~
+        la.importVRDoodler(**keywords)
+        return {'FINISHED'} 
+
 class ImportGml(bpy.types.Operator, ImportHelper):
     """Load a GML File"""
     bl_idname = "import_scene.gml"
@@ -150,7 +210,7 @@ class ImportGml(bpy.types.Operator, ImportHelper):
             options={'HIDDEN'},
             )
 
-    splitStrokes = BoolProperty(name="Split Strokes", description="Split Strokes on Layers", default=True)
+    splitStrokes = BoolProperty(name="Split Strokes", description="Split Strokes on Layers", default=False)
 
     def execute(self, context):
         import latk as la
@@ -176,7 +236,7 @@ class ExportGml(bpy.types.Operator, ExportHelper):
             options={'HIDDEN'},
             )
 
-    make2d = BoolProperty(name="Make 2D", description="Project Coordinates to Camera View", default=True)
+    make2d = BoolProperty(name="Make 2D", description="Project Coordinates to Camera View", default=False)
 
     def execute(self, context):
         import latk as la
@@ -657,17 +717,25 @@ class Latk_Button_MtlShader(bpy.types.Operator):
 
 def menu_func_import(self, context):
     self.layout.operator(ImportLatk.bl_idname, text="Latk Animation (.latk, .json)")
-    self.layout.operator(ImportTiltBrush.bl_idname, text="Tilt Brush (.tilt, .json)")
-    if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats == True):
+    #~
+    if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_TiltBrush == True):
+        self.layout.operator(ImportTiltBrush.bl_idname, text="Latk - Tilt Brush (.tilt, .json)")
+    if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_GML == True):
         self.layout.operator(ImportGml.bl_idname, text="Latk - GML (.gml)")
+    if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_Norman == True):
         self.layout.operator(ImportNorman.bl_idname, text="Latk - Norman (.json)")
+    if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_VRDoodler == True):
+        self.layout.operator(ImportVRDoodler.bl_idname, text="Latk - VRDoodler (.obj)")
 
 def menu_func_export(self, context):
     self.layout.operator(ExportLatk.bl_idname, text="Latk Animation (.latk)")
     self.layout.operator(ExportLatkJson.bl_idname, text="Latk Animation (.json)")
-    if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats == True):
-        #self.layout.operator(ExportGml.bl_idname, text="Latk - GML (.gml)")
+    #~
+    if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_GML == True):
+        self.layout.operator(ExportGml.bl_idname, text="Latk - GML (.gml)")
+    if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_SVG == True):
         self.layout.operator(ExportSvg.bl_idname, text="Latk - SVG SMIL (.svg)")
+    if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_Painter == True):
         self.layout.operator(ExportPainter.bl_idname, text="Latk - Corel Painter (.txt)")
 
 #classes = (FreestyleGPencil, FreestyleGPencil_Panel)

@@ -479,6 +479,51 @@ def painterPoint(point):
 
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 
+def importVRDoodler(filepath=None):
+    globalScale = Vector((1, 1, 1))
+    globalOffset = Vector((0, 0, 0))
+    useScaleAndOffset = True
+    numPlaces = 7
+    roundValues = True
+
+    with open(filepath) as data_file: 
+        data = data_file.readlines()
+
+    vrd_strokes = []
+    vrd_points = []
+    for line in data:
+        if str(line).startswith("l") == True:
+            if (len(vrd_points) > 0):
+                vrd_strokes.append(vrd_points)
+                vrd_points = []
+        elif str(line).startswith("v") == True:
+            vrd_pointRaw = line.split()
+            vrd_point = (-1 * float(vrd_pointRaw[1]), float(vrd_pointRaw[2]), float(vrd_pointRaw[3]))
+            vrd_points.append(vrd_point)
+
+    gp = getActiveGp()
+    layer = gp.layers.new("VRDoodler_layer", set_active=True)
+    start, end = getStartEnd()
+    frame = layer.frames.new(start)
+    for vrd_stroke in vrd_strokes:
+        strokeColor = (0.5,0.5,0.5)
+        createColor(strokeColor)
+        stroke = frame.strokes.new(getActiveColor().name)
+        stroke.draw_mode = "3DSPACE" # either of ("SCREEN", "3DSPACE", "2DSPACE", "2DIMAGE")
+        stroke.points.add(len(vrd_stroke)) # add 4 points
+        for l, vrd_point in enumerate(vrd_stroke):
+            x = vrd_point[0]
+            y = vrd_point[2]
+            z = vrd_point[1]
+            pressure = 1.0
+            strength = 1.0
+            if useScaleAndOffset == True:
+                x = (x * globalScale.x) + globalOffset.x
+                y = (y * globalScale.y) + globalOffset.y
+                z = (z * globalScale.z) + globalOffset.z
+            #~
+            createPoint(stroke, l, (x, y, z), pressure, strength)
+
 def importNorman(filepath=None):
     globalScale = Vector((1, 1, 1))
     globalOffset = Vector((0, 0, 0))
@@ -644,24 +689,26 @@ def writeGml(filepath=None, make2d=False):
     timeCounter = 0
     timeIncrement = 0.01
     #~
-    globalScale = (10, 10, 10)
+    globalScale = (1, 1, 1)
     globalOffset = (0, 0, 0)
     useScaleAndOffset = True
     numPlaces = 7
     roundValues = True
     #~
+    frame = getActiveFrame()
+    strokes = frame.strokes
     # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
     sg = gmlHeader((512,512,512))
-    for i in range(0,len(strokes)):
-        sg += gmlStroke(strokes[i])
+    for stroke in strokes:
+        coords = []
+        for point in stroke.points:
+            coords.append(point.co)
+        returnString, timeCounter = gmlStroke(coords, timeCounter, timeIncrement)
+        sg += returnString
     sg += gmlFooter()
     # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
-    #~
-    url = filename + ".gml"
-    with open(url, "w") as f:
-        f.write(sg)
-        f.closed
-        print("Wrote " + url)    
+    writeTextFile(filepath, sg)
+    return {'FINISHED'}
 
 def gmlHeader(dim=(1024,1024,1024)):
     s = "<gml spec=\"0.1b\">\r"
@@ -692,16 +739,15 @@ def gmlFooter():
     s += "</gml>\r"
     return s
 
-def gmlStroke(points):
+def gmlStroke(points, timeCounter, timeIncrement):
     s = "\t\t\t<stroke>\r"
     for point in points:
-        s += gmlPoint(point)
+        returnString, timeCounter = gmlPoint(point, timeCounter, timeIncrement)
+        s += returnString
     s += "\t\t\t</stroke>\r"
-    return s
+    return s, timeCounter
 
-def gmlPoint(point):
-    global timeCounter
-    global timeIncrement
+def gmlPoint(point, timeCounter, timeIncrement):
     s = "\t\t\t\t<pt>\r"
     s += "\t\t\t\t\t<x>" + str(point[0]) + "</x>\r"
     s += "\t\t\t\t\t<y>" + str(point[1]) + "</y>\r"
@@ -709,7 +755,7 @@ def gmlPoint(point):
     s += "\t\t\t\t\t<time>" + str(timeCounter) + "</time>\r"
     s += "\t\t\t\t</pt>\r"
     timeCounter += timeIncrement
-    return s
+    return s, timeCounter
 
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 
