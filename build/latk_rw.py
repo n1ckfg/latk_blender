@@ -572,7 +572,7 @@ def importNorman(filepath=None):
                 createPoint(stroke, l, (x, y, z), pressure, strength)
 
 def gmlParser(filepath=None, splitStrokes=True):
-    globalScale = (1, 1, 1)
+    globalScale = (0.01, -0.01, 0.01)
     screenBounds = (1, 1, 1)
     up = (0, 1, 0)
     useTime = True
@@ -697,12 +697,30 @@ def writeGml(filepath=None, make2d=False):
     #~
     frame = getActiveFrame()
     strokes = frame.strokes
+    allX = []
+    allY = []
+    allZ = []
+    for stroke in strokes:
+        for point in stroke.points:
+            coord = point.co
+            allX.append(coord[0])
+            allY.append(coord[1])
+            allZ.append(coord[2])
+    allX.sort()
+    allY.sort()
+    allZ.sort()
+    maxPoint = (allX[len(allX)-1], allY[len(allY)-1], allZ[len(allZ)-1])
+    minPoint = (allX[0], allY[0], allZ[0])
     # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
-    sg = gmlHeader((512,512,512))
+    sg = gmlHeader((480, 320, 18)) # Fat Tag default
     for stroke in strokes:
         coords = []
         for point in stroke.points:
-            coords.append(point.co)
+            coord = point.co
+            x = remap(coord[0], minPoint[0], maxPoint[0], 0, 1)
+            y = remap(coord[1], minPoint[1], maxPoint[1], 0, 1)
+            z = remap(coord[2], minPoint[2], maxPoint[2], 0, 1)
+            coords.append((x, 1.0 - z, y))
         returnString, timeCounter = gmlStroke(coords, timeCounter, timeIncrement)
         sg += returnString
     sg += gmlFooter()
@@ -715,7 +733,7 @@ def gmlHeader(dim=(1024,1024,1024)):
     s += "\t<tag>\r"
     s += "\t\t<header>\r"
     s += "\t\t\t<client>\r"
-    s += "\t\t\t\t<name>KinectToPin</name>\r"
+    s += "\t\t\t\t<name>Latk</name>\r"
     s += "\t\t\t</client>\r"
     s += "\t\t\t<environment>\r"
     s += "\t\t\t\t<up>\r"
