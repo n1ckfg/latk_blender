@@ -571,7 +571,7 @@ def importNorman(filepath=None):
                 #~
                 createPoint(stroke, l, (x, y, z), pressure, strength)
 
-def gmlParser(filepath=None, splitStrokes=True):
+def gmlParser(filepath=None, splitStrokes=False, sequenceAnim=False):
     globalScale = (0.01, -0.01, 0.01)
     screenBounds = (1, 1, 1)
     up = (0, 1, 0)
@@ -640,36 +640,56 @@ def gmlParser(filepath=None, splitStrokes=True):
         gmlPoints = sorted(gmlPoints, key=itemgetter(3)) # sort by time
         strokes.append(gmlPoints)
         #~
-        for gmlPoint in gmlPoints:
-            frameNum = int(gmlPoint[3] * float(fps))
-            print(str(gmlPoint[3]))
-            goToFrame(frameNum)
-            try:
-                layer.frames.new(frameNum)
-            except:
-                pass
-        for frame in layer.frames:
-            goToFrame(frame.frame_number)
-            layer.active_frame = frame
-            #~
-            if (splitStrokes==False):
-                for stroke in strokes:
-                    lastPoint = stroke[len(stroke)-1]
-                    if (int(lastPoint[3] * float(fps)) <= frame.frame_number):
-                        if (len(stroke) >= minStrokeLength):
-                            drawPoints(stroke, frame=frame, layer=layer)
-            #~
-            gpPoints = []
+        if (sequenceAnim == True):
             for gmlPoint in gmlPoints:
-                if (int(gmlPoint[3] * float(fps)) <= frame.frame_number):
-                    gpPoints.append(gmlPoint)
-            print("...Drawing into frame " + str(frame.frame_number) + " with " + str(len(gpPoints)) + " points.")
-            if (len(gpPoints) >= minStrokeLength):
-                if (splitStrokes==True):
-                    layer = newLayer(layer.info)
-                    masterLayerList.append(layer)
-                drawPoints(points=gpPoints, frame=frame, layer=layer)
+                frameNum = int(gmlPoint[3] * float(fps))
+                print(str(gmlPoint[3]))
+                goToFrame(frameNum)
+                try:
+                    layer.frames.new(frameNum)
+                except:
+                    pass
+            for frame in layer.frames:
+                goToFrame(frame.frame_number)
+                layer.active_frame = frame
+                #~
+                if (splitStrokes==False):
+                    for stroke in strokes:
+                        lastPoint = stroke[len(stroke)-1]
+                        if (int(lastPoint[3] * float(fps)) <= frame.frame_number):
+                            if (len(stroke) >= minStrokeLength):
+                                drawPoints(stroke, frame=frame, layer=layer)
+                #~
+                gpPoints = []
+                for gmlPoint in gmlPoints:
+                    if (int(gmlPoint[3] * float(fps)) <= frame.frame_number):
+                        gpPoints.append(gmlPoint)
+                print("...Drawing into frame " + str(frame.frame_number) + " with " + str(len(gpPoints)) + " points.")
+                if (len(gpPoints) >= minStrokeLength):
+                    if (splitStrokes==True):
+                        layer = newLayer(layer.info)
+                        masterLayerList.append(layer)
+                    drawPoints(points=gpPoints, frame=frame, layer=layer)
     # cleanup
+    #~
+    if (sequenceAnim == False):
+        start, end = getStartEnd()
+        layer = getActiveLayer()
+        frame = None
+        try:
+            frame = layer.frames.new(start)
+        except:
+            frame = getActiveFrame()
+        for i, stroke in enumerate(strokes):
+            if (splitStrokes == True and i > 0):
+                layer = newLayer(layer.info)
+                masterLayerList.append(layer)
+                try:
+                    frame = layer.frames.new(start)
+                except:
+                    frame = getActiveFrame()
+            drawPoints(stroke, frame=frame, layer=layer)
+    #~
     if (splitStrokes==True):
         for layer in masterLayerList:
             if (len(layer.frames)<1):
@@ -681,7 +701,6 @@ def gmlParser(filepath=None, splitStrokes=True):
                     gpLayer.info = origLayerName + "_" + str(cleanCounter)
                     cleanCounter += 1
                     break
-    #~
     print("* * * * * * * * * * * * * * *")
     print("strokes: " + str(strokeCounter) + "   points: " + str(pointCounter))
 

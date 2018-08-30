@@ -210,15 +210,17 @@ class ImportGml(bpy.types.Operator, ImportHelper):
             options={'HIDDEN'},
             )
 
-    splitStrokes = BoolProperty(name="Split Strokes", description="Split Strokes on Layers", default=False)
-
+    sequenceAnim = BoolProperty(name="Sequence in Time", description="Create a new frame for each stroke", default=False)
+    splitStrokes = BoolProperty(name="Split Strokes", description="Split animated strokes to layers", default=False)
+                
     def execute(self, context):
         import latk as la
-        keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "splitStrokes"))
+        keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "splitStrokes", "sequenceAnim"))
         if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
             import os
         #~
         keywords["splitStrokes"] = self.splitStrokes
+        keywords["sequenceAnim"] = self.sequenceAnim
         #~
         la.gmlParser(**keywords)
         return {'FINISHED'} 
