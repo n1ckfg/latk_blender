@@ -358,7 +358,7 @@ class FreestyleGPencil_Panel(bpy.types.Panel):
     """Creates a Panel in the render context of the properties editor"""
     bl_idname = "RENDER_PT_FreestyleGPencilPanel"
     bl_space_type = 'PROPERTIES'
-    bl_label = "Freestyle to Grease Pencil"
+    bl_label = "Latk Freestyle"
     bl_region_type = 'WINDOW'
     bl_context = "render"
 
