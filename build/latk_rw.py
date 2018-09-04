@@ -3,7 +3,11 @@
 def exportAlembic(url="test.abc"):
     bpy.ops.wm.alembic_export(filepath=url, vcolors=True, face_sets=True, renderable_only=False)
 
-def exportForUnity(sketchFab=True):
+def exportForUnity(filepath=None, sketchFab=True):
+    if not filepath:
+        filepath = getFilePath()
+    else:
+        filepath = filepath.split(".fbx")[0] + "_"
     start, end = getStartEnd()
     target = matchName("latk")
     sketchFabList = []
@@ -19,8 +23,8 @@ def exportForUnity(sketchFab=True):
                 exportName = target[tt].name
                 exportName = exportName.split("latk_")[1]
                 exportName = exportName.split("_mesh")[0]
-                exporter(manualSelect=True, fileType="fbx", name=exportName, legacyFbx=True)
-                sketchFabList.append("0.083 " + exportName + ".fbx\r")
+                exporter(url=filepath, manualSelect=True, fileType="fbx", name=exportName, legacyFbx=True)
+                sketchFabList.append(str(1.0/getSceneFps()) + " " + exportName + ".fbx\r") #"0.083 " + exportName + ".fbx\r")
                 sketchFabListNum.append(float(exportName.split("_")[len(exportName.split("_"))-1]))
                 break
     if (sketchFab==True):
@@ -41,7 +45,8 @@ def exportForUnity(sketchFab=True):
                 tempString += "_"
         print("after sort: ")
         print(sketchFabList)
-        writeTextFile(getFilePath() + getFileName() + "_" + tempString + ".sketchfab.timeframe", sketchFabList)
+        #writeTextFile(filepath + getFileName() + "_" + tempString + ".sketchfab.timeframe", sketchFabList)
+        writeTextFile(filepath + tempString + ".sketchfab.timeframe", sketchFabList)
 
 def exporter(name="test", url=None, winDir=False, manualSelect=False, fileType="fbx", legacyFbx=False):
     if not url:
@@ -845,9 +850,14 @@ def getAllTags(name=None, xml=None):
             returns.append(node)
     return returns
 
-def writePointCloud(name=None, strokes=None):
+def writePointCloud(filepath=None, strokes=None):
+    if not filepath:
+        filepath = getFilePath()
     if not strokes:
         strokes = getSelectedStrokes()
+        if not strokes:
+            frame = getActiveFrame()
+            strokes = frame.strokes
     lines = []
     for stroke in strokes:
         for point in stroke.points:
@@ -857,6 +867,49 @@ def writePointCloud(name=None, strokes=None):
             lines.append(x + ", " + y + ", " + z + "\n")
     writeTextFile(name=name, lines=lines)
 
+def exportSculptrVrCsv(filepath=None, strokes=None, octreeSize=15, vol_res=20, mtl_val=127):
+    if not filepath:
+        filepath = getFilePath()
+    if not strokes:
+        strokes = getSelectedStrokes()
+        if not strokes:
+            frame = getActiveFrame()
+            strokes = frame.strokes
+
+    csvDataInt = []
+    csvData = []
+
+    allX = []
+    allY = []
+    allZ = []
+    for stroke in strokes:
+        for point in stroke.points:
+            coord = point.co
+            allX.append(coord[0])
+            allY.append(coord[1])
+            allZ.append(coord[2])
+    allX.sort()
+    allY.sort()
+    allZ.sort()
+
+    for stroke in strokes:
+        for point in stroke.points:
+            color = stroke.color.color
+            r = int(color[0] * 255)
+            g = int(color[1] * 255)
+            b = int(color[2] * 255)
+            coord = point.co
+            x = remapInt(coord[0], allX[0], allX[len(allX)-1], int(-octreeSize/2), int(octreeSize/2))
+            y = remapInt(coord[1], allY[0], allY[len(allY)-1], int(-octreeSize/2), int(octreeSize/2))
+            z = remapInt(coord[2], allZ[0], allZ[len(allZ)-1], 1, octreeSize)
+            csvDataInt.append([x, y, z, octreeSize, r, g, b, mtl_val])
+
+    #csvDataInt = sorted(csvDataInt, key=lambda x: x[1])
+    #csvDataInt = sorted(csvDataInt, key=lambda x: x[2])
+    for data in csvDataInt:
+        csvData.append(str(data[0]) + ", " + str(data[1]) + ", " + str(data[2]) + ", " + str(data[3]) + ", " + str(data[4]) + ", " + str(data[5]) + ", " + str(data[6]) + ", " + str(data[7]))
+
+    writeTextFile(filepath, "\n".join(csvData))
 
 class InMemoryZip(object):
 

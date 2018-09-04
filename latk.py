@@ -535,7 +535,10 @@ def remap(value, min1, max1, min2, max2):
     range2 = max2 - min2
     valueScaled = float(value - min1) / float(range1)
     return min2 + (valueScaled * range2)
-    
+
+def remapInt(value, min1, max1, min2, max2):
+    return int(remap(value, min1, max1, min2, max2))
+
 def matchName(_name):
     returns = []
     for i in range(0, len(bpy.context.scene.objects)):
@@ -1273,7 +1276,11 @@ def multVec3(p1, p2):
 def exportAlembic(url="test.abc"):
     bpy.ops.wm.alembic_export(filepath=url, vcolors=True, face_sets=True, renderable_only=False)
 
-def exportForUnity(sketchFab=True):
+def exportForUnity(filepath=None, sketchFab=True):
+    if not filepath:
+        filepath = getFilePath()
+    else:
+        filepath = filepath.split(".fbx")[0] + "_"
     start, end = getStartEnd()
     target = matchName("latk")
     sketchFabList = []
@@ -1289,8 +1296,8 @@ def exportForUnity(sketchFab=True):
                 exportName = target[tt].name
                 exportName = exportName.split("latk_")[1]
                 exportName = exportName.split("_mesh")[0]
-                exporter(manualSelect=True, fileType="fbx", name=exportName, legacyFbx=True)
-                sketchFabList.append("0.083 " + exportName + ".fbx\r")
+                exporter(url=filepath, manualSelect=True, fileType="fbx", name=exportName, legacyFbx=True)
+                sketchFabList.append(str(1.0/getSceneFps()) + " " + exportName + ".fbx\r") #"0.083 " + exportName + ".fbx\r")
                 sketchFabListNum.append(float(exportName.split("_")[len(exportName.split("_"))-1]))
                 break
     if (sketchFab==True):
@@ -1311,7 +1318,8 @@ def exportForUnity(sketchFab=True):
                 tempString += "_"
         print("after sort: ")
         print(sketchFabList)
-        writeTextFile(getFilePath() + getFileName() + "_" + tempString + ".sketchfab.timeframe", sketchFabList)
+        #writeTextFile(filepath + getFileName() + "_" + tempString + ".sketchfab.timeframe", sketchFabList)
+        writeTextFile(filepath + tempString + ".sketchfab.timeframe", sketchFabList)
 
 def exporter(name="test", url=None, winDir=False, manualSelect=False, fileType="fbx", legacyFbx=False):
     if not url:
@@ -2115,9 +2123,14 @@ def getAllTags(name=None, xml=None):
             returns.append(node)
     return returns
 
-def writePointCloud(name=None, strokes=None):
+def writePointCloud(filepath=None, strokes=None):
+    if not filepath:
+        filepath = getFilePath()
     if not strokes:
         strokes = getSelectedStrokes()
+        if not strokes:
+            frame = getActiveFrame()
+            strokes = frame.strokes
     lines = []
     for stroke in strokes:
         for point in stroke.points:
@@ -2127,6 +2140,49 @@ def writePointCloud(name=None, strokes=None):
             lines.append(x + ", " + y + ", " + z + "\n")
     writeTextFile(name=name, lines=lines)
 
+def exportSculptrVrCsv(filepath=None, strokes=None, octreeSize=15, vol_res=20, mtl_val=127):
+    if not filepath:
+        filepath = getFilePath()
+    if not strokes:
+        strokes = getSelectedStrokes()
+        if not strokes:
+            frame = getActiveFrame()
+            strokes = frame.strokes
+
+    csvDataInt = []
+    csvData = []
+
+    allX = []
+    allY = []
+    allZ = []
+    for stroke in strokes:
+        for point in stroke.points:
+            coord = point.co
+            allX.append(coord[0])
+            allY.append(coord[1])
+            allZ.append(coord[2])
+    allX.sort()
+    allY.sort()
+    allZ.sort()
+
+    for stroke in strokes:
+        for point in stroke.points:
+            color = stroke.color.color
+            r = int(color[0] * 255)
+            g = int(color[1] * 255)
+            b = int(color[2] * 255)
+            coord = point.co
+            x = remapInt(coord[0], allX[0], allX[len(allX)-1], int(-octreeSize/2), int(octreeSize/2))
+            y = remapInt(coord[1], allY[0], allY[len(allY)-1], int(-octreeSize/2), int(octreeSize/2))
+            z = remapInt(coord[2], allZ[0], allZ[len(allZ)-1], 1, octreeSize)
+            csvDataInt.append([x, y, z, octreeSize, r, g, b, mtl_val])
+
+    #csvDataInt = sorted(csvDataInt, key=lambda x: x[1])
+    #csvDataInt = sorted(csvDataInt, key=lambda x: x[2])
+    for data in csvDataInt:
+        csvData.append(str(data[0]) + ", " + str(data[1]) + ", " + str(data[2]) + ", " + str(data[3]) + ", " + str(data[4]) + ", " + str(data[5]) + ", " + str(data[6]) + ", " + str(data[7]))
+
+    writeTextFile(filepath, "\n".join(csvData))
 
 class InMemoryZip(object):
 
@@ -4144,7 +4200,7 @@ class LightningArtistToolkitPreferences(bpy.types.AddonPreferences):
 
     extraFormats_GML = bpy.props.BoolProperty(
         name = 'GML',
-        description = "Graffiti Markup Language import",
+        description = "Graffiti Markup Language import/export",
         default = False
     )
 
@@ -4172,6 +4228,18 @@ class LightningArtistToolkitPreferences(bpy.types.AddonPreferences):
         default = False
     )
 
+    extraFormats_FBXSequence = bpy.props.BoolProperty(
+        name = 'FBX Sequence',
+        description = "FBX Sequence export",
+        default = False
+    )
+
+    extraFormats_SculptrVR = bpy.props.BoolProperty(
+        name = 'SculptrVR CSV',
+        description = "SculptrVR CSV export",
+        default = False
+    )
+
     def draw(self, context):
         layout = self.layout
         layout.label("Add menu items to import:")
@@ -4184,6 +4252,8 @@ class LightningArtistToolkitPreferences(bpy.types.AddonPreferences):
         layout.prop(self, "extraFormats_GML")
         layout.prop(self, "extraFormats_Painter")
         layout.prop(self, "extraFormats_SVG")
+        layout.prop(self, "extraFormats_FBXSequence")
+        layout.prop(self, "extraFormats_SculptrVR")
 
 class ImportLatk(bpy.types.Operator, ImportHelper):
     """Load a Latk File"""
@@ -4382,6 +4452,62 @@ class ExportGml(bpy.types.Operator, ExportHelper):
         keywords["make2d"] = self.make2d
         #~
         la.writeGml(**keywords)
+        return {'FINISHED'} 
+
+class ExportFbxSequence(bpy.types.Operator, ExportHelper):
+    """Save an FBX Sequence"""
+
+    bl_idname = "export_scene.fbx_sequence"
+    bl_label = 'Export FBX Sequence'
+    bl_options = {'PRESET'}
+
+    filename_ext = ".fbx"
+    filter_glob = StringProperty(
+            default="*.fbx",
+            options={'HIDDEN'},
+            )
+
+    sketchFab = BoolProperty(name="Sketchfab List", description="Generate list for Sketchfab animation", default=True)
+
+    def execute(self, context):
+        import latk as la
+        keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "check_existing"))
+        if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
+            import os
+        #~
+        keywords["sketchFab"] = self.sketchFab
+        #~
+        la.exportForUnity(**keywords)
+        return {'FINISHED'} 
+
+class ExportSculptrVR(bpy.types.Operator, ExportHelper):
+    """Save a SculptrVR CSV"""
+
+    bl_idname = "export_scene.sculptrvr"
+    bl_label = 'Export SculptrVR CSV'
+    bl_options = {'PRESET'}
+
+    filename_ext = ".csv"
+    filter_glob = StringProperty(
+            default="*.csv",
+            options={'HIDDEN'},
+            )
+
+    octreeSize = IntProperty(name="Octree Size", description="Octree Size", default=10)
+    vol_res = IntProperty(name="Volume Resolution", description="Volume Resolution", default=20)
+    mtl_val = IntProperty(name="Material Value", description="Material Value", default=127)
+
+    def execute(self, context):
+        import latk as la
+        keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "check_existing"))
+        if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
+            import os
+        #~
+        keywords["octreeSize"] = self.octreeSize
+        keywords["vol_res"] = self.vol_res
+        keywords["mtl_val"] = self.mtl_val
+        #~
+        la.exportSculptrVrCsv(**keywords)
         return {'FINISHED'} 
 
 class ExportSvg(bpy.types.Operator, ExportHelper):
@@ -4872,6 +4998,10 @@ def menu_func_export(self, context):
         self.layout.operator(ExportSvg.bl_idname, text="Latk - SVG SMIL (.svg)")
     if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_Painter == True):
         self.layout.operator(ExportPainter.bl_idname, text="Latk - Corel Painter (.txt)")
+    if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_FBXSequence == True):
+        self.layout.operator(ExportFbxSequence.bl_idname, text="Latk - FBX Sequence (.fbx)")
+    if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_SculptrVR == True):
+        self.layout.operator(ExportSculptrVR.bl_idname, text="Latk - SculptrVR (.csv)")
 
 #classes = (FreestyleGPencil, FreestyleGPencil_Panel)
 

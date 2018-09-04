@@ -11,7 +11,7 @@ class LightningArtistToolkitPreferences(bpy.types.AddonPreferences):
 
     extraFormats_GML = bpy.props.BoolProperty(
         name = 'GML',
-        description = "Graffiti Markup Language import",
+        description = "Graffiti Markup Language import/export",
         default = False
     )
 
@@ -39,6 +39,18 @@ class LightningArtistToolkitPreferences(bpy.types.AddonPreferences):
         default = False
     )
 
+    extraFormats_FBXSequence = bpy.props.BoolProperty(
+        name = 'FBX Sequence',
+        description = "FBX Sequence export",
+        default = False
+    )
+
+    extraFormats_SculptrVR = bpy.props.BoolProperty(
+        name = 'SculptrVR CSV',
+        description = "SculptrVR CSV export",
+        default = False
+    )
+
     def draw(self, context):
         layout = self.layout
         layout.label("Add menu items to import:")
@@ -51,6 +63,8 @@ class LightningArtistToolkitPreferences(bpy.types.AddonPreferences):
         layout.prop(self, "extraFormats_GML")
         layout.prop(self, "extraFormats_Painter")
         layout.prop(self, "extraFormats_SVG")
+        layout.prop(self, "extraFormats_FBXSequence")
+        layout.prop(self, "extraFormats_SculptrVR")
 
 class ImportLatk(bpy.types.Operator, ImportHelper):
     """Load a Latk File"""
@@ -249,6 +263,62 @@ class ExportGml(bpy.types.Operator, ExportHelper):
         keywords["make2d"] = self.make2d
         #~
         la.writeGml(**keywords)
+        return {'FINISHED'} 
+
+class ExportFbxSequence(bpy.types.Operator, ExportHelper):
+    """Save an FBX Sequence"""
+
+    bl_idname = "export_scene.fbx_sequence"
+    bl_label = 'Export FBX Sequence'
+    bl_options = {'PRESET'}
+
+    filename_ext = ".fbx"
+    filter_glob = StringProperty(
+            default="*.fbx",
+            options={'HIDDEN'},
+            )
+
+    sketchFab = BoolProperty(name="Sketchfab List", description="Generate list for Sketchfab animation", default=True)
+
+    def execute(self, context):
+        import latk as la
+        keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "check_existing"))
+        if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
+            import os
+        #~
+        keywords["sketchFab"] = self.sketchFab
+        #~
+        la.exportForUnity(**keywords)
+        return {'FINISHED'} 
+
+class ExportSculptrVR(bpy.types.Operator, ExportHelper):
+    """Save a SculptrVR CSV"""
+
+    bl_idname = "export_scene.sculptrvr"
+    bl_label = 'Export SculptrVR CSV'
+    bl_options = {'PRESET'}
+
+    filename_ext = ".csv"
+    filter_glob = StringProperty(
+            default="*.csv",
+            options={'HIDDEN'},
+            )
+
+    octreeSize = IntProperty(name="Octree Size", description="Octree Size", default=10)
+    vol_res = IntProperty(name="Volume Resolution", description="Volume Resolution", default=20)
+    mtl_val = IntProperty(name="Material Value", description="Material Value", default=127)
+
+    def execute(self, context):
+        import latk as la
+        keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "check_existing"))
+        if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
+            import os
+        #~
+        keywords["octreeSize"] = self.octreeSize
+        keywords["vol_res"] = self.vol_res
+        keywords["mtl_val"] = self.mtl_val
+        #~
+        la.exportSculptrVrCsv(**keywords)
         return {'FINISHED'} 
 
 class ExportSvg(bpy.types.Operator, ExportHelper):
@@ -739,6 +809,10 @@ def menu_func_export(self, context):
         self.layout.operator(ExportSvg.bl_idname, text="Latk - SVG SMIL (.svg)")
     if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_Painter == True):
         self.layout.operator(ExportPainter.bl_idname, text="Latk - Corel Painter (.txt)")
+    if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_FBXSequence == True):
+        self.layout.operator(ExportFbxSequence.bl_idname, text="Latk - FBX Sequence (.fbx)")
+    if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_SculptrVR == True):
+        self.layout.operator(ExportSculptrVR.bl_idname, text="Latk - SculptrVR (.csv)")
 
 #classes = (FreestyleGPencil, FreestyleGPencil_Panel)
 
