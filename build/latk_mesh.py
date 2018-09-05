@@ -473,6 +473,15 @@ def colorVertices(obj, color=(1,0,0), makeMaterial=False, colorName="rgba"):
     if (makeMaterial==True):
         colorVertexCyclesMat(obj)
 
+def togglePoints(strokes=None):
+    if not strokes:
+        strokes = getSelectedStrokes()
+        if not strokes:
+            strokes = getAllStrokes()
+    #~
+    for stroke in strokes:
+        stroke.color.use_volumetric_strokes = True
+
 def meshToGp(obj=None, pointsOnly=False):
     if not obj:
         obj = ss()

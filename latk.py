@@ -95,9 +95,9 @@ def gpWorldRoot(name="Empty"):
         layer.parent = target
     return target
 
-def pressureRange(_min=0.1, _max=1.0, _mode="clamp"):
+def pressureRange(_min=0.1, _max=1.0, _mode="clamp_p"):
     gp = getActiveGp()
-    if (_mode == "clamp"):
+    if (_mode == "clamp_p"):
         for layer in gp.layers:
             for frame in layer.frames:
                 for stroke in frame.strokes:
@@ -106,12 +106,27 @@ def pressureRange(_min=0.1, _max=1.0, _mode="clamp"):
                             point.pressure = _min
                         elif (point.pressure > _max):
                             point.pressure = _max
-    else:
+    elif (_mode == "remap_p"):
         for layer in gp.layers:
             for frame in layer.frames:
                 for stroke in frame.strokes:
                     for point in stroke.points:
                         point.pressure = remap(point.pressure, 0.0, 1.0, _min, _max)
+    elif (_mode == "clamp_s"):
+        for layer in gp.layers:
+            for frame in layer.frames:
+                for stroke in frame.strokes:
+                    for point in stroke.points:
+                        if (point.strength < _min):
+                            point.strength = _min
+                        elif (point.strength > _max):
+                            point.strength = _max
+    elif (_mode == "remap_s"):
+        for layer in gp.layers:
+            for frame in layer.frames:
+                for stroke in frame.strokes:
+                    for point in stroke.points:
+                        point.strength = remap(point.strength, 0.0, 1.0, _min, _max)
     
 def cameraArray(target=None, hideTarget=True, removeCameras=True, removeLayers=True): 
     if not target:
@@ -3289,6 +3304,15 @@ def colorVertices(obj, color=(1,0,0), makeMaterial=False, colorName="rgba"):
     if (makeMaterial==True):
         colorVertexCyclesMat(obj)
 
+def togglePoints(strokes=None):
+    if not strokes:
+        strokes = getSelectedStrokes()
+        if not strokes:
+            strokes = getAllStrokes()
+    #~
+    for stroke in strokes:
+        stroke.color.use_volumetric_strokes = True
+
 def meshToGp(obj=None, pointsOnly=False):
     if not obj:
         obj = ss()
@@ -4699,12 +4723,14 @@ class LatkProperties(bpy.types.PropertyGroup):
     )
 
     remapPressureMode = EnumProperty(
-        name="",
+        name="Remap Mode",
         items=(
-            ("CLAMP", "Clamp", "Clamp values below min or above max", 0),
-            ("REMAP", "Remap", "Remap values from 0-1 to min-max", 1)
+            ("CLAMP_P", "Clamp Pressure", "Clamp pressure values below min or above max", 0),
+            ("REMAP_P", "Remap Pressure", "Remap pressure values from 0-1 to min-max", 1),
+            ("CLAMP_S", "Clamp Strength", "Clamp strength values below min or above max", 0),
+            ("REMAP_S", "Remap Strength", "Remap strength values from 0-1 to min-max", 1)
         ),
-        default="CLAMP"
+        default="REMAP_P"
     )
 
     saveLayers = BoolProperty(
@@ -4860,7 +4886,7 @@ class LatkProperties_Panel(bpy.types.Panel):
         
         row = layout.row()
         row.operator("latk_button.strokesfrommesh")
-        row.operator("latk_button.pointsfrommesh")
+        row.operator("latk_button.pointstoggle")
 
 
         # ~ ~ ~ 
@@ -4902,7 +4928,7 @@ class Latk_Button_Gpmesh(bpy.types.Operator):
         return {'FINISHED'}
 
 class Latk_Button_RemapPressure(bpy.types.Operator):
-    """Mesh all GP strokes. Takes a while.."""
+    """Remap pressure or strength for all strokes"""
     bl_idname = "latk_button.remappressure"
     bl_label = "Pressure"
     bl_options = {'UNDO'}
@@ -4911,7 +4937,6 @@ class Latk_Button_RemapPressure(bpy.types.Operator):
         latk_settings = bpy.context.scene.latk_settings
         pressureRange(latk_settings.minRemapPressure, latk_settings.maxRemapPressure, latk_settings.remapPressureMode.lower())
         return {'FINISHED'}
-
 
 class Latk_Button_WriteOnStrokes(bpy.types.Operator):
     """Create a sequence of write-on GP strokes"""
@@ -4935,15 +4960,15 @@ class Latk_Button_StrokesFromMesh(bpy.types.Operator):
         meshToGp(obj=None, pointsOnly=False)
         return {'FINISHED'}
 
-class Latk_Button_PointsFromMesh(bpy.types.Operator):
-    """Generate GP strokes from a mesh"""
-    bl_idname = "latk_button.pointsfrommesh"
-    bl_label = "Points from Mesh"
+class Latk_Button_PointsToggle(bpy.types.Operator):
+    """Toggle points mode on"""
+    bl_idname = "latk_button.pointstoggle"
+    bl_label = "Points Mode"
     bl_options = {'UNDO'}
     
     def execute(self, context):
         latk_settings = bpy.context.scene.latk_settings
-        meshToGp(obj=None, pointsOnly=True)
+        togglePoints()
         return {'FINISHED'}
 
 class Latk_Button_BakeSelected(bpy.types.Operator):
