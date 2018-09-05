@@ -3313,13 +3313,13 @@ def togglePoints(strokes=None):
     for stroke in strokes:
         stroke.color.use_volumetric_strokes = True
 
-def meshToGp(obj=None, pointsOnly=False):
+def meshToGp(obj=None, vertexHitbox=1.5):
     if not obj:
         obj = ss()
     mesh = obj.data
     mat = obj.matrix_world
     #~
-    points = []
+    allPoints = []
     for face in mesh.polygons:
         for idx in face.vertices:
             pointsFace = []
@@ -3329,16 +3329,20 @@ def meshToGp(obj=None, pointsOnly=False):
             finalPoint += vert
         finalPoint /= len(pointsFace)
         finalPoint = mat * finalPoint
-        points.append((finalPoint.x, finalPoint.z, finalPoint.y))
-    if (pointsOnly == False):
-        drawPoints(points)
-    else:
-        for point in points:
+        allPoints.append((finalPoint.x, finalPoint.z, finalPoint.y))
+    #~
+    points = []
+    allPointsCounter = 0
+    for i in range(1, len(allPoints)):
+        if (len(points) < 2 or getDistance(allPoints[allPointsCounter], allPoints[i]) < vertexHitbox):
+            points.append(allPoints[i])
+        else:
             try:
-                drawPoints([point])
+                drawPoints(points=points, color=getUnknownColor(obj.data.materials[0]))
+                allPointsCounter = i
+                points = []
             except:
-                pass
-
+                points.append(allPoints[i])
 
 def makeCurve(coords, pressures, resolution=2, thickness=0.1, bevelResolution=1, curveType="bezier", parent=None, capsObj=None, name="latk_ob", useUvs=True, usePressure=True):
     # http://blender.stackexchange.com/questions/12201/bezier-spline-with-python-adds-unwanted-point
@@ -3445,12 +3449,15 @@ def makeGpCurve(_type="PATH"):
 
 def cubesToVerts(target=None, cubeScale=0.25, posScale=0.01):
     if not target:
-        target = s()[0].data.vertices
-    for vert in target:
+        target = ss()
+    verts = target.data.vertices
+    mat = target.matrix_world
+    for vert in verts:
         bpy.ops.mesh.primitive_cube_add()
-        cube = s()[0]
-        cube.location = vert.co * posScale
-        cube.scale = (cubeScale,cubeScale,cubeScale)
+        cube = ss()
+        cube.scale = (cubeScale * target.scale[0],cubeScale * target.scale[1],cubeScale * target.scale[2])
+        cube.rotation_euler = target.rotation_euler
+        cube.location = mat * vert.co
 
 def randomMetaballs():
     # http://blenderscripting.blogspot.com/2012/09/tripping-metaballs-python.html
@@ -3557,6 +3564,8 @@ def drawPoints(points=None, color=None, frame=None, layer=None):
     if (len(points) > 0):
         if not color:
             color = getActiveColor()
+        else:
+            color = createColor(color)
         if not layer:
             layer = getActiveLayer()
             if not layer:
@@ -4285,7 +4294,7 @@ class LightningArtistToolkitPreferences(bpy.types.AddonPreferences):
     extraFormats_SculptrVR = bpy.props.BoolProperty(
         name = 'SculptrVR CSV',
         description = "SculptrVR CSV export",
-        default = False
+        default = True
     )
 
     def draw(self, context):
@@ -4763,6 +4772,12 @@ class LatkProperties(bpy.types.PropertyGroup):
         default=0.1
     )
 
+    vertHitbox2 = FloatProperty(
+        name="Vert Hitbox",
+        description="Max distance between vertices",
+        default=1.5
+    )
+
     numSplitFrames = IntProperty(
         name="Split Frames",
         description="Split layers if they have more than this many frames",
@@ -4885,6 +4900,7 @@ class LatkProperties_Panel(bpy.types.Panel):
         row.operator("latk_button.bakeall")
         
         row = layout.row()
+        row.prop(latk, "vertHitbox2")
         row.operator("latk_button.strokesfrommesh")
         row.operator("latk_button.pointstoggle")
 
@@ -4957,7 +4973,7 @@ class Latk_Button_StrokesFromMesh(bpy.types.Operator):
     
     def execute(self, context):
         latk_settings = bpy.context.scene.latk_settings
-        meshToGp(obj=None, pointsOnly=False)
+        meshToGp(vertexHitbox=latk_settings.vertHitbox2)
         return {'FINISHED'}
 
 class Latk_Button_PointsToggle(bpy.types.Operator):

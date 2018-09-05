@@ -48,7 +48,7 @@ class LightningArtistToolkitPreferences(bpy.types.AddonPreferences):
     extraFormats_SculptrVR = bpy.props.BoolProperty(
         name = 'SculptrVR CSV',
         description = "SculptrVR CSV export",
-        default = False
+        default = True
     )
 
     def draw(self, context):
@@ -526,6 +526,12 @@ class LatkProperties(bpy.types.PropertyGroup):
         default=0.1
     )
 
+    vertHitbox2 = FloatProperty(
+        name="Vert Hitbox",
+        description="Max distance between vertices",
+        default=1.5
+    )
+
     numSplitFrames = IntProperty(
         name="Split Frames",
         description="Split layers if they have more than this many frames",
@@ -648,6 +654,7 @@ class LatkProperties_Panel(bpy.types.Panel):
         row.operator("latk_button.bakeall")
         
         row = layout.row()
+        row.prop(latk, "vertHitbox2")
         row.operator("latk_button.strokesfrommesh")
         row.operator("latk_button.pointstoggle")
 
@@ -720,7 +727,7 @@ class Latk_Button_StrokesFromMesh(bpy.types.Operator):
     
     def execute(self, context):
         latk_settings = bpy.context.scene.latk_settings
-        meshToGp(obj=None, pointsOnly=False)
+        meshToGp(vertexHitbox=latk_settings.vertHitbox2)
         return {'FINISHED'}
 
 class Latk_Button_PointsToggle(bpy.types.Operator):

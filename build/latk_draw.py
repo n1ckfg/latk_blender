@@ -5,6 +5,8 @@ def drawPoints(points=None, color=None, frame=None, layer=None):
     if (len(points) > 0):
         if not color:
             color = getActiveColor()
+        else:
+            color = createColor(color)
         if not layer:
             layer = getActiveLayer()
             if not layer:
