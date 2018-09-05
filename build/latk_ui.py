@@ -304,9 +304,9 @@ class ExportSculptrVR(bpy.types.Operator, ExportHelper):
             options={'HIDDEN'},
             )
 
-    octreeSize = IntProperty(name="Octree Size", description="Octree Size", default=10)
-    vol_res = IntProperty(name="Volume Resolution", description="Volume Resolution", default=20)
-    mtl_val = IntProperty(name="Material Value", description="Material Value", default=127)
+    octreeSize = IntProperty(name="Octree Size (0-19)", description="Octree Size", default=7)
+    vol_scale = FloatProperty(name="Volume Scale (0-1)", description="Volume Scale", default=0.33)
+    mtl_val = IntProperty(name="Material (127, 254, or 255)", description="Material Value", default=255)
 
     def execute(self, context):
         import latk as la
@@ -315,7 +315,7 @@ class ExportSculptrVR(bpy.types.Operator, ExportHelper):
             import os
         #~
         keywords["octreeSize"] = self.octreeSize
-        keywords["vol_res"] = self.vol_res
+        keywords["vol_scale"] = self.vol_scale
         keywords["mtl_val"] = self.mtl_val
         #~
         la.exportSculptrVrCsv(**keywords)
@@ -803,16 +803,16 @@ def menu_func_export(self, context):
     self.layout.operator(ExportLatk.bl_idname, text="Latk Animation (.latk)")
     self.layout.operator(ExportLatkJson.bl_idname, text="Latk Animation (.json)")
     #~
+    if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_SculptrVR == True):
+        self.layout.operator(ExportSculptrVR.bl_idname, text="Latk - SculptrVR (.csv)")
+    if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_FBXSequence == True):
+        self.layout.operator(ExportFbxSequence.bl_idname, text="Latk - FBX Sequence (.fbx)")
     if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_GML == True):
         self.layout.operator(ExportGml.bl_idname, text="Latk - GML (.gml)")
     if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_SVG == True):
         self.layout.operator(ExportSvg.bl_idname, text="Latk - SVG SMIL (.svg)")
     if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_Painter == True):
         self.layout.operator(ExportPainter.bl_idname, text="Latk - Corel Painter (.txt)")
-    if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_FBXSequence == True):
-        self.layout.operator(ExportFbxSequence.bl_idname, text="Latk - FBX Sequence (.fbx)")
-    if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_SculptrVR == True):
-        self.layout.operator(ExportSculptrVR.bl_idname, text="Latk - SculptrVR (.csv)")
 
 #classes = (FreestyleGPencil, FreestyleGPencil_Panel)
 

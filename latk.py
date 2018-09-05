@@ -2140,7 +2140,14 @@ def writePointCloud(filepath=None, strokes=None):
             lines.append(x + ", " + y + ", " + z + "\n")
     writeTextFile(name=name, lines=lines)
 
-def exportSculptrVrCsv(filepath=None, strokes=None, octreeSize=15, vol_res=20, mtl_val=127):
+def exportSculptrVrCsv(filepath=None, strokes=None, octreeSize=7, vol_scale=0.33, mtl_val=255):
+    if (octreeSize < 0):
+        octreeSize = 0
+    if (octreeSize > 19):
+        octreeSize = 19
+    if (mtl_val != 127 and mtl_val != 254 and mtl_val != 255):
+        mtl_val = 255
+    #~
     if not filepath:
         filepath = getFilePath()
     if not strokes:
@@ -2167,22 +2174,31 @@ def exportSculptrVrCsv(filepath=None, strokes=None, octreeSize=15, vol_res=20, m
 
     for stroke in strokes:
         for point in stroke.points:
+            # do this here in case we want to use pressure later
+            minVal, maxVal = getSculptrVrVolRes(octreeSize)
+
             color = stroke.color.color
             r = int(color[0] * 255)
             g = int(color[1] * 255)
             b = int(color[2] * 255)
             coord = point.co
-            x = remapInt(coord[0], allX[0], allX[len(allX)-1], int(-octreeSize/2), int(octreeSize/2))
-            y = remapInt(coord[1], allY[0], allY[len(allY)-1], int(-octreeSize/2), int(octreeSize/2))
-            z = remapInt(coord[2], allZ[0], allZ[len(allZ)-1], 1, octreeSize)
+            x = remapInt(coord[0], allX[0], allX[len(allX)-1], int(minVal * vol_scale), int(maxVal * vol_scale))
+            y = remapInt(coord[1], allY[0], allY[len(allY)-1], int(minVal * vol_scale), int(maxVal * vol_scale))
+            z = remapInt(coord[2], allZ[0], allZ[len(allZ)-1], int(minVal * vol_scale), int(maxVal * vol_scale))
             csvDataInt.append([x, y, z, octreeSize, r, g, b, mtl_val])
 
     #csvDataInt = sorted(csvDataInt, key=lambda x: x[1])
     #csvDataInt = sorted(csvDataInt, key=lambda x: x[2])
     for data in csvDataInt:
-        csvData.append(str(data[0]) + ", " + str(data[1]) + ", " + str(data[2]) + ", " + str(data[3]) + ", " + str(data[4]) + ", " + str(data[5]) + ", " + str(data[6]) + ", " + str(data[7]))
+        csvData.append(str(data[0]) + "," + str(data[1]) + "," + str(data[2]) + "," + str(data[3]) + "," + str(data[4]) + "," + str(data[5]) + "," + str(data[6]) + "," + str(data[7]))
 
     writeTextFile(filepath, "\n".join(csvData))
+
+def getSculptrVrVolRes(val):
+    vol_res = 19 - val
+    minVal = -pow(2, vol_res)
+    maxVal = pow(2, vol_res)-1
+    return minVal, maxVal
 
 class InMemoryZip(object):
 
@@ -4493,9 +4509,9 @@ class ExportSculptrVR(bpy.types.Operator, ExportHelper):
             options={'HIDDEN'},
             )
 
-    octreeSize = IntProperty(name="Octree Size", description="Octree Size", default=10)
-    vol_res = IntProperty(name="Volume Resolution", description="Volume Resolution", default=20)
-    mtl_val = IntProperty(name="Material Value", description="Material Value", default=127)
+    octreeSize = IntProperty(name="Octree Size (0-19)", description="Octree Size", default=7)
+    vol_scale = FloatProperty(name="Volume Scale (0-1)", description="Volume Scale", default=0.33)
+    mtl_val = IntProperty(name="Material (127, 254, or 255)", description="Material Value", default=255)
 
     def execute(self, context):
         import latk as la
@@ -4504,7 +4520,7 @@ class ExportSculptrVR(bpy.types.Operator, ExportHelper):
             import os
         #~
         keywords["octreeSize"] = self.octreeSize
-        keywords["vol_res"] = self.vol_res
+        keywords["vol_scale"] = self.vol_scale
         keywords["mtl_val"] = self.mtl_val
         #~
         la.exportSculptrVrCsv(**keywords)
@@ -4992,16 +5008,16 @@ def menu_func_export(self, context):
     self.layout.operator(ExportLatk.bl_idname, text="Latk Animation (.latk)")
     self.layout.operator(ExportLatkJson.bl_idname, text="Latk Animation (.json)")
     #~
+    if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_SculptrVR == True):
+        self.layout.operator(ExportSculptrVR.bl_idname, text="Latk - SculptrVR (.csv)")
+    if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_FBXSequence == True):
+        self.layout.operator(ExportFbxSequence.bl_idname, text="Latk - FBX Sequence (.fbx)")
     if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_GML == True):
         self.layout.operator(ExportGml.bl_idname, text="Latk - GML (.gml)")
     if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_SVG == True):
         self.layout.operator(ExportSvg.bl_idname, text="Latk - SVG SMIL (.svg)")
     if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_Painter == True):
         self.layout.operator(ExportPainter.bl_idname, text="Latk - Corel Painter (.txt)")
-    if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_FBXSequence == True):
-        self.layout.operator(ExportFbxSequence.bl_idname, text="Latk - FBX Sequence (.fbx)")
-    if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_SculptrVR == True):
-        self.layout.operator(ExportSculptrVR.bl_idname, text="Latk - SculptrVR (.csv)")
 
 #classes = (FreestyleGPencil, FreestyleGPencil_Panel)
 
