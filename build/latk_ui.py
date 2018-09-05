@@ -629,21 +629,26 @@ class LatkProperties_Panel(bpy.types.Panel):
         row.prop(latk, "remesh_mode", expand=True)
 
         row = layout.row()
-        row.operator("latk_button.bakeselected")
-        row.operator("latk_button.booleanmod") #"latk_button.bakeall")
-        row.operator("latk_button.strokesfrommesh")
-
-        row = layout.row()
         row.prop(latk, "bakeMesh")
         row.prop(latk, "saveLayers")
         row.prop(latk, "vertexColorName")
-
-        # ~ ~ ~ 
 
         row = layout.row()
         row.prop(latk, "material_set_mode")
         row.prop(latk, "material_shader_mode")
         row.operator("latk_button.mtlshader")
+
+        # ~ ~ ~ 
+
+        row = layout.row()
+        row.operator("latk_button.bakeselected")
+        row.operator("latk_button.booleanmod") 
+        row.operator("latk_button.bakeall")
+        
+        row = layout.row()
+        row.operator("latk_button.strokesfrommesh")
+        row.operator("latk_button.pointsfrommesh")
+
 
         # ~ ~ ~ 
 
@@ -714,7 +719,18 @@ class Latk_Button_StrokesFromMesh(bpy.types.Operator):
     
     def execute(self, context):
         latk_settings = bpy.context.scene.latk_settings
-        meshToGp()
+        meshToGp(obj=None, pointsOnly=False)
+        return {'FINISHED'}
+
+class Latk_Button_PointsFromMesh(bpy.types.Operator):
+    """Generate GP strokes from a mesh"""
+    bl_idname = "latk_button.pointsfrommesh"
+    bl_label = "Points from Mesh"
+    bl_options = {'UNDO'}
+    
+    def execute(self, context):
+        latk_settings = bpy.context.scene.latk_settings
+        meshToGp(obj=None, pointsOnly=True)
         return {'FINISHED'}
 
 class Latk_Button_BakeSelected(bpy.types.Operator):

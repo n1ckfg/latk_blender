@@ -473,7 +473,7 @@ def colorVertices(obj, color=(1,0,0), makeMaterial=False, colorName="rgba"):
     if (makeMaterial==True):
         colorVertexCyclesMat(obj)
 
-def meshToGp(obj=None):
+def meshToGp(obj=None, pointsOnly=False):
     if not obj:
         obj = ss()
     mesh = obj.data
@@ -490,7 +490,15 @@ def meshToGp(obj=None):
         finalPoint /= len(pointsFace)
         finalPoint = mat * finalPoint
         points.append((finalPoint.x, finalPoint.z, finalPoint.y))
-    drawPoints(points)
+    if (pointsOnly == False):
+        drawPoints(points)
+    else:
+        for point in points:
+            try:
+                drawPoints([point])
+            except:
+                pass
+
 
 def makeCurve(coords, pressures, resolution=2, thickness=0.1, bevelResolution=1, curveType="bezier", parent=None, capsObj=None, name="latk_ob", useUvs=True, usePressure=True):
     # http://blender.stackexchange.com/questions/12201/bezier-spline-with-python-adds-unwanted-point
