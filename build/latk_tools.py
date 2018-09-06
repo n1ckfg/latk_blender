@@ -952,6 +952,14 @@ def matchColorToPalette(_color):
     palette.colors.active = returns
     return returns
 
+def createAndMatchColorPalette(color, numMaxColors=16, numColPlaces=5):
+    palette = getActivePalette()
+    if (len(palette.colors) < numMaxColors):
+        createColorWithPalette(color, numColPlaces, numMaxColors)
+    else:
+        matchColorToPalette(color)
+    return getActiveColor()
+
 def changeColor():
     frame = getActiveFrame()
     palette = getActivePalette()

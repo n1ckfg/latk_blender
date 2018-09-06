@@ -15,6 +15,12 @@ class LightningArtistToolkitPreferences(bpy.types.AddonPreferences):
         default = False
     )
 
+    extraFormats_ASC = bpy.props.BoolProperty(
+        name = 'ASC Point Cloud',
+        description = "ASC point cloud import/export",
+        default = False
+    )
+
     extraFormats_Painter = bpy.props.BoolProperty(
         name = 'Corel Painter',
         description = "Corel Painter script export",
@@ -56,15 +62,18 @@ class LightningArtistToolkitPreferences(bpy.types.AddonPreferences):
         layout.label("Add menu items to import:")
         layout.prop(self, "extraFormats_TiltBrush")
         layout.prop(self, "extraFormats_GML")
+        layout.prop(self, "extraFormats_ASC")
         layout.prop(self, "extraFormats_Norman")
         layout.prop(self, "extraFormats_VRDoodler")
         #~
         layout.label("Add menu items to export:")
         layout.prop(self, "extraFormats_GML")
+        layout.prop(self, "extraFormats_ASC")
         layout.prop(self, "extraFormats_Painter")
         layout.prop(self, "extraFormats_SVG")
         layout.prop(self, "extraFormats_FBXSequence")
         layout.prop(self, "extraFormats_SculptrVR")
+
 
 class ImportLatk(bpy.types.Operator, ImportHelper):
     """Load a Latk File"""
@@ -89,6 +98,129 @@ class ImportLatk(bpy.types.Operator, ImportHelper):
         keywords["resizeTimeline"] = self.resizeTimeline
         la.readBrushStrokes(**keywords)
         return {'FINISHED'}
+
+
+class ImportTiltBrush(bpy.types.Operator, ImportHelper):
+    """Load a Norman File"""
+    bl_idname = "import_scene.tbjson"
+    bl_label = "Import Tilt Brush"
+    bl_options = {'PRESET', 'UNDO'}
+
+    filename_ext = ".json"
+    filter_glob = StringProperty(
+            default="*.tilt;*.json",
+            options={'HIDDEN'},
+            )
+
+    vertSkip = IntProperty(name="Read Vertices", description="Read every n vertices", default=1)
+
+    def execute(self, context):
+        import latk as la
+        keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode"))
+        if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
+            import os
+        #~
+        keywords["vertSkip"] = self.vertSkip
+        la.importTiltBrush(**keywords)
+        return {'FINISHED'} 
+
+
+class ImportNorman(bpy.types.Operator, ImportHelper):
+    """Load a Norman File"""
+    bl_idname = "import_scene.norman"
+    bl_label = "Import Norman"
+    bl_options = {'PRESET', 'UNDO'}
+
+    filename_ext = ".json"
+    filter_glob = StringProperty(
+            default="*.json",
+            options={'HIDDEN'},
+            )
+
+    def execute(self, context):
+        import latk as la
+        keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode"))
+        if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
+            import os
+        #~
+        la.importNorman(**keywords)
+        return {'FINISHED'} 
+
+
+class ImportVRDoodler(bpy.types.Operator, ImportHelper):
+    """Load a VRDoodler File"""
+    bl_idname = "import_scene.vrdoodler"
+    bl_label = "Import VRDoodler"
+    bl_options = {'PRESET', 'UNDO'}
+
+    filename_ext = ".obj"
+    filter_glob = StringProperty(
+            default="*.obj",
+            options={'HIDDEN'},
+            )
+
+    def execute(self, context):
+        import latk as la
+        keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode"))
+        if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
+            import os
+        #~
+        la.importVRDoodler(**keywords)
+        return {'FINISHED'} 
+
+
+class ImportASC(bpy.types.Operator, ImportHelper):
+    """Load an ASC point cloud"""
+    bl_idname = "import_scene.asc"
+    bl_label = "Import ASC point cloud"
+    bl_options = {'PRESET', 'UNDO'}
+
+    filename_ext = ".asc"
+    filter_glob = StringProperty(
+            default="*.asc",
+            options={'HIDDEN'},
+            )
+
+    def execute(self, context):
+        import latk as la
+        keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode"))
+        if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
+            import os
+        #~
+        la.importAsc(**keywords)
+        return {'FINISHED'} 
+
+
+class ImportGml(bpy.types.Operator, ImportHelper):
+    """Load a GML File"""
+    bl_idname = "import_scene.gml"
+    bl_label = "Import Gml"
+    bl_options = {'PRESET', 'UNDO'}
+
+    filename_ext = ".gml"
+    filter_glob = StringProperty(
+            default="*.gml",
+            options={'HIDDEN'},
+            )
+
+    sequenceAnim = BoolProperty(name="Sequence in Time", description="Create a new frame for each stroke", default=False)
+    splitStrokes = BoolProperty(name="Split Strokes", description="Split animated strokes to layers", default=False)
+                
+    def execute(self, context):
+        import latk as la
+        keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "splitStrokes", "sequenceAnim"))
+        if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
+            import os
+        #~
+        keywords["splitStrokes"] = self.splitStrokes
+        keywords["sequenceAnim"] = self.sequenceAnim
+        #~
+        la.gmlParser(**keywords)
+        return {'FINISHED'} 
+
+
+# ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
+
 
 class ExportLatkJson(bpy.types.Operator, ExportHelper): # TODO combine into one class
     """Save a Latk Json File"""
@@ -144,100 +276,6 @@ class ExportLatk(bpy.types.Operator, ExportHelper):  # TODO combine into one cla
         la.writeBrushStrokes(**keywords, zipped=True)
         return {'FINISHED'}
 
-# ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ 
-
-class ImportTiltBrush(bpy.types.Operator, ImportHelper):
-    """Load a Norman File"""
-    bl_idname = "import_scene.tbjson"
-    bl_label = "Import Tilt Brush"
-    bl_options = {'PRESET', 'UNDO'}
-
-    filename_ext = ".json"
-    filter_glob = StringProperty(
-            default="*.tilt;*.json",
-            options={'HIDDEN'},
-            )
-
-    vertSkip = IntProperty(name="Read Vertices", description="Read every n vertices", default=1)
-
-    def execute(self, context):
-        import latk as la
-        keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode"))
-        if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
-            import os
-        #~
-        keywords["vertSkip"] = self.vertSkip
-        la.importTiltBrush(**keywords)
-        return {'FINISHED'} 
-
-class ImportNorman(bpy.types.Operator, ImportHelper):
-    """Load a Norman File"""
-    bl_idname = "import_scene.norman"
-    bl_label = "Import Norman"
-    bl_options = {'PRESET', 'UNDO'}
-
-    filename_ext = ".json"
-    filter_glob = StringProperty(
-            default="*.json",
-            options={'HIDDEN'},
-            )
-
-    def execute(self, context):
-        import latk as la
-        keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode"))
-        if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
-            import os
-        #~
-        la.importNorman(**keywords)
-        return {'FINISHED'} 
-
-class ImportVRDoodler(bpy.types.Operator, ImportHelper):
-    """Load a VRDoodler File"""
-    bl_idname = "import_scene.vrdoodler"
-    bl_label = "Import VRDoodler"
-    bl_options = {'PRESET', 'UNDO'}
-
-    filename_ext = ".obj"
-    filter_glob = StringProperty(
-            default="*.obj",
-            options={'HIDDEN'},
-            )
-
-    def execute(self, context):
-        import latk as la
-        keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode"))
-        if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
-            import os
-        #~
-        la.importVRDoodler(**keywords)
-        return {'FINISHED'} 
-
-class ImportGml(bpy.types.Operator, ImportHelper):
-    """Load a GML File"""
-    bl_idname = "import_scene.gml"
-    bl_label = "Import Gml"
-    bl_options = {'PRESET', 'UNDO'}
-
-    filename_ext = ".gml"
-    filter_glob = StringProperty(
-            default="*.gml",
-            options={'HIDDEN'},
-            )
-
-    sequenceAnim = BoolProperty(name="Sequence in Time", description="Create a new frame for each stroke", default=False)
-    splitStrokes = BoolProperty(name="Split Strokes", description="Split animated strokes to layers", default=False)
-                
-    def execute(self, context):
-        import latk as la
-        keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "splitStrokes", "sequenceAnim"))
-        if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
-            import os
-        #~
-        keywords["splitStrokes"] = self.splitStrokes
-        keywords["sequenceAnim"] = self.sequenceAnim
-        #~
-        la.gmlParser(**keywords)
-        return {'FINISHED'} 
 
 class ExportGml(bpy.types.Operator, ExportHelper):
     """Save a GML File"""
@@ -265,6 +303,7 @@ class ExportGml(bpy.types.Operator, ExportHelper):
         la.writeGml(**keywords)
         return {'FINISHED'} 
 
+
 class ExportFbxSequence(bpy.types.Operator, ExportHelper):
     """Save an FBX Sequence"""
 
@@ -290,6 +329,7 @@ class ExportFbxSequence(bpy.types.Operator, ExportHelper):
         #~
         la.exportForUnity(**keywords)
         return {'FINISHED'} 
+
 
 class ExportSculptrVR(bpy.types.Operator, ExportHelper):
     """Save a SculptrVR CSV"""
@@ -334,6 +374,30 @@ class ExportSculptrVR(bpy.types.Operator, ExportHelper):
         la.exportSculptrVrCsv(**keywords)
         return {'FINISHED'} 
 
+
+class ExportASC(bpy.types.Operator, ExportHelper):
+    """Save an ASC point cloud"""
+
+    bl_idname = "export_scene.asc"
+    bl_label = 'Export ASC'
+    bl_options = {'PRESET'}
+
+    filename_ext = ".asc"
+    filter_glob = StringProperty(
+            default="*.asc",
+            options={'HIDDEN'},
+            )
+
+    def execute(self, context):
+        import latk as la
+        keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "check_existing"))
+        if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
+            import os
+        #~
+        la.exportAsc(**keywords)
+        return {'FINISHED'} 
+
+
 class ExportSvg(bpy.types.Operator, ExportHelper):
     """Save an SVG SMIL File"""
 
@@ -356,6 +420,7 @@ class ExportSvg(bpy.types.Operator, ExportHelper):
         #~
         la.writeSvg(**keywords)
         return {'FINISHED'} 
+
 
 class ExportPainter(bpy.types.Operator, ExportHelper):
     """Save a Painter script"""
@@ -380,7 +445,9 @@ class ExportPainter(bpy.types.Operator, ExportHelper):
         la.writePainter(**keywords)
         return {'FINISHED'} 
 
-# ~ ~ ~ 
+
+# ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
+
 
 class FreestyleGPencil(bpy.types.PropertyGroup):
     """Properties for the Freestyle to Grease Pencil exporter"""
@@ -474,7 +541,9 @@ class FreestyleGPencil_Panel(bpy.types.Panel):
         row.prop(gp, "use_connecting")
         row.prop(gp, "vertexHitbox")
 
-# ~ ~ ~ 
+
+# ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
+
 
 class LatkProperties(bpy.types.PropertyGroup):
     """Properties for Latk"""
@@ -831,6 +900,8 @@ def menu_func_import(self, context):
         self.layout.operator(ImportTiltBrush.bl_idname, text="Latk - Tilt Brush (.tilt, .json)")
     if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_GML == True):
         self.layout.operator(ImportGml.bl_idname, text="Latk - GML (.gml)")
+    if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_ASC == True):
+        self.layout.operator(ImportASC.bl_idname, text="Latk - ASC (.asc)")
     if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_Norman == True):
         self.layout.operator(ImportNorman.bl_idname, text="Latk - Norman (.json)")
     if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_VRDoodler == True):
@@ -846,6 +917,8 @@ def menu_func_export(self, context):
         self.layout.operator(ExportFbxSequence.bl_idname, text="Latk - FBX Sequence (.fbx)")
     if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_GML == True):
         self.layout.operator(ExportGml.bl_idname, text="Latk - GML (.gml)")
+    if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_ASC == True):
+        self.layout.operator(ExportASC.bl_idname, text="Latk - ASC (.asc)")
     if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_SVG == True):
         self.layout.operator(ExportSvg.bl_idname, text="Latk - SVG SMIL (.svg)")
     if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_Painter == True):

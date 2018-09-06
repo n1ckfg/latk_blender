@@ -864,6 +864,7 @@ def getAllTags(name=None, xml=None):
             returns.append(node)
     return returns
 
+'''
 def writePointCloud(filepath=None, strokes=None):
     if not filepath:
         filepath = getFilePath()
@@ -880,6 +881,65 @@ def writePointCloud(filepath=None, strokes=None):
             z = str(point.co[2])
             lines.append(x + ", " + y + ", " + z + "\n")
     writeTextFile(name=name, lines=lines)
+'''
+
+def importAsc(filepath=None):
+    globalScale = Vector((1, 1, 1))
+    globalOffset = Vector((0, 0, 0))
+    useScaleAndOffset = True
+    numPlaces = 7
+    roundValues = True
+
+    with open(filepath) as data_file: 
+        data = data_file.readlines()
+
+    points = []
+    for line in data:
+        pointRaw = line.split(",")
+        point = (float(pointRaw[0]), float(pointRaw[1]), float(pointRaw[2]))
+        points.append(point)
+
+    gp = getActiveGp()
+    layer = gp.layers.new("ASC_layer", set_active=True)
+    start, end = getStartEnd()
+    frame = getActiveFrame()
+    if not frame:
+        frame = layer.frames.new(start)
+
+    stroke = frame.strokes.new(getActiveColor().name)
+    stroke.draw_mode = "3DSPACE"
+    stroke.points.add(len(points))
+    for l, point in enumerate(points):
+        x = point[0]
+        y = point[2]
+        z = point[1]
+        pressure = 1.0
+        strength = 1.0
+        if useScaleAndOffset == True:
+            x = (x * globalScale.x) + globalOffset.x
+            y = (y * globalScale.y) + globalOffset.y
+            z = (z * globalScale.z) + globalOffset.z
+        #~
+        createPoint(stroke, l, (x, y, z), pressure, strength)
+
+def exportAsc(filepath=None):
+    ascData = []
+    strokes = getSelectedStrokes()
+    if not strokes:
+        frame = getActiveFrame()
+        strokes = frame.strokes
+    for stroke in strokes:
+        color = stroke.color.color
+        for point in stroke.points:
+            coord = point.co
+            x = coord[0]
+            y = coord[2]
+            z = coord[1]
+            r = int(255 * color[0])
+            g = int(255 * color[1])
+            b = int(255 * color[2])
+            ascData.append(str(x) + "," + str(y) + "," + str(z) + "," + str(r) + "," + str(g) + "," + str(b)) 
+    writeTextFile(filepath, "\n".join(ascData))
 
 def exportSculptrVrCsv(filepath=None, strokes=None, sphereRadius=10, octreeSize=7, vol_scale=0.33, mtl_val=255, file_format="sphere"):
     file_format = file_format.lower()

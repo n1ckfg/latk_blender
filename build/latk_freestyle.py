@@ -173,12 +173,8 @@ def freestyle_to_gpencil_strokes(strokes, frame, pressure=1, draw_mode="3DSPACE"
         except:
             pixel = lastPixel   
         #~ 
-        palette = getActivePalette()
-        if (len(palette.colors) < scene.freestyle_gpencil_export.numMaxColors):
-            createColorWithPalette(pixel, scene.freestyle_gpencil_export.numColPlaces, scene.freestyle_gpencil_export.numMaxColors)
-        else:
-            matchColorToPalette(pixel)
-        lastActiveColor = getActiveColor()
+        lastActiveColor = createAndMatchColorPalette(pixel, scene.freestyle_gpencil_export.numMaxColors, scene.freestyle_gpencil_export.numColPlaces)
+        #~
         if (scene.freestyle_gpencil_export.use_fill):
             lastActiveColor.fill_color = lastActiveColor.color
             lastActiveColor.fill_alpha = 0.9
