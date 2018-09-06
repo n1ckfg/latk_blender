@@ -887,7 +887,7 @@ def exportSculptrVrCsv(filepath=None, strokes=None, sphereRadius=1, octreeSize=7
         if not strokes:
             frame = getActiveFrame()
             strokes = frame.strokes
-
+    #~
     csvData = []
 
     allX = []

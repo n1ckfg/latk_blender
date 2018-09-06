@@ -41,6 +41,51 @@ def colorVertexAlt(obj, vert, color=[1,0,0]):
                 mesh.vertex_colors[0].data[i].color = color
             i += 1
 
+def getVertexColor(mesh=None, vert=0):
+    if not mesh:
+        mesh = ss().data
+    if (len(mesh.vertex_colors)) == 0:
+        return None
+    i=0
+    for poly in mesh.polygons:
+        for vert_side in poly.loop_indices:
+            global_vert_num = poly.vertices[vert_side-min(poly.loop_indices)] 
+            if (vert == global_vert_num):
+                return mesh.vertex_colors[0].data[i].color
+            i += 1    
+
+def colorVertices(obj, color=(1,0,0), makeMaterial=False, colorName="rgba"):
+    # start in object mode
+    mesh = obj.data
+    #~
+    if not mesh.vertex_colors:
+        mesh.vertex_colors.new(colorName) 
+    #~
+    color_layer = mesh.vertex_colors.active  
+    #~
+    i = 0
+    for poly in mesh.polygons:
+        for idx in poly.loop_indices:
+            try:
+                color_layer.data[i].color = (color[0], color[1], color[2], 1) # future-proofing 2.79a
+            except:
+                color_layer.data[i].color = color # 2.79 and earlier
+            i += 1
+    #~
+    if (makeMaterial==True):
+        colorVertexCyclesMat(obj)
+
+def togglePoints(strokes=None):
+    layer = getActiveLayer()
+    if not strokes:
+        strokes = getSelectedStrokes()
+        if not strokes:
+            strokes = getAllStrokes()
+    #~
+    for stroke in strokes:
+        stroke.color.use_volumetric_strokes = True
+    layer.line_change = 1
+
 def createMtlPalette(numPlaces=5, numReps = 1):
     palette = None
     removeUnusedMtl()
@@ -249,6 +294,22 @@ def getUnknownColor(mtl=None):
     if (col == None):
         col = getDiffuseColor(mtl)
     return col
+
+def getColorExplorer(target=None, vert=0):
+    if not target:
+        target = ss()
+    mesh = target.data
+    col = None
+    col = getVertexColor(mesh, vert)
+    if (col == None):
+        try:
+            col = getUnknownColor(target.data.materials[0])
+        except:
+            pass
+    if (col == None):
+        col = getActiveColor().color
+    return col
+
 
 # is this obsolete now that all materials are linked by color value?
 def makeEmissionMtl():

@@ -2175,7 +2175,7 @@ def exportSculptrVrCsv(filepath=None, strokes=None, sphereRadius=1, octreeSize=7
         if not strokes:
             frame = getActiveFrame()
             strokes = frame.strokes
-
+    #~
     csvData = []
 
     allX = []
@@ -2513,6 +2513,51 @@ def colorVertexAlt(obj, vert, color=[1,0,0]):
                 mesh.vertex_colors[0].data[i].color = color
             i += 1
 
+def getVertexColor(mesh=None, vert=0):
+    if not mesh:
+        mesh = ss().data
+    if (len(mesh.vertex_colors)) == 0:
+        return None
+    i=0
+    for poly in mesh.polygons:
+        for vert_side in poly.loop_indices:
+            global_vert_num = poly.vertices[vert_side-min(poly.loop_indices)] 
+            if (vert == global_vert_num):
+                return mesh.vertex_colors[0].data[i].color
+            i += 1    
+
+def colorVertices(obj, color=(1,0,0), makeMaterial=False, colorName="rgba"):
+    # start in object mode
+    mesh = obj.data
+    #~
+    if not mesh.vertex_colors:
+        mesh.vertex_colors.new(colorName) 
+    #~
+    color_layer = mesh.vertex_colors.active  
+    #~
+    i = 0
+    for poly in mesh.polygons:
+        for idx in poly.loop_indices:
+            try:
+                color_layer.data[i].color = (color[0], color[1], color[2], 1) # future-proofing 2.79a
+            except:
+                color_layer.data[i].color = color # 2.79 and earlier
+            i += 1
+    #~
+    if (makeMaterial==True):
+        colorVertexCyclesMat(obj)
+
+def togglePoints(strokes=None):
+    layer = getActiveLayer()
+    if not strokes:
+        strokes = getSelectedStrokes()
+        if not strokes:
+            strokes = getAllStrokes()
+    #~
+    for stroke in strokes:
+        stroke.color.use_volumetric_strokes = True
+    layer.line_change = 1
+
 def createMtlPalette(numPlaces=5, numReps = 1):
     palette = None
     removeUnusedMtl()
@@ -2722,6 +2767,22 @@ def getUnknownColor(mtl=None):
         col = getDiffuseColor(mtl)
     return col
 
+def getColorExplorer(target=None, vert=0):
+    if not target:
+        target = ss()
+    mesh = target.data
+    col = None
+    col = getVertexColor(mesh, vert)
+    if (col == None):
+        try:
+            col = getUnknownColor(target.data.materials[0])
+        except:
+            pass
+    if (col == None):
+        col = getActiveColor().color
+    return col
+
+
 # is this obsolete now that all materials are linked by color value?
 def makeEmissionMtl():
     mtl = getActiveMtl()
@@ -2849,15 +2910,46 @@ def getPixelFromUvArray(img, u, v):
 
 # 5 of 10. MESHES / GEOMETRY
 
-def getVerts(target=None):
+def getVerts(target=None, useWorldSpace=True, useColors=False, useFaces=True, useBmesh=False):
     if not target:
         target = bpy.context.scene.objects.active
-    me = target.data
-    bm = bmesh.new()
-    bm.from_mesh(me)
-    return bm.verts
-
-getVertices = getVerts
+    mesh = target.data
+    mat = target.matrix_world
+    #~
+    if (useBmesh==True):
+        bm = bmesh.new()
+        bm.from_mesh(mesh)
+        return bm.verts
+    else:
+        verts = []
+        #~
+        if (useFaces==True):
+            for face in mesh.polygons:
+                for idx in face.vertices:
+                    pointsFace = []
+                    pointsFace.append(mesh.vertices[idx].co)
+                point = Vector((0,0,0))
+                for vert in pointsFace:
+                    point += vert
+                point /= len(pointsFace)
+                if (useWorldSpace == True):
+                    point = mat * point
+                verts.append((point.x, point.z, point.y))
+        else:
+            for vert in mesh.vertices:
+                point = vert.co
+                if (useWorldSpace == True):
+                    point = mat * point
+                verts.append((point.x, point.z, point.y))
+        #~
+        if (useColors==True): # TODO this always returns len 0
+            colors = []
+            if (len(mesh.vertex_colors) == 0):
+                for i, vert in enumerate(verts):
+                    colors.append(getVertexColor(mesh, i))
+            return verts, colors
+        else:
+            return verts
 
 # TODO does not work, context error with decimate
 def bakeAllCurvesToMesh(_decimate=0.1):
@@ -3311,36 +3403,6 @@ def writeOnMesh(step=1, name="latk"):
             hideFrame(target[j], 0, True)
             hideFrame(target[j], len(target)-j, False)
 
-def colorVertices(obj, color=(1,0,0), makeMaterial=False, colorName="rgba"):
-    # start in object mode
-    mesh = obj.data
-    #~
-    if not mesh.vertex_colors:
-        mesh.vertex_colors.new(colorName) 
-    #~
-    color_layer = mesh.vertex_colors.active  
-    #~
-    i = 0
-    for poly in mesh.polygons:
-        for idx in poly.loop_indices:
-            try:
-                color_layer.data[i].color = (color[0], color[1], color[2], 1) # future-proofing 2.79a
-            except:
-                color_layer.data[i].color = color # 2.79 and earlier
-            i += 1
-    #~
-    if (makeMaterial==True):
-        colorVertexCyclesMat(obj)
-
-def togglePoints(strokes=None):
-    if not strokes:
-        strokes = getSelectedStrokes()
-        if not strokes:
-            strokes = getAllStrokes()
-    #~
-    for stroke in strokes:
-        stroke.color.use_volumetric_strokes = True
-
 def meshToGp(obj=None, vertexHitbox=1.5):
     if not obj:
         obj = ss()
@@ -3355,17 +3417,7 @@ def meshToGp(obj=None, vertexHitbox=1.5):
     if not frame:
         frame = layer.frames.new(currentFrame())
     #~
-    allPoints = []
-    for face in mesh.polygons:
-        for idx in face.vertices:
-            pointsFace = []
-            pointsFace.append(mesh.vertices[idx].co)
-        finalPoint = Vector((0,0,0))
-        for vert in pointsFace:
-            finalPoint += vert
-        finalPoint /= len(pointsFace)
-        finalPoint = mat * finalPoint
-        allPoints.append((finalPoint.x, finalPoint.z, finalPoint.y))
+    allPoints = getVerts(target=obj, useWorldSpace=True, useFaces=False, useColors=False, useBmesh=False)
     #~
     points = []
     allPointsCounter = 0
@@ -3373,11 +3425,7 @@ def meshToGp(obj=None, vertexHitbox=1.5):
         if (len(points) < 2 or getDistance(allPoints[allPointsCounter], allPoints[i]) < vertexHitbox):
             points.append(allPoints[i])
         else:
-            col = None
-            try:
-                col = getUnknownColor(obj.data.materials[0])
-            except:
-                col = getActiveColor().color
+            col = getColorExplorer(obj, i)
             try:
                 drawPoints(points=points, color=col)
                 allPointsCounter = i
@@ -4280,6 +4328,8 @@ spl = splitLayer
 cplf = checkLayersAboveFrameLimit
 
 splf = splitLayersAboveFrameLimit
+
+getVertices = getVerts
 
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
 # * * * * * * * * * * * * * * * * * * * * * * * * * *

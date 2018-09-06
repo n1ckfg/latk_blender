@@ -23,6 +23,8 @@ cplf = checkLayersAboveFrameLimit
 
 splf = splitLayersAboveFrameLimit
 
+getVertices = getVerts
+
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
