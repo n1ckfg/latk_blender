@@ -938,7 +938,7 @@ def exportSculptrVrCsv(filepath=None, strokes=None, sphereRadius=10, octreeSize=
                 x = remap(coord[0], allX[0], allX[len(allX)-1], minVal * vol_scale, maxVal * vol_scale)
                 y = remap(coord[1], allY[0], allY[len(allY)-1], minVal * vol_scale, maxVal * vol_scale)
                 z = remap(coord[2], allZ[0], allZ[len(allZ)-1], minVal * vol_scale, maxVal * vol_scale)
-                pressure = remap(point.pressure, 0.0, 1.0, sphereRadius/10.0, sphereRadius)
+                pressure = remap(point.pressure, 0.0, 1.0, sphereRadius/100.0, sphereRadius)
                 if (pressure < 0.01):
                 	pressure = 0.01
                 csvData.append([x, y, z, pressure, r, g, b])
