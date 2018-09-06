@@ -2222,7 +2222,7 @@ def exportSculptrVrCsv(filepath=None, strokes=None, sphereRadius=1, octreeSize=7
     #csvData = sorted(csvDataInt, key=lambda x: x[1])
     #csvData = sorted(csvDataInt, key=lambda x: x[2])
     finalData = []
-    finalData.append("# header")
+    finalData.append("# SculptrVR: " + file_format + " #")
     if (file_format == "legacy"): # xyz rgb
         for data in csvData:
             finalData.append(str(data[0]) + "," + str(data[1]) + "," + str(data[2]) + "," + str(data[4]) + "," + str(data[5]) + "," + str(data[6]))
