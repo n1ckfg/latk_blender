@@ -93,7 +93,7 @@ class ImportLatk(bpy.types.Operator, ImportHelper):
 class ExportLatkJson(bpy.types.Operator, ExportHelper): # TODO combine into one class
     """Save a Latk Json File"""
 
-    bake = BoolProperty(name="Bake Frames", description="Bake Keyframes to All Frames", default=True)
+    bake = BoolProperty(name="Bake Frames", description="Bake Keyframes to All Frames", default=False)
 
     bl_idname = "export_scene.latkjson"
     bl_label = 'Export Latk Json'

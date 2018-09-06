@@ -153,6 +153,7 @@ def writeBrushStrokes(filepath=None, bake=True, zipped=False):
     sg.append("\t\"creator\": \"blender\",")
     sg.append("\t\"grease_pencil\": [")
     sg.append("\t\t{")
+    sg.append("\t\t\t\"frame_rate\": " + str(getSceneFps()) + ",")
     sg.append("\t\t\t\"layers\": [")
     #~
     sl = []
@@ -170,11 +171,21 @@ def writeBrushStrokes(filepath=None, bake=True, zipped=False):
                 sb.append("\t\t\t\t\t\t\t\t{") # one stroke
                 for i, stroke in enumerate(frame.strokes):
                     color = (0,0,0)
+                    alpha = 0.9
+                    fill_color = (1,1,1)
+                    fill_alpha = 0.0
                     try:
-                        color = palette.colors[stroke.colorname].color
+                        col = palette.colors[stroke.colorname]
+                        color = col.color
+                        alpha = col.alpha 
+                        fill_color = col.fill_color
+                        fill_alpha = col.fill_alpha
                     except:
                         pass
                     sb.append("\t\t\t\t\t\t\t\t\t\"color\": [" + str(color[0]) + ", " + str(color[1]) + ", " + str(color[2])+ "],")
+                    sb.append("\t\t\t\t\t\t\t\t\t\"alpha\": " + str(alpha) + ",")
+                    sb.append("\t\t\t\t\t\t\t\t\t\"fill_color\": [" + str(fill_color[0]) + ", " + str(fill_color[1]) + ", " + str(fill_color[2])+ "],")
+                    sb.append("\t\t\t\t\t\t\t\t\t\"fill_alpha\": " + str(fill_alpha) + ",")
                     sb.append("\t\t\t\t\t\t\t\t\t\"points\": [")
                     for j, point in enumerate(stroke.points):
                         x = point.co.x
@@ -278,7 +289,10 @@ def readBrushStrokes(filepath=None, resizeTimeline=True):
         palette = getActivePalette()    
         #~
         for i, frameJson in enumerate(layerJson["frames"]):
-            frame = layer.frames.new(i) # frame number 5
+            try:
+            	frame = layer.frames.new(layerJson["frames"][i]["frame_number"]) 
+            except:
+            	frame = layer.frames.new(i) 
             if (frame.frame_number > longestFrameNum):
                 longestFrameNum = frame.frame_number
             for strokeJson in frameJson["strokes"]:
@@ -924,7 +938,10 @@ def exportSculptrVrCsv(filepath=None, strokes=None, sphereRadius=10, octreeSize=
                 x = remap(coord[0], allX[0], allX[len(allX)-1], minVal * vol_scale, maxVal * vol_scale)
                 y = remap(coord[1], allY[0], allY[len(allY)-1], minVal * vol_scale, maxVal * vol_scale)
                 z = remap(coord[2], allZ[0], allZ[len(allZ)-1], minVal * vol_scale, maxVal * vol_scale)
-                csvData.append([x, y, z, sphereRadius, r, g, b])
+                pressure = remap(point.pressure, 0.0, 1.0, sphereRadius/10.0, sphereRadius)
+                if (pressure < 0.01):
+                	pressure = 0.01
+                csvData.append([x, y, z, pressure, r, g, b])
             else:
                 x = remapInt(coord[0], allX[0], allX[len(allX)-1], int(minVal * vol_scale), int(maxVal * vol_scale))
                 y = remapInt(coord[1], allY[0], allY[len(allY)-1], int(minVal * vol_scale), int(maxVal * vol_scale))
