@@ -515,7 +515,8 @@ def meshToGp(obj=None, vertexHitbox=1.5):
         if (len(points) < 2 or getDistance(allPoints[allPointsCounter], allPoints[i]) < vertexHitbox):
             points.append(allPoints[i])
         else:
-            col = createAndMatchColorPalette(getColorExplorer(obj, i), 16, 2)
+            #col = createAndMatchColorPalette(getColorExplorer(obj, i), 16, 2)
+            col = getColorExplorer(obj, i)
             try:
                 drawPoints(points=points, color=col)
                 allPointsCounter = i
