@@ -867,7 +867,7 @@ def writePointCloud(filepath=None, strokes=None):
             lines.append(x + ", " + y + ", " + z + "\n")
     writeTextFile(name=name, lines=lines)
 
-def exportSculptrVrCsv(filepath=None, strokes=None, sphereRadius=1, octreeSize=7, vol_scale=0.33, mtl_val=255, file_format="sphere"):
+def exportSculptrVrCsv(filepath=None, strokes=None, sphereRadius=10, octreeSize=7, vol_scale=0.33, mtl_val=255, file_format="sphere"):
     file_format = file_format.lower()
     #~
     if (sphereRadius < 0.01):

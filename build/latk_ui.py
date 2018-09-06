@@ -304,10 +304,10 @@ class ExportSculptrVR(bpy.types.Operator, ExportHelper):
             options={'HIDDEN'},
             )
 
-    sphereRadius = FloatProperty(name="Sphere Radius (min 0.01)", description="Sphere Radius", default=1)
-    octreeSize = IntProperty(name="Octree Size (0-19)", description="Octree Size", default=7)
-    vol_scale = FloatProperty(name="Volume Scale (0-1)", description="Volume Scale", default=0.33)
-    mtl_val = IntProperty(name="Material (127, 254, or 255)", description="Material Value", default=255)
+    sphereRadius = FloatProperty(name="Sphere Radius", description="Sphere Radius (min 0.01)", default=10)
+    octreeSize = IntProperty(name="Octree Size", description="Octree Size (0-19)", default=7)
+    vol_scale = FloatProperty(name="Volume Scale", description="Volume Scale (0-1)", default=0.33)
+    mtl_val = IntProperty(name="Material", description="Material Value (127, 254, or 255)", default=255)
     file_format = EnumProperty(
         name="File Format",
         items=(
