@@ -867,7 +867,12 @@ def writePointCloud(filepath=None, strokes=None):
             lines.append(x + ", " + y + ", " + z + "\n")
     writeTextFile(name=name, lines=lines)
 
-def exportSculptrVrCsv(filepath=None, strokes=None, octreeSize=7, vol_scale=0.33, mtl_val=255):
+def exportSculptrVrCsv(filepath=None, strokes=None, sphereRadius=1, octreeSize=7, vol_scale=0.33, mtl_val=255, file_format="sphere"):
+    file_format = file_format.lower()
+    #~
+    if (sphereRadius < 0.01):
+        sphereRadius = 0.01
+    #~
     if (octreeSize < 0):
         octreeSize = 0
     if (octreeSize > 19):
@@ -883,7 +888,6 @@ def exportSculptrVrCsv(filepath=None, strokes=None, octreeSize=7, vol_scale=0.33
             frame = getActiveFrame()
             strokes = frame.strokes
 
-    csvDataInt = []
     csvData = []
 
     allX = []
@@ -899,27 +903,49 @@ def exportSculptrVrCsv(filepath=None, strokes=None, octreeSize=7, vol_scale=0.33
     allY.sort()
     allZ.sort()
 
+    minVal = -1500.0
+    maxVal = 1500.0
+    if (file_format == "legacy"):
+        minVal, maxVal = getSculptrVrVolRes(0)
+    elif (file_format == "single"):
+        minVal, maxVal = getSculptrVrVolRes(octreeSize)
+
     for stroke in strokes:
         for point in stroke.points:
-            # do this here in case we want to use pressure later
-            minVal, maxVal = getSculptrVrVolRes(octreeSize)
+            # might do this here if we want to use variable pressure later
+            #minVal, maxVal = getSculptrVrVolRes(octreeSize)
 
             color = stroke.color.color
             r = int(color[0] * 255)
             g = int(color[1] * 255)
             b = int(color[2] * 255)
             coord = point.co
-            x = remapInt(coord[0], allX[0], allX[len(allX)-1], int(minVal * vol_scale), int(maxVal * vol_scale))
-            y = remapInt(coord[1], allY[0], allY[len(allY)-1], int(minVal * vol_scale), int(maxVal * vol_scale))
-            z = remapInt(coord[2], allZ[0], allZ[len(allZ)-1], int(minVal * vol_scale), int(maxVal * vol_scale))
-            csvDataInt.append([x, y, z, octreeSize, r, g, b, mtl_val])
+            if (file_format == "sphere"):
+                x = remap(coord[0], allX[0], allX[len(allX)-1], minVal * vol_scale, maxVal * vol_scale)
+                y = remap(coord[1], allY[0], allY[len(allY)-1], minVal * vol_scale, maxVal * vol_scale)
+                z = remap(coord[2], allZ[0], allZ[len(allZ)-1], minVal * vol_scale, maxVal * vol_scale)
+                csvData.append([x, y, z, sphereRadius, r, g, b])
+            else:
+                x = remapInt(coord[0], allX[0], allX[len(allX)-1], int(minVal * vol_scale), int(maxVal * vol_scale))
+                y = remapInt(coord[1], allY[0], allY[len(allY)-1], int(minVal * vol_scale), int(maxVal * vol_scale))
+                z = remapInt(coord[2], allZ[0], allZ[len(allZ)-1], int(minVal * vol_scale), int(maxVal * vol_scale))
+                csvData.append([x, y, z, octreeSize, r, g, b, mtl_val])
 
-    #csvDataInt = sorted(csvDataInt, key=lambda x: x[1])
-    #csvDataInt = sorted(csvDataInt, key=lambda x: x[2])
-    for data in csvDataInt:
-        csvData.append(str(data[0]) + "," + str(data[1]) + "," + str(data[2]) + "," + str(data[3]) + "," + str(data[4]) + "," + str(data[5]) + "," + str(data[6]) + "," + str(data[7]))
+    #csvData = sorted(csvDataInt, key=lambda x: x[1])
+    #csvData = sorted(csvDataInt, key=lambda x: x[2])
+    finalData = []
+    finalData.append("# header")
+    if (file_format == "legacy"): # xyz rgb
+        for data in csvData:
+            finalData.append(str(data[0]) + "," + str(data[1]) + "," + str(data[2]) + "," + str(data[4]) + "," + str(data[5]) + "," + str(data[6]))
+    elif(file_format == "single"): # xyz octree_size rgb mtl_val
+        for data in csvData:
+            finalData.append(str(data[0]) + "," + str(data[1]) + "," + str(data[2]) + "," + str(data[3]) + "," + str(data[4]) + "," + str(data[5]) + "," + str(data[6]) + "," + str(data[7]))
+    elif(file_format == "sphere"): # xyz radius rgb
+        for data in csvData:
+            finalData.append(str(data[0]) + "," + str(data[1]) + "," + str(data[2]) + "," + str(data[3]) + "," + str(data[4]) + "," + str(data[5]) + "," + str(data[6]))
 
-    writeTextFile(filepath, "\n".join(csvData))
+    writeTextFile(filepath, "\n".join(finalData))
 
 def getSculptrVrVolRes(val):
     vol_res = 19 - val

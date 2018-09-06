@@ -315,14 +315,6 @@ def testUvs():
         print("Pixel: " + str(pixel))
 '''
 
-def getVerts(target=None):
-    if not target:
-        target = bpy.context.scene.objects.active
-    me = target.data
-    bm = bmesh.new()
-    bm.from_mesh(me)
-    return bm.verts
-
 def getUvImages():
     obj = bpy.context.scene.objects.active
     uv_images = {}

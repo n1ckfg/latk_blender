@@ -304,9 +304,20 @@ class ExportSculptrVR(bpy.types.Operator, ExportHelper):
             options={'HIDDEN'},
             )
 
+    sphereRadius = FloatProperty(name="Sphere Radius (min 0.01)", description="Sphere Radius", default=1)
     octreeSize = IntProperty(name="Octree Size (0-19)", description="Octree Size", default=7)
     vol_scale = FloatProperty(name="Volume Scale (0-1)", description="Volume Scale", default=0.33)
     mtl_val = IntProperty(name="Material (127, 254, or 255)", description="Material Value", default=255)
+    file_format = EnumProperty(
+        name="File Format",
+        items=(
+            ("SPHERE", "Sphere per Voxel", "Recommended", 0),
+            ("SINGLE", "Single Voxel", "Single voxel at octree size", 1),
+            ("LEGACY", "Legacy Format", "Probably too small to see", 2),
+        ),
+        default="SPHERE"
+    )
+
 
     def execute(self, context):
         import latk as la
@@ -314,9 +325,11 @@ class ExportSculptrVR(bpy.types.Operator, ExportHelper):
         if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
             import os
         #~
+        keywords["sphereRadius"] = self.sphereRadius
         keywords["octreeSize"] = self.octreeSize
         keywords["vol_scale"] = self.vol_scale
         keywords["mtl_val"] = self.mtl_val
+        keywords["file_format"] = self.file_format
         #~
         la.exportSculptrVrCsv(**keywords)
         return {'FINISHED'} 
@@ -490,8 +503,8 @@ class LatkProperties(bpy.types.PropertyGroup):
         items=(
             ("CLAMP_P", "Clamp Pressure", "Clamp pressure values below min or above max", 0),
             ("REMAP_P", "Remap Pressure", "Remap pressure values from 0-1 to min-max", 1),
-            ("CLAMP_S", "Clamp Strength", "Clamp strength values below min or above max", 0),
-            ("REMAP_S", "Remap Strength", "Remap strength values from 0-1 to min-max", 1)
+            ("CLAMP_S", "Clamp Strength", "Clamp strength values below min or above max", 2),
+            ("REMAP_S", "Remap Strength", "Remap strength values from 0-1 to min-max", 3)
         ),
         default="REMAP_P"
     )

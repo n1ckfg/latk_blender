@@ -2155,7 +2155,12 @@ def writePointCloud(filepath=None, strokes=None):
             lines.append(x + ", " + y + ", " + z + "\n")
     writeTextFile(name=name, lines=lines)
 
-def exportSculptrVrCsv(filepath=None, strokes=None, octreeSize=7, vol_scale=0.33, mtl_val=255):
+def exportSculptrVrCsv(filepath=None, strokes=None, sphereRadius=1, octreeSize=7, vol_scale=0.33, mtl_val=255, file_format="sphere"):
+    file_format = file_format.lower()
+    #~
+    if (sphereRadius < 0.01):
+        sphereRadius = 0.01
+    #~
     if (octreeSize < 0):
         octreeSize = 0
     if (octreeSize > 19):
@@ -2171,7 +2176,6 @@ def exportSculptrVrCsv(filepath=None, strokes=None, octreeSize=7, vol_scale=0.33
             frame = getActiveFrame()
             strokes = frame.strokes
 
-    csvDataInt = []
     csvData = []
 
     allX = []
@@ -2187,27 +2191,49 @@ def exportSculptrVrCsv(filepath=None, strokes=None, octreeSize=7, vol_scale=0.33
     allY.sort()
     allZ.sort()
 
+    minVal = -1500.0
+    maxVal = 1500.0
+    if (file_format == "legacy"):
+        minVal, maxVal = getSculptrVrVolRes(0)
+    elif (file_format == "single"):
+        minVal, maxVal = getSculptrVrVolRes(octreeSize)
+
     for stroke in strokes:
         for point in stroke.points:
-            # do this here in case we want to use pressure later
-            minVal, maxVal = getSculptrVrVolRes(octreeSize)
+            # might do this here if we want to use variable pressure later
+            #minVal, maxVal = getSculptrVrVolRes(octreeSize)
 
             color = stroke.color.color
             r = int(color[0] * 255)
             g = int(color[1] * 255)
             b = int(color[2] * 255)
             coord = point.co
-            x = remapInt(coord[0], allX[0], allX[len(allX)-1], int(minVal * vol_scale), int(maxVal * vol_scale))
-            y = remapInt(coord[1], allY[0], allY[len(allY)-1], int(minVal * vol_scale), int(maxVal * vol_scale))
-            z = remapInt(coord[2], allZ[0], allZ[len(allZ)-1], int(minVal * vol_scale), int(maxVal * vol_scale))
-            csvDataInt.append([x, y, z, octreeSize, r, g, b, mtl_val])
+            if (file_format == "sphere"):
+                x = remap(coord[0], allX[0], allX[len(allX)-1], minVal * vol_scale, maxVal * vol_scale)
+                y = remap(coord[1], allY[0], allY[len(allY)-1], minVal * vol_scale, maxVal * vol_scale)
+                z = remap(coord[2], allZ[0], allZ[len(allZ)-1], minVal * vol_scale, maxVal * vol_scale)
+                csvData.append([x, y, z, sphereRadius, r, g, b])
+            else:
+                x = remapInt(coord[0], allX[0], allX[len(allX)-1], int(minVal * vol_scale), int(maxVal * vol_scale))
+                y = remapInt(coord[1], allY[0], allY[len(allY)-1], int(minVal * vol_scale), int(maxVal * vol_scale))
+                z = remapInt(coord[2], allZ[0], allZ[len(allZ)-1], int(minVal * vol_scale), int(maxVal * vol_scale))
+                csvData.append([x, y, z, octreeSize, r, g, b, mtl_val])
 
-    #csvDataInt = sorted(csvDataInt, key=lambda x: x[1])
-    #csvDataInt = sorted(csvDataInt, key=lambda x: x[2])
-    for data in csvDataInt:
-        csvData.append(str(data[0]) + "," + str(data[1]) + "," + str(data[2]) + "," + str(data[3]) + "," + str(data[4]) + "," + str(data[5]) + "," + str(data[6]) + "," + str(data[7]))
+    #csvData = sorted(csvDataInt, key=lambda x: x[1])
+    #csvData = sorted(csvDataInt, key=lambda x: x[2])
+    finalData = []
+    finalData.append("# header")
+    if (file_format == "legacy"): # xyz rgb
+        for data in csvData:
+            finalData.append(str(data[0]) + "," + str(data[1]) + "," + str(data[2]) + "," + str(data[4]) + "," + str(data[5]) + "," + str(data[6]))
+    elif(file_format == "single"): # xyz octree_size rgb mtl_val
+        for data in csvData:
+            finalData.append(str(data[0]) + "," + str(data[1]) + "," + str(data[2]) + "," + str(data[3]) + "," + str(data[4]) + "," + str(data[5]) + "," + str(data[6]) + "," + str(data[7]))
+    elif(file_format == "sphere"): # xyz radius rgb
+        for data in csvData:
+            finalData.append(str(data[0]) + "," + str(data[1]) + "," + str(data[2]) + "," + str(data[3]) + "," + str(data[4]) + "," + str(data[5]) + "," + str(data[6]))
 
-    writeTextFile(filepath, "\n".join(csvData))
+    writeTextFile(filepath, "\n".join(finalData))
 
 def getSculptrVrVolRes(val):
     vol_res = 19 - val
@@ -2761,14 +2787,6 @@ def testUvs():
         print("Pixel: " + str(pixel))
 '''
 
-def getVerts(target=None):
-    if not target:
-        target = bpy.context.scene.objects.active
-    me = target.data
-    bm = bmesh.new()
-    bm.from_mesh(me)
-    return bm.verts
-
 def getUvImages():
     obj = bpy.context.scene.objects.active
     uv_images = {}
@@ -2830,6 +2848,16 @@ def getPixelFromUvArray(img, u, v):
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 # 5 of 10. MESHES / GEOMETRY
+
+def getVerts(target=None):
+    if not target:
+        target = bpy.context.scene.objects.active
+    me = target.data
+    bm = bmesh.new()
+    bm.from_mesh(me)
+    return bm.verts
+
+getVertices = getVerts
 
 # TODO does not work, context error with decimate
 def bakeAllCurvesToMesh(_decimate=0.1):
@@ -3319,6 +3347,14 @@ def meshToGp(obj=None, vertexHitbox=1.5):
     mesh = obj.data
     mat = obj.matrix_world
     #~
+    gp = getActiveGp()
+    layer = getActiveLayer()
+    if not layer:
+        layer = gp.layers.new(name="meshToGp")
+    frame = getActiveFrame()
+    if not frame:
+        frame = layer.frames.new(currentFrame())
+    #~
     allPoints = []
     for face in mesh.polygons:
         for idx in face.vertices:
@@ -3337,8 +3373,13 @@ def meshToGp(obj=None, vertexHitbox=1.5):
         if (len(points) < 2 or getDistance(allPoints[allPointsCounter], allPoints[i]) < vertexHitbox):
             points.append(allPoints[i])
         else:
+            col = None
             try:
-                drawPoints(points=points, color=getUnknownColor(obj.data.materials[0]))
+                col = getUnknownColor(obj.data.materials[0])
+            except:
+                col = getActiveColor().color
+            try:
+                drawPoints(points=points, color=col)
                 allPointsCounter = i
                 points = []
             except:
@@ -4550,9 +4591,20 @@ class ExportSculptrVR(bpy.types.Operator, ExportHelper):
             options={'HIDDEN'},
             )
 
+    sphereRadius = FloatProperty(name="Sphere Radius (min 0.01)", description="Sphere Radius", default=1)
     octreeSize = IntProperty(name="Octree Size (0-19)", description="Octree Size", default=7)
     vol_scale = FloatProperty(name="Volume Scale (0-1)", description="Volume Scale", default=0.33)
     mtl_val = IntProperty(name="Material (127, 254, or 255)", description="Material Value", default=255)
+    file_format = EnumProperty(
+        name="File Format",
+        items=(
+            ("SPHERE", "Sphere per Voxel", "Recommended", 0),
+            ("SINGLE", "Single Voxel", "Single voxel at octree size", 1),
+            ("LEGACY", "Legacy Format", "Probably too small to see", 2),
+        ),
+        default="SPHERE"
+    )
+
 
     def execute(self, context):
         import latk as la
@@ -4560,9 +4612,11 @@ class ExportSculptrVR(bpy.types.Operator, ExportHelper):
         if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
             import os
         #~
+        keywords["sphereRadius"] = self.sphereRadius
         keywords["octreeSize"] = self.octreeSize
         keywords["vol_scale"] = self.vol_scale
         keywords["mtl_val"] = self.mtl_val
+        keywords["file_format"] = self.file_format
         #~
         la.exportSculptrVrCsv(**keywords)
         return {'FINISHED'} 
@@ -4736,8 +4790,8 @@ class LatkProperties(bpy.types.PropertyGroup):
         items=(
             ("CLAMP_P", "Clamp Pressure", "Clamp pressure values below min or above max", 0),
             ("REMAP_P", "Remap Pressure", "Remap pressure values from 0-1 to min-max", 1),
-            ("CLAMP_S", "Clamp Strength", "Clamp strength values below min or above max", 0),
-            ("REMAP_S", "Remap Strength", "Remap strength values from 0-1 to min-max", 1)
+            ("CLAMP_S", "Clamp Strength", "Clamp strength values below min or above max", 2),
+            ("REMAP_S", "Remap Strength", "Remap strength values from 0-1 to min-max", 3)
         ),
         default="REMAP_P"
     )

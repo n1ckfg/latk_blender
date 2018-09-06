@@ -1,5 +1,15 @@
 # 5 of 10. MESHES / GEOMETRY
 
+def getVerts(target=None):
+    if not target:
+        target = bpy.context.scene.objects.active
+    me = target.data
+    bm = bmesh.new()
+    bm.from_mesh(me)
+    return bm.verts
+
+getVertices = getVerts
+
 # TODO does not work, context error with decimate
 def bakeAllCurvesToMesh(_decimate=0.1):
     start, end = getStartEnd()
@@ -488,6 +498,14 @@ def meshToGp(obj=None, vertexHitbox=1.5):
     mesh = obj.data
     mat = obj.matrix_world
     #~
+    gp = getActiveGp()
+    layer = getActiveLayer()
+    if not layer:
+        layer = gp.layers.new(name="meshToGp")
+    frame = getActiveFrame()
+    if not frame:
+        frame = layer.frames.new(currentFrame())
+    #~
     allPoints = []
     for face in mesh.polygons:
         for idx in face.vertices:
@@ -506,8 +524,13 @@ def meshToGp(obj=None, vertexHitbox=1.5):
         if (len(points) < 2 or getDistance(allPoints[allPointsCounter], allPoints[i]) < vertexHitbox):
             points.append(allPoints[i])
         else:
+            col = None
             try:
-                drawPoints(points=points, color=getUnknownColor(obj.data.materials[0]))
+                col = getUnknownColor(obj.data.materials[0])
+            except:
+                col = getActiveColor().color
+            try:
+                drawPoints(points=points, color=col)
                 allPointsCounter = i
                 points = []
             except:
