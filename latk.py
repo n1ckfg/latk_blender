@@ -2190,10 +2190,29 @@ def importAsc(filepath=None):
         data = data_file.readlines()
 
     points = []
+    pressures = []
+    colors = []
+    colorIs255 = False
     for line in data:
         pointRaw = line.split(",")
         point = (float(pointRaw[0]), float(pointRaw[1]), float(pointRaw[2]))
         points.append(point)
+        
+        color = None
+        pressure = 1.0
+        
+        if (len(pointRaw) == 4):
+            pressure = float(pointRaw[3])
+        elif (len(pointRaw) == 6):
+            color = (float(pointRaw[3]), float(pointRaw[4]), float(pointRaw[5]))
+        elif(len(pointRaw > 6)):
+            pressure = float(pointRaw[3])
+            color = (float(pointRaw[4]), float(pointRaw[5]), float(pointRaw[6]))
+
+        if (color != None and color[0] + color[1] + color[2] > 3.9):
+                colorIs255 = True
+        pressures.append(pressure)
+        colors.append(color)
 
     gp = getActiveGp()
     layer = gp.layers.new("ASC_layer", set_active=True)
