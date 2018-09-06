@@ -2205,7 +2205,7 @@ def importAsc(filepath=None):
             pressure = float(pointRaw[3])
         elif (len(pointRaw) == 6):
             color = (float(pointRaw[3]), float(pointRaw[4]), float(pointRaw[5]))
-        elif(len(pointRaw > 6)):
+        elif(len(pointRaw) > 6):
             pressure = float(pointRaw[3])
             color = (float(pointRaw[4]), float(pointRaw[5]), float(pointRaw[6]))
 
@@ -2250,10 +2250,11 @@ def exportAsc(filepath=None):
             x = coord[0]
             y = coord[2]
             z = coord[1]
-            r = int(255 * color[0])
-            g = int(255 * color[1])
-            b = int(255 * color[2])
-            ascData.append(str(x) + "," + str(y) + "," + str(z) + "," + str(r) + "," + str(g) + "," + str(b)) 
+            pressure = point.pressure
+            r = color[0]
+            g = color[1]
+            b = color[2]
+            ascData.append(str(x) + "," + str(y) + "," + str(z) + "," + str(pressure) + "," + str(r) + "," + str(g) + "," + str(b)) 
     writeTextFile(filepath, "\n".join(ascData))
 
 def exportSculptrVrCsv(filepath=None, strokes=None, sphereRadius=10, octreeSize=7, vol_scale=0.33, mtl_val=255, file_format="sphere"):
