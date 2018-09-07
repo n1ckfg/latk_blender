@@ -893,14 +893,14 @@ def importAsc(filepath=None):
     with open(filepath) as data_file: 
         data = data_file.readlines()
 
-    points = []
-    pressures = []
+    allPoints = []
+    allPressures = []
     colors = []
-    colorIs255 = False
+    #colorIs255 = False
     for line in data:
         pointRaw = line.split(",")
         point = (float(pointRaw[0]), float(pointRaw[1]), float(pointRaw[2]))
-        points.append(point)
+        allPoints.append(point)
         
         color = None
         pressure = 1.0
@@ -913,9 +913,9 @@ def importAsc(filepath=None):
             pressure = float(pointRaw[3])
             color = (float(pointRaw[4]), float(pointRaw[5]), float(pointRaw[6]))
 
-        if (color != None and color[0] + color[1] + color[2] > 3.9):
-                colorIs255 = True
-        pressures.append(pressure)
+        #if (color != None and color[0] + color[1] + color[2] > 3.1):
+                #colorIs255 = True
+        allPressures.append(pressure)
         colors.append(color)
 
     gp = getActiveGp()
@@ -925,30 +925,42 @@ def importAsc(filepath=None):
     if not frame:
         frame = layer.frames.new(start)
 
-    stroke = frame.strokes.new(getActiveColor().name)
-    stroke.draw_mode = "3DSPACE"
-    stroke.points.add(len(points))
-    for l, point in enumerate(points):
-        x = point[0]
-        y = point[2]
-        z = point[1]
-        pressure = 1.0
-        strength = 1.0
-        if useScaleAndOffset == True:
-            x = (x * globalScale.x) + globalOffset.x
-            y = (y * globalScale.y) + globalOffset.y
-            z = (z * globalScale.z) + globalOffset.z
-        #~
-        createPoint(stroke, l, (x, y, z), pressure, strength)
+    points = []
+    pressures = []
+    allPointsCounter = 0
+    for i in range(1, len(allPoints)):
+        if (len(points) < 2 or colors[allPointsCounter] == colors[i]):
+            points.append(allPoints[i])
+            pressures.append(allPressures[i])
+        else:
+            color = colors[allPointsCounter]
+            #if (colorIs255==True):
+                #color = (color[0] / 255.0, color[1] / 255.0, color[2] / 255.0)
+            createColor(color)
+            stroke = frame.strokes.new(getActiveColor().name)
+            stroke.draw_mode = "3DSPACE"
+            stroke.points.add(len(points))
+            for l, point in enumerate(points):
+                x = point[0]
+                y = point[2]
+                z = point[1]
+                pressure = pressures[l]
+                strength = 1.0
+                if useScaleAndOffset == True:
+                    x = (x * globalScale.x) + globalOffset.x
+                    y = (y * globalScale.y) + globalOffset.y
+                    z = (z * globalScale.z) + globalOffset.z
+                createPoint(stroke, l, (x, y, z), pressure, strength)
+            allPointsCounter = i
+            points = []
 
 def exportAsc(filepath=None):
     ascData = []
-    strokes = getSelectedStrokes()
-    if not strokes:
-        frame = getActiveFrame()
-        strokes = frame.strokes
+    palette = getActivePalette()
+    frame = getActiveFrame()
+    strokes = frame.strokes
     for stroke in strokes:
-        color = stroke.color.color
+        color = palette.colors[stroke.colorname].color
         for point in stroke.points:
             coord = point.co
             x = coord[0]
@@ -959,6 +971,7 @@ def exportAsc(filepath=None):
             g = color[1]
             b = color[2]
             ascData.append(str(x) + "," + str(y) + "," + str(z) + "," + str(pressure) + "," + str(r) + "," + str(g) + "," + str(b)) 
+
     writeTextFile(filepath, "\n".join(ascData))
 
 def exportSculptrVrCsv(filepath=None, strokes=None, sphereRadius=10, octreeSize=7, vol_scale=0.33, mtl_val=255, file_format="sphere"):
