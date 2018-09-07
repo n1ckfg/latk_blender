@@ -877,7 +877,7 @@ def writePointCloud(filepath=None, strokes=None):
     writeTextFile(name=name, lines=lines)
 '''
 
-def importAsc(filepath=None):
+def importAsc(filepath=None, strokeLength=1):
     globalScale = Vector((1, 1, 1))
     globalOffset = Vector((0, 0, 0))
     useScaleAndOffset = True
@@ -922,7 +922,25 @@ def importAsc(filepath=None):
     points = []
     pressures = []
     allPointsCounter = 0
-    for i in range(1, len(allPoints)):
+    for i, point in enumerate(allPoints):
+        color = colors[i]
+        if (color != None):
+            createColor(color)
+        stroke = frame.strokes.new(getActiveColor().name)
+        stroke.draw_mode = "3DSPACE"
+        stroke.points.add(1)
+        x = point[0]
+        y = point[2]
+        z = point[1]
+        pressure = allPressures[i]
+        strength = 1.0
+        if useScaleAndOffset == True:
+            x = (x * globalScale.x) + globalOffset.x
+            y = (y * globalScale.y) + globalOffset.y
+            z = (z * globalScale.z) + globalOffset.z
+        createPoint(stroke, 0, (x, y, z), pressure, strength)
+
+        '''
         if (len(points) < 2 or getDistance(allPoints[i], allPoints[i-1]) < 0.1):
             points.append(allPoints[i])
             pressures.append(allPressures[i])
@@ -948,6 +966,7 @@ def importAsc(filepath=None):
                 createPoint(stroke, l, (x, y, z), pressure, strength)
             allPointsCounter = i
             points = []
+        '''
 
 def exportAsc(filepath=None):
     ascData = []
