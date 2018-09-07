@@ -611,10 +611,10 @@ class LatkProperties(bpy.types.PropertyGroup):
         default=0.1
     )
 
-    vertHitbox2 = FloatProperty(
-        name="Vert Hitbox",
-        description="Max distance between vertices",
-        default=1.5
+    strokeLength = IntProperty(
+        name="Length",
+        description="Group every n points into strokes",
+        default=2
     )
 
     numSplitFrames = IntProperty(
@@ -739,7 +739,7 @@ class LatkProperties_Panel(bpy.types.Panel):
         row.operator("latk_button.bakeall")
         
         row = layout.row()
-        row.prop(latk, "vertHitbox2")
+        row.prop(latk, "strokeLength")
         row.operator("latk_button.strokesfrommesh")
         row.operator("latk_button.pointstoggle")
 
@@ -812,7 +812,7 @@ class Latk_Button_StrokesFromMesh(bpy.types.Operator):
     
     def execute(self, context):
         latk_settings = bpy.context.scene.latk_settings
-        meshToGp(vertexHitbox=latk_settings.vertHitbox2)
+        meshToGp(strokeLength=latk_settings.strokeLength)
         return {'FINISHED'}
 
 class Latk_Button_PointsToggle(bpy.types.Operator):

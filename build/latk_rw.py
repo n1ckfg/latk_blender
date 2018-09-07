@@ -922,9 +922,9 @@ def importAsc(filepath=None, strokeLength=1):
     if not frame:
         frame = layer.frames.new(start)
 
-    points = []
-    pressures = []
-    allPointsCounter = 0
+    #points = []
+    #pressures = []
+    #allPointsCounter = 0
     for i in range(0, len(allPoints), strokeLength):
         color = colors[i]
         if (color != None):

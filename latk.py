@@ -2224,9 +2224,9 @@ def importAsc(filepath=None, strokeLength=1):
     if not frame:
         frame = layer.frames.new(start)
 
-    points = []
-    pressures = []
-    allPointsCounter = 0
+    #points = []
+    #pressures = []
+    #allPointsCounter = 0
     for i in range(0, len(allPoints), strokeLength):
         color = colors[i]
         if (color != None):
@@ -3546,7 +3546,7 @@ def writeOnMesh(step=1, name="latk"):
             hideFrame(target[j], 0, True)
             hideFrame(target[j], len(target)-j, False)
 
-def meshToGp(obj=None, vertexHitbox=1.5):
+def meshToGp(obj=None, strokeLength=1):
     if not obj:
         obj = ss()
     mesh = obj.data
@@ -3562,6 +3562,27 @@ def meshToGp(obj=None, vertexHitbox=1.5):
     #~
     allPoints = getVerts(target=obj, useWorldSpace=True, useFaces=False, useColors=False, useBmesh=False)
     #~
+    for i in range(0, len(allPoints), strokeLength):
+        color = getColorExplorer(obj, i)
+        if (color != None):
+            createColor(color)
+        stroke = frame.strokes.new(getActiveColor().name)
+        stroke.draw_mode = "3DSPACE"
+        stroke.points.add(strokeLength)
+
+        for j in range(0, strokeLength):
+            point = allPoints[i]
+            try:
+                point = allPoints[i+j]
+            except:
+                pass
+            x = point[0]
+            y = point[2]
+            z = point[1]
+            pressure = 1.0
+            strength = 1.0
+            createPoint(stroke, j, (x, y, z), pressure, strength)
+    '''
     points = []
     allPointsCounter = 0
     for i in range(1, len(allPoints)):
@@ -3576,6 +3597,7 @@ def meshToGp(obj=None, vertexHitbox=1.5):
                 points = []
             except:
                 points.append(allPoints[i])
+    '''
 
 def makeCurve(coords, pressures, resolution=2, thickness=0.1, bevelResolution=1, curveType="bezier", parent=None, capsObj=None, name="latk_ob", useUvs=True, usePressure=True):
     # http://blender.stackexchange.com/questions/12201/bezier-spline-with-python-adds-unwanted-point
@@ -5088,10 +5110,10 @@ class LatkProperties(bpy.types.PropertyGroup):
         default=0.1
     )
 
-    vertHitbox2 = FloatProperty(
-        name="Vert Hitbox",
-        description="Max distance between vertices",
-        default=1.5
+    strokeLength = IntProperty(
+        name="Length",
+        description="Group every n points into strokes",
+        default=2
     )
 
     numSplitFrames = IntProperty(
@@ -5216,7 +5238,7 @@ class LatkProperties_Panel(bpy.types.Panel):
         row.operator("latk_button.bakeall")
         
         row = layout.row()
-        row.prop(latk, "vertHitbox2")
+        row.prop(latk, "strokeLength")
         row.operator("latk_button.strokesfrommesh")
         row.operator("latk_button.pointstoggle")
 
@@ -5289,7 +5311,7 @@ class Latk_Button_StrokesFromMesh(bpy.types.Operator):
     
     def execute(self, context):
         latk_settings = bpy.context.scene.latk_settings
-        meshToGp(vertexHitbox=latk_settings.vertHitbox2)
+        meshToGp(strokeLength=latk_settings.strokeLength)
         return {'FINISHED'}
 
 class Latk_Button_PointsToggle(bpy.types.Operator):
