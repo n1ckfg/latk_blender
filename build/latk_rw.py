@@ -929,7 +929,7 @@ def importAsc(filepath=None):
     pressures = []
     allPointsCounter = 0
     for i in range(1, len(allPoints)):
-        if (len(points) < 2 or colors[allPointsCounter] == colors[i]):
+        if (len(points) < 2 or getDistance(allPoints[i], allPoints[i-1]) < 1.5):
             points.append(allPoints[i])
             pressures.append(allPressures[i])
         else:
