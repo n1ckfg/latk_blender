@@ -936,7 +936,8 @@ def importAsc(filepath=None):
             color = colors[allPointsCounter]
             #if (colorIs255==True):
                 #color = (color[0] / 255.0, color[1] / 255.0, color[2] / 255.0)
-            createColor(color)
+            if (color != None):
+                createColor(color)
             stroke = frame.strokes.new(getActiveColor().name)
             stroke.draw_mode = "3DSPACE"
             stroke.points.add(len(points))
