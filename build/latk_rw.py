@@ -890,7 +890,7 @@ def importAsc(filepath=None, strokeLength=1):
     allPoints = []
     allPressures = []
     colors = []
-    #colorIs255 = False
+    colorIs255 = False
     for line in data:
         pointRaw = line.split(",")
         point = (float(pointRaw[0]), float(pointRaw[1]), float(pointRaw[2]))
@@ -907,8 +907,11 @@ def importAsc(filepath=None, strokeLength=1):
             pressure = float(pointRaw[3])
             color = (float(pointRaw[4]), float(pointRaw[5]), float(pointRaw[6]))
 
-        #if (color != None and color[0] + color[1] + color[2] > 3.1):
-                #colorIs255 = True
+        if (colorIs255 == False and color != None and color[0] + color[1] + color[2] > 3.1):
+                colorIs255 = True
+        elif (colorIs255 == True):
+            color = (color[0] / 255.0, color[1] / 255.0, color[2] / 255.0)
+
         allPressures.append(pressure)
         colors.append(color)
 
@@ -922,23 +925,25 @@ def importAsc(filepath=None, strokeLength=1):
     points = []
     pressures = []
     allPointsCounter = 0
-    for i, point in enumerate(allPoints):
+    for i in range(0, len(allPoints), strokeLength):
         color = colors[i]
         if (color != None):
             createColor(color)
         stroke = frame.strokes.new(getActiveColor().name)
         stroke.draw_mode = "3DSPACE"
-        stroke.points.add(1)
-        x = point[0]
-        y = point[2]
-        z = point[1]
-        pressure = allPressures[i]
-        strength = 1.0
-        if useScaleAndOffset == True:
-            x = (x * globalScale.x) + globalOffset.x
-            y = (y * globalScale.y) + globalOffset.y
-            z = (z * globalScale.z) + globalOffset.z
-        createPoint(stroke, 0, (x, y, z), pressure, strength)
+        stroke.points.add(strokeLength)
+
+        for j in range(0, strokeLength):
+            x = allPoints[i+j][0]
+            y = allPoints[i+j][2]
+            z = allPoints[i+j][1]
+            pressure = allPressures[i+j]
+            strength = 1.0
+            if useScaleAndOffset == True:
+                x = (x * globalScale.x) + globalOffset.x
+                y = (y * globalScale.y) + globalOffset.y
+                z = (z * globalScale.z) + globalOffset.z
+            createPoint(stroke, j, (x, y, z), pressure, strength)
 
         '''
         if (len(points) < 2 or getDistance(allPoints[i], allPoints[i-1]) < 0.1):
