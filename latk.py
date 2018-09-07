@@ -83,6 +83,12 @@ from io import BytesIO
 
 # 2 of 10. TOOLS
 
+def scalePoints(val=0.01):
+    strokes = getAllStrokes()
+    for stroke in strokes:
+        for point in stroke.points:
+            point.co = (point.co[0] * val, point.co[1] * val, point.co[2] * val)
+
 def loadJson(url):
     return json.load(open(url))
 
