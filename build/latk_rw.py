@@ -334,19 +334,12 @@ def readBrushStrokes(filepath=None, resizeTimeline=True):
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 
 def writeSvg(filepath=None):
+	# Note: keep fps at 24 and above to prevent timing artifacts. 
+	# Last frame in timeline must be empty.
     minLineWidth=3
-    camera=None
-    fps=None
-    start=None
-    end=None
-    #~
-    if not camera:
-        camera = getActiveCamera()
-    if not fps:
-        fps = getSceneFps()
-    if (start==None or end==None):
-        start, end = getStartEnd()
-    fps = float(fps)
+    camera = getActiveCamera()
+    fps = float(getSceneFps())
+    start, end = getStartEnd()
     duration = float(end - start) / fps
     gp = getActiveGp()
     #url = getFilePath() + name
@@ -367,6 +360,7 @@ def writeSvg(filepath=None):
         layerInfo = layer.info.replace(" ", "_").replace(".", "_")
         svg.append("\t" + "<g id=\"" + layerInfo + "\">\r")
         for i, frame in enumerate(layer.frames):
+            goToFrame(frame.frame_number)
             svg.append("\t\t" + "<g id=\"" + layerInfo + "_frame" + str(i) + "\">\r")
             palette = getActivePalette()
             for stroke in frame.strokes:
