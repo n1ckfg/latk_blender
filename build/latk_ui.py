@@ -553,7 +553,7 @@ class LatkProperties(bpy.types.PropertyGroup):
     bl_idname = "GREASE_PENCIL_PT_LatkProperties"
 
     bakeMesh = BoolProperty(
-        name="Auto Bake Curves",
+        name="Auto Bake",
         description="Off: major speedup if you're staying in Blender. On: slow but keeps everything exportable",
         default=False
     )
@@ -682,6 +682,12 @@ class LatkProperties(bpy.types.PropertyGroup):
         default="PRINCIPLED"
     )
 
+    fast_colors = BoolProperty(
+        name="Fast Color",
+        description="Off: Accurate but slow. On: Fast but scrambles colors",
+        default=True
+    )
+
 # https://docs.blender.org/api/blender_python_api_2_78_release/bpy.types.Panel.html
 class LatkProperties_Panel(bpy.types.Panel):
     """Creates a Panel in the 3D View context"""
@@ -740,6 +746,7 @@ class LatkProperties_Panel(bpy.types.Panel):
         
         row = layout.row()
         row.prop(latk, "strokeLength")
+        row.prop(latk, "fast_colors")
         row.operator("latk_button.strokesfrommesh")
         row.operator("latk_button.pointstoggle")
 
@@ -812,13 +819,13 @@ class Latk_Button_StrokesFromMesh(bpy.types.Operator):
     
     def execute(self, context):
         latk_settings = bpy.context.scene.latk_settings
-        meshToGp(strokeLength=latk_settings.strokeLength)
+        meshToGp(strokeLength=latk_settings.strokeLength, fastColorMethod=latk_settings.fast_colors)
         return {'FINISHED'}
 
 class Latk_Button_PointsToggle(bpy.types.Operator):
     """Toggle points mode on"""
     bl_idname = "latk_button.pointstoggle"
-    bl_label = "Points Mode"
+    bl_label = "Points"
     bl_options = {'UNDO'}
     
     def execute(self, context):

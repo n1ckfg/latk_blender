@@ -496,7 +496,7 @@ def writeOnMesh(step=1, name="latk"):
             hideFrame(target[j], 0, True)
             hideFrame(target[j], len(target)-j, False)
 
-def meshToGp(obj=None, strokeLength=1):
+def meshToGp(obj=None, strokeLength=1, fastColorMethod=True):
     if not obj:
         obj = ss()
     mesh = obj.data
@@ -510,7 +510,7 @@ def meshToGp(obj=None, strokeLength=1):
     if not frame:
         frame = layer.frames.new(currentFrame())
     #~
-    allPoints, allColors = getVerts(target=obj, useWorldSpace=True, useFaces=False, useColors=True, useBmesh=False, fastColorMethod=False)
+    allPoints, allColors = getVerts(target=obj, useWorldSpace=True, useFaces=False, useColors=True, useBmesh=False, fastColorMethod=fastColorMethod)
     #~
     for i in range(0, len(allPoints), strokeLength):
         color = allColors[i]
