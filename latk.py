@@ -2664,10 +2664,10 @@ def getVertexColor(mesh=None, vert=0):
     i=0
     for poly in mesh.polygons:
         for vert_side in poly.loop_indices:
-            global_vert_num = poly.vertices[vert_side-min(poly.loop_indices)] 
-            if (vert == global_vert_num):
+            if (vert == poly.vertices[vert_side-min(poly.loop_indices)]):
                 return mesh.vertex_colors[0].data[i].color
-            i += 1    
+            i += 1   
+    return None 
 
 def colorVertices(obj, color=(1,0,0), makeMaterial=False, colorName="rgba"):
     # start in object mode
@@ -3053,7 +3053,7 @@ def getPixelFromUvArray(img, u, v):
 
 # 5 of 10. MESHES / GEOMETRY
 
-def getVerts(target=None, useWorldSpace=True, useColors=True, useFaces=False, useBmesh=False):
+def getVerts(target=None, useWorldSpace=True, useColors=True, useFaces=False, useBmesh=False, fastColorMethod=False):
     if not target:
         target = bpy.context.scene.objects.active
     mesh = target.data
@@ -3087,13 +3087,12 @@ def getVerts(target=None, useWorldSpace=True, useColors=True, useFaces=False, us
         #~
         if (useColors==True):
             colors = []
-            '''
-            if (len(mesh.vertex_colors) == 0):
+            if (fastColorMethod == False):
                 for i, vert in enumerate(verts):
                     colors.append(getVertexColor(mesh, i))
-            '''
-            for i in range(0, len(mesh.vertex_colors[0].data), int(len(mesh.vertex_colors[0].data) / len(verts))):
-                colors.append(mesh.vertex_colors[0].data[i].color)
+            else:
+                for i in range(0, len(mesh.vertex_colors[0].data), int(len(mesh.vertex_colors[0].data) / len(verts))):
+                    colors.append(mesh.vertex_colors[0].data[i].color)
             return verts, colors
         else:
             return verts
@@ -3564,7 +3563,7 @@ def meshToGp(obj=None, strokeLength=1):
     if not frame:
         frame = layer.frames.new(currentFrame())
     #~
-    allPoints, allColors = getVerts(target=obj, useWorldSpace=True, useFaces=False, useColors=True, useBmesh=False)
+    allPoints, allColors = getVerts(target=obj, useWorldSpace=True, useFaces=False, useColors=True, useBmesh=False, fastColorMethod=False)
     #~
     for i in range(0, len(allPoints), strokeLength):
         color = allColors[i]
@@ -3574,7 +3573,7 @@ def meshToGp(obj=None, strokeLength=1):
         stroke = frame.strokes.new(getActiveColor().name)
         stroke.draw_mode = "3DSPACE"
         stroke.points.add(strokeLength)
-
+        #~
         for j in range(0, strokeLength):
             point = allPoints[i]
             try:

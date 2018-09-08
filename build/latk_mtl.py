@@ -49,10 +49,10 @@ def getVertexColor(mesh=None, vert=0):
     i=0
     for poly in mesh.polygons:
         for vert_side in poly.loop_indices:
-            global_vert_num = poly.vertices[vert_side-min(poly.loop_indices)] 
-            if (vert == global_vert_num):
+            if (vert == poly.vertices[vert_side-min(poly.loop_indices)]):
                 return mesh.vertex_colors[0].data[i].color
-            i += 1    
+            i += 1   
+    return None 
 
 def colorVertices(obj, color=(1,0,0), makeMaterial=False, colorName="rgba"):
     # start in object mode
