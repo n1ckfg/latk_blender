@@ -1,6 +1,6 @@
 # 5 of 10. MESHES / GEOMETRY
 
-def getVerts(target=None, useWorldSpace=True, useColors=False, useFaces=True, useBmesh=False):
+def getVerts(target=None, useWorldSpace=True, useColors=True, useFaces=False, useBmesh=False):
     if not target:
         target = bpy.context.scene.objects.active
     mesh = target.data
@@ -32,11 +32,15 @@ def getVerts(target=None, useWorldSpace=True, useColors=False, useFaces=True, us
                     point = mat * point
                 verts.append((point.x, point.z, point.y))
         #~
-        if (useColors==True): # TODO this always returns len 0
+        if (useColors==True):
             colors = []
+            '''
             if (len(mesh.vertex_colors) == 0):
                 for i, vert in enumerate(verts):
                     colors.append(getVertexColor(mesh, i))
+            '''
+            for i in range(0, len(mesh.vertex_colors[0].data), int(len(mesh.vertex_colors[0].data) / len(verts))):
+                colors.append(mesh.vertex_colors[0].data[i].color)
             return verts, colors
         else:
             return verts
@@ -507,12 +511,13 @@ def meshToGp(obj=None, strokeLength=1):
     if not frame:
         frame = layer.frames.new(currentFrame())
     #~
-    allPoints = getVerts(target=obj, useWorldSpace=True, useFaces=False, useColors=False, useBmesh=False)
+    allPoints, allColors = getVerts(target=obj, useWorldSpace=True, useFaces=False, useColors=True, useBmesh=False)
     #~
     for i in range(0, len(allPoints), strokeLength):
-        color = getColorExplorer(obj, i)
-        if (color != None):
-            createColor(color)
+        color = allColors[i]
+        if (color == None):
+            color = getColorExplorer(obj, i)
+        createColor(color)
         stroke = frame.strokes.new(getActiveColor().name)
         stroke.draw_mode = "3DSPACE"
         stroke.points.add(strokeLength)
