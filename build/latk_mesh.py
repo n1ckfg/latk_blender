@@ -1,9 +1,13 @@
 # 5 of 10. MESHES / GEOMETRY
 
-def getVerts(target=None, useWorldSpace=True, useColors=True, useFaces=False, useBmesh=False, fastColorMethod=False):
+def getVerts(target=None, useWorldSpace=True, useColors=True, useFaces=False, useBmesh=False, fastColorMethod=False, useModifiers=True):
     if not target:
         target = bpy.context.scene.objects.active
-    mesh = target.data
+    mesh = None
+    if (useModifiers==True):
+        mesh = target.to_mesh(scene=bpy.context.scene, apply_modifiers=True, settings='PREVIEW')
+    else:
+        mesh = target.data
     mat = target.matrix_world
     #~
     if (useBmesh==True):
@@ -497,7 +501,7 @@ def meshToGp(obj=None, strokeLength=1, fastColorMethod=True):
     if not layer:
         layer = gp.layers.new(name="meshToGp")
     frame = getActiveFrame()
-    if not frame:
+    if not frame or frame.frame_number != currentFrame():
         frame = layer.frames.new(currentFrame())
     #~
     allPoints, allColors = getVerts(target=obj, useWorldSpace=True, useFaces=False, useColors=True, useBmesh=False, fastColorMethod=fastColorMethod)

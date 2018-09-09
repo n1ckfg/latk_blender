@@ -685,7 +685,7 @@ class LatkProperties(bpy.types.PropertyGroup):
     fast_colors = BoolProperty(
         name="Fast Color",
         description="Off: Accurate but slow. On: Fast but scrambles colors",
-        default=True
+        default=False
     )
 
 # https://docs.blender.org/api/blender_python_api_2_78_release/bpy.types.Panel.html
