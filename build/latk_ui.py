@@ -663,7 +663,7 @@ class LatkProperties(bpy.types.PropertyGroup):
     )
     '''
 
-    material_set_mode = EnumProperty(
+    material_set_mode = EnumProperty( 
         name="Affect",
         items=(
             ("ALL", "All", "All materials", 0),
@@ -740,8 +740,8 @@ class LatkProperties_Panel(bpy.types.Panel):
         # ~ ~ ~ 
 
         row = layout.row()
-        row.operator("latk_button.bakeselected")
         row.operator("latk_button.booleanmod") 
+        row.operator("latk_button.bakeselected")
         row.operator("latk_button.bakeall")
         
         row = layout.row()

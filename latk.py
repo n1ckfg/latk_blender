@@ -3097,22 +3097,12 @@ def getVerts(target=None, useWorldSpace=True, useColors=True, useFaces=False, us
         else:
             return verts
 
-# TODO does not work, context error with decimate
+# TODO decimate does not work, context error
 def bakeAllCurvesToMesh(_decimate=0.1):
     start, end = getStartEnd()
-    for i in range(start, end):
-        goToFrame(i)
-        refresh()
-        deselect()
-        targetAll = matchName("_latk")
-        target = []
-        for obj in targetAll:
-            if (obj.hide==False):
-                target.append(obj)
-        for obj in target:
-            select(obj)
-            setActiveObject(obj)
-            applyModifiers(obj)   
+    target = matchName("latk_")
+    for obj in target:
+        applyModifiers(obj)   
 
 def joinObjects(target=None, center=False):
     if not target:
@@ -5166,7 +5156,7 @@ class LatkProperties(bpy.types.PropertyGroup):
     )
     '''
 
-    material_set_mode = EnumProperty(
+    material_set_mode = EnumProperty( 
         name="Affect",
         items=(
             ("ALL", "All", "All materials", 0),
@@ -5243,8 +5233,8 @@ class LatkProperties_Panel(bpy.types.Panel):
         # ~ ~ ~ 
 
         row = layout.row()
-        row.operator("latk_button.bakeselected")
         row.operator("latk_button.booleanmod") 
+        row.operator("latk_button.bakeselected")
         row.operator("latk_button.bakeall")
         
         row = layout.row()
