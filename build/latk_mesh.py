@@ -490,7 +490,7 @@ def writeOnMesh(step=1, name="latk"):
             hideFrame(target[j], 0, True)
             hideFrame(target[j], len(target)-j, False)
 
-def meshToGp(obj=None, strokeLength=1, fastColorMethod=True):
+def meshToGp(obj=None, strokeLength=1, strokeGaps=10.0, fastColorMethod=True):
     if not obj:
         obj = ss()
     mesh = obj.data
@@ -506,21 +506,33 @@ def meshToGp(obj=None, strokeLength=1, fastColorMethod=True):
     #~
     allPoints, allColors = getVerts(target=obj, useWorldSpace=True, useFaces=False, useColors=True, useBmesh=False, fastColorMethod=fastColorMethod)
     #~
+    pointSeqsToAdd = []
+    colorsToAdd = []
     for i in range(0, len(allPoints), strokeLength):
         color = allColors[i]
         if (color == None):
             color = getColorExplorer(obj, i)
+        colorsToAdd.append(color)
+        #~
+        pointSeq = []
+        for j in range(0, strokeLength):
+            #point = allPoints[i]
+            try:
+                point = allPoints[i+j]
+                if (len(pointSeq) == 0 or fastColorMethod==True or getDistance(pointSeq[len(pointSeq)-1], point) < strokeGaps):
+                    pointSeq.append(point)
+            except:
+                break
+        if (len(pointSeq) > 0): 
+            pointSeqsToAdd.append(pointSeq)
+    for i, pointSeq in enumerate(pointSeqsToAdd):
+        color = colorsToAdd[i]
         createColor(color)
         stroke = frame.strokes.new(getActiveColor().name)
         stroke.draw_mode = "3DSPACE"
-        stroke.points.add(strokeLength)
-        #~
-        for j in range(0, strokeLength):
-            point = allPoints[i]
-            try:
-                point = allPoints[i+j]
-            except:
-                pass
+        stroke.points.add(len(pointSeq))
+
+        for j, point in enumerate(pointSeq):    
             x = point[0]
             y = point[2]
             z = point[1]

@@ -617,6 +617,12 @@ class LatkProperties(bpy.types.PropertyGroup):
         default=2
     )
 
+    strokeGaps = FloatProperty(
+        name="Gaps",
+        description="Skip points greater than this distance away",
+        default=10.0
+    )
+
     numSplitFrames = IntProperty(
         name="Split Frames",
         description="Split layers if they have more than this many frames",
@@ -746,6 +752,7 @@ class LatkProperties_Panel(bpy.types.Panel):
         
         row = layout.row()
         row.prop(latk, "strokeLength")
+        row.prop(latk, "strokeGaps")
         row.prop(latk, "fast_colors")
         row.operator("latk_button.strokesfrommesh")
         row.operator("latk_button.pointstoggle")
@@ -819,7 +826,7 @@ class Latk_Button_StrokesFromMesh(bpy.types.Operator):
     
     def execute(self, context):
         latk_settings = bpy.context.scene.latk_settings
-        meshToGp(strokeLength=latk_settings.strokeLength, fastColorMethod=latk_settings.fast_colors)
+        meshToGp(strokeLength=latk_settings.strokeLength, strokeGaps=latk_settings.strokeGaps, fastColorMethod=latk_settings.fast_colors)
         return {'FINISHED'}
 
 class Latk_Button_PointsToggle(bpy.types.Operator):
