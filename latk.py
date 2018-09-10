@@ -4706,7 +4706,7 @@ class ImportASC(bpy.types.Operator, ImportHelper):
 
     filename_ext = ".asc"
     filter_glob = StringProperty(
-            default="*.asc",
+            default="*.asc;*.xyz",
             options={'HIDDEN'},
             )
 
@@ -5447,7 +5447,7 @@ def menu_func_import(self, context):
     if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_GML == True):
         self.layout.operator(ImportGml.bl_idname, text="Latk - GML (.gml)")
     if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_ASC == True):
-        self.layout.operator(ImportASC.bl_idname, text="Latk - ASC (.asc)")
+        self.layout.operator(ImportASC.bl_idname, text="Latk - ASC (.asc, .xyz)")
     if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_Norman == True):
         self.layout.operator(ImportNorman.bl_idname, text="Latk - Norman (.json)")
     if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_VRDoodler == True):
