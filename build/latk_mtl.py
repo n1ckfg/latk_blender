@@ -9,7 +9,7 @@ def planarUvProject():
                     override = {'area': area, 'region': region, 'edit_object': bpy.context.edit_object}
                     bpy.ops.uv.smart_project(override)
                     
-def colorVertexCyclesMat(obj):
+def colorVertexCyclesMat(obj, vertName="Cd"):
     # http://blender.stackexchange.com/questions/6084/use-python-to-add-multiple-colors-to-a-nurbs-curve
     # http://blender.stackexchange.com/questions/5668/add-nodes-to-material-with-python
     # this will fail if you don't have Cycles Render enabled
@@ -22,7 +22,7 @@ def colorVertexCyclesMat(obj):
     nodes = obj.active_material.node_tree.nodes
     material_output = nodes.get('Diffuse BSDF')
     nodeAttr = nodes.new("ShaderNodeAttribute")
-    nodeAttr.attribute_name = "Cd"
+    nodeAttr.attribute_name = vertName
     obj.active_material.node_tree.links.new(material_output.inputs[0], nodeAttr.outputs[0])
 
 def colorVertexAlt(obj, vert, color=[1,0,0]):
@@ -384,6 +384,22 @@ def getUvImages():
     for tex in obj.active_material.texture_slots:
         try:
             uv_tex = tex.texture
+            if (uv_tex.image and
+                uv_tex.image.name not in uv_images and
+                uv_tex.image.pixels):
+
+                uv_images[uv_tex.image.name] = (
+                    uv_tex.image.size[0],
+                    uv_tex.image.size[1],
+                    uv_tex.image.pixels[:]
+                    # Accessing pixels directly is far too slow.
+                    # Copied to new array for massive performance-gain.
+                )
+        except:
+            pass
+    if (len(uv_images) < 1):
+        try:
+            uv_tex = obj.active_material.node_tree.nodes["Image Texture"]
             if (uv_tex.image and
                 uv_tex.image.name not in uv_images and
                 uv_tex.image.pixels):
