@@ -66,7 +66,7 @@ def frame_from_frame_number(layer, current_frame):
     """Get a reference to the current frame if it exists, else False"""
     return next((frame for frame in layer.frames if frame.frame_number == current_frame), False)
 
-def freestyle_to_gpencil_strokes(strokes, frame, pressure=1, draw_mode="3DSPACE"):
+def freestyle_to_gpencil_strokes(strokes, frame, pressure=1, draw_mode="3DSPACE", blenderRender=False):
     scene = bpy.context.scene
     if (scene.freestyle_gpencil_export.doClearPalette == True):
         clearPalette()
@@ -164,7 +164,11 @@ def freestyle_to_gpencil_strokes(strokes, frame, pressure=1, draw_mode="3DSPACE"
             #uv_average = uv_from_vert_average(uv_layer, v)
             #print("Vertex: %r, uv_first=%r, uv_average=%r" % (v, uv_first, uv_average))
             #~
-            pixelRaw = getPixelFromUvArray(images[obj.active_material.texture_slots[0].texture.image.name], uv_first[0], uv_first[1])
+            pixelRaw = None
+            if (blenderRender == True):
+                pixelRaw = getPixelFromUvArray(images[obj.active_material.texture_slots[0].texture.image.name], uv_first[0], uv_first[1])
+            else:
+                pixelRaw = getPixelFromUvArray(images[obj.active_material.node_tree.nodes["Image Texture"].image.name], uv_first[0], uv_first[1])                
             #pixelRaw = getPixelFromUv(obj.active_material.texture_slots[0].texture.image, uv_first[0], uv_first[1])
             #pixelRaw = getPixelFromUv(obj.active_material.texture_slots[0].texture.image, uv_average[0], uv_average[1])
             pixel = (pixelRaw[0], pixelRaw[1], pixelRaw[2])
