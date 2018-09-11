@@ -688,11 +688,13 @@ class LatkProperties(bpy.types.PropertyGroup):
         default="PRINCIPLED"
     )
 
+    '''
     fast_colors = BoolProperty(
         name="Fast Color",
         description="Off: Accurate but slow. On: Fast but scrambles colors",
         default=False
     )
+    '''
 
 # https://docs.blender.org/api/blender_python_api_2_78_release/bpy.types.Panel.html
 class LatkProperties_Panel(bpy.types.Panel):
@@ -753,7 +755,7 @@ class LatkProperties_Panel(bpy.types.Panel):
         row = layout.row()
         row.prop(latk, "strokeLength")
         row.prop(latk, "strokeGaps")
-        row.prop(latk, "fast_colors")
+        #row.prop(latk, "fast_colors")
         row.operator("latk_button.strokesfrommesh")
         row.operator("latk_button.pointstoggle")
 
@@ -826,7 +828,7 @@ class Latk_Button_StrokesFromMesh(bpy.types.Operator):
     
     def execute(self, context):
         latk_settings = bpy.context.scene.latk_settings
-        meshToGp(strokeLength=latk_settings.strokeLength, strokeGaps=latk_settings.strokeGaps, fastColorMethod=latk_settings.fast_colors)
+        meshToGp(strokeLength=latk_settings.strokeLength, strokeGaps=latk_settings.strokeGaps)
         return {'FINISHED'}
 
 class Latk_Button_PointsToggle(bpy.types.Operator):

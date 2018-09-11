@@ -1,6 +1,6 @@
 # 5 of 10. MESHES / GEOMETRY
 
-def getVerts(target=None, useWorldSpace=True, useColors=True, useFaces=False, useBmesh=False, fastColorMethod=False, useModifiers=True):
+def getVerts(target=None, useWorldSpace=True, useColors=True, useBmesh=False, useModifiers=True):
     if not target:
         target = bpy.context.scene.objects.active
     mesh = None
@@ -17,33 +17,22 @@ def getVerts(target=None, useWorldSpace=True, useColors=True, useFaces=False, us
     else:
         verts = []
         #~
-        if (useFaces==True):
-            for face in mesh.polygons:
-                for idx in face.vertices:
-                    pointsFace = []
-                    pointsFace.append(mesh.vertices[idx].co)
-                point = Vector((0,0,0))
-                for vert in pointsFace:
-                    point += vert
-                point /= len(pointsFace)
-                if (useWorldSpace == True):
-                    point = mat * point
-                verts.append((point.x, point.z, point.y))
-        else:
-            for vert in mesh.vertices:
-                point = vert.co
-                if (useWorldSpace == True):
-                    point = mat * point
-                verts.append((point.x, point.z, point.y))
+        for face in mesh.polygons:
+            for idx in face.vertices:
+                pointsFace = []
+                pointsFace.append(mesh.vertices[idx].co)
+            point = Vector((0,0,0))
+            for vert in pointsFace:
+                point += vert
+            point /= len(pointsFace)
+            if (useWorldSpace == True):
+                point = mat * point
+            verts.append((point.x, point.z, point.y))
         #~
         if (useColors==True):
             colors = []
-            if (fastColorMethod == False):
-                for i, vert in enumerate(verts):
-                    colors.append(getVertexColor(mesh, i))
-            else:
-                for i in range(0, len(mesh.vertex_colors[0].data), int(len(mesh.vertex_colors[0].data) / len(verts))):
-                    colors.append(mesh.vertex_colors[0].data[i].color)
+            for i in range(0, len(mesh.vertex_colors[0].data), int(len(mesh.vertex_colors[0].data) / len(verts))):
+                colors.append(mesh.vertex_colors[0].data[i].color)
             return verts, colors
         else:
             return verts
@@ -504,7 +493,7 @@ def meshToGp(obj=None, strokeLength=1, strokeGaps=10.0, fastColorMethod=True):
     if not frame or frame.frame_number != currentFrame():
         frame = layer.frames.new(currentFrame())
     #~
-    allPoints, allColors = getVerts(target=obj, useWorldSpace=True, useFaces=False, useColors=True, useBmesh=False, fastColorMethod=fastColorMethod)
+    allPoints, allColors = getVerts(target=obj, useWorldSpace=True, useColors=True, useBmesh=False)
     #~
     pointSeqsToAdd = []
     colorsToAdd = []
