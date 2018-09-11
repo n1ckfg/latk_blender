@@ -462,6 +462,38 @@ def sumPoints(stroke):
         z += co[2]
     return roundVal(x + y + z, 5)
 
+def rename(target=None, name="Untitled"):
+    if not target:
+        target = ss()
+    target.name = name
+    return target.name
+
+def getUniqueName(name):
+    # if the name is already unique, return it
+    searchNames = matchName("name")
+    if (len(searchNames) == 0):
+        return name
+    else:
+        # find the trailing digit in the name
+        trailingDigit = re.sub('.*?([0-9]*)$',r'\1',name)
+        
+        # create default variables for newDigit and shortname
+        # in case there is no trailing digit (ie: "pSphere")
+        newDigit = 1
+        shortname = name
+        
+        if(trailingDigit):
+            # increment the last digit and find the shortname using the length
+            # of the trailing digit as a reference for how much to trim
+            newDigit = int(trailingDigit)+1
+            shortname = name[:-len(trailingDigit)]
+        
+        # create the new name
+        newName = shortname+str(newDigit)
+
+        # recursively run through the function until a unique name is reached and returned
+        return getUniqueName(newName)
+
 def renameCurves(name="mesh", nameMesh="latk_ob_mesh", nameCurve="latk"):
     target = matchName(nameMesh)
     for i in range(0, len(target)):
@@ -673,6 +705,16 @@ def copyFramePoints(source, dest, limit=None, pointsPercentage=1):
             strokeDest.points.add(len(strokeSource.points))
             for l in range(0, len(strokeSource.points)):
                 strokeDest.points[l].co = strokeSource.points[l].co
+
+def addLocator(target=None):
+    if not target:
+        target = ss()
+    empty = bpy.data.objects.new("Empty", None)
+    bpy.context.scene.objects.link(empty)
+    bpy.context.scene.update()
+    if (target != None):
+        empty.location = target.location
+    return empty
 
 def createCamera():
     # https://blenderartists.org/forum/showthread.php?312512-how-to-add-an-empty-and-a-camera-using-python-script
@@ -4502,11 +4544,20 @@ def up():
     makeParent(unParent=True)
 
 def ss():
-    return select()[0]
+	returns = select()
+	if (len(returns) > 0):
+	    return returns[0]
+	else:
+		return None
 
 def dn():
     deleteName(_name="latk_ob")
     deleteName(_name="caps_ob")
+
+def k():
+	target = ss()
+	for obj in target:
+		keyTransform(obj, currentFrame())
 
 rb = readBrushStrokes
 wb = writeBrushStrokes
@@ -4522,6 +4573,7 @@ cplf = checkLayersAboveFrameLimit
 splf = splitLayersAboveFrameLimit
 
 getVertices = getVerts
+gotoFrame = goToFrame
 
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
 # * * * * * * * * * * * * * * * * * * * * * * * * * *

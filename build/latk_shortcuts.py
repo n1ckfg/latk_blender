@@ -4,11 +4,20 @@ def up():
     makeParent(unParent=True)
 
 def ss():
-    return select()[0]
+	returns = select()
+	if (len(returns) > 0):
+	    return returns[0]
+	else:
+		return None
 
 def dn():
     deleteName(_name="latk_ob")
     deleteName(_name="caps_ob")
+
+def k():
+	target = ss()
+	for obj in target:
+		keyTransform(obj, currentFrame())
 
 rb = readBrushStrokes
 wb = writeBrushStrokes
@@ -24,6 +33,7 @@ cplf = checkLayersAboveFrameLimit
 splf = splitLayersAboveFrameLimit
 
 getVertices = getVerts
+gotoFrame = goToFrame
 
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
