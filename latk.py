@@ -2952,15 +2952,22 @@ def getUnknownColor(mtl=None):
         col = getDiffuseColor(mtl)
     return col
 
-def getColorExplorer(target=None, vert=0):
+def getColorExplorer(target=None, vert=0, images=None):
     if not target:
         target = ss()
     mesh = target.data
     col = None
-    col = getVertexColor(mesh, vert)
+    try:
+        uv_first = mesh.uv_layers.active.data[vert].uv
+        pixelRaw = getPixelFromUvArray(images[target.active_material.node_tree.nodes["Image Texture"].image.name], uv_first[0], uv_first[1])                
+        col = (pixelRaw[0], pixelRaw[1], pixelRaw[2])  
+    except:
+        pass
+    if (col == None):
+        col = getVertexColor(mesh, vert)
     if (col == None):
         try:
-            col = getUnknownColor(target.data.materials[0])
+            col = getUnknownColor(mesh.materials[0])
         except:
             pass
     if (col == None):
@@ -2993,6 +3000,7 @@ def makeEmissionMtl():
 # https://docs.blender.org/api/blender_python_api_2_63_2/bmesh.html
 # http://blender.stackexchange.com/questions/1311/how-can-i-get-vertex-positions-from-a-mesh
 
+# TODO is this for bmesh only?
 def uv_from_vert_first(uv_layer, v):
     for l in v.link_loops:
         uv_data = l[uv_layer]
@@ -3142,9 +3150,12 @@ def getVerts(target=None, useWorldSpace=True, useColors=True, useBmesh=False, us
         #~
         if (useColors==True):
             colors = []
-            for i in range(0, len(mesh.vertex_colors[0].data), int(len(mesh.vertex_colors[0].data) / len(verts))):
-                colors.append(mesh.vertex_colors[0].data[i].color)
-            return verts, colors
+            try:
+                for i in range(0, len(mesh.vertex_colors[0].data), int(len(mesh.vertex_colors[0].data) / len(verts))):
+                    colors.append(mesh.vertex_colors[0].data[i].color)
+                return verts, colors
+            except:
+                return verts, None
         else:
             return verts
 
@@ -3590,7 +3601,7 @@ def writeOnMesh(step=1, name="latk"):
             hideFrame(target[j], 0, True)
             hideFrame(target[j], len(target)-j, False)
 
-def meshToGp(obj=None, strokeLength=1, strokeGaps=10.0, fastColorMethod=True):
+def meshToGp(obj=None, strokeLength=1, strokeGaps=10.0):
     if not obj:
         obj = ss()
     mesh = obj.data
@@ -3604,14 +3615,28 @@ def meshToGp(obj=None, strokeLength=1, strokeGaps=10.0, fastColorMethod=True):
     if not frame or frame.frame_number != currentFrame():
         frame = layer.frames.new(currentFrame())
     #~
+    images = None
+    try:
+        images = getUvImages()
+    except:
+        pass
+    #~
     allPoints, allColors = getVerts(target=obj, useWorldSpace=True, useColors=True, useBmesh=False)
     #~
     pointSeqsToAdd = []
     colorsToAdd = []
     for i in range(0, len(allPoints), strokeLength):
-        color = allColors[i]
-        if (color == None):
-            color = getColorExplorer(obj, i)
+        color = None
+        if not images:
+            try:
+                color = allColors[i]
+            except:
+                color = getColorExplorer(obj, i)
+        else:
+            try:
+                color = getColorExplorer(obj, i, images)
+            except:
+                color = getColorExplorer(obj, i)
         colorsToAdd.append(color)
         #~
         pointSeq = []
@@ -3619,7 +3644,7 @@ def meshToGp(obj=None, strokeLength=1, strokeGaps=10.0, fastColorMethod=True):
             #point = allPoints[i]
             try:
                 point = allPoints[i+j]
-                if (len(pointSeq) == 0 or fastColorMethod==True or getDistance(pointSeq[len(pointSeq)-1], point) < strokeGaps):
+                if (len(pointSeq) == 0 or getDistance(pointSeq[len(pointSeq)-1], point) < strokeGaps):
                     pointSeq.append(point)
             except:
                 break
