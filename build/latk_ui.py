@@ -749,6 +749,9 @@ class LatkProperties_Panel(bpy.types.Panel):
 
         row = layout.row()
         row.operator("latk_button.booleanmod") 
+        row.operator("latk_button.subsurfmod") 
+
+        row = layout.row()
         row.operator("latk_button.bakeselected")
         row.operator("latk_button.bakeall")
         
@@ -785,6 +788,16 @@ class Latk_Button_BooleanMod(bpy.types.Operator):
     
     def execute(self, context):
         booleanMod()
+        return {'FINISHED'}
+
+class Latk_Button_SubsurfMod(bpy.types.Operator):
+    """Mesh all GP strokes. Takes a while.."""
+    bl_idname = "latk_button.subsurfmod"
+    bl_label = "Subd"
+    bl_options = {'UNDO'}
+    
+    def execute(self, context):
+        subsurfMod()
         return {'FINISHED'}
 
 class Latk_Button_Gpmesh(bpy.types.Operator):

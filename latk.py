@@ -3509,6 +3509,14 @@ def booleanMod(target=None, op="union"):
             bpy.ops.object.modifier_apply(apply_as='DATA', modifier="Boolean")
             delete(target[i-1])
 
+def subsurfMod(target=None):
+    if not target:
+        target=s()
+    for obj in target:
+            bpy.context.scene.objects.active = obj
+            bpy.ops.object.modifier_add(type="SUBSURF")
+            bpy.ops.object.modifier_apply(apply_as='DATA', modifier="Subsurf")
+
 def polyCube(pos=(0,0,0), scale=(1,1,1), rot=(0,0,0)):
     bpy.ops.mesh.primitive_cube_add()
     cube = s()[0]
@@ -5344,6 +5352,9 @@ class LatkProperties_Panel(bpy.types.Panel):
 
         row = layout.row()
         row.operator("latk_button.booleanmod") 
+        row.operator("latk_button.subsurfmod") 
+
+        row = layout.row()
         row.operator("latk_button.bakeselected")
         row.operator("latk_button.bakeall")
         
@@ -5380,6 +5391,16 @@ class Latk_Button_BooleanMod(bpy.types.Operator):
     
     def execute(self, context):
         booleanMod()
+        return {'FINISHED'}
+
+class Latk_Button_SubsurfMod(bpy.types.Operator):
+    """Mesh all GP strokes. Takes a while.."""
+    bl_idname = "latk_button.subsurfmod"
+    bl_label = "Subd"
+    bl_options = {'UNDO'}
+    
+    def execute(self, context):
+        subsurfMod()
         return {'FINISHED'}
 
 class Latk_Button_Gpmesh(bpy.types.Operator):

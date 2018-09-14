@@ -390,6 +390,14 @@ def booleanMod(target=None, op="union"):
             bpy.ops.object.modifier_apply(apply_as='DATA', modifier="Boolean")
             delete(target[i-1])
 
+def subsurfMod(target=None):
+    if not target:
+        target=s()
+    for obj in target:
+            bpy.context.scene.objects.active = obj
+            bpy.ops.object.modifier_add(type="SUBSURF")
+            bpy.ops.object.modifier_apply(apply_as='DATA', modifier="Subsurf")
+
 def polyCube(pos=(0,0,0), scale=(1,1,1), rot=(0,0,0)):
     bpy.ops.mesh.primitive_cube_add()
     cube = s()[0]
