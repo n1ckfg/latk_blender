@@ -3508,6 +3508,9 @@ def booleanMod(target=None, op="union"):
             bpy.context.object.modifiers["Boolean"].object = target[i-1]
             bpy.ops.object.modifier_apply(apply_as='DATA', modifier="Boolean")
             delete(target[i-1])
+    lastObj = target[len(target)-1]
+    lastObj.select = True
+    return lastObj
 
 def subsurfMod(target=None):
     if not target:
