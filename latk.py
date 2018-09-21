@@ -557,6 +557,12 @@ def makeParent(target=None, unParent=False, fixTransforms=True):
         else:   
             bpy.ops.object.parent_set(type='OBJECT', xmirror=False, keep_transform=True) 
 
+def makeRoot():
+    root = addLocator()
+    target = matchName("latk")
+    parentMultiple(target, root)
+    return root
+
 def keyTransform(_obj, _frame):
     _obj.keyframe_insert(data_path="location", frame=_frame) 
     _obj.keyframe_insert(data_path="rotation_euler", frame=_frame) 
@@ -5356,6 +5362,7 @@ class LatkProperties_Panel(bpy.types.Panel):
         row = layout.row()
         row.operator("latk_button.booleanmod") 
         row.operator("latk_button.subsurfmod") 
+        row.operator("latk_button.makeroot") 
 
         row = layout.row()
         row.operator("latk_button.bakeselected")
@@ -5390,6 +5397,16 @@ class LatkProperties_Panel(bpy.types.Panel):
 
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
+
+class Latk_Button_MakeRoot(bpy.types.Operator):
+    """Mesh all GP strokes. Takes a while.."""
+    bl_idname = "latk_button.makeroot"
+    bl_label = "Root"
+    bl_options = {'UNDO'}
+    
+    def execute(self, context):
+        makeRoot()
+        return {'FINISHED'}
 
 class Latk_Button_HideScale(bpy.types.Operator):
     """Mesh all GP strokes. Takes a while.."""

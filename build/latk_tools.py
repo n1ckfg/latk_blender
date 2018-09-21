@@ -474,6 +474,12 @@ def makeParent(target=None, unParent=False, fixTransforms=True):
         else:   
             bpy.ops.object.parent_set(type='OBJECT', xmirror=False, keep_transform=True) 
 
+def makeRoot():
+    root = addLocator()
+    target = matchName("latk")
+    parentMultiple(target, root)
+    return root
+
 def keyTransform(_obj, _frame):
     _obj.keyframe_insert(data_path="location", frame=_frame) 
     _obj.keyframe_insert(data_path="rotation_euler", frame=_frame) 
