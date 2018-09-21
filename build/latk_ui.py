@@ -673,8 +673,9 @@ class LatkProperties(bpy.types.PropertyGroup):
         name="Type",
         items=(
             ("DIFFUSE", "Diffuse", "Diffuse shader", 0),
-            #("EMISSION", "Emission", "Emission shader", 1),
-            ("PRINCIPLED", "Principled", "Principled shader", 1) #2)
+            ("PRINCIPLED", "Principled", "Principled shader", 1),
+            ("GLTF", "glTF", "glTF MR shader", 2),
+            #("EMISSION", "Emission", "Emission shader", 3)
         ),
         default="PRINCIPLED"
     )

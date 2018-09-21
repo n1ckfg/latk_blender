@@ -211,6 +211,9 @@ def getMtlColor(node="diffuse", mtl=None):
         elif (node.lower() == "principled"):
             color = mtl.node_tree.nodes["Principled BSDF"].inputs["Base Color"].default_value
             return (color[0], color[1], color[2])
+        elif (node.lower() == "gltf"):
+            color = mtl.node_tree.nodes["Group"].inputs["BaseColor"].default_value
+            return (color[0], color[1], color[2])
         else:
             color = mtl.node_tree.nodes["Diffuse BSDF"].inputs["Color"].default_value
             return (color[0], color[1], color[2])
@@ -245,6 +248,13 @@ def setMtlShader(shader="diffuse", mtl=None):
         destNode = nodes.new(type="ShaderNodeBsdfPrincipled")
         destNode.inputs["Base Color"].default_value = (col[0], col[1], col[2], 1) # RGBA
         destNode.inputs["Subsurface Color"].default_value = (col[0], col[1], col[2], 1) # RGBA
+    elif (shader.lower()=="gltf"):
+        group = bpy.data.node_groups["glTF Metallic Roughness"]
+        destNode = mtl.node_tree.nodes.new("ShaderNodeGroup")
+        destNode.node_tree = group
+        destNode.inputs["BaseColor"].default_value = (col[0], col[1], col[2], 1) # RGBA
+        destNode.inputs["BaseColorFactor"].default_value = (col[0], col[1], col[2], 1) # RGBA
+        destNode.inputs["MetallicRoughness"].default_value = (col[0], col[1], col[2], 1) # RGBA
     else:
         destNode = nodes.new(type="ShaderNodeBsdfDiffuse")
         destNode.inputs[0].default_value = (col[0], col[1], col[2], 1) # RGBA
@@ -283,6 +293,11 @@ def getPrincipledColor(mtl=None):
         mtl = getActiveMtl()
     return getMtlColor("principled", mtl)
 
+def getGltfColor(mtl=None):
+    if not mtl:
+        mtl = getActiveMtl()
+    return getMtlColor("gltf", mtl)
+
 def getUnknownColor(mtl=None):
     if not mtl:
         mtl = getActiveMtl()
@@ -291,6 +306,8 @@ def getUnknownColor(mtl=None):
         col = getEmissionColor(mtl)
     if (col == None):
         col = getPrincipledColor(mtl)
+    if (col == None):
+        col = getGltfColor(mtl)
     if (col == None):
         col = getDiffuseColor(mtl)
     return col
