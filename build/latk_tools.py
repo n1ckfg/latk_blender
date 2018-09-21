@@ -680,9 +680,13 @@ def hideFrameByScale(_obj, _frame, _hide):
         _obj.scale = [hideScaleVal, hideScaleVal, hideScaleVal]
     else:
         _obj.scale = [showScaleVal, showScaleVal, showScaleVal]
-    _obj.keyframe_insert(data_path="location", frame=_frame)
-    _obj.keyframe_insert(data_path="rotation_quaternion", frame=_frame)
+    #_obj.keyframe_insert(data_path="location", frame=_frame)
+    #_obj.keyframe_insert(data_path="rotation_quaternion", frame=_frame)
     _obj.keyframe_insert(data_path="scale", frame=_frame)
+    fcurves = _obj.animation_data.action.fcurves
+    for fcurve in fcurves:
+        for kf in fcurve.keyframe_points:
+            kf.interpolation = 'CONSTANT'
     '''
     if (_obj.hide == True):
         _obj.hide = False
@@ -691,6 +695,22 @@ def hideFrameByScale(_obj, _frame, _hide):
         _obj.hide_render = False
         _obj.keyframe_insert(data_path="hide_render", frame=_frame)
     '''
+
+def hideFramesByScale():
+    target = matchName("latk_")
+    start, end = getStartEnd()
+    for i in range(start, end):
+        goToFrame(i)
+        for j in range(0, len(target)):
+            if (target[j].hide == False):
+                hideFrameByScale(target[j], i, False)
+    #turn off all hide keyframes
+    for i in range(start, end):
+        goToFrame(i)
+        for j in range(0, len(target)):
+            if (target[j].hide == True):
+                hideFrameByScale(target[j], i, True)
+                hideFrame(target[j], i, False) 
     
 def deleteAnimationPath(target=None, paths=["hide", "hide_render"]):
     if not target:

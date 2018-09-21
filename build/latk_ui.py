@@ -450,6 +450,7 @@ class ExportPainter(bpy.types.Operator, ExportHelper):
 
 
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
+# ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 
 
 class FreestyleGPencil(bpy.types.PropertyGroup):
@@ -545,6 +546,7 @@ class FreestyleGPencil_Panel(bpy.types.Panel):
         row.prop(gp, "vertexHitbox")
 
 
+# ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 
 
@@ -658,17 +660,6 @@ class LatkProperties(bpy.types.PropertyGroup):
         default="NONE"
     )
 
-    '''
-    hide_mode = EnumProperty(
-        name="Hide Mode",
-        items=(
-            ("HIDE", "Hide", "Hide inactive frames", 0),
-            ("SCALE", "Scale", "Scale inactive frames", 1)
-        ),
-        default="HIDE"
-    )
-    '''
-
     material_set_mode = EnumProperty( 
         name="Affect",
         items=(
@@ -687,14 +678,6 @@ class LatkProperties(bpy.types.PropertyGroup):
         ),
         default="PRINCIPLED"
     )
-
-    '''
-    fast_colors = BoolProperty(
-        name="Fast Color",
-        description="Off: Accurate but slow. On: Fast but scrambles colors",
-        default=False
-    )
-    '''
 
 # https://docs.blender.org/api/blender_python_api_2_78_release/bpy.types.Panel.html
 class LatkProperties_Panel(bpy.types.Panel):
@@ -729,9 +712,6 @@ class LatkProperties_Panel(bpy.types.Panel):
         row.operator("latk_button.gpmesh")
         row.operator("latk_button.dn")
 
-        #row = layout.row()
-        #row.prop(latk, "hide_mode", expand=True)
-
         row = layout.row()
         row.prop(latk, "remesh_mode", expand=True)
 
@@ -754,6 +734,7 @@ class LatkProperties_Panel(bpy.types.Panel):
         row = layout.row()
         row.operator("latk_button.bakeselected")
         row.operator("latk_button.bakeall")
+        row.operator("latk_button.hidescale")
         
         row = layout.row()
         row.prop(latk, "strokeLength")
@@ -779,6 +760,20 @@ class LatkProperties_Panel(bpy.types.Panel):
         row.prop(latk, "maxRemapPressure")
         row.prop(latk, "remapPressureMode")
         row.operator("latk_button.remappressure")
+
+
+# ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
+# ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
+
+class Latk_Button_HideScale(bpy.types.Operator):
+    """Mesh all GP strokes. Takes a while.."""
+    bl_idname = "latk_button.hidescale"
+    bl_label = "Hide Scale"
+    bl_options = {'UNDO'}
+    
+    def execute(self, context):
+        hideFramesByScale()
+        return {'FINISHED'}
 
 class Latk_Button_BooleanMod(bpy.types.Operator):
     """Mesh all GP strokes. Takes a while.."""
