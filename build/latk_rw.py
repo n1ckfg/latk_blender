@@ -4,10 +4,13 @@ def exportAlembic(url="test.abc"):
     bpy.ops.wm.alembic_export(filepath=url, vcolors=True, face_sets=True, renderable_only=False)
 
 def exportForUnity(filepath=None, sketchFab=True):
-    if not filepath:
-        filepath = getFilePath()
-    else:
-        filepath = filepath.split(".fbx")[0] + "_"
+    #origFilepath = ""
+    #if not filepath:
+        #filepath = getFilePath()
+    #else:
+    filepath = filepath.split(".fbx")[0] + "_"
+    rootFilepath = filepath.split(getFileName())[0]
+    #~
     start, end = getStartEnd()
     target = matchName("latk")
     sketchFabList = []
@@ -24,7 +27,7 @@ def exportForUnity(filepath=None, sketchFab=True):
                 exportName = exportName.split("latk_")[1]
                 exportName = exportName.split("_mesh")[0]
                 exporter(url=filepath, manualSelect=True, fileType="fbx", name=exportName, legacyFbx=True)
-                sketchFabList.append(str(1.0/getSceneFps()) + " " + exportName + ".fbx\r") #"0.083 " + exportName + ".fbx\r")
+                sketchFabList.append(str(1.0/getSceneFps()) + " " + getFileName() + "_" + exportName + ".fbx\r") #"0.083 " + exportName + ".fbx\r")
                 sketchFabListNum.append(float(exportName.split("_")[len(exportName.split("_"))-1]))
                 break
     if (sketchFab==True):
@@ -46,7 +49,7 @@ def exportForUnity(filepath=None, sketchFab=True):
         print("after sort: ")
         print(sketchFabList)
         #writeTextFile(filepath + getFileName() + "_" + tempString + ".sketchfab.timeframe", sketchFabList)
-        writeTextFile(filepath + tempString + ".sketchfab.timeframe", sketchFabList)
+        writeTextFile(rootFilepath + "sketchfab.timeframe", sketchFabList)
 
 def exporter(name="test", url=None, winDir=False, manualSelect=False, fileType="fbx", legacyFbx=False):
     if not url:
