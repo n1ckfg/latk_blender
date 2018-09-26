@@ -5595,7 +5595,7 @@ def menu_func_import(self, context):
     if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_ASC == True):
         self.layout.operator(ImportASC.bl_idname, text="Latk - ASC (.asc, .xyz)")
     if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_Norman == True):
-        self.layout.operator(ImportNorman.bl_idname, text="Latk - Norman (.json)")
+        self.layout.operator(ImportNorman.bl_idname, text="Latk - NormanVR (.json)")
     if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_VRDoodler == True):
         self.layout.operator(ImportVRDoodler.bl_idname, text="Latk - VRDoodler (.obj)")
 
