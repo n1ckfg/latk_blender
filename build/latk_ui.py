@@ -101,7 +101,7 @@ class ImportLatk(bpy.types.Operator, ImportHelper):
 
 
 class ImportTiltBrush(bpy.types.Operator, ImportHelper):
-    """Load a Norman File"""
+    """Load a Tilt Brush File"""
     bl_idname = "import_scene.tbjson"
     bl_label = "Import Tilt Brush"
     bl_options = {'PRESET', 'UNDO'}
