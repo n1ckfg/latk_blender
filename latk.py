@@ -2348,21 +2348,22 @@ def importAsc(filepath=None, strokeLength=1):
 
 def exportAsc(filepath=None):
     ascData = []
+    gp = getActiveGp()
     palette = getActivePalette()
-    frame = getActiveFrame()
-    strokes = frame.strokes
-    for stroke in strokes:
-        color = palette.colors[stroke.colorname].color
-        for point in stroke.points:
-            coord = point.co
-            x = coord[0]
-            y = coord[2]
-            z = coord[1]
-            pressure = point.pressure
-            r = color[0]
-            g = color[1]
-            b = color[2]
-            ascData.append(str(x) + "," + str(y) + "," + str(z) + "," + str(pressure) + "," + str(r) + "," + str(g) + "," + str(b)) 
+    for layer in gp.layers:
+        for frame in layer.frames:
+            for stroke in frame.strokes:
+                color = palette.colors[stroke.colorname].color
+                for point in stroke.points:
+                    coord = point.co
+                    x = coord[0]
+                    y = coord[2]
+                    z = coord[1]
+                    pressure = point.pressure
+                    r = color[0]
+                    g = color[1]
+                    b = color[2]
+                    ascData.append(str(x) + "," + str(y) + "," + str(z) + "," + str(pressure) + "," + str(r) + "," + str(g) + "," + str(b)) 
 
     writeTextFile(filepath, "\n".join(ascData))
 
