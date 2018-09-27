@@ -53,7 +53,7 @@ class LightningArtistToolkitPreferences(bpy.types.AddonPreferences):
 
     extraFormats_SculptrVR = bpy.props.BoolProperty(
         name = 'SculptrVR CSV',
-        description = "SculptrVR CSV export",
+        description = "SculptrVR CSV import/export",
         default = True
     )
 
@@ -61,18 +61,19 @@ class LightningArtistToolkitPreferences(bpy.types.AddonPreferences):
         layout = self.layout
         layout.label("Add menu items to import:")
         layout.prop(self, "extraFormats_TiltBrush")
-        layout.prop(self, "extraFormats_GML")
+        layout.prop(self, "extraFormats_SculptrVR")
         layout.prop(self, "extraFormats_ASC")
+        layout.prop(self, "extraFormats_GML")
         layout.prop(self, "extraFormats_Norman")
         layout.prop(self, "extraFormats_VRDoodler")
         #~
         layout.label("Add menu items to export:")
-        layout.prop(self, "extraFormats_GML")
+        layout.prop(self, "extraFormats_SculptrVR")
         layout.prop(self, "extraFormats_ASC")
+        layout.prop(self, "extraFormats_GML")
         layout.prop(self, "extraFormats_Painter")
         layout.prop(self, "extraFormats_SVG")
         layout.prop(self, "extraFormats_FBXSequence")
-        layout.prop(self, "extraFormats_SculptrVR")
 
 
 class ImportLatk(bpy.types.Operator, ImportHelper):
@@ -191,6 +192,31 @@ class ImportASC(bpy.types.Operator, ImportHelper):
         #~
         keywords["strokeLength"] = self.strokeLength
         la.importAsc(**keywords)
+        return {'FINISHED'} 
+
+
+class ImportSculptrVR(bpy.types.Operator, ImportHelper):
+    """Load an ASC point cloud"""
+    bl_idname = "import_scene.sculptrvr"
+    bl_label = "Import SculptrVR CSV"
+    bl_options = {'PRESET', 'UNDO'}
+
+    filename_ext = ".csv"
+    filter_glob = StringProperty(
+            default="*.csv",
+            options={'HIDDEN'},
+            )
+
+    strokeLength = IntProperty(name="Points per Stroke", description="Group every n points into strokes", default=1)
+
+    def execute(self, context):
+        import latk as la
+        keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode"))
+        if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
+            import os
+        #~
+        keywords["strokeLength"] = self.strokeLength
+        la.importSculptrVr(**keywords)
         return {'FINISHED'} 
 
 
@@ -937,10 +963,12 @@ def menu_func_import(self, context):
     #~
     if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_TiltBrush == True):
         self.layout.operator(ImportTiltBrush.bl_idname, text="Latk - Tilt Brush (.tilt, .json)")
-    if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_GML == True):
-        self.layout.operator(ImportGml.bl_idname, text="Latk - GML (.gml)")
+    if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_SculptrVR == True):
+        self.layout.operator(ImportSculptrVR.bl_idname, text="Latk - SculptrVR (.csv)")
     if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_ASC == True):
         self.layout.operator(ImportASC.bl_idname, text="Latk - ASC (.asc, .xyz)")
+    if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_GML == True):
+        self.layout.operator(ImportGml.bl_idname, text="Latk - GML (.gml)")
     if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_Norman == True):
         self.layout.operator(ImportNorman.bl_idname, text="Latk - NormanVR (.json)")
     if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_VRDoodler == True):
@@ -952,18 +980,16 @@ def menu_func_export(self, context):
     #~
     if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_SculptrVR == True):
         self.layout.operator(ExportSculptrVR.bl_idname, text="Latk - SculptrVR (.csv)")
-    if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_FBXSequence == True):
-        self.layout.operator(ExportFbxSequence.bl_idname, text="Latk - FBX Sequence (.fbx)")
-    if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_GML == True):
-        self.layout.operator(ExportGml.bl_idname, text="Latk - GML (.gml)")
     if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_ASC == True):
         self.layout.operator(ExportASC.bl_idname, text="Latk - ASC (.asc)")
-    if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_SVG == True):
-        self.layout.operator(ExportSvg.bl_idname, text="Latk - SVG SMIL (.svg)")
+    if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_GML == True):
+        self.layout.operator(ExportGml.bl_idname, text="Latk - GML (.gml)")
     if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_Painter == True):
         self.layout.operator(ExportPainter.bl_idname, text="Latk - Corel Painter (.txt)")
-
-#classes = (FreestyleGPencil, FreestyleGPencil_Panel)
+    if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_SVG == True):
+        self.layout.operator(ExportSvg.bl_idname, text="Latk - SVG SMIL (.svg)")
+    if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_FBXSequence == True):
+        self.layout.operator(ExportFbxSequence.bl_idname, text="Latk - FBX Sequence (.fbx)")
 
 def register():
     bpy.utils.register_module(__name__)
@@ -972,15 +998,10 @@ def register():
     bpy.types.INFO_MT_file_import.append(menu_func_import)
     bpy.types.INFO_MT_file_export.append(menu_func_export)
 
-    # freestyle
-    #for cls in classes:
-        #bpy.utils.register_class(cls)
     bpy.types.Scene.freestyle_gpencil_export = PointerProperty(type=FreestyleGPencil)
-    #~
+    
     parameter_editor.callbacks_lineset_pre.append(export_fill)
     parameter_editor.callbacks_lineset_post.append(export_stroke)
-    # bpy.app.handlers.render_post.append(export_stroke)
-    #print("anew")
 
 def unregister():
     bpy.utils.unregister_module(__name__)
@@ -989,11 +1010,8 @@ def unregister():
     bpy.types.INFO_MT_file_import.remove(menu_func_import)
     bpy.types.INFO_MT_file_export.remove(menu_func_export)
 
-    # freestyle
-    #for cls in classes:
-        #bpy.utils.register_class(cls)
     del bpy.types.Scene.freestyle_gpencil_export
-    #~
+    
     parameter_editor.callbacks_lineset_pre.remove(export_fill)
     parameter_editor.callbacks_lineset_post.remove(export_stroke)
 

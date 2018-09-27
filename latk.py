@@ -2295,9 +2295,6 @@ def importAsc(filepath=None, strokeLength=1):
     if not frame:
         frame = layer.frames.new(start)
 
-    #points = []
-    #pressures = []
-    #allPointsCounter = 0
     for i in range(0, len(allPoints), strokeLength):
         color = colors[i]
         if (color != None):
@@ -2317,34 +2314,6 @@ def importAsc(filepath=None, strokeLength=1):
                 y = (y * globalScale.y) + globalOffset.y
                 z = (z * globalScale.z) + globalOffset.z
             createPoint(stroke, j, (x, y, z), pressure, strength)
-
-        '''
-        if (len(points) < 2 or getDistance(allPoints[i], allPoints[i-1]) < 0.1):
-            points.append(allPoints[i])
-            pressures.append(allPressures[i])
-        else:
-            color = colors[allPointsCounter]
-            #if (colorIs255==True):
-                #color = (color[0] / 255.0, color[1] / 255.0, color[2] / 255.0)
-            if (color != None):
-                createColor(color)
-            stroke = frame.strokes.new(getActiveColor().name)
-            stroke.draw_mode = "3DSPACE"
-            stroke.points.add(len(points))
-            for l, point in enumerate(points):
-                x = point[0]
-                y = point[2]
-                z = point[1]
-                pressure = pressures[l]
-                strength = 1.0
-                if useScaleAndOffset == True:
-                    x = (x * globalScale.x) + globalOffset.x
-                    y = (y * globalScale.y) + globalOffset.y
-                    z = (z * globalScale.z) + globalOffset.z
-                createPoint(stroke, l, (x, y, z), pressure, strength)
-            allPointsCounter = i
-            points = []
-        '''
 
 def exportAsc(filepath=None):
     ascData = []
@@ -2366,6 +2335,73 @@ def exportAsc(filepath=None):
                     ascData.append(str(x) + "," + str(y) + "," + str(z) + "," + str(pressure) + "," + str(r) + "," + str(g) + "," + str(b)) 
 
     writeTextFile(filepath, "\n".join(ascData))
+
+def importSculptrVr(filepath=None, strokeLength=1, scale=0.01, startLine=1):
+    globalScale = Vector((scale, scale, scale))
+    globalOffset = Vector((0, 0, 0))
+    useScaleAndOffset = True
+    numPlaces = 7
+    roundValues = True
+
+    with open(filepath) as data_file: 
+        data = data_file.readlines()
+
+    allPoints = []
+    allPressures = []
+    colors = []
+    colorIs255 = False
+    for i in range(startLine, len(data)):
+        pointRaw = data[i].split(",")
+        point = (float(pointRaw[0]), float(pointRaw[1]), float(pointRaw[2]))
+        allPoints.append(point)
+        
+        color = None
+        pressure = 1.0
+        
+        '''
+        if (len(pointRaw) == 4):
+            pressure = float(pointRaw[3])
+        elif (len(pointRaw) == 6):
+            color = (float(pointRaw[3]), float(pointRaw[4]), float(pointRaw[5]))
+        elif(len(pointRaw) > 6):
+            pressure = float(pointRaw[3])
+        '''
+        color = (float(pointRaw[4]), float(pointRaw[5]), float(pointRaw[6]))
+
+        if (colorIs255 == False and color != None and color[0] + color[1] + color[2] > 3.1):
+                colorIs255 = True
+        elif (colorIs255 == True):
+            color = (color[0] / 255.0, color[1] / 255.0, color[2] / 255.0)
+
+        allPressures.append(pressure)
+        colors.append(color)
+
+    gp = getActiveGp()
+    layer = gp.layers.new("ASC_layer", set_active=True)
+    start, end = getStartEnd()
+    frame = getActiveFrame()
+    if not frame:
+        frame = layer.frames.new(start)
+
+    for i in range(0, len(allPoints), strokeLength):
+        color = colors[i]
+        if (color != None):
+            createColor(color)
+        stroke = frame.strokes.new(getActiveColor().name)
+        stroke.draw_mode = "3DSPACE"
+        stroke.points.add(strokeLength)
+
+        for j in range(0, strokeLength):
+            x = allPoints[i+j][0]
+            y = allPoints[i+j][1]
+            z = allPoints[i+j][2]
+            pressure = allPressures[i+j]
+            strength = 1.0
+            if useScaleAndOffset == True:
+                x = (x * globalScale.x) + globalOffset.x
+                y = (y * globalScale.y) + globalOffset.y
+                z = (z * globalScale.z) + globalOffset.z
+            createPoint(stroke, j, (x, y, z), pressure, strength)
 
 def exportSculptrVrCsv(filepath=None, strokes=None, sphereRadius=10, octreeSize=7, vol_scale=0.33, mtl_val=255, file_format="sphere"):
     file_format = file_format.lower()
@@ -4706,7 +4742,7 @@ class LightningArtistToolkitPreferences(bpy.types.AddonPreferences):
 
     extraFormats_SculptrVR = bpy.props.BoolProperty(
         name = 'SculptrVR CSV',
-        description = "SculptrVR CSV export",
+        description = "SculptrVR CSV import/export",
         default = True
     )
 
@@ -4714,18 +4750,19 @@ class LightningArtistToolkitPreferences(bpy.types.AddonPreferences):
         layout = self.layout
         layout.label("Add menu items to import:")
         layout.prop(self, "extraFormats_TiltBrush")
-        layout.prop(self, "extraFormats_GML")
+        layout.prop(self, "extraFormats_SculptrVR")
         layout.prop(self, "extraFormats_ASC")
+        layout.prop(self, "extraFormats_GML")
         layout.prop(self, "extraFormats_Norman")
         layout.prop(self, "extraFormats_VRDoodler")
         #~
         layout.label("Add menu items to export:")
-        layout.prop(self, "extraFormats_GML")
+        layout.prop(self, "extraFormats_SculptrVR")
         layout.prop(self, "extraFormats_ASC")
+        layout.prop(self, "extraFormats_GML")
         layout.prop(self, "extraFormats_Painter")
         layout.prop(self, "extraFormats_SVG")
         layout.prop(self, "extraFormats_FBXSequence")
-        layout.prop(self, "extraFormats_SculptrVR")
 
 
 class ImportLatk(bpy.types.Operator, ImportHelper):
@@ -4844,6 +4881,31 @@ class ImportASC(bpy.types.Operator, ImportHelper):
         #~
         keywords["strokeLength"] = self.strokeLength
         la.importAsc(**keywords)
+        return {'FINISHED'} 
+
+
+class ImportSculptrVR(bpy.types.Operator, ImportHelper):
+    """Load an ASC point cloud"""
+    bl_idname = "import_scene.sculptrvr"
+    bl_label = "Import SculptrVR CSV"
+    bl_options = {'PRESET', 'UNDO'}
+
+    filename_ext = ".csv"
+    filter_glob = StringProperty(
+            default="*.csv",
+            options={'HIDDEN'},
+            )
+
+    strokeLength = IntProperty(name="Points per Stroke", description="Group every n points into strokes", default=1)
+
+    def execute(self, context):
+        import latk as la
+        keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode"))
+        if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
+            import os
+        #~
+        keywords["strokeLength"] = self.strokeLength
+        la.importSculptrVr(**keywords)
         return {'FINISHED'} 
 
 
@@ -5590,10 +5652,12 @@ def menu_func_import(self, context):
     #~
     if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_TiltBrush == True):
         self.layout.operator(ImportTiltBrush.bl_idname, text="Latk - Tilt Brush (.tilt, .json)")
-    if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_GML == True):
-        self.layout.operator(ImportGml.bl_idname, text="Latk - GML (.gml)")
+    if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_SculptrVR == True):
+        self.layout.operator(ImportSculptrVR.bl_idname, text="Latk - SculptrVR (.csv)")
     if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_ASC == True):
         self.layout.operator(ImportASC.bl_idname, text="Latk - ASC (.asc, .xyz)")
+    if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_GML == True):
+        self.layout.operator(ImportGml.bl_idname, text="Latk - GML (.gml)")
     if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_Norman == True):
         self.layout.operator(ImportNorman.bl_idname, text="Latk - NormanVR (.json)")
     if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_VRDoodler == True):
@@ -5605,18 +5669,16 @@ def menu_func_export(self, context):
     #~
     if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_SculptrVR == True):
         self.layout.operator(ExportSculptrVR.bl_idname, text="Latk - SculptrVR (.csv)")
-    if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_FBXSequence == True):
-        self.layout.operator(ExportFbxSequence.bl_idname, text="Latk - FBX Sequence (.fbx)")
-    if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_GML == True):
-        self.layout.operator(ExportGml.bl_idname, text="Latk - GML (.gml)")
     if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_ASC == True):
         self.layout.operator(ExportASC.bl_idname, text="Latk - ASC (.asc)")
-    if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_SVG == True):
-        self.layout.operator(ExportSvg.bl_idname, text="Latk - SVG SMIL (.svg)")
+    if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_GML == True):
+        self.layout.operator(ExportGml.bl_idname, text="Latk - GML (.gml)")
     if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_Painter == True):
         self.layout.operator(ExportPainter.bl_idname, text="Latk - Corel Painter (.txt)")
-
-#classes = (FreestyleGPencil, FreestyleGPencil_Panel)
+    if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_SVG == True):
+        self.layout.operator(ExportSvg.bl_idname, text="Latk - SVG SMIL (.svg)")
+    if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_FBXSequence == True):
+        self.layout.operator(ExportFbxSequence.bl_idname, text="Latk - FBX Sequence (.fbx)")
 
 def register():
     bpy.utils.register_module(__name__)
@@ -5625,15 +5687,10 @@ def register():
     bpy.types.INFO_MT_file_import.append(menu_func_import)
     bpy.types.INFO_MT_file_export.append(menu_func_export)
 
-    # freestyle
-    #for cls in classes:
-        #bpy.utils.register_class(cls)
     bpy.types.Scene.freestyle_gpencil_export = PointerProperty(type=FreestyleGPencil)
-    #~
+    
     parameter_editor.callbacks_lineset_pre.append(export_fill)
     parameter_editor.callbacks_lineset_post.append(export_stroke)
-    # bpy.app.handlers.render_post.append(export_stroke)
-    #print("anew")
 
 def unregister():
     bpy.utils.unregister_module(__name__)
@@ -5642,11 +5699,8 @@ def unregister():
     bpy.types.INFO_MT_file_import.remove(menu_func_import)
     bpy.types.INFO_MT_file_export.remove(menu_func_export)
 
-    # freestyle
-    #for cls in classes:
-        #bpy.utils.register_class(cls)
     del bpy.types.Scene.freestyle_gpencil_export
-    #~
+    
     parameter_editor.callbacks_lineset_pre.remove(export_fill)
     parameter_editor.callbacks_lineset_post.remove(export_stroke)
 
