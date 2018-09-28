@@ -726,7 +726,7 @@ class LatkProperties_Panel(bpy.types.Panel):
 
         row = layout.row()
         row.operator("latk_button.gpmesh_singleframe")
-
+     
         row = layout.row()
         row.prop(latk, "thickness")
         row.prop(latk, "resolution")
@@ -740,12 +740,12 @@ class LatkProperties_Panel(bpy.types.Panel):
         row.operator("latk_button.dn")
 
         row = layout.row()
-        row.prop(latk, "remesh_mode", expand=True)
-
-        row = layout.row()
         row.prop(latk, "bakeMesh")
         row.prop(latk, "saveLayers")
         row.prop(latk, "vertexColorName")
+        
+        row = layout.row()
+        row.prop(latk, "remesh_mode", expand=True)
 
         row = layout.row()
         row.prop(latk, "material_set_mode")

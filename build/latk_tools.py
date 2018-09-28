@@ -1,5 +1,75 @@
 # 2 of 10. TOOLS
 
+def breakUpStrokes():
+    gp = getActiveGp()
+    for layer in gp.layers:
+        for frame in layer.frames:
+            tempPoints = []
+            tempColors = []
+            for stroke in frame.strokes:
+                for point in stroke.points:
+                    tempPoints.append(point)
+                    tempColors.append(stroke.color)
+            #~
+            for stroke in frame.strokes:
+                frame.strokes.remove(stroke)     
+            #~  
+            for i in range(0, len(tempPoints)):
+                point = tempPoints[i]
+                color = tempColors[i]
+                #~
+                stroke = frame.strokes.new(color.name)
+                stroke.draw_mode = "3DSPACE"
+                stroke.points.add(1)
+                coord = point.co
+                createPoint(stroke, 0, (coord[0], coord[1], coord[2]), point.pressure, point.strength)
+
+def normalizePoints(minVal=0.0, maxVal=1.0):
+    gp = getActiveGp()
+    allX = []
+    allY = []
+    allZ = []
+    for layer in gp.layers:
+        for frame in layer.frames:
+            for stroke in frame.strokes:
+                for point in stroke.points:
+                    coord = point.co
+                    allX.append(coord[0])
+                    allY.append(coord[1])
+                    allZ.append(coord[2])
+    allX.sort()
+    allY.sort()
+    allZ.sort()
+    #~
+    leastValArray = [ allX[0], allY[0], allZ[0] ]
+    mostValArray = [ allX[len(allX)-1], allY[len(allY)-1], allZ[len(allZ)-1] ]
+    leastValArray.sort()
+    mostValArray.sort()
+    leastVal = leastValArray[0]
+    mostVal = mostValArray[2]
+    valRange = mostVal - leastVal
+    #~
+    xRange = (allX[len(allX)-1] - allX[0]) / valRange
+    yRange = (allY[len(allY)-1] - allY[0]) / valRange
+    zRange = (allZ[len(allZ)-1] - allZ[0]) / valRange
+    #~
+    minValX = minVal * xRange
+    minValY = minVal * yRange
+    minValZ = minVal * zRange
+    maxValX = maxVal * xRange
+    maxValY = maxVal * yRange
+    maxValZ = maxVal * zRange
+    #~
+    for layer in gp.layers:
+        for frame in layer.frames:
+            for stroke in frame.strokes:
+                for point in stroke.points:  
+                    coord = point.co
+                    x = remap(coord[0], allX[0], allX[len(allX)-1], minValX, maxValX)
+                    y = remap(coord[1], allY[0], allY[len(allY)-1], minValY, maxValY)
+                    z = remap(coord[2], allZ[0], allZ[len(allZ)-1], minValZ, maxValZ)
+                    point.co = (x,y,z)
+
 def scalePoints(val=0.01):
     strokes = getAllStrokes()
     for stroke in strokes:
