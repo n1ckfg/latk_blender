@@ -54,7 +54,7 @@ class LightningArtistToolkitPreferences(bpy.types.AddonPreferences):
     extraFormats_SculptrVR = bpy.props.BoolProperty(
         name = 'SculptrVR CSV',
         description = "SculptrVR CSV import/export",
-        default = False
+        default = True
     )
 
     def draw(self, context):

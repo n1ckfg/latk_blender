@@ -2439,12 +2439,31 @@ def exportSculptrVrCsv(filepath=None, strokes=None, sphereRadius=10, octreeSize=
     allY.sort()
     allZ.sort()
 
+    leastValArray = [ allX[0], allY[0], allZ[0] ]
+    mostValArray = [ allX[len(allX)-1], allY[len(allY)-1], allZ[len(allZ)-1] ]
+    leastValArray.sort()
+    mostValArray.sort()
+    leastVal = leastValArray[0]
+    mostVal = mostValArray[2]
+    valRange = mostVal - leastVal
+
+    xRange = (allX[len(allX)-1] - allX[0]) / valRange
+    yRange = (allY[len(allY)-1] - allY[0]) / valRange
+    zRange = (allZ[len(allZ)-1] - allZ[0]) / valRange
+
     minVal = -1500.0
     maxVal = 1500.0
     if (file_format == "legacy"):
         minVal, maxVal = getSculptrVrVolRes(0)
     elif (file_format == "single"):
         minVal, maxVal = getSculptrVrVolRes(octreeSize)
+
+    minValX = minVal * xRange * vol_scale
+    minValY = minVal * yRange * vol_scale
+    minValZ = minVal * zRange * vol_scale
+    maxValX = maxVal * xRange * vol_scale
+    maxValY = maxVal * yRange * vol_scale
+    maxValZ = maxVal * zRange * vol_scale
 
     for stroke in strokes:
         for point in stroke.points:
@@ -2457,17 +2476,17 @@ def exportSculptrVrCsv(filepath=None, strokes=None, sphereRadius=10, octreeSize=
             b = int(color[2] * 255)
             coord = point.co
             if (file_format == "sphere"):
-                x = remap(coord[0], allX[0], allX[len(allX)-1], minVal * vol_scale, maxVal * vol_scale)
-                y = remap(coord[1], allY[0], allY[len(allY)-1], minVal * vol_scale, maxVal * vol_scale)
-                z = remap(coord[2], allZ[0], allZ[len(allZ)-1], minVal * vol_scale, maxVal * vol_scale)
+                x = remap(coord[0], allX[0], allX[len(allX)-1], minValX, maxValX)
+                y = remap(coord[1], allY[0], allY[len(allY)-1], minValY, maxValY)
+                z = remap(coord[2], allZ[0], allZ[len(allZ)-1], minValZ, maxValZ)
                 pressure = remap(point.pressure, 0.0, 1.0, sphereRadius/100.0, sphereRadius)
                 if (pressure < 0.01):
                 	pressure = 0.01
                 csvData.append([x, y, z, pressure, r, g, b])
             else:
-                x = remapInt(coord[0], allX[0], allX[len(allX)-1], int(minVal * vol_scale), int(maxVal * vol_scale))
-                y = remapInt(coord[1], allY[0], allY[len(allY)-1], int(minVal * vol_scale), int(maxVal * vol_scale))
-                z = remapInt(coord[2], allZ[0], allZ[len(allZ)-1], int(minVal * vol_scale), int(maxVal * vol_scale))
+                x = remapInt(coord[0], allX[0], allX[len(allX)-1], int(minValX), int(maxValX))
+                y = remapInt(coord[1], allY[0], allY[len(allY)-1], int(minValY), int(maxValY))
+                z = remapInt(coord[2], allZ[0], allZ[len(allZ)-1], int(minValZ), int(maxValZ))
                 csvData.append([x, y, z, octreeSize, r, g, b, mtl_val])
 
     #csvData = sorted(csvDataInt, key=lambda x: x[1])
@@ -4743,7 +4762,7 @@ class LightningArtistToolkitPreferences(bpy.types.AddonPreferences):
     extraFormats_SculptrVR = bpy.props.BoolProperty(
         name = 'SculptrVR CSV',
         description = "SculptrVR CSV import/export",
-        default = False
+        default = True
     )
 
     def draw(self, context):
