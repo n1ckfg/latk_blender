@@ -255,6 +255,8 @@ def setMtlShader(shader="diffuse", mtl=None):
         destNode.inputs["BaseColor"].default_value = (col[0], col[1], col[2], 1) # RGBA
         destNode.inputs["BaseColorFactor"].default_value = (col[0], col[1], col[2], 1) # RGBA
         destNode.inputs["MetallicRoughness"].default_value = (col[0], col[1], col[2], 1) # RGBA
+        destNode.inputs["MetallicFactor"].default_value = 0.5
+        destNode.inputs["RoughnessFactor"].default_value = 0.5
     else:
         destNode = nodes.new(type="ShaderNodeBsdfDiffuse")
         destNode.inputs[0].default_value = (col[0], col[1], col[2], 1) # RGBA
