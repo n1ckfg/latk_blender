@@ -255,6 +255,8 @@ class ExportLatkJson(bpy.types.Operator, ExportHelper): # TODO combine into one 
     """Save a Latk Json File"""
 
     bake = BoolProperty(name="Bake Frames", description="Bake Keyframes to All Frames", default=False)
+    roundValues = BoolProperty(name="Round Values", description="Round Values to Reduce Filesize", default=True)    
+    numPlaces = IntProperty(name="Number Places", description="Number of Decimal Places", default=7)
 
     bl_idname = "export_scene.latkjson"
     bl_label = 'Export Latk Json'
@@ -269,11 +271,13 @@ class ExportLatkJson(bpy.types.Operator, ExportHelper): # TODO combine into one 
 
     def execute(self, context):
         import latk as la
-        keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "check_existing", "bake"))
+        keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "check_existing", "bake", "roundValues", "numPlaces"))
         if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
             import os
         #~
         keywords["bake"] = self.bake
+        keywords["roundValues"] = self.roundValues
+        keywords["numPlaces"] = self.numPlaces
         #~
         la.writeBrushStrokes(**keywords, zipped=False)
         return {'FINISHED'}
@@ -282,6 +286,8 @@ class ExportLatk(bpy.types.Operator, ExportHelper):  # TODO combine into one cla
     """Save a Latk File"""
 
     bake = BoolProperty(name="Bake Frames", description="Bake Keyframes to All Frames", default=False)
+    roundValues = BoolProperty(name="Round Values", description="Round Values to Reduce Filesize", default=True)    
+    numPlaces = IntProperty(name="Number Places", description="Number of Decimal Places", default=7)
 
     bl_idname = "export_scene.latk"
     bl_label = 'Export Latk'
@@ -296,11 +302,13 @@ class ExportLatk(bpy.types.Operator, ExportHelper):  # TODO combine into one cla
 
     def execute(self, context):
         import latk as la
-        keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "check_existing", "bake"))
+        keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "check_existing", "bake", "roundValues", "numPlaces"))
         if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
             import os
         #~
         keywords["bake"] = self.bake
+        keywords["roundValues"] = self.roundValues
+        keywords["numPlaces"] = self.numPlaces
         #~
         la.writeBrushStrokes(**keywords, zipped=True)
         return {'FINISHED'}

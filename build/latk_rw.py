@@ -138,7 +138,7 @@ def getFileName(stripExtension=True):
     return name
 
 # http://blender.stackexchange.com/questions/24694/query-grease-pencil-strokes-from-python
-def writeBrushStrokes(filepath=None, bake=True, zipped=False):
+def writeBrushStrokes(filepath=None, bake=True, roundValues=True, numPlaces=7, zipped=False):
     url = filepath # compatibility with gui keywords
     #~
     if(bake == True):
@@ -147,8 +147,8 @@ def writeBrushStrokes(filepath=None, bake=True, zipped=False):
     globalScale = Vector((0.1, 0.1, 0.1))
     globalOffset = Vector((0, 0, 0))
     useScaleAndOffset = True
-    numPlaces = 7
-    roundValues = False
+    #numPlaces = 7
+    #roundValues = True
     palette = getActivePalette()
     #~
     sg = []
@@ -207,7 +207,7 @@ def writeBrushStrokes(filepath=None, bake=True, zipped=False):
                         if roundValues == True:
                             sb.append("\t\t\t\t\t\t\t\t\t\t{\"co\": [" + roundVal(x, numPlaces) + ", " + roundVal(y, numPlaces) + ", " + roundVal(z, numPlaces) + "], \"pressure\": " + roundVal(pressure, numPlaces) + ", \"strength\": " + roundVal(strength, numPlaces))
                         else:
-                            sb.append("\t\t\t\t\t\t\t\t\t\t{\"co\": [" + str(x) + ", " + str(y) + ", " + str(z) + "], \"pressure\": " + pressure + ", \"strength\": " + strength)                  
+                            sb.append("\t\t\t\t\t\t\t\t\t\t{\"co\": [" + str(x) + ", " + str(y) + ", " + str(z) + "], \"pressure\": " + str(pressure) + ", \"strength\": " + str(strength))                  
                         #~
                         if j == len(stroke.points) - 1:
                             sb[len(sb)-1] +="}"
@@ -499,8 +499,8 @@ def importVRDoodler(filepath=None):
     globalScale = Vector((1, 1, 1))
     globalOffset = Vector((0, 0, 0))
     useScaleAndOffset = True
-    numPlaces = 7
-    roundValues = False
+    #numPlaces = 7
+    #roundValues = True
 
     with open(filepath) as data_file: 
         data = data_file.readlines()
@@ -544,8 +544,8 @@ def importNorman(filepath=None):
     globalScale = Vector((1, 1, 1))
     globalOffset = Vector((0, 0, 0))
     useScaleAndOffset = True
-    numPlaces = 7
-    roundValues = False
+    #numPlaces = 7
+    #roundValues = True
     #~
     with open(filepath) as data_file: 
         data = json.load(data_file)
@@ -727,8 +727,8 @@ def writeGml(filepath=None, make2d=False):
     globalScale = (1, 1, 1)
     globalOffset = (0, 0, 0)
     useScaleAndOffset = True
-    numPlaces = 7
-    roundValues = False
+    #numPlaces = 7
+    #roundValues = True
     #~
     frame = getActiveFrame()
     strokes = frame.strokes
@@ -884,8 +884,8 @@ def importAsc(filepath=None, strokeLength=1):
     globalScale = Vector((1, 1, 1))
     globalOffset = Vector((0, 0, 0))
     useScaleAndOffset = True
-    numPlaces = 7
-    roundValues = False
+    #numPlaces = 7
+    #roundValues = True
 
     with open(filepath) as data_file: 
         data = data_file.readlines()
@@ -970,8 +970,8 @@ def importSculptrVr(filepath=None, strokeLength=1, scale=0.01, startLine=1):
     globalScale = Vector((scale, scale, scale))
     globalOffset = Vector((0, 0, 0))
     useScaleAndOffset = True
-    numPlaces = 7
-    roundValues = False
+    #numPlaces = 7
+    #roundValues = True
 
     with open(filepath) as data_file: 
         data = data_file.readlines()

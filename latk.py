@@ -1578,7 +1578,7 @@ def getFileName(stripExtension=True):
     return name
 
 # http://blender.stackexchange.com/questions/24694/query-grease-pencil-strokes-from-python
-def writeBrushStrokes(filepath=None, bake=True, zipped=False):
+def writeBrushStrokes(filepath=None, bake=True, roundValues=True, numPlaces=7, zipped=False):
     url = filepath # compatibility with gui keywords
     #~
     if(bake == True):
@@ -1587,8 +1587,8 @@ def writeBrushStrokes(filepath=None, bake=True, zipped=False):
     globalScale = Vector((0.1, 0.1, 0.1))
     globalOffset = Vector((0, 0, 0))
     useScaleAndOffset = True
-    numPlaces = 7
-    roundValues = False
+    #numPlaces = 7
+    #roundValues = True
     palette = getActivePalette()
     #~
     sg = []
@@ -1647,7 +1647,7 @@ def writeBrushStrokes(filepath=None, bake=True, zipped=False):
                         if roundValues == True:
                             sb.append("\t\t\t\t\t\t\t\t\t\t{\"co\": [" + roundVal(x, numPlaces) + ", " + roundVal(y, numPlaces) + ", " + roundVal(z, numPlaces) + "], \"pressure\": " + roundVal(pressure, numPlaces) + ", \"strength\": " + roundVal(strength, numPlaces))
                         else:
-                            sb.append("\t\t\t\t\t\t\t\t\t\t{\"co\": [" + str(x) + ", " + str(y) + ", " + str(z) + "], \"pressure\": " + pressure + ", \"strength\": " + strength)                  
+                            sb.append("\t\t\t\t\t\t\t\t\t\t{\"co\": [" + str(x) + ", " + str(y) + ", " + str(z) + "], \"pressure\": " + str(pressure) + ", \"strength\": " + str(strength))                  
                         #~
                         if j == len(stroke.points) - 1:
                             sb[len(sb)-1] +="}"
@@ -1939,8 +1939,8 @@ def importVRDoodler(filepath=None):
     globalScale = Vector((1, 1, 1))
     globalOffset = Vector((0, 0, 0))
     useScaleAndOffset = True
-    numPlaces = 7
-    roundValues = False
+    #numPlaces = 7
+    #roundValues = True
 
     with open(filepath) as data_file: 
         data = data_file.readlines()
@@ -1984,8 +1984,8 @@ def importNorman(filepath=None):
     globalScale = Vector((1, 1, 1))
     globalOffset = Vector((0, 0, 0))
     useScaleAndOffset = True
-    numPlaces = 7
-    roundValues = False
+    #numPlaces = 7
+    #roundValues = True
     #~
     with open(filepath) as data_file: 
         data = json.load(data_file)
@@ -2167,8 +2167,8 @@ def writeGml(filepath=None, make2d=False):
     globalScale = (1, 1, 1)
     globalOffset = (0, 0, 0)
     useScaleAndOffset = True
-    numPlaces = 7
-    roundValues = False
+    #numPlaces = 7
+    #roundValues = True
     #~
     frame = getActiveFrame()
     strokes = frame.strokes
@@ -2324,8 +2324,8 @@ def importAsc(filepath=None, strokeLength=1):
     globalScale = Vector((1, 1, 1))
     globalOffset = Vector((0, 0, 0))
     useScaleAndOffset = True
-    numPlaces = 7
-    roundValues = False
+    #numPlaces = 7
+    #roundValues = True
 
     with open(filepath) as data_file: 
         data = data_file.readlines()
@@ -2410,8 +2410,8 @@ def importSculptrVr(filepath=None, strokeLength=1, scale=0.01, startLine=1):
     globalScale = Vector((scale, scale, scale))
     globalOffset = Vector((0, 0, 0))
     useScaleAndOffset = True
-    numPlaces = 7
-    roundValues = False
+    #numPlaces = 7
+    #roundValues = True
 
     with open(filepath) as data_file: 
         data = data_file.readlines()
@@ -5035,6 +5035,8 @@ class ExportLatkJson(bpy.types.Operator, ExportHelper): # TODO combine into one 
     """Save a Latk Json File"""
 
     bake = BoolProperty(name="Bake Frames", description="Bake Keyframes to All Frames", default=False)
+    roundValues = BoolProperty(name="Round Values", description="Round Values to Reduce Filesize", default=True)    
+    numPlaces = IntProperty(name="Number Places", description="Number of Decimal Places", default=7)
 
     bl_idname = "export_scene.latkjson"
     bl_label = 'Export Latk Json'
@@ -5049,11 +5051,13 @@ class ExportLatkJson(bpy.types.Operator, ExportHelper): # TODO combine into one 
 
     def execute(self, context):
         import latk as la
-        keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "check_existing", "bake"))
+        keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "check_existing", "bake", "roundValues", "numPlaces"))
         if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
             import os
         #~
         keywords["bake"] = self.bake
+        keywords["roundValues"] = self.roundValues
+        keywords["numPlaces"] = self.numPlaces
         #~
         la.writeBrushStrokes(**keywords, zipped=False)
         return {'FINISHED'}
@@ -5062,6 +5066,8 @@ class ExportLatk(bpy.types.Operator, ExportHelper):  # TODO combine into one cla
     """Save a Latk File"""
 
     bake = BoolProperty(name="Bake Frames", description="Bake Keyframes to All Frames", default=False)
+    roundValues = BoolProperty(name="Round Values", description="Round Values to Reduce Filesize", default=True)    
+    numPlaces = IntProperty(name="Number Places", description="Number of Decimal Places", default=7)
 
     bl_idname = "export_scene.latk"
     bl_label = 'Export Latk'
@@ -5076,11 +5082,13 @@ class ExportLatk(bpy.types.Operator, ExportHelper):  # TODO combine into one cla
 
     def execute(self, context):
         import latk as la
-        keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "check_existing", "bake"))
+        keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "check_existing", "bake", "roundValues", "numPlaces"))
         if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
             import os
         #~
         keywords["bake"] = self.bake
+        keywords["roundValues"] = self.roundValues
+        keywords["numPlaces"] = self.numPlaces
         #~
         la.writeBrushStrokes(**keywords, zipped=True)
         return {'FINISHED'}
