@@ -148,7 +148,7 @@ def writeBrushStrokes(filepath=None, bake=True, zipped=False):
     globalOffset = Vector((0, 0, 0))
     useScaleAndOffset = True
     numPlaces = 7
-    roundValues = True
+    roundValues = False
     palette = getActivePalette()
     #~
     sg = []
@@ -500,7 +500,7 @@ def importVRDoodler(filepath=None):
     globalOffset = Vector((0, 0, 0))
     useScaleAndOffset = True
     numPlaces = 7
-    roundValues = True
+    roundValues = False
 
     with open(filepath) as data_file: 
         data = data_file.readlines()
@@ -545,7 +545,7 @@ def importNorman(filepath=None):
     globalOffset = Vector((0, 0, 0))
     useScaleAndOffset = True
     numPlaces = 7
-    roundValues = True
+    roundValues = False
     #~
     with open(filepath) as data_file: 
         data = json.load(data_file)
@@ -728,7 +728,7 @@ def writeGml(filepath=None, make2d=False):
     globalOffset = (0, 0, 0)
     useScaleAndOffset = True
     numPlaces = 7
-    roundValues = True
+    roundValues = False
     #~
     frame = getActiveFrame()
     strokes = frame.strokes
@@ -885,7 +885,7 @@ def importAsc(filepath=None, strokeLength=1):
     globalOffset = Vector((0, 0, 0))
     useScaleAndOffset = True
     numPlaces = 7
-    roundValues = True
+    roundValues = False
 
     with open(filepath) as data_file: 
         data = data_file.readlines()
@@ -971,7 +971,7 @@ def importSculptrVr(filepath=None, strokeLength=1, scale=0.01, startLine=1):
     globalOffset = Vector((0, 0, 0))
     useScaleAndOffset = True
     numPlaces = 7
-    roundValues = True
+    roundValues = False
 
     with open(filepath) as data_file: 
         data = data_file.readlines()
