@@ -85,27 +85,28 @@ from io import BytesIO
 
 def breakUpStrokes():
     gp = getActiveGp()
+    palette = getActivePalette()
     for layer in gp.layers:
         for frame in layer.frames:
             tempPoints = []
-            tempColors = []
+            tempColorNames = []
             for stroke in frame.strokes:
                 for point in stroke.points:
                     tempPoints.append(point)
-                    tempColors.append(stroke.color)
+                    tempColorNames.append(stroke.colorname)
             #~
             for stroke in frame.strokes:
                 frame.strokes.remove(stroke)     
             #~  
-            for i in range(0, len(tempPoints)):
-                point = tempPoints[i]
-                color = tempColors[i]
-                #~
-                stroke = frame.strokes.new(color.name)
+            for i, point in enumerate(tempPoints):
+                stroke = frame.strokes.new(tempColorNames[i])
                 stroke.draw_mode = "3DSPACE"
                 stroke.points.add(1)
                 coord = point.co
                 createPoint(stroke, 0, (coord[0], coord[1], coord[2]), point.pressure, point.strength)
+
+
+
 
 def normalizePoints(minVal=0.0, maxVal=1.0):
     gp = getActiveGp()
