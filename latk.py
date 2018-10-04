@@ -3893,8 +3893,11 @@ def makeCurve(coords, pressures, resolution=2, thickness=0.1, bevelResolution=1,
     '''
     #~
     # adding an extra point to the beginning helps with smoothing
-    coords.insert(0, coords[0])
-    pressures.insert(0, pressures[0])
+    try:
+    	coords.insert(0, coords[0])
+    	pressures.insert(0, pressures[0])
+    except:
+    	pass
 
     curveData = bpy.data.curves.new('latk', type='CURVE')
     curveData.dimensions = '3D'
