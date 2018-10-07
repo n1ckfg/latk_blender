@@ -764,6 +764,11 @@ class LatkProperties_Panel(bpy.types.Panel):
 
         row = layout.row()
         row.operator("latk_button.booleanmod") 
+        row.operator("latk_button.booleanmodminus") 
+        row.operator("latk_button.makeloop") 
+
+        row = layout.row()
+        row.operator("latk_button.smoothmod") 
         row.operator("latk_button.subsurfmod") 
         row.operator("latk_button.makeroot") 
 
@@ -778,7 +783,6 @@ class LatkProperties_Panel(bpy.types.Panel):
         #row.prop(latk, "fast_colors")
         row.operator("latk_button.strokesfrommesh")
         row.operator("latk_button.pointstoggle")
-
 
         # ~ ~ ~ 
 
@@ -801,8 +805,18 @@ class LatkProperties_Panel(bpy.types.Panel):
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 
+class Latk_Button_MakeLoop(bpy.types.Operator):
+    """Loop all latk keyframes"""
+    bl_idname = "latk_button.makeloop"
+    bl_label = "Loop"
+    bl_options = {'UNDO'}
+    
+    def execute(self, context):
+        makeLoop()
+        return {'FINISHED'}
+
 class Latk_Button_MakeRoot(bpy.types.Operator):
-    """Mesh all GP strokes. Takes a while.."""
+    """Parent all latk objects to locator"""
     bl_idname = "latk_button.makeroot"
     bl_label = "Root"
     bl_options = {'UNDO'}
@@ -812,7 +826,7 @@ class Latk_Button_MakeRoot(bpy.types.Operator):
         return {'FINISHED'}
 
 class Latk_Button_HideScale(bpy.types.Operator):
-    """Mesh all GP strokes. Takes a while.."""
+    """Replace hide keyframes on latk objects with scale keyframes"""
     bl_idname = "latk_button.hidescale"
     bl_label = "Hide Scale"
     bl_options = {'UNDO'}
@@ -822,23 +836,43 @@ class Latk_Button_HideScale(bpy.types.Operator):
         return {'FINISHED'}
 
 class Latk_Button_BooleanMod(bpy.types.Operator):
-    """Mesh all GP strokes. Takes a while.."""
+    """Boolean union and bake"""
     bl_idname = "latk_button.booleanmod"
-    bl_label = "Bool"
+    bl_label = "Bool+"
     bl_options = {'UNDO'}
     
     def execute(self, context):
-        booleanMod()
+        booleanMod(op="union")
+        return {'FINISHED'}
+
+class Latk_Button_BooleanModMinus(bpy.types.Operator):
+    """Boolean difference and bake"""
+    bl_idname = "latk_button.booleanmodminus"
+    bl_label = "Bool-"
+    bl_options = {'UNDO'}
+    
+    def execute(self, context):
+        booleanMod(op="difference")
         return {'FINISHED'}
 
 class Latk_Button_SubsurfMod(bpy.types.Operator):
-    """Mesh all GP strokes. Takes a while.."""
+    """Subdivide one level and bake"""
     bl_idname = "latk_button.subsurfmod"
     bl_label = "Subd"
     bl_options = {'UNDO'}
     
     def execute(self, context):
         subsurfMod()
+        return {'FINISHED'}
+
+class Latk_Button_SmoothMod(bpy.types.Operator):
+    """Smooth using defaults and bake"""
+    bl_idname = "latk_button.smoothmod"
+    bl_label = "Smooth"
+    bl_options = {'UNDO'}
+    
+    def execute(self, context):
+        smoothMod()
         return {'FINISHED'}
 
 class Latk_Button_Gpmesh(bpy.types.Operator):

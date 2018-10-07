@@ -401,6 +401,14 @@ def subsurfMod(target=None):
             bpy.ops.object.modifier_add(type="SUBSURF")
             bpy.ops.object.modifier_apply(apply_as='DATA', modifier="Subsurf")
 
+def smoothMod(target=None):
+    if not target:
+        target=s()
+    for obj in target:
+            bpy.context.scene.objects.active = obj
+            bpy.ops.object.modifier_add(type="SMOOTH")
+            bpy.ops.object.modifier_apply(apply_as='DATA', modifier="Smooth")
+
 def polyCube(pos=(0,0,0), scale=(1,1,1), rot=(0,0,0)):
     bpy.ops.mesh.primitive_cube_add()
     cube = s()[0]

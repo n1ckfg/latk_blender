@@ -1,5 +1,19 @@
 # 2 of 10. TOOLS
 
+def makeLoop():
+    target = matchName("latk")
+    ctx = fixContext()
+    #~
+    for obj in target:
+        fixContext("VIEW_3D")
+        bpy.ops.object.select_all(action='DESELECT')
+        obj.select = True
+        bpy.context.scene.objects.active = obj # last object will be the parent
+        fixContext("GRAPH_EDITOR")
+        bpy.ops.graph.extrapolation_type(type='MAKE_CYCLIC')
+    #~
+    returnContext(ctx)
+
 def breakUpStrokes():
     gp = getActiveGp()
     palette = getActivePalette()
@@ -21,9 +35,6 @@ def breakUpStrokes():
                 stroke.points.add(1)
                 coord = point.co
                 createPoint(stroke, 0, (coord[0], coord[1], coord[2]), point.pressure, point.strength)
-
-
-
 
 def normalizePoints(minVal=0.0, maxVal=1.0):
     gp = getActiveGp()
