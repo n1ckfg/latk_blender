@@ -1,5 +1,18 @@
 # 2 of 10. TOOLS
 
+def resizeToFitGp():
+    gp = getActiveGp()
+    least = 0
+    most = 1
+    for layer in gp.layers:
+        for frame in layer.frames:
+            if frame.frame_number < least:
+                least = frame.frame_number
+            elif frame.frame_number > most:
+                most = frame.frame_number
+    setStartEnd(least + 1, most - 1)
+    return getStartEnd()
+
 def makeLoop():
     target = matchName("latk")
     origStart, origEnd = getStartEnd()
@@ -19,7 +32,7 @@ def makeLoop():
                 bpy.ops.graph.extrapolation_type(type='MAKE_CYCLIC')
     #~
     returnContext(ctx)
-    setStartEnd(origStart, origEnd)
+    setStartEnd(origStart, origEnd - 2)
 
 def breakUpStrokes():
     gp = getActiveGp()
