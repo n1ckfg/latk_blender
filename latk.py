@@ -85,17 +85,24 @@ from io import BytesIO
 
 def makeLoop():
     target = matchName("latk")
+    origStart, origEnd = getStartEnd()
+    setStartEnd(origStart-1, origEnd+1)
+    start, end = getStartEnd()
     ctx = fixContext()
     #~
     for obj in target:
         fixContext("VIEW_3D")
-        bpy.ops.object.select_all(action='DESELECT')
-        obj.select = True
-        bpy.context.scene.objects.active = obj # last object will be the parent
-        fixContext("GRAPH_EDITOR")
-        bpy.ops.graph.extrapolation_type(type='MAKE_CYCLIC')
+        for i in range(start, end):
+            goToFrame(i)
+            if (obj.hide == False):
+                bpy.ops.object.select_all(action='DESELECT')
+                obj.select = True
+                bpy.context.scene.objects.active = obj # last object will be the parent
+                fixContext("GRAPH_EDITOR")
+                bpy.ops.graph.extrapolation_type(type='MAKE_CYCLIC')
     #~
     returnContext(ctx)
+    setStartEnd(origStart, origEnd)
 
 def breakUpStrokes():
     gp = getActiveGp()
