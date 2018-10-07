@@ -540,6 +540,85 @@ def importVRDoodler(filepath=None):
             #~
             createPoint(stroke, l, (x, y, z), pressure, strength)
 
+def importPainter(filepath=None):
+    globalScale = Vector((1, 1, -1))
+    globalOffset = Vector((0, 0, 0))
+    useScaleAndOffset = True
+    #numPlaces = 7
+    #roundValues = True
+
+    gp = getActiveGp()
+    layer = gp.layers.new("Painter_layer", set_active=True)
+    start, end = getStartEnd()
+    frame = getActiveFrame()
+    if not frame:
+        frame = layer.frames.new(start)
+
+    width = 0
+    height = 0
+    points = []
+    pressures = []
+
+    with open(filepath) as data_file: 
+        data = data_file.readlines()
+
+    for line in data:
+        if (line.startswith("new")):
+            vals = line.split(" ")
+            for i, val in enumerate(vals):
+                if (val == "width"):
+                    width = float(vals[i+1])
+                elif (val == "height"):
+                    height = float(vals[i+1])
+        elif (line.startswith("color")):
+            r = 0
+            g = 0
+            b = 0
+            vals = line.split(" ")
+            for i, val in enumerate(vals):
+                if (val == "red"):
+                    r = float(vals[i+1]) / 255.0
+                if (val == "green"):
+                    g = float(vals[i+1]) / 255.0
+                if (val == "blue"):
+                    b = float(vals[i+1]) / 255.0
+            createColor((r, g, b))
+        elif (line.startswith("stroke_start")):
+            points = []
+            pressures = []
+        elif (line.startswith("pnt")):
+            vals = line.split(" ")
+            x = 0
+            y = 0
+            z = 0
+            pressure = 0
+            for i, val in enumerate(vals):
+                if (val == "x"):
+                    x = float(vals[i+1]) / width
+                elif (val == "y"):
+                    y = float(vals[i+1]) / height
+                elif (val == "prs"):
+                    pressure = float(vals[i+1])
+            points.append((x, y, z))
+            pressures.append(pressure)
+        elif (line.startswith("stroke_end")):
+            stroke = frame.strokes.new(getActiveColor().name)
+            stroke.draw_mode = "3DSPACE"
+            stroke.points.add(len(points))
+
+            for i in range(0, len(points)):
+                point = points[i]
+                x = point[0]
+                y = point[2]
+                z = point[1]
+                pressure = pressures[i]
+                strength = 1.0
+                if useScaleAndOffset == True:
+                    x = (x * globalScale.x) + globalOffset.x
+                    y = (y * globalScale.y) + globalOffset.y
+                    z = (z * globalScale.z) + globalOffset.z
+                createPoint(stroke, i, (x, y, z), pressure, strength)
+
 def importNorman(filepath=None):
     globalScale = Vector((1, 1, 1))
     globalOffset = Vector((0, 0, 0))

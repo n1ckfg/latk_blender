@@ -2012,6 +2012,85 @@ def importVRDoodler(filepath=None):
             #~
             createPoint(stroke, l, (x, y, z), pressure, strength)
 
+def importPainter(filepath=None):
+    globalScale = Vector((1, 1, -1))
+    globalOffset = Vector((0, 0, 0))
+    useScaleAndOffset = True
+    #numPlaces = 7
+    #roundValues = True
+
+    gp = getActiveGp()
+    layer = gp.layers.new("Painter_layer", set_active=True)
+    start, end = getStartEnd()
+    frame = getActiveFrame()
+    if not frame:
+        frame = layer.frames.new(start)
+
+    width = 0
+    height = 0
+    points = []
+    pressures = []
+
+    with open(filepath) as data_file: 
+        data = data_file.readlines()
+
+    for line in data:
+        if (line.startswith("new")):
+            vals = line.split(" ")
+            for i, val in enumerate(vals):
+                if (val == "width"):
+                    width = float(vals[i+1])
+                elif (val == "height"):
+                    height = float(vals[i+1])
+        elif (line.startswith("color")):
+            r = 0
+            g = 0
+            b = 0
+            vals = line.split(" ")
+            for i, val in enumerate(vals):
+                if (val == "red"):
+                    r = float(vals[i+1]) / 255.0
+                if (val == "green"):
+                    g = float(vals[i+1]) / 255.0
+                if (val == "blue"):
+                    b = float(vals[i+1]) / 255.0
+            createColor((r, g, b))
+        elif (line.startswith("stroke_start")):
+            points = []
+            pressures = []
+        elif (line.startswith("pnt")):
+            vals = line.split(" ")
+            x = 0
+            y = 0
+            z = 0
+            pressure = 0
+            for i, val in enumerate(vals):
+                if (val == "x"):
+                    x = float(vals[i+1]) / width
+                elif (val == "y"):
+                    y = float(vals[i+1]) / height
+                elif (val == "prs"):
+                    pressure = float(vals[i+1])
+            points.append((x, y, z))
+            pressures.append(pressure)
+        elif (line.startswith("stroke_end")):
+            stroke = frame.strokes.new(getActiveColor().name)
+            stroke.draw_mode = "3DSPACE"
+            stroke.points.add(len(points))
+
+            for i in range(0, len(points)):
+                point = points[i]
+                x = point[0]
+                y = point[2]
+                z = point[1]
+                pressure = pressures[i]
+                strength = 1.0
+                if useScaleAndOffset == True:
+                    x = (x * globalScale.x) + globalOffset.x
+                    y = (y * globalScale.y) + globalOffset.y
+                    z = (z * globalScale.z) + globalOffset.z
+                createPoint(stroke, i, (x, y, z), pressure, strength)
+
 def importNorman(filepath=None):
     globalScale = Vector((1, 1, 1))
     globalOffset = Vector((0, 0, 0))
@@ -4846,7 +4925,7 @@ class LightningArtistToolkitPreferences(bpy.types.AddonPreferences):
 
     extraFormats_Painter = bpy.props.BoolProperty(
         name = 'Corel Painter',
-        description = "Corel Painter script export",
+        description = "Corel Painter script import/export",
         default = False
     )
 
@@ -4887,6 +4966,7 @@ class LightningArtistToolkitPreferences(bpy.types.AddonPreferences):
         layout.prop(self, "extraFormats_SculptrVR")
         layout.prop(self, "extraFormats_ASC")
         layout.prop(self, "extraFormats_GML")
+        layout.prop(self, "extraFormats_Painter")
         layout.prop(self, "extraFormats_Norman")
         layout.prop(self, "extraFormats_VRDoodler")
         #~
@@ -5040,6 +5120,28 @@ class ImportSculptrVR(bpy.types.Operator, ImportHelper):
         #~
         keywords["strokeLength"] = self.strokeLength
         la.importSculptrVr(**keywords)
+        return {'FINISHED'} 
+
+
+class ImportPainter(bpy.types.Operator, ImportHelper):
+    """Load a Painter script"""
+    bl_idname = "import_scene.painter"
+    bl_label = "Import Painter"
+    bl_options = {'PRESET', 'UNDO'}
+
+    filename_ext = ".txt"
+    filter_glob = StringProperty(
+            default="*.txt",
+            options={'HIDDEN'},
+            )
+
+    def execute(self, context):
+        import latk as la
+        keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode"))
+        if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
+            import os
+        #~
+        la.importPainter(**keywords)
         return {'FINISHED'} 
 
 
@@ -5834,6 +5936,8 @@ def menu_func_import(self, context):
         self.layout.operator(ImportASC.bl_idname, text="Latk - ASC (.asc, .xyz)")
     if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_GML == True):
         self.layout.operator(ImportGml.bl_idname, text="Latk - GML (.gml)")
+    if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_Painter == True):
+        self.layout.operator(ImportPainter.bl_idname, text="Latk - Corel Painter (.txt)")
     if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_Norman == True):
         self.layout.operator(ImportNorman.bl_idname, text="Latk - NormanVR (.json)")
     if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_VRDoodler == True):

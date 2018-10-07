@@ -23,7 +23,7 @@ class LightningArtistToolkitPreferences(bpy.types.AddonPreferences):
 
     extraFormats_Painter = bpy.props.BoolProperty(
         name = 'Corel Painter',
-        description = "Corel Painter script export",
+        description = "Corel Painter script import/export",
         default = False
     )
 
@@ -64,6 +64,7 @@ class LightningArtistToolkitPreferences(bpy.types.AddonPreferences):
         layout.prop(self, "extraFormats_SculptrVR")
         layout.prop(self, "extraFormats_ASC")
         layout.prop(self, "extraFormats_GML")
+        layout.prop(self, "extraFormats_Painter")
         layout.prop(self, "extraFormats_Norman")
         layout.prop(self, "extraFormats_VRDoodler")
         #~
@@ -217,6 +218,28 @@ class ImportSculptrVR(bpy.types.Operator, ImportHelper):
         #~
         keywords["strokeLength"] = self.strokeLength
         la.importSculptrVr(**keywords)
+        return {'FINISHED'} 
+
+
+class ImportPainter(bpy.types.Operator, ImportHelper):
+    """Load a Painter script"""
+    bl_idname = "import_scene.painter"
+    bl_label = "Import Painter"
+    bl_options = {'PRESET', 'UNDO'}
+
+    filename_ext = ".txt"
+    filter_glob = StringProperty(
+            default="*.txt",
+            options={'HIDDEN'},
+            )
+
+    def execute(self, context):
+        import latk as la
+        keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode"))
+        if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
+            import os
+        #~
+        la.importPainter(**keywords)
         return {'FINISHED'} 
 
 
@@ -1011,6 +1034,8 @@ def menu_func_import(self, context):
         self.layout.operator(ImportASC.bl_idname, text="Latk - ASC (.asc, .xyz)")
     if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_GML == True):
         self.layout.operator(ImportGml.bl_idname, text="Latk - GML (.gml)")
+    if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_Painter == True):
+        self.layout.operator(ImportPainter.bl_idname, text="Latk - Corel Painter (.txt)")
     if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_Norman == True):
         self.layout.operator(ImportNorman.bl_idname, text="Latk - NormanVR (.json)")
     if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_VRDoodler == True):
