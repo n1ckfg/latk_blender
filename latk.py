@@ -104,7 +104,7 @@ def resizeToFitGp(activeLayer=False, trimEnds=False):
                 most = frame.frame_number        
     #~
     if (trimEnds == False):
-        setStartEnd(least, most)
+        setStartEnd(least, most - 1)
     else:
         setStartEnd(least + 1, most - 1)
     #~
