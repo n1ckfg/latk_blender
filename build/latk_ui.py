@@ -836,7 +836,7 @@ class Latk_Button_ScopeTimeline(bpy.types.Operator):
     bl_options = {'UNDO'}
     
     def execute(self, context):
-        resizeToFitGp(activeLayer=True)
+        resizeToFitGp(activeLayer=True, trimEnds=False)
         return {'FINISHED'}
 
 class Latk_Button_MakeLoop(bpy.types.Operator):

@@ -83,7 +83,7 @@ from io import BytesIO
 
 # 2 of 10. TOOLS
 
-def resizeToFitGp(activeLayer=False):
+def resizeToFitGp(activeLayer=False, trimEnds=False):
     least = 0
     most = 1
     #~
@@ -103,7 +103,11 @@ def resizeToFitGp(activeLayer=False):
             elif frame.frame_number > most:
                 most = frame.frame_number        
     #~
-    setStartEnd(least + 1, most - 1)
+    if (trimEnds == False):
+        setStartEnd(least, most)
+    else:
+        setStartEnd(least + 1, most - 1)
+    #~
     return getStartEnd()
 
 def makeLoop():
@@ -5748,7 +5752,7 @@ class Latk_Button_ScopeTimeline(bpy.types.Operator):
     bl_options = {'UNDO'}
     
     def execute(self, context):
-        resizeToFitGp(activeLayer=True)
+        resizeToFitGp(activeLayer=True, trimEnds=False)
         return {'FINISHED'}
 
 class Latk_Button_MakeLoop(bpy.types.Operator):
