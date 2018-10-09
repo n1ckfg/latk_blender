@@ -789,6 +789,7 @@ class LatkProperties_Panel(bpy.types.Panel):
         row.operator("latk_button.booleanmod") 
         row.operator("latk_button.booleanmodminus") 
         row.operator("latk_button.makeloop") 
+        row.operator("latk_button.scopetimeline") 
 
         row = layout.row()
         row.operator("latk_button.smoothmod") 
@@ -827,6 +828,16 @@ class LatkProperties_Panel(bpy.types.Panel):
 
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
+
+class Latk_Button_ScopeTimeline(bpy.types.Operator):
+    """Loop all latk keyframes"""
+    bl_idname = "latk_button.scopetimeline"
+    bl_label = "Scope"
+    bl_options = {'UNDO'}
+    
+    def execute(self, context):
+        resizeToFitGp(activeLayer=True)
+        return {'FINISHED'}
 
 class Latk_Button_MakeLoop(bpy.types.Operator):
     """Loop all latk keyframes"""

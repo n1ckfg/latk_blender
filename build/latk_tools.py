@@ -1,15 +1,25 @@
 # 2 of 10. TOOLS
 
-def resizeToFitGp():
-    gp = getActiveGp()
+def resizeToFitGp(activeLayer=False):
     least = 0
     most = 1
-    for layer in gp.layers:
+    #~
+    if (activeLayer == False):
+        gp = getActiveGp()
+        for layer in gp.layers:
+            for frame in layer.frames:
+                if frame.frame_number < least:
+                    least = frame.frame_number
+                elif frame.frame_number > most:
+                    most = frame.frame_number
+    else:
+        layer = getActiveLayer()
         for frame in layer.frames:
             if frame.frame_number < least:
                 least = frame.frame_number
             elif frame.frame_number > most:
-                most = frame.frame_number
+                most = frame.frame_number        
+    #~
     setStartEnd(least + 1, most - 1)
     return getStartEnd()
 

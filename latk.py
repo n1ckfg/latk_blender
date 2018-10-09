@@ -83,16 +83,26 @@ from io import BytesIO
 
 # 2 of 10. TOOLS
 
-def resizeToFitGp():
-    gp = getActiveGp()
+def resizeToFitGp(activeLayer=False):
     least = 0
     most = 1
-    for layer in gp.layers:
+    #~
+    if (activeLayer == False):
+        gp = getActiveGp()
+        for layer in gp.layers:
+            for frame in layer.frames:
+                if frame.frame_number < least:
+                    least = frame.frame_number
+                elif frame.frame_number > most:
+                    most = frame.frame_number
+    else:
+        layer = getActiveLayer()
         for frame in layer.frames:
             if frame.frame_number < least:
                 least = frame.frame_number
             elif frame.frame_number > most:
-                most = frame.frame_number
+                most = frame.frame_number        
+    #~
     setStartEnd(least + 1, most - 1)
     return getStartEnd()
 
@@ -5691,6 +5701,7 @@ class LatkProperties_Panel(bpy.types.Panel):
         row.operator("latk_button.booleanmod") 
         row.operator("latk_button.booleanmodminus") 
         row.operator("latk_button.makeloop") 
+        row.operator("latk_button.scopetimeline") 
 
         row = layout.row()
         row.operator("latk_button.smoothmod") 
@@ -5729,6 +5740,16 @@ class LatkProperties_Panel(bpy.types.Panel):
 
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
+
+class Latk_Button_ScopeTimeline(bpy.types.Operator):
+    """Loop all latk keyframes"""
+    bl_idname = "latk_button.scopetimeline"
+    bl_label = "Scope"
+    bl_options = {'UNDO'}
+    
+    def execute(self, context):
+        resizeToFitGp(activeLayer=True)
+        return {'FINISHED'}
 
 class Latk_Button_MakeLoop(bpy.types.Operator):
     """Loop all latk keyframes"""
