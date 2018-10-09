@@ -1,7 +1,7 @@
 # 2 of 10. TOOLS
 
-def resizeToFitGp(activeLayer=False, trimEnds=False):
-    least = 0
+def resizeToFitGp(activeLayer=False):
+    least = 1
     most = 1
     #~
     if (activeLayer == False):
@@ -20,11 +20,7 @@ def resizeToFitGp(activeLayer=False, trimEnds=False):
             elif frame.frame_number > most:
                 most = frame.frame_number        
     #~
-    if (trimEnds == False):
-        setStartEnd(least, most - 1)
-    else:
-        setStartEnd(least + 1, most - 1)
-    #~
+    setStartEnd(least, most - 1)
     return getStartEnd()
 
 def makeLoop():
