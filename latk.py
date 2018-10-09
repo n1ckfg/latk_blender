@@ -83,25 +83,18 @@ from io import BytesIO
 
 # 2 of 10. TOOLS
 
-def resizeToFitGp(activeLayer=False):
+def resizeToFitGp():
     least = 1
     most = 1
     #~
-    if (activeLayer == False):
-        gp = getActiveGp()
-        for layer in gp.layers:
+    gp = getActiveGp()
+    for layer in gp.layers:
+        if (layer.lock == False):
             for frame in layer.frames:
                 if frame.frame_number < least:
                     least = frame.frame_number
                 elif frame.frame_number > most:
                     most = frame.frame_number
-    else:
-        layer = getActiveLayer()
-        for frame in layer.frames:
-            if frame.frame_number < least:
-                least = frame.frame_number
-            elif frame.frame_number > most:
-                most = frame.frame_number        
     #~
     setStartEnd(least, most - 1)
     return getStartEnd()
@@ -5748,7 +5741,7 @@ class Latk_Button_ScopeTimeline(bpy.types.Operator):
     bl_options = {'UNDO'}
     
     def execute(self, context):
-        resizeToFitGp(activeLayer=True)
+        resizeToFitGp()
         return {'FINISHED'}
 
 class Latk_Button_MakeLoop(bpy.types.Operator):
