@@ -278,7 +278,7 @@ class ExportLatkJson(bpy.types.Operator, ExportHelper): # TODO combine into one 
     """Save a Latk Json File"""
 
     bake = BoolProperty(name="Bake Frames", description="Bake Keyframes to All Frames", default=False)
-    roundValues = BoolProperty(name="Round Values", description="Round Values to Reduce Filesize", default=False)    
+    roundValues = BoolProperty(name="Limit Precision", description="Round Values to Reduce Filesize", default=False)    
     numPlaces = IntProperty(name="Number Places", description="Number of Decimal Places", default=7)
 
     bl_idname = "export_scene.latkjson"
