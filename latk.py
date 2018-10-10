@@ -5214,7 +5214,7 @@ class ExportLatk(bpy.types.Operator, ExportHelper):  # TODO combine into one cla
     """Save a Latk File"""
 
     bake = BoolProperty(name="Bake Frames", description="Bake Keyframes to All Frames", default=False)
-    roundValues = BoolProperty(name="Round Values", description="Round Values to Reduce Filesize", default=True)    
+    roundValues = BoolProperty(name="Limit Precision", description="Round Values to Reduce Filesize", default=True)    
     numPlaces = IntProperty(name="Number Places", description="Number of Decimal Places", default=7)
 
     bl_idname = "export_scene.latk"
