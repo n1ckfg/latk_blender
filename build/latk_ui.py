@@ -788,15 +788,15 @@ class LatkProperties_Panel(bpy.types.Panel):
         row = layout.row()
         row.operator("latk_button.booleanmod") 
         row.operator("latk_button.booleanmodminus") 
-        row.operator("latk_button.makeloop") 
-        row.operator("latk_button.scopetimeline") 
-        row.operator("latk_button.makeroot") 
+        row.operator("latk_button.smoothmod") 
+        row.operator("latk_button.subsurfmod") 
 
         row = layout.row()
         row.operator("latk_button.hidetrue") 
         row.operator("latk_button.hidefalse") 
-        row.operator("latk_button.smoothmod") 
-        row.operator("latk_button.subsurfmod") 
+        row.operator("latk_button.makeloop") 
+        row.operator("latk_button.scopetimeline") 
+        row.operator("latk_button.makeroot") 
 
         row = layout.row()
         row.operator("latk_button.bakeselected")
@@ -874,7 +874,7 @@ class Latk_Button_HideScale(bpy.types.Operator):
 class Latk_Button_BooleanMod(bpy.types.Operator):
     """Boolean union and bake"""
     bl_idname = "latk_button.booleanmod"
-    bl_label = "B+"
+    bl_label = "Bool+"
     bl_options = {'UNDO'}
     
     def execute(self, context):
@@ -884,7 +884,7 @@ class Latk_Button_BooleanMod(bpy.types.Operator):
 class Latk_Button_BooleanModMinus(bpy.types.Operator):
     """Boolean difference and bake"""
     bl_idname = "latk_button.booleanmodminus"
-    bl_label = "B-"
+    bl_label = "Bool-"
     bl_options = {'UNDO'}
     
     def execute(self, context):
