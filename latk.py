@@ -3447,6 +3447,11 @@ def getVerts(target=None, useWorldSpace=True, useColors=True, useBmesh=False, us
         else:
             return verts
 
+def countVerts(target=None):
+    if not target:
+        target = bpy.context.scene.objects.active
+    return len(getVerts(target)[0])
+
 # TODO decimate does not work, context error
 def bakeAllCurvesToMesh(_decimate=0.1):
     start, end = getStartEnd()
