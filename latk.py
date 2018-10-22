@@ -83,6 +83,15 @@ from io import BytesIO
 
 # 2 of 10. TOOLS
 
+def scatterObjects(target=None, val=10):
+    if not target:
+        target = s()
+    for obj in target:
+        x = (2 * random.random() * val) - val
+        y = (2 * random.random() * val) - val
+        z = (2 * random.random() * val) - val
+        obj.location = (x, y, z)
+
 def resizeToFitGp():
     least = 1
     most = 1
