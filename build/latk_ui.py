@@ -682,6 +682,12 @@ class LatkProperties(bpy.types.PropertyGroup):
         default=10.0
     )
 
+    shuffleOdds = FloatProperty(
+        name="Odds",
+        description="Odds of shuffling the points in a stroke",
+        default=1.0
+    )
+
     numSplitFrames = IntProperty(
         name="Split Frames",
         description="Split layers if they have more than this many frames",
@@ -806,9 +812,9 @@ class LatkProperties_Panel(bpy.types.Panel):
         row = layout.row()
         row.prop(latk, "strokeLength")
         row.prop(latk, "strokeGaps")
+        row.prop(latk, "shuffleOdds")
         #row.prop(latk, "fast_colors")
         row.operator("latk_button.strokesfrommesh")
-        row.operator("latk_button.pointstoggle")
 
         # ~ ~ ~ 
 
@@ -816,6 +822,7 @@ class LatkProperties_Panel(bpy.types.Panel):
         row.prop(latk, "writeStrokeSteps")
         row.prop(latk, "writeStrokePoints")
         row.operator("latk_button.writeonstrokes")
+        row.operator("latk_button.pointstoggle")
 
         row = layout.row()
         row.prop(latk, "numSplitFrames")
@@ -976,7 +983,7 @@ class Latk_Button_StrokesFromMesh(bpy.types.Operator):
     
     def execute(self, context):
         latk_settings = bpy.context.scene.latk_settings
-        meshToGp(strokeLength=latk_settings.strokeLength, strokeGaps=latk_settings.strokeGaps)
+        meshToGp(strokeLength=latk_settings.strokeLength, strokeGaps=latk_settings.strokeGaps, shuffleOdds=latk_settings.shuffleOdds)
         return {'FINISHED'}
 
 class Latk_Button_PointsToggle(bpy.types.Operator):

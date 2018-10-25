@@ -506,7 +506,7 @@ def writeOnMesh(step=1, name="latk"):
             hideFrame(target[j], 0, True)
             hideFrame(target[j], len(target)-j, False)
 
-def meshToGp(obj=None, strokeLength=1, strokeGaps=10.0):
+def meshToGp(obj=None, strokeLength=1, strokeGaps=10.0, shuffleOdds=1.0):
     if not obj:
         obj = ss()
     mesh = obj.data
@@ -561,6 +561,9 @@ def meshToGp(obj=None, strokeLength=1, strokeGaps=10.0):
         stroke = frame.strokes.new(getActiveColor().name)
         stroke.draw_mode = "3DSPACE"
         stroke.points.add(len(pointSeq))
+
+        if (random.random() < shuffleOdds):
+            random.shuffle(pointSeq)
 
         for j, point in enumerate(pointSeq):    
             x = point[0]
