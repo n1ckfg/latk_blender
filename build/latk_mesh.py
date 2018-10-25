@@ -506,7 +506,7 @@ def writeOnMesh(step=1, name="latk"):
             hideFrame(target[j], 0, True)
             hideFrame(target[j], len(target)-j, False)
 
-def meshToGp(obj=None, strokeLength=1, strokeGaps=10.0, shuffleOdds=1.0):
+def meshToGp(obj=None, strokeLength=1, strokeGaps=10.0, shuffleOdds=1.0, spreadPoints=0.1):
     if not obj:
         obj = ss()
     mesh = obj.data
@@ -566,9 +566,9 @@ def meshToGp(obj=None, strokeLength=1, strokeGaps=10.0, shuffleOdds=1.0):
             random.shuffle(pointSeq)
 
         for j, point in enumerate(pointSeq):    
-            x = point[0]
-            y = point[2]
-            z = point[1]
+            x = point[0] + (random.random() * 2.0 * spreadPoints) - spreadPoints
+            y = point[2] + (random.random() * 2.0 * spreadPoints) - spreadPoints
+            z = point[1] + (random.random() * 2.0 * spreadPoints) - spreadPoints
             pressure = 1.0
             strength = 1.0
             createPoint(stroke, j, (x, y, z), pressure, strength)
