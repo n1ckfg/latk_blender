@@ -1,5 +1,28 @@
 # 4 of 10. MATERIALS / RENDERING
 
+def createMaterial(target=None, name="NewMaterial", unique=True):
+    if not target:
+        target = s()
+    if (unique == False):
+        mat = bpy.data.materials.new(name=name)
+    for obj in target:
+        try:
+            if (len(obj.data.materials) < 1):
+                if (unique==True):
+                    mat = bpy.data.materials.new(name=name)
+                obj.data.materials.append(mat)
+        except:
+            pass
+
+def deleteMaterial(target=None):
+    if not target:
+        target = s()
+    for obj in target():
+        try:
+            setActiveObject(obj)
+            bpy.ops.object.material_slot_remove()
+        except:
+               pass
 # http://blender.stackexchange.com/questions/17738/how-to-uv-unwrap-object-with-python
 def planarUvProject():
     for area in bpy.context.screen.areas:
