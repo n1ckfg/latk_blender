@@ -401,18 +401,36 @@ def booleanMod(target=None, op="union"):
 def subsurfMod(target=None):
     if not target:
         target=s()
+    returns = []
     for obj in target:
-            bpy.context.scene.objects.active = obj
-            bpy.ops.object.modifier_add(type="SUBSURF")
-            bpy.ops.object.modifier_apply(apply_as='DATA', modifier="Subsurf")
+        bpy.context.scene.objects.active = obj
+        bpy.ops.object.modifier_add(type="SUBSURF")
+        bpy.ops.object.modifier_apply(apply_as='DATA', modifier="Subsurf")
+        returns.append(obj)
+    return returns
 
 def smoothMod(target=None):
     if not target:
         target=s()
+    returns = []
     for obj in target:
-            bpy.context.scene.objects.active = obj
-            bpy.ops.object.modifier_add(type="SMOOTH")
-            bpy.ops.object.modifier_apply(apply_as='DATA', modifier="Smooth")
+        bpy.context.scene.objects.active = obj
+        bpy.ops.object.modifier_add(type="SMOOTH")
+        bpy.ops.object.modifier_apply(apply_as='DATA', modifier="Smooth")
+        returns.append(obj)
+    return returns
+
+def decimateMod(target=None, _decimate=0.1):
+    if not target:
+        target = s()
+    returns = []
+    for obj in target:
+        bpy.context.scene.objects.active = obj
+        bpy.ops.object.modifier_add(type='DECIMATE')
+        bpy.context.object.modifiers["Decimate"].ratio = _decimate     
+        bpy.ops.object.modifier_apply(apply_as='DATA', modifier="Decimate")
+        returns.append(obj)
+    return returns
 
 def polyCube(pos=(0,0,0), scale=(1,1,1), rot=(0,0,0)):
     bpy.ops.mesh.primitive_cube_add()

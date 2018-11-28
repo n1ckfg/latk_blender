@@ -3862,18 +3862,36 @@ def booleanMod(target=None, op="union"):
 def subsurfMod(target=None):
     if not target:
         target=s()
+    returns = []
     for obj in target:
-            bpy.context.scene.objects.active = obj
-            bpy.ops.object.modifier_add(type="SUBSURF")
-            bpy.ops.object.modifier_apply(apply_as='DATA', modifier="Subsurf")
+        bpy.context.scene.objects.active = obj
+        bpy.ops.object.modifier_add(type="SUBSURF")
+        bpy.ops.object.modifier_apply(apply_as='DATA', modifier="Subsurf")
+        returns.append(obj)
+    return returns
 
 def smoothMod(target=None):
     if not target:
         target=s()
+    returns = []
     for obj in target:
-            bpy.context.scene.objects.active = obj
-            bpy.ops.object.modifier_add(type="SMOOTH")
-            bpy.ops.object.modifier_apply(apply_as='DATA', modifier="Smooth")
+        bpy.context.scene.objects.active = obj
+        bpy.ops.object.modifier_add(type="SMOOTH")
+        bpy.ops.object.modifier_apply(apply_as='DATA', modifier="Smooth")
+        returns.append(obj)
+    return returns
+
+def decimateMod(target=None, _decimate=0.1):
+    if not target:
+        target = s()
+    returns = []
+    for obj in target:
+        bpy.context.scene.objects.active = obj
+        bpy.ops.object.modifier_add(type='DECIMATE')
+        bpy.context.object.modifiers["Decimate"].ratio = _decimate     
+        bpy.ops.object.modifier_apply(apply_as='DATA', modifier="Decimate")
+        returns.append(obj)
+    return returns
 
 def polyCube(pos=(0,0,0), scale=(1,1,1), rot=(0,0,0)):
     bpy.ops.mesh.primitive_cube_add()
@@ -5772,16 +5790,15 @@ class LatkProperties_Panel(bpy.types.Panel):
 
         row = layout.row()
         row.operator("latk_button.hidetrue") 
-        row.operator("latk_button.hidefalse") 
-        row.operator("latk_button.makeloop") 
         row.operator("latk_button.scopetimeline") 
         row.operator("latk_button.makeroot") 
+        row.operator("latk_button.decimatemod") 
 
         row = layout.row()
-        row.operator("latk_button.bakeselected")
         row.operator("latk_button.bakeall")
         row.operator("latk_button.bakeanim")
         row.operator("latk_button.hidescale")
+        row.operator("latk_button.makeloop") 
         
         row = layout.row()
         row.prop(latk, "strokeLength")
@@ -5893,8 +5910,19 @@ class Latk_Button_SmoothMod(bpy.types.Operator):
         smoothMod()
         return {'FINISHED'}
 
+class Latk_Button_DecimateMod(bpy.types.Operator):
+    """Smooth using defaults and bake"""
+    bl_idname = "latk_button.decimatemod"
+    bl_label = "Decimate"
+    bl_options = {'UNDO'}
+    
+    def execute(self, context):
+        latk_settings = bpy.context.scene.latk_settings
+        decimateMod(_decimate=latk_settings.decimate)
+        return {'FINISHED'}
+
 class Latk_Button_HideTrue(bpy.types.Operator):
-    """Boolean union and bake"""
+    """Hide or show selected"""
     bl_idname = "latk_button.hidetrue"
     bl_label = "Hide"
     bl_options = {'UNDO'}
@@ -5902,11 +5930,12 @@ class Latk_Button_HideTrue(bpy.types.Operator):
     def execute(self, context):
         target = s()
         for obj in target:
-            hideFrame(obj,currentFrame(), True)
+            hideFrame(obj, currentFrame(), True)
         return {'FINISHED'}
 
+'''
 class Latk_Button_HideFalse(bpy.types.Operator):
-    """Boolean union and bake"""
+    """Show selected"""
     bl_idname = "latk_button.hidefalse"
     bl_label = "Show"
     bl_options = {'UNDO'}
@@ -5916,6 +5945,7 @@ class Latk_Button_HideFalse(bpy.types.Operator):
         for obj in target:
             hideFrame(obj,currentFrame(), False)
         return {'FINISHED'}
+'''
 
 class Latk_Button_Gpmesh(bpy.types.Operator):
     """Mesh all GP strokes. Takes a while.."""
@@ -5972,26 +6002,32 @@ class Latk_Button_PointsToggle(bpy.types.Operator):
         togglePoints()
         return {'FINISHED'}
 
+'''
 class Latk_Button_BakeSelected(bpy.types.Operator):
     """Bake selected curves to exportable meshes"""
     bl_idname = "latk_button.bakeselected"
     bl_label = "Curve Bake"
     bl_options = {'UNDO'}
     
-    def execute(self, context):
+    def execute(self, context):goo
         latk_settings = bpy.context.scene.latk_settings
         decimateAndBake(_decimate=latk_settings.decimate)
         return {'FINISHED'}
+'''
 
 class Latk_Button_BakeAllCurves(bpy.types.Operator):
-    """Bake all curves to exportable meshes"""
+    """Bake curves to exportable meshes"""
     bl_idname = "latk_button.bakeall"
     bl_label = "Curves Bake"
     bl_options = {'UNDO'}
     
     def execute(self, context):
         latk_settings = bpy.context.scene.latk_settings
-        bakeAllCurvesToMesh(_decimate=latk_settings.decimate)
+        target = s()
+        if (len(target) < 1): # all
+            bakeAllCurvesToMesh(_decimate=latk_settings.decimate)
+        else: # selected
+            decimateAndBake(_decimate=latk_settings.decimate)
         return {'FINISHED'}
 
 class Latk_Button_BakeAnim(bpy.types.Operator):
@@ -6002,7 +6038,19 @@ class Latk_Button_BakeAnim(bpy.types.Operator):
     
     def execute(self, context):
         latk_settings = bpy.context.scene.latk_settings
-        bakeAnimConstraint()
+        target = s()
+        if (len(target) < 1): # all
+            toBake = []
+            for obj in bpy.context.scene.objects:
+                try:
+                    if (len(obj.constraints) > 0):
+                        tobake.append(obj)
+                except:
+                    pass
+            if (len(toBake) > 0):
+                bakeAnimConstraint(toBake)
+        else:
+            bakeAnimConstraint()
         return {'FINISHED'}
 
 class Latk_Button_Gpmesh_SingleFrame(bpy.types.Operator):
