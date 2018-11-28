@@ -813,6 +813,7 @@ class LatkProperties_Panel(bpy.types.Panel):
         row = layout.row()
         row.operator("latk_button.bakeselected")
         row.operator("latk_button.bakeall")
+        row.operator("latk_button.bakeanim")
         row.operator("latk_button.hidescale")
         
         row = layout.row()
@@ -1007,7 +1008,7 @@ class Latk_Button_PointsToggle(bpy.types.Operator):
 class Latk_Button_BakeSelected(bpy.types.Operator):
     """Bake selected curves to exportable meshes"""
     bl_idname = "latk_button.bakeselected"
-    bl_label = "Bake Curve"
+    bl_label = "Curve Bake"
     bl_options = {'UNDO'}
     
     def execute(self, context):
@@ -1018,12 +1019,23 @@ class Latk_Button_BakeSelected(bpy.types.Operator):
 class Latk_Button_BakeAllCurves(bpy.types.Operator):
     """Bake all curves to exportable meshes"""
     bl_idname = "latk_button.bakeall"
-    bl_label = "Bake All Curves"
+    bl_label = "Curves Bake"
     bl_options = {'UNDO'}
     
     def execute(self, context):
         latk_settings = bpy.context.scene.latk_settings
         bakeAllCurvesToMesh(_decimate=latk_settings.decimate)
+        return {'FINISHED'}
+
+class Latk_Button_BakeAnim(bpy.types.Operator):
+    """Bake keyframes with constraints"""
+    bl_idname = "latk_button.bakeanim"
+    bl_label = "Anim Bake"
+    bl_options = {'UNDO'}
+    
+    def execute(self, context):
+        latk_settings = bpy.context.scene.latk_settings
+        bakeAnimConstraint()
         return {'FINISHED'}
 
 class Latk_Button_Gpmesh_SingleFrame(bpy.types.Operator):

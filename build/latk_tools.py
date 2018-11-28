@@ -1,5 +1,15 @@
 # 2 of 10. TOOLS
 
+def bakeAnimConstraint(target=None, bakeType="OBJECT"):
+    if not target:
+        target = s()
+    start, end = getStartEnd()
+    for obj in target:
+        deselect()
+        select(obj)
+        setActiveObject(obj)
+        bpy.ops.nla.bake(frame_start=start, frame_end=end, only_selected=True, visual_keying=True, clear_constraints=True, bake_types={bakeType.upper()})
+
 def scatterObjects(target=None, val=10):
     if not target:
         target = s()
