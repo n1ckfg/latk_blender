@@ -1052,20 +1052,15 @@ class Latk_Button_BakeAnim(bpy.types.Operator):
     bl_options = {'UNDO'}
     
     def execute(self, context):
-        latk_settings = bpy.context.scene.latk_settings
         target = s()
         if (len(target) < 1): # all
-            toBake = []
-            for obj in bpy.context.scene.objects:
-                try:
-                    if (len(obj.constraints) > 0):
-                        tobake.append(obj)
-                except:
-                    pass
-            if (len(toBake) > 0):
-                bakeAnimConstraint(toBake)
-        else:
-            bakeAnimConstraint()
+            target = bpy.data.objects
+        toBake = []
+        for obj in target:
+            if (len(obj.constraints) > 0):
+                toBake.append(obj)
+        if (len(toBake) > 0):
+            bakeAnimConstraint(target=toBake)
         return {'FINISHED'}
 
 class Latk_Button_Gpmesh_SingleFrame(bpy.types.Operator):
