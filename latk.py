@@ -5930,7 +5930,7 @@ class Latk_Button_HideTrue(bpy.types.Operator):
     def execute(self, context):
         target = s()
         for obj in target:
-            hideFrame(obj, currentFrame(), Latk_Button_HideTruee)
+            hideFrame(obj, currentFrame(), True)
         return {'FINISHED'}
 
 '''
