@@ -5790,14 +5790,14 @@ class LatkProperties_Panel(bpy.types.Panel):
 
         row = layout.row()
         row.operator("latk_button.hidetrue") 
-        row.operator("latk_button.scopetimeline") 
+        row.operator("latk_button.hidescale")
         row.operator("latk_button.makeroot") 
         row.operator("latk_button.decimatemod") 
 
         row = layout.row()
         row.operator("latk_button.bakeall")
         row.operator("latk_button.bakeanim")
-        row.operator("latk_button.hidescale")
+        row.operator("latk_button.scopetimeline") 
         row.operator("latk_button.makeloop") 
         
         row = layout.row()
