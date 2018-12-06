@@ -1,5 +1,15 @@
 # 5 of 10. MESHES / GEOMETRY
 
+def simpleClean(target=None):
+    if not target:
+        target = s()
+    for obj in target:
+        setObjectMode()
+        setActiveObject(obj)
+        setEditMode()
+        bpy.ops.mesh.face_make_planar()
+        bpy.ops.mesh.tris_convert_to_quads()
+
 def getVerts(target=None, useWorldSpace=True, useColors=True, useBmesh=False, useModifiers=True):
     if not target:
         target = bpy.context.scene.objects.active

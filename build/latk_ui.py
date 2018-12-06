@@ -790,31 +790,29 @@ class LatkProperties_Panel(bpy.types.Panel):
         row = layout.row()
         row.prop(latk, "remesh_mode", expand=True)
 
-        row = layout.row()
-        row.prop(latk, "material_set_mode")
-        row.prop(latk, "material_shader_mode")
-        row.operator("latk_button.mtlshader")
-
         # ~ ~ ~ 
 
         row = layout.row()
         row.operator("latk_button.booleanmod") 
         row.operator("latk_button.booleanmodminus") 
-        row.operator("latk_button.smoothmod") 
-        row.operator("latk_button.subsurfmod") 
+        row.operator("latk_button.simpleclean")
 
         row = layout.row()
-        row.operator("latk_button.hidetrue") 
-        row.operator("latk_button.hidescale")
-        row.operator("latk_button.makeroot") 
+        row.operator("latk_button.smoothmod") 
+        row.operator("latk_button.subsurfmod") 
         row.operator("latk_button.decimatemod") 
 
         row = layout.row()
         row.operator("latk_button.bakeall")
         row.operator("latk_button.bakeanim")
         row.operator("latk_button.scopetimeline") 
+
+        row = layout.row()
+        row.operator("latk_button.hidetrue") 
+        row.operator("latk_button.hidescale")
+        row.operator("latk_button.makeroot") 
         row.operator("latk_button.makeloop") 
-        
+
         row = layout.row()
         row.prop(latk, "strokeLength")
         row.prop(latk, "strokeGaps")
@@ -822,6 +820,19 @@ class LatkProperties_Panel(bpy.types.Panel):
         row.prop(latk, "spreadPoints")
         #row.prop(latk, "fast_colors")
         row.operator("latk_button.strokesfrommesh")
+
+        # ~ ~ ~ 
+
+        row = layout.row()
+        row.prop(latk, "material_set_mode")
+        row.prop(latk, "material_shader_mode")
+        row.operator("latk_button.mtlshader")
+
+        row = layout.row()
+        row.prop(latk, "minRemapPressure")
+        row.prop(latk, "maxRemapPressure")
+        row.prop(latk, "remapPressureMode")
+        row.operator("latk_button.remappressure")
 
         # ~ ~ ~ 
 
@@ -835,15 +846,18 @@ class LatkProperties_Panel(bpy.types.Panel):
         row.prop(latk, "numSplitFrames")
         row.operator("latk_button.splf")
 
-        row = layout.row()
-        row.prop(latk, "minRemapPressure")
-        row.prop(latk, "maxRemapPressure")
-        row.prop(latk, "remapPressureMode")
-        row.operator("latk_button.remappressure")
-
-
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
+
+class Latk_Button_SimpleClean(bpy.types.Operator):
+    """Loop all latk keyframes"""
+    bl_idname = "latk_button.simpleclean"
+    bl_label = "Clean"
+    bl_options = {'UNDO'}
+    
+    def execute(self, context):
+        simpleClean()
+        return {'FINISHED'}
 
 class Latk_Button_ScopeTimeline(bpy.types.Operator):
     """Loop all latk keyframes"""

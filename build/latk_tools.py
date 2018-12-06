@@ -1,5 +1,11 @@
 # 2 of 10. TOOLS
 
+def setObjectMode():
+    bpy.ops.object.mode_set(mode='OBJECT')
+
+def setEditMode():
+    bpy.ops.object.mode_set(mode='EDIT')
+
 def bakeAnimConstraint(target=None, bakeType="OBJECT"):
     if not target:
         target = s()
