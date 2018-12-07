@@ -9,6 +9,7 @@ def simpleClean(target=None):
         setEditMode()
         bpy.ops.mesh.face_make_planar()
         bpy.ops.mesh.tris_convert_to_quads()
+        bpy.ops.mesh.delete_loose()
 
 def getVerts(target=None, useWorldSpace=True, useColors=True, useBmesh=False, useModifiers=True):
     if not target:
