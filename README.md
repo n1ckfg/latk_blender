@@ -1,4 +1,5 @@
-Lightning Artist Toolkit / Blender 
+# latk_blender
+Read and write Latk files in Blender Grease Pencil. Last tested in Blender 2.79.
 
 To install, copy latk.py to:
 
