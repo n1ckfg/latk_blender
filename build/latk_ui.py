@@ -92,7 +92,7 @@ class ImportLatk(bpy.types.Operator, ImportHelper):
             )
 
     def execute(self, context):
-        import latk as la
+        import latk_blender as la
         keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "resizeTimeline"))
         if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
             import os
@@ -117,7 +117,7 @@ class ImportTiltBrush(bpy.types.Operator, ImportHelper):
     vertSkip = IntProperty(name="Read Vertices", description="Read every n vertices", default=1)
 
     def execute(self, context):
-        import latk as la
+        import latk_blender as la
         keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode"))
         if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
             import os
@@ -140,7 +140,7 @@ class ImportNorman(bpy.types.Operator, ImportHelper):
             )
 
     def execute(self, context):
-        import latk as la
+        import latk_blender as la
         keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode"))
         if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
             import os
@@ -162,7 +162,7 @@ class ImportVRDoodler(bpy.types.Operator, ImportHelper):
             )
 
     def execute(self, context):
-        import latk as la
+        import latk_blender as la
         keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode"))
         if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
             import os
@@ -186,7 +186,7 @@ class ImportASC(bpy.types.Operator, ImportHelper):
     strokeLength = IntProperty(name="Points per Stroke", description="Group every n points into strokes", default=1)
 
     def execute(self, context):
-        import latk as la
+        import latk_blender as la
         keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode"))
         if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
             import os
@@ -211,7 +211,7 @@ class ImportSculptrVR(bpy.types.Operator, ImportHelper):
     strokeLength = IntProperty(name="Points per Stroke", description="Group every n points into strokes", default=1)
 
     def execute(self, context):
-        import latk as la
+        import latk_blender as la
         keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode"))
         if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
             import os
@@ -234,7 +234,7 @@ class ImportPainter(bpy.types.Operator, ImportHelper):
             )
 
     def execute(self, context):
-        import latk as la
+        import latk_blender as la
         keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode"))
         if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
             import os
@@ -259,7 +259,7 @@ class ImportGml(bpy.types.Operator, ImportHelper):
     splitStrokes = BoolProperty(name="Split Strokes", description="Split animated strokes to layers", default=False)
                 
     def execute(self, context):
-        import latk as la
+        import latk_blender as la
         keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "splitStrokes", "sequenceAnim"))
         if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
             import os
@@ -293,7 +293,7 @@ class ExportLatkJson(bpy.types.Operator, ExportHelper): # TODO combine into one 
             )
 
     def execute(self, context):
-        import latk as la
+        import latk_blender as la
         keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "check_existing", "bake", "roundValues", "numPlaces"))
         if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
             import os
@@ -324,7 +324,7 @@ class ExportLatk(bpy.types.Operator, ExportHelper):  # TODO combine into one cla
             )
 
     def execute(self, context):
-        import latk as la
+        import latk_blender as la
         keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "check_existing", "bake", "roundValues", "numPlaces"))
         if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
             import os
@@ -353,7 +353,7 @@ class ExportGml(bpy.types.Operator, ExportHelper):
     make2d = BoolProperty(name="Make 2D", description="Project Coordinates to Camera View", default=False)
 
     def execute(self, context):
-        import latk as la
+        import latk_blender as la
         keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "check_existing"))
         if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
             import os
@@ -380,7 +380,7 @@ class ExportFbxSequence(bpy.types.Operator, ExportHelper):
     sketchFab = BoolProperty(name="Sketchfab List", description="Generate list for Sketchfab animation", default=True)
 
     def execute(self, context):
-        import latk as la
+        import latk_blender as la
         keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "check_existing"))
         if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
             import os
@@ -420,7 +420,7 @@ class ExportSculptrVR(bpy.types.Operator, ExportHelper):
 
 
     def execute(self, context):
-        import latk as la
+        import latk_blender as la
         keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "check_existing"))
         if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
             import os
@@ -449,7 +449,7 @@ class ExportASC(bpy.types.Operator, ExportHelper):
             )
 
     def execute(self, context):
-        import latk as la
+        import latk_blender as la
         keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "check_existing"))
         if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
             import os
@@ -472,7 +472,7 @@ class ExportSvg(bpy.types.Operator, ExportHelper):
             )
 
     def execute(self, context):
-        import latk as la
+        import latk_blender as la
         #keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "check_existing", "bake"))
         keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "check_existing"))
         if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
@@ -496,7 +496,7 @@ class ExportPainter(bpy.types.Operator, ExportHelper):
             )
 
     def execute(self, context):
-        import latk as la
+        import latk_blender as la
         #keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "check_existing", "bake"))
         keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "check_existing"))
         if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
