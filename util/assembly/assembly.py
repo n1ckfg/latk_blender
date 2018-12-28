@@ -1,4 +1,4 @@
-from latk import *
+from latk_blender import *
 #~
 assembleMesh()
 #~
