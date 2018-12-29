@@ -618,7 +618,7 @@ def meshToGp(obj=None, strokeLength=1, strokeGaps=10.0, shuffleOdds=1.0, spreadP
                 points.append(allPoints[i])
     '''
 
-def makeCurve(coords, pressures, resolution=2, thickness=0.1, bevelResolution=1, curveType="bezier", parent=None, capsObj=None, name="latk_ob", useUvs=True, usePressure=True):
+def makeCurve(coords, pressures=None, resolution=2, thickness=0.1, bevelResolution=1, curveType="bezier", parent=None, capsObj=None, name="latk_ob", useUvs=True, usePressure=True):
     # http://blender.stackexchange.com/questions/12201/bezier-spline-with-python-adds-unwanted-point
     # http://blender.stackexchange.com/questions/6750/poly-bezier-curve-from-a-list-of-coordinates
     # create the curve datablock

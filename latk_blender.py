@@ -365,6 +365,7 @@ class LatkLayer(object):
 class LatkFrame(object):   
     def __init__(self):    
         self.strokes = [] # LatkStroke
+        self.index = 0
         
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 
@@ -384,6 +385,18 @@ class LatkStroke(object):
         returns = []
         for point in self.points:
             returns.append(point.co)
+        return returns
+
+    def getPressures(self):
+        returns = []
+        for point in self.points:
+            returns.append(point.pressure)
+        return returns
+
+    def getStrengths(self):
+        returns = []
+        for point in self.points:
+            returns.append(point.strength)
         return returns
 
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
@@ -438,6 +451,35 @@ class InMemoryZip(object):
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
+
+'''
+LIGHTNING ARTIST TOOLKIT (BLENDER)
+
+The Lightning Artist Toolkit was developed with support from:
+   Canada Council on the Arts
+   Eyebeam Art + Technology Center
+   Ontario Arts Council
+   Toronto Arts Council
+   
+Copyright (c) 2018 Nick Fox-Gieg
+http://fox-gieg.com
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The Lightning Artist Toolkit (Blender) is free software: you can redistribute it 
+and/or modify it under the terms of the GNU General Public License 
+as published by the Free Software Foundation, either version 3 of 
+the License, or (at your option) any later version.
+
+The Lightning Artist Toolkit (Blender) is distributed in the hope that it will 
+be useful, but WITHOUT ANY WARRANTY; without even the implied warranty 
+of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with the Lightning Artist Toolkit (Blender).  If not, see 
+<http://www.gnu.org/licenses/>.
+'''
 
 # 1 of 10. MAIN
 
@@ -4458,7 +4500,7 @@ def meshToGp(obj=None, strokeLength=1, strokeGaps=10.0, shuffleOdds=1.0, spreadP
                 points.append(allPoints[i])
     '''
 
-def makeCurve(coords, pressures, resolution=2, thickness=0.1, bevelResolution=1, curveType="bezier", parent=None, capsObj=None, name="latk_ob", useUvs=True, usePressure=True):
+def makeCurve(coords, pressures=None, resolution=2, thickness=0.1, bevelResolution=1, curveType="bezier", parent=None, capsObj=None, name="latk_ob", useUvs=True, usePressure=True):
     # http://blender.stackexchange.com/questions/12201/bezier-spline-with-python-adds-unwanted-point
     # http://blender.stackexchange.com/questions/6750/poly-bezier-curve-from-a-list-of-coordinates
     # create the curve datablock
