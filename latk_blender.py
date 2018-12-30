@@ -316,17 +316,24 @@ class Latk(object):
         lastFrame = lastLayer.frames[len(lastLayer.frames)-1]
         lastFrame.strokes.append(stroke)
 
-    def setPoints(self, points, color=None):
+    def setPoints(self, points, color=(1.0,1.0,1.0)):
         lastLayer = self.layers[len(self.layers)-1]
         lastFrame = lastLayer.frames[len(lastLayer.frames)-1]
         stroke = LatkStroke()
-        stroke.setPoints(points)
-        if (color != None):
-            stroke.color = color
+        stroke.points = points
+        stroke.color = color
         lastFrame.strokes.append(stroke)
     
+    def setPoints(self, coords, color=(1.0,1.0,1.0)):
+        lastLayer = self.layers[len(self.layers)-1]
+        lastFrame = lastLayer.frames[len(lastLayer.frames)-1]
+        stroke = LatkStroke()
+        stroke.setCoords(coords)
+        stroke.color = color
+        lastFrame.strokes.append(stroke)
+
     def getDistance(self, v1, v2):
-        return sqrt( (v1[0] - v2[0])**2 + (v1[1] - v2[1])**2 + (v1[2] - v2[2])**2)
+        return sqrt((v1[0] - v2[0])**2 + (v1[1] - v2[1])**2 + (v1[2] - v2[2])**2)
 
     def hitDetect3D(self, p1, p2, hitbox=0.01):
         if (self.getDistance(p1, p2) <= hitbox):
@@ -389,14 +396,13 @@ class LatkStroke(object):
         self.fill_color = color
         self.fill_alpha = 0.0
 
-    def setPoints(self, points, color=None):
+    def setCoords(self, coords, color=(1.0, 1.0, 1.0)):
         self.points = []
-        for point in points:
-            self.points.append(LatkPoint(point))
-        if (color != None):
-            self.color = color
+        for coord in coords:
+            self.points.append(LatkPoint(coord))
+        self.color = color
 
-    def getPoints(self):
+    def getCoords(self):
         returns = []
         for point in self.points:
             returns.append(point.co)
