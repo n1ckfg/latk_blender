@@ -1089,6 +1089,11 @@ def cleanEmptyLayers():
         if (len(layer.frames) == 0):
             gp.layers.remove(layer)
 
+def clearLayers():
+    gp = getActiveGp()
+    for layer in gp.layers:
+        gp.layers.remove(layer)
+
 def clearPalette():
     palette = getActivePalette()
     for color in palette.colors:
