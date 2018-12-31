@@ -1206,7 +1206,7 @@ def delete(_obj=None):
     bpy.data.objects[_obj.name].hide = False
     bpy.data.objects[_obj.name].select = True
     bpy.ops.object.delete()
-    gc.collect()
+    #gc.collect()
 
 def refresh():
     bpy.context.scene.update()
@@ -4120,7 +4120,7 @@ def joinObjects(target=None, center=False):
         except:
             pass
     #~
-    gc.collect()
+    #gc.collect()
     if (center==True):
         centerOrigin(target[0])
     return target[0]
@@ -4571,7 +4571,7 @@ def applySubdiv(target=None, _subd=1):
                 pass
 
 def gpMeshCleanup(target):
-    gc.collect()
+    #gc.collect()
     removeGroup(target, allGroups=True)
     dn()
 
