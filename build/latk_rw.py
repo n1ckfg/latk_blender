@@ -204,9 +204,9 @@ def gpToLatk(bake=False, roundValues=False, numPlaces=7):
 
                         laPoint = LatkPoint((x, y, z), pressure, strength)
                         laStroke.points.append(laPoint)
-            laFrame.strokes.append(laStroke)
-        laLayer.frames.append(laFrame)
-    la.layers.append(laLayer)
+                laFrame.strokes.append(laStroke)
+            laLayer.frames.append(laFrame)
+        la.layers.append(laLayer)
     return la
 
 def latkToGp(la=None, resizeTimeline=True):
