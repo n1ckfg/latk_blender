@@ -790,7 +790,7 @@ def getActiveCamera():
         print("%s object as camera" % cam_ob.type)
         ob = bpy.context.object
         if ob is not None and ob.type == 'CAMERA':
-            print("Active camera object")
+            #print("Active camera object")
             return ob
         else:
             return None
@@ -929,7 +929,7 @@ def getActiveGp(_name="GPencil"):
     except:
         gp = bpy.data.grease_pencil.new(_name)
         bpy.context.scene.grease_pencil = gp
-    print("Active GP block is: " + gp.name)
+    #print("Active GP block is: " + gp.name)
     return gp
 
 def forceDrawMode():
@@ -964,12 +964,12 @@ def getActivePalette():
     if (len(palette.colors) < 1):
         color = palette.colors.new()
         color.color = (0,0,0)
-    print("Active palette is: " + gp.palettes.active.name)
+    #print("Active palette is: " + gp.palettes.active.name)
     return palette
 
 def getActiveColor():
     palette = getActivePalette()
-    print("Active color is: " + "\"" + palette.colors.active.name + "\" " + str(palette.colors.active.color))
+    #print("Active color is: " + "\"" + palette.colors.active.name + "\" " + str(palette.colors.active.color))
     return palette.colors.active
 
 def getActiveLayer():
@@ -1119,7 +1119,7 @@ def createColor(_color):
         palette.colors.active = palette.colors[matchingColorIndex]
         color = palette.colors[matchingColorIndex]
     #~        
-    print("Active color is: " + "\"" + palette.colors.active.name + "\" " + str(palette.colors.active.color))
+    #print("Active color is: " + "\"" + palette.colors.active.name + "\" " + str(palette.colors.active.color))
     return color
 
 # ~ ~ ~ 
@@ -1148,7 +1148,7 @@ def createColorWithPalette(_color, numPlaces=7, maxColors=0):
         palette.colors.active = palette.colors[matchingColorIndex]
         color = palette.colors[matchingColorIndex]
     #~        
-    print("Active color is: " + "\"" + palette.colors.active.name + "\" " + str(palette.colors.active.color))
+    #print("Active color is: " + "\"" + palette.colors.active.name + "\" " + str(palette.colors.active.color))
     return color
 # ~ ~ ~
 

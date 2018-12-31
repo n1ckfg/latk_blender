@@ -77,6 +77,8 @@ import zipfile
 import io
 from io import BytesIO
 
+la = Latk()
+
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
 # * * * * * * * * * * * * * * * * * * * * * * * * * *

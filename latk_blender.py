@@ -567,6 +567,8 @@ import zipfile
 import io
 from io import BytesIO
 
+la = Latk()
+
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -2137,6 +2139,7 @@ def getFileName(stripExtension=True):
     return name
 
 def fromGpToLatk(bake=False, roundValues=False, numPlaces=7, useScaleAndOffset=False, globalScale=(1.0, 1.0, 1.0), globalOffset=(0.0, 0.0, 0.0)):
+    print("Begin building Latk object from Grease Pencil...")
     if(bake == True):
         bakeFrames()
     gp = getActiveGp()
@@ -2202,10 +2205,11 @@ def fromGpToLatk(bake=False, roundValues=False, numPlaces=7, useScaleAndOffset=F
             laLayer.frames.append(laFrame)
         la.layers.append(laLayer)
     return la
+    print("...end building Latk object from Grease Pencil.")           
 
 def fromLatkToGp(la=None, resizeTimeline=True, useScaleAndOffset=False, globalScale=(1.0, 1.0, 1.0), globalOffset=(0.0, 0.0, 0.0)):
-    clearLayers()
-    clearPalette()
+    print("Begin building Grease Pencil from Latk object...")
+    clearAll()
     gp = getActiveGp()
     
     longestFrameNum = 1
@@ -2251,7 +2255,8 @@ def fromLatkToGp(la=None, resizeTimeline=True, useScaleAndOffset=False, globalSc
                     createPoint(stroke, l, (x, y, z), pressure, strength)
     #~  
     if (resizeTimeline == True):
-        setStartEnd(0, longestFrameNum, pad=False)              
+        setStartEnd(0, longestFrameNum, pad=False)  
+    print("...end building Grease Pencil from Latk object.")           
 
 # http://blender.stackexchange.com/questions/24694/query-grease-pencil-strokes-from-python
 def writeBrushStrokes(filepath=None, bake=True, roundValues=True, numPlaces=7, zipped=False, useScaleAndOffset=False, globalScale=Vector((0.1, 0.1, 0.1)), globalOffset=Vector((0, 0, 0))):
@@ -4179,10 +4184,7 @@ def assembleMesh(export=False, createPalette=True):
             saveFile(origFileName + "_ASSEMBLY")
             print(origFileName + "_ASSEMBLY.blend" + " was saved but some groups were missing.")
 
-def gpMeshQ(val = 0.1):
-    gpMesh(_decimate=val, _saveLayers=True)
-
-def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _decimate = 0.1, _curveType="nurbs", _useColors=True, _saveLayers=False, _singleFrame=False, _vertexColors=True, _vertexColorName="rgba", _animateFrames=True, _remesh="none", _consolidateMtl=True, _caps=True, _joinMesh=True, _uvStroke=True, _uvFill=True, _usePressure=True):
+def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _decimate = 0.1, _curveType="nurbs", _useColors=True, _saveLayers=False, _singleFrame=False, _vertexColors=True, _vertexColorName="rgba", _animateFrames=True, _remesh="none", _consolidateMtl=True, _caps=True, _joinMesh=True, _uvStroke=True, _uvFill=True, _usePressure=True, _la=None):
     if (_joinMesh==True or _remesh != "none"):
         _bakeMesh=True
     #~
@@ -4211,7 +4213,8 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
         capsObj.name="caps_ob"
         capsObj.data.resolution_u = _bevelResolution
     #~
-    la = fromGpToLatk()
+    if not _la:
+        _la = fromGpToLatk()
     #~
     for b, layer in enumerate(gp.layers):
         url = origFileName + "_layer_" + layer.info
@@ -4224,7 +4227,7 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
             for c in range(rangeStart, rangeEnd):
                 print("\n" + "*** gp layer " + str(b+1) + " of " + str(len(gp.layers)) + " | gp frame " + str(c+1) + " of " + str(rangeEnd) + " ***")
                 frameList = []
-                for stroke in la.layers[b].frames[c].strokes:
+                for stroke in _la.layers[b].frames[c].strokes:
                     origParent = None
                     if (layer.parent):
                         origParent = layer.parent
@@ -4236,7 +4239,7 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
                     coords = stroke.getCoords()
                     pressures = stroke.getPressures()
                     #~
-                    latk_ob = makeCurve(name="latk_" + getLayerInfo(layer) + "_" + str(la.layers[b].frames[c].frame_number), coords=coords, pressures=pressures, curveType=_curveType, resolution=_resolution, thickness=_thickness, bevelResolution=_bevelResolution, parent=layer.parent, capsObj=capsObj, useUvs=_uvStroke, usePressure=_usePressure)
+                    latk_ob = makeCurve(name="latk_" + getLayerInfo(layer) + "_" + str(_la.layers[b].frames[c].frame_number), coords=coords, pressures=pressures, curveType=_curveType, resolution=_resolution, thickness=_thickness, bevelResolution=_bevelResolution, parent=layer.parent, capsObj=capsObj, useUvs=_uvStroke, usePressure=_usePressure)
                     #centerOrigin(latk_ob)
                     strokeColor = (0.5,0.5,0.5)
                     if (_useColors==True):
@@ -4540,6 +4543,9 @@ def gpMeshOrig(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True
         #~
         saveFile(origFileName + "_ASSEMBLY")
 '''
+
+def gpMeshQ(val = 0.1):
+    gpMesh(_decimate=val, _saveLayers=True)
 
 def applySolidify(target=None, _extrude=1):
     if not target:

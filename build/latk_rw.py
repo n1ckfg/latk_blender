@@ -138,6 +138,7 @@ def getFileName(stripExtension=True):
     return name
 
 def fromGpToLatk(bake=False, roundValues=False, numPlaces=7, useScaleAndOffset=False, globalScale=(1.0, 1.0, 1.0), globalOffset=(0.0, 0.0, 0.0)):
+    print("Begin building Latk object from Grease Pencil...")
     if(bake == True):
         bakeFrames()
     gp = getActiveGp()
@@ -203,10 +204,11 @@ def fromGpToLatk(bake=False, roundValues=False, numPlaces=7, useScaleAndOffset=F
             laLayer.frames.append(laFrame)
         la.layers.append(laLayer)
     return la
+    print("...end building Latk object from Grease Pencil.")           
 
 def fromLatkToGp(la=None, resizeTimeline=True, useScaleAndOffset=False, globalScale=(1.0, 1.0, 1.0), globalOffset=(0.0, 0.0, 0.0)):
-    clearLayers()
-    clearPalette()
+    print("Begin building Grease Pencil from Latk object...")
+    clearAll()
     gp = getActiveGp()
     
     longestFrameNum = 1
@@ -252,7 +254,8 @@ def fromLatkToGp(la=None, resizeTimeline=True, useScaleAndOffset=False, globalSc
                     createPoint(stroke, l, (x, y, z), pressure, strength)
     #~  
     if (resizeTimeline == True):
-        setStartEnd(0, longestFrameNum, pad=False)              
+        setStartEnd(0, longestFrameNum, pad=False)  
+    print("...end building Grease Pencil from Latk object.")           
 
 # http://blender.stackexchange.com/questions/24694/query-grease-pencil-strokes-from-python
 def writeBrushStrokes(filepath=None, bake=True, roundValues=True, numPlaces=7, zipped=False, useScaleAndOffset=False, globalScale=Vector((0.1, 0.1, 0.1)), globalOffset=Vector((0, 0, 0))):
