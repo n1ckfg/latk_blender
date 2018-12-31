@@ -65,7 +65,7 @@ class Latk(object):
         returns = temp[len(temp)-1]
         return returns
 
-    def read(self, fileName, clearExisting=True): # args string, bool
+    def read(self, fileName, clearExisting=True, yUp=False, useScaleAndOffset=False, globalScale=(10.0, 10.0, 10.0), globalOffset=(0.0, 0.0, 0.0)): # defaults to Blender Z up
         data = None
 
         if (clearExisting == True):
@@ -89,9 +89,9 @@ class Latk(object):
                     for jsonStroke in jsonFrame["strokes"]:                       
                         color = (1,1,1)
                         try:
-                            r = float(jsonStroke["coloror"][0])
-                            g = float(jsonStroke["coloror"][1])
-                            b = float(jsonStroke["coloror"][2])
+                            r = jsonStroke["color"][0]
+                            g = jsonStroke["color"][1]
+                            b = jsonStroke["color"][2]
                             color = (r,g,b)
                         except:
                             pass
@@ -99,8 +99,20 @@ class Latk(object):
                         points = []
                         for jsonPoint in jsonStroke["points"]:
                             x = float(jsonPoint["co"][0])
-                            y = float(jsonPoint["co"][1])
-                            z = float(jsonPoint["co"][2])
+                            y = None
+                            z = None
+                            if (yUp == False):
+                                y = float(jsonPoint["co"][2])
+                                z = float(jsonPoint["co"][1])  
+                            else:
+                                y = float(jsonPoint["co"][1])
+                                z = float(jsonPoint["co"][2]) 
+                            #~
+                            if (useScaleAndOffset == True):
+                                x = (x * globalScale[0]) + globalOffset[0]
+                                y = (y * globalScale[1]) + globalOffset[1]
+                                z = (z * globalScale[2]) + globalOffset[2]
+                            #~                                                           
                             pressure = 1.0
                             strength = 1.0
                             try:
@@ -118,7 +130,7 @@ class Latk(object):
                     layer.frames.append(frame)
                 self.layers.append(layer)
 
-    def write(self, fileName): # args string
+    def write(self, fileName, yUp=True, useScaleAndOffset=False, globalScale=(0.1, 0.1, 0.1), globalOffset=(0.0, 0.0, 0.0)): # defaults to Unity, Maya Y up
         FINAL_LAYER_LIST = [] # string array
 
         for layer in self.layers:
@@ -137,16 +149,31 @@ class Latk(object):
                     sbb = [] # string array
                     sbb.append("\t\t\t\t\t\t\t\t{")
                     color = stroke.color
-                    sbb.append("\t\t\t\t\t\t\t\t\t\"coloror\": [" + str(color[0]) + ", " + str(color[1]) + ", " + str(color[2]) + "],")
+                    sbb.append("\t\t\t\t\t\t\t\t\t\"color\": [" + str(color[0]) + ", " + str(color[1]) + ", " + str(color[2]) + "],")
 
                     if (len(stroke.points) > 0): 
                         sbb.append("\t\t\t\t\t\t\t\t\t\"points\": [")
-                        for j, point in enumerate(stroke.points):                                     
+                        for j, point in enumerate(stroke.points):
+                            x = point.co[0]
+                            y = None
+                            z = None
+                            if (yUp == True):
+                                y = point.co[2]
+                                z = point.co[1]
+                            else:
+                                y = point.co[1]
+                                z = point.co[2]  
+                            #~
+                            if (useScaleAndOffset == True):
+                                x = (x * globalScale[0]) + globalOffset[0]
+                                y = (y * globalScale[1]) + globalOffset[1]
+                                z = (z * globalScale[2]) + globalOffset[2]
+                            #~                                           
                             if (j == len(stroke.points) - 1):
-                                sbb.append("\t\t\t\t\t\t\t\t\t\t{\"co\": [" + str(point.co[0]) + ", " + str(point.co[1]) + ", " + str(point.co[2]) + "], \"pressure\":" + str(point.pressure) + ", \"strength\":" + str(point.strength) + "}")
+                                sbb.append("\t\t\t\t\t\t\t\t\t\t{\"co\": [" + str(x) + ", " + str(y) + ", " + str(z) + "], \"pressure\":" + str(point.pressure) + ", \"strength\":" + str(point.strength) + "}")
                                 sbb.append("\t\t\t\t\t\t\t\t\t]")
                             else:
-                                sbb.append("\t\t\t\t\t\t\t\t\t\t{\"co\": [" + str(point.co[0]) + ", " + str(point.co[1]) + ", " + str(point.co[2]) + "], \"pressure\":" + str(point.pressure) + ", \"strength\":" + str(point.strength) + "},")
+                                sbb.append("\t\t\t\t\t\t\t\t\t\t{\"co\": [" + str(x) + ", " + str(y) + ", " + str(z) + "], \"pressure\":" + str(point.pressure) + ", \"strength\":" + str(point.strength) + "},")
                     else:
                         sbb.append("\t\t\t\t\t\t\t\t\t\"points\": []")
                     
@@ -377,20 +404,18 @@ class LatkFrame(object):
 
 class LatkStroke(object):       
     def __init__(self, points=None, color=(1.0,1.0,1.0)): # args float tuple array, float tuple 
-        if not points:
-            self.points = []
-        else:
+        self.points = []
+        if (points != None):
             self.points = points
         self.color = color
         self.alpha = 1.0
         self.fill_color = color
         self.fill_alpha = 0.0
 
-    def setCoords(self, coords, color=(1.0, 1.0, 1.0)):
+    def setCoords(self, coords):
         self.points = []
         for coord in coords:
             self.points.append(LatkPoint(coord))
-        self.color = color
 
     def getCoords(self):
         returns = []
@@ -2107,14 +2132,11 @@ def getFileName(stripExtension=True):
         name = name[:-6]
     return name
 
-def fromGpToLatk(bake=False, roundValues=False, numPlaces=7):
+def fromGpToLatk(bake=False, roundValues=False, numPlaces=7, useScaleAndOffset=False, globalScale=(1.0, 1.0, 1.0), globalOffset=(0.0, 0.0, 0.0)):
     if(bake == True):
         bakeFrames()
     gp = getActiveGp()
     pal = getActivePalette()
-    globalScale = Vector((0.1, 0.1, 0.1))
-    globalOffset = Vector((0, 0, 0))
-    useScaleAndOffset = True
     #~
     la = Latk()
     la.frame_rate = getSceneFps()
@@ -2177,13 +2199,11 @@ def fromGpToLatk(bake=False, roundValues=False, numPlaces=7):
         la.layers.append(laLayer)
     return la
 
-def fromLatkToGp(la=None, resizeTimeline=True):
+def fromLatkToGp(la=None, resizeTimeline=True, useScaleAndOffset=False, globalScale=(1.0, 1.0, 1.0), globalOffset=(0.0, 0.0, 0.0)):
     clearLayers()
     clearPalette()
     gp = getActiveGp()
-    useScaleAndOffset = True
-    globalScale = Vector((10, 10, 10))
-    globalOffset = Vector((0, 0, 0))
+    
     longestFrameNum = 1
     #~
     for laLayer in la.layers:
@@ -2211,14 +2231,14 @@ def fromLatkToGp(la=None, resizeTimeline=True):
                 for l, laPoint in enumerate(laPoints):
                     co = laPoint.co 
                     x = co[0]
-                    y = co[2]
-                    z = co[1]
+                    y = co[1]
+                    z = co[2]
                     pressure = 1.0
                     strength = 1.0
                     if (useScaleAndOffset == True):
-                        x = (x * globalScale.x) + globalOffset.x
-                        y = (y * globalScale.y) + globalOffset.y
-                        z = (z * globalScale.z) + globalOffset.z
+                        x = (x * globalScale[0]) + globalOffset[0]
+                        y = (y * globalScale[1]) + globalOffset[1]
+                        z = (z * globalScale[2]) + globalOffset[2]
                     #~
                     if (laPoint.pressure != None):
                         pressure = laPoint.pressure
@@ -2230,17 +2250,12 @@ def fromLatkToGp(la=None, resizeTimeline=True):
         setStartEnd(0, longestFrameNum, pad=False)              
 
 # http://blender.stackexchange.com/questions/24694/query-grease-pencil-strokes-from-python
-def writeBrushStrokes(filepath=None, bake=True, roundValues=True, numPlaces=7, zipped=False):
+def writeBrushStrokes(filepath=None, bake=True, roundValues=True, numPlaces=7, zipped=False, useScaleAndOffset=False, globalScale=Vector((0.1, 0.1, 0.1)), globalOffset=Vector((0, 0, 0))):
     url = filepath # compatibility with gui keywords
     #~
     if(bake == True):
         bakeFrames()
     gp = bpy.context.scene.grease_pencil
-    globalScale = Vector((0.1, 0.1, 0.1))
-    globalOffset = Vector((0, 0, 0))
-    useScaleAndOffset = True
-    #numPlaces = 7
-    #roundValues = True
     palette = getActivePalette()
     #~
     sg = []
@@ -2356,17 +2371,12 @@ def writeBrushStrokes(filepath=None, bake=True, roundValues=True, numPlaces=7, z
     #~                
     return {'FINISHED'}
     
-def readBrushStrokes(filepath=None, resizeTimeline=True):
+def readBrushStrokes(filepath=None, resizeTimeline=True, useScaleAndOffset=False, globalScale=Vector((10, 10, 10)), globalOffset=Vector((0, 0, 0))):
     url = filepath # compatibility with gui keywords
     #~
     gp = getActiveGp()
-    #~
-    useScaleAndOffset = True
-    globalScale = Vector((10, 10, 10))
-    globalOffset = Vector((0, 0, 0))
-    #~
     data = None
-
+    #~
     filename = os.path.split(url)[1].split(".")
     filetype = filename[len(filename)-1].lower()
     if (filetype == "latk" or filetype == "zip"):
@@ -5635,6 +5645,7 @@ class LightningArtistToolkitPreferences(bpy.types.AddonPreferences):
 class ImportLatk(bpy.types.Operator, ImportHelper):
     """Load a Latk File"""
     resizeTimeline = BoolProperty(name="Resize Timeline", description="Set in and out points", default=True)
+    useScaleAndOffset = BoolProperty(name="Use Scale and Offset", description="Compensate scale for Blender viewport", default=True)
 
     bl_idname = "import_scene.latk"
     bl_label = "Import Latk"
@@ -5648,11 +5659,12 @@ class ImportLatk(bpy.types.Operator, ImportHelper):
 
     def execute(self, context):
         import latk_blender as la
-        keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "resizeTimeline"))
+        keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "resizeTimeline", "useScaleAndOffset"))
         if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
             import os
         #~
         keywords["resizeTimeline"] = self.resizeTimeline
+        keywords["useScaleAndOffset"] = self.useScaleAndOffset
         la.readBrushStrokes(**keywords)
         return {'FINISHED'}
 
@@ -5835,6 +5847,7 @@ class ExportLatkJson(bpy.types.Operator, ExportHelper): # TODO combine into one 
     bake = BoolProperty(name="Bake Frames", description="Bake Keyframes to All Frames", default=False)
     roundValues = BoolProperty(name="Limit Precision", description="Round Values to Reduce Filesize", default=False)    
     numPlaces = IntProperty(name="Number Places", description="Number of Decimal Places", default=7)
+    useScaleAndOffset = BoolProperty(name="Use Scale and Offset", description="Compensate scale for Blender viewport", default=True)
 
     bl_idname = "export_scene.latkjson"
     bl_label = 'Export Latk Json'
@@ -5849,13 +5862,14 @@ class ExportLatkJson(bpy.types.Operator, ExportHelper): # TODO combine into one 
 
     def execute(self, context):
         import latk_blender as la
-        keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "check_existing", "bake", "roundValues", "numPlaces"))
+        keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "check_existing", "bake", "roundValues", "numPlaces", "useScaleAndOffset"))
         if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
             import os
         #~
         keywords["bake"] = self.bake
         keywords["roundValues"] = self.roundValues
         keywords["numPlaces"] = self.numPlaces
+        keywords["useScaleAndOffset"] = self.useScaleAndOffset
         #~
         la.writeBrushStrokes(**keywords, zipped=False)
         return {'FINISHED'}
@@ -5866,6 +5880,7 @@ class ExportLatk(bpy.types.Operator, ExportHelper):  # TODO combine into one cla
     bake = BoolProperty(name="Bake Frames", description="Bake Keyframes to All Frames", default=False)
     roundValues = BoolProperty(name="Limit Precision", description="Round Values to Reduce Filesize", default=False)    
     numPlaces = IntProperty(name="Number Places", description="Number of Decimal Places", default=7)
+    useScaleAndOffset = BoolProperty(name="Use Scale and Offset", description="Compensate scale for Blender viewport", default=True)
 
     bl_idname = "export_scene.latk"
     bl_label = 'Export Latk'
@@ -5880,13 +5895,14 @@ class ExportLatk(bpy.types.Operator, ExportHelper):  # TODO combine into one cla
 
     def execute(self, context):
         import latk_blender as la
-        keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "check_existing", "bake", "roundValues", "numPlaces"))
+        keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "check_existing", "bake", "roundValues", "numPlaces", "useScaleAndOffset"))
         if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
             import os
         #~
         keywords["bake"] = self.bake
         keywords["roundValues"] = self.roundValues
         keywords["numPlaces"] = self.numPlaces
+        keywords["useScaleAndOffset"] = self.useScaleAndOffset
         #~
         la.writeBrushStrokes(**keywords, zipped=True)
         return {'FINISHED'}

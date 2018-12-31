@@ -1099,6 +1099,10 @@ def clearPalette():
     for color in palette.colors:
         palette.colors.remove(color)
 
+def clearAll():
+    clearLayers()
+    clearPalette()
+
 def createColor(_color):
     frame = getActiveFrame()
     palette = getActivePalette()

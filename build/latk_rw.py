@@ -137,14 +137,11 @@ def getFileName(stripExtension=True):
         name = name[:-6]
     return name
 
-def fromGpToLatk(bake=False, roundValues=False, numPlaces=7):
+def fromGpToLatk(bake=False, roundValues=False, numPlaces=7, useScaleAndOffset=False, globalScale=(1.0, 1.0, 1.0), globalOffset=(0.0, 0.0, 0.0)):
     if(bake == True):
         bakeFrames()
     gp = getActiveGp()
     pal = getActivePalette()
-    globalScale = Vector((0.1, 0.1, 0.1))
-    globalOffset = Vector((0, 0, 0))
-    useScaleAndOffset = True
     #~
     la = Latk()
     la.frame_rate = getSceneFps()
@@ -207,13 +204,11 @@ def fromGpToLatk(bake=False, roundValues=False, numPlaces=7):
         la.layers.append(laLayer)
     return la
 
-def fromLatkToGp(la=None, resizeTimeline=True):
+def fromLatkToGp(la=None, resizeTimeline=True, useScaleAndOffset=False, globalScale=(1.0, 1.0, 1.0), globalOffset=(0.0, 0.0, 0.0)):
     clearLayers()
     clearPalette()
     gp = getActiveGp()
-    useScaleAndOffset = True
-    globalScale = Vector((10, 10, 10))
-    globalOffset = Vector((0, 0, 0))
+    
     longestFrameNum = 1
     #~
     for laLayer in la.layers:
@@ -241,14 +236,14 @@ def fromLatkToGp(la=None, resizeTimeline=True):
                 for l, laPoint in enumerate(laPoints):
                     co = laPoint.co 
                     x = co[0]
-                    y = co[2]
-                    z = co[1]
+                    y = co[1]
+                    z = co[2]
                     pressure = 1.0
                     strength = 1.0
                     if (useScaleAndOffset == True):
-                        x = (x * globalScale.x) + globalOffset.x
-                        y = (y * globalScale.y) + globalOffset.y
-                        z = (z * globalScale.z) + globalOffset.z
+                        x = (x * globalScale[0]) + globalOffset[0]
+                        y = (y * globalScale[1]) + globalOffset[1]
+                        z = (z * globalScale[2]) + globalOffset[2]
                     #~
                     if (laPoint.pressure != None):
                         pressure = laPoint.pressure
@@ -260,17 +255,12 @@ def fromLatkToGp(la=None, resizeTimeline=True):
         setStartEnd(0, longestFrameNum, pad=False)              
 
 # http://blender.stackexchange.com/questions/24694/query-grease-pencil-strokes-from-python
-def writeBrushStrokes(filepath=None, bake=True, roundValues=True, numPlaces=7, zipped=False):
+def writeBrushStrokes(filepath=None, bake=True, roundValues=True, numPlaces=7, zipped=False, useScaleAndOffset=False, globalScale=Vector((0.1, 0.1, 0.1)), globalOffset=Vector((0, 0, 0))):
     url = filepath # compatibility with gui keywords
     #~
     if(bake == True):
         bakeFrames()
     gp = bpy.context.scene.grease_pencil
-    globalScale = Vector((0.1, 0.1, 0.1))
-    globalOffset = Vector((0, 0, 0))
-    useScaleAndOffset = True
-    #numPlaces = 7
-    #roundValues = True
     palette = getActivePalette()
     #~
     sg = []
@@ -386,17 +376,12 @@ def writeBrushStrokes(filepath=None, bake=True, roundValues=True, numPlaces=7, z
     #~                
     return {'FINISHED'}
     
-def readBrushStrokes(filepath=None, resizeTimeline=True):
+def readBrushStrokes(filepath=None, resizeTimeline=True, useScaleAndOffset=False, globalScale=Vector((10, 10, 10)), globalOffset=Vector((0, 0, 0))):
     url = filepath # compatibility with gui keywords
     #~
     gp = getActiveGp()
-    #~
-    useScaleAndOffset = True
-    globalScale = Vector((10, 10, 10))
-    globalOffset = Vector((0, 0, 0))
-    #~
     data = None
-
+    #~
     filename = os.path.split(url)[1].split(".")
     filetype = filename[len(filename)-1].lower()
     if (filetype == "latk" or filetype == "zip"):
