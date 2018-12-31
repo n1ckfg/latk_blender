@@ -31,23 +31,21 @@ from math import sqrt
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 class Latk(object):     
-    def __init__(self, fileName=None, latks=None, points=None, coloror=None): # args string, Latk array, float tuple array, float tuple           
+    def __init__(self, fileName=None, init=False, coords=None, color=None): # args string, Latk array, float tuple array, float tuple           
         self.layers = [] # LatkLayer
         self.frame_rate = 12
 
-        if (fileName==None and latks==None and points==None): # new empty Latk
-            self.layers.append(LatkLayer())
-            self.layers[0].frames.append(LatkFrame())
-        elif (fileName==None and latks!=None and points==None): # merge Latk array
-            pass # TODO read multiple times without clearing
-        elif (fileName==None and latks==None and points!=None): # 
-            self.layers.append(LatkLayer())
-            self.layers[0].frames.append(LatkFrame())
-            
-            stroke = LatkStroke(_pts, _c)
-            self.layers[0].frames[0].strokes.append(stroke)
-        else: # load from url
+        if (fileName != None):
             self.read(fileName, True)
+        elif (init == True):
+            self.layers.append(LatkLayer())
+            self.layers[0].frames.append(LatkFrame())
+            if (coords != None): # 
+                stroke = LatkStroke()
+                stroke.setCoords(coords)
+                if (color != None):
+                    stroke.color = color
+                self.layers[0].frames[0].strokes.append(stroke)            
 
     def getFileNameNoExt(self, s): # args string, return string
         returns = ""
@@ -324,7 +322,7 @@ class Latk(object):
         stroke.color = color
         lastFrame.strokes.append(stroke)
     
-    def setPoints(self, coords, color=(1.0,1.0,1.0)):
+    def setCoords(self, coords, color=(1.0,1.0,1.0)):
         lastLayer = self.layers[len(self.layers)-1]
         lastFrame = lastLayer.frames[len(lastLayer.frames)-1]
         stroke = LatkStroke()
@@ -362,25 +360,17 @@ class Latk(object):
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 
 class LatkLayer(object):    
-    def __init__(self, name=None, frames=None): 
-        if not name:
-            name = "layer"   
-        if not frames:
-            self.frames = [] # LatkFrame
-        else:
-            self.frames = frames
+    def __init__(self, name="layer"): 
+        self.frames = [] # LatkFrame
         self.name = name
         self.parent = None
     
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 
 class LatkFrame(object):   
-    def __init__(self, strokes=None): 
-        if not strokes:   
-            self.strokes = [] # LatkStroke
-        else:
-            self.strokes = strokes
-        self.frame_number = 0
+    def __init__(self, frame_number=0): 
+        self.strokes = [] # LatkStroke
+        self.frame_number = frame_number
         self.parent_location = (0.0,0.0,0.0)
         
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
@@ -2127,66 +2117,60 @@ def fromGpToLatk(bake=False, roundValues=False, numPlaces=7):
     useScaleAndOffset = True
     #~
     la = Latk()
-    la.layers = []
     la.frame_rate = getSceneFps()
     #~
-    for f, layer in enumerate(gp.layers):
+    for layer in gp.layers:
         laLayer = LatkLayer()
-        laLayer.frames = []
         laLayer.name = layer.info
-        if (layer.parent):
+        if (layer.parent == True):
             laLayer.parent = layer.parent.name
-        for h, frame in enumerate(layer.frames):
+        for frame in layer.frames:
             laFrame = LatkFrame()
-            laFrame.strokes = []
-            goToFrame(h)
 
             laFrame.frame_number = frame.frame_number
             if (layer.parent == True):
                 laFrame.parent_location = layer.parent.location
-            if (len(frame.strokes) > 0):
-                for i, stroke in enumerate(frame.strokes):
-                    laStroke = LatkStroke()
-                    laStroke.points = []
-                    
-                    color = (0,0,0)
-                    alpha = 0.9
-                    fill_color = (1,1,1)
-                    fill_alpha = 0.0
-                    try:
-                        col = pal.colors[stroke.colorname]
-                        color = col.color
-                        alpha = col.alpha 
-                        fill_color = col.fill_color
-                        fill_alpha = col.fill_alpha
-                    except:
-                        pass
-                    laStroke.color = color
-                    laStroke.alpha = alpha
-                    laStroke.fill_color = fill_color
-                    laStroke.fill_alpha = fill_alpha
-                    for j, point in enumerate(stroke.points):
-                        x = point.co.x
-                        y = point.co.z
-                        z = point.co.y
-                        pressure = 1.0
-                        pressure = point.pressure
-                        strength = 1.0
-                        strength = point.strength
-                        #~
-                        if (useScaleAndOffset == True):
-                            x = (x * globalScale.x) + globalOffset.x
-                            y = (y * globalScale.y) + globalOffset.y
-                            z = (z * globalScale.z) + globalOffset.z
-                        #~
-                        if (roundValues == True):
-                            x = roundVal(x, numPlaces)
-                            y = roundVal(y, numPlaces)
-                            z = roundVal(z, numPlaces)
-                            pressure = roundVal(pressure, numPlaces)
-                            strength = roundVal(strength, numPlaces)
+            for stroke in frame.strokes:
+                laStroke = LatkStroke()
+                
+                color = (0,0,0)
+                alpha = 0.9
+                fill_color = (1,1,1)
+                fill_alpha = 0.0
+                try:
+                    col = pal.colors[stroke.colorname]
+                    color = (col.color[0], col.color[1], col.color[2])
+                    alpha = col.alpha 
+                    fill_color = (col.fill_color[0], col.fill_color[1], col.fill_color[2])
+                    fill_alpha = col.fill_alpha
+                except:
+                    pass
+                laStroke.color = color
+                laStroke.alpha = alpha
+                laStroke.fill_color = fill_color
+                laStroke.fill_alpha = fill_alpha
+                for point in stroke.points:
+                    x = point.co[0]
+                    y = point.co[1]
+                    z = point.co[2]
+                    pressure = 1.0
+                    pressure = point.pressure
+                    strength = 1.0
+                    strength = point.strength
+                    #~
+                    if (useScaleAndOffset == True):
+                        x = (x * globalScale[0]) + globalOffset[0]
+                        y = (y * globalScale[1]) + globalOffset[1]
+                        z = (z * globalScale[2]) + globalOffset[2]
+                    #~
+                    if (roundValues == True):
+                        x = roundVal(x, numPlaces)
+                        y = roundVal(y, numPlaces)
+                        z = roundVal(z, numPlaces)
+                        pressure = roundVal(pressure, numPlaces)
+                        strength = roundVal(strength, numPlaces)
 
-                        laPoint = LatkPoint((x, y, z), pressure, strength)
+                    laPoint = LatkPoint((x, y, z), pressure, strength)
                     laStroke.points.append(laPoint)
                 laFrame.strokes.append(laStroke)
             laLayer.frames.append(laFrame)
