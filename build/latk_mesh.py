@@ -224,9 +224,10 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
                     bpy.context.scene.objects.active = latk_ob
                     #~
                     if (_bakeMesh==True): #or _remesh==True):
-                        bpy.ops.object.modifier_add(type='DECIMATE')
-                        bpy.context.object.modifiers["Decimate"].ratio = _decimate     
-                        meshObj = applyModifiers(latk_ob)
+                        if (_decimate < 0.999):
+                        	bpy.ops.object.modifier_add(type='DECIMATE')
+                            bpy.context.object.modifiers["Decimate"].ratio = _decimate     
+                            meshObj = applyModifiers(latk_ob)
                         #~
                         if (_remesh != "none"):
                             meshObj = remesher(meshObj, mode=_remesh)
