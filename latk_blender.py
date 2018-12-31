@@ -2204,8 +2204,8 @@ def fromGpToLatk(bake=False, roundValues=False, numPlaces=7, useScaleAndOffset=F
                 laFrame.strokes.append(laStroke)
             laLayer.frames.append(laFrame)
         la.layers.append(laLayer)
-    return la
     print("...end building Latk object from Grease Pencil.")           
+    return la
 
 def fromLatkToGp(la=None, resizeTimeline=True, useScaleAndOffset=False, globalScale=(1.0, 1.0, 1.0), globalOffset=(0.0, 0.0, 0.0)):
     print("Begin building Grease Pencil from Latk object...")
