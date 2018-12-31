@@ -137,7 +137,7 @@ def getFileName(stripExtension=True):
         name = name[:-6]
     return name
 
-def gpToLatk(bake=False, roundValues=False, numPlaces=7):
+def fromGpToLatk(bake=False, roundValues=False, numPlaces=7):
     if(bake == True):
         bakeFrames()
     gp = getActiveGp()
@@ -147,15 +147,18 @@ def gpToLatk(bake=False, roundValues=False, numPlaces=7):
     useScaleAndOffset = True
     #~
     la = Latk()
+    la.layers = []
     la.frame_rate = getSceneFps()
     #~
     for f, layer in enumerate(gp.layers):
         laLayer = LatkLayer()
+        laLayer.frames = []
         laLayer.name = layer.info
         if (layer.parent):
             laLayer.parent = layer.parent.name
         for h, frame in enumerate(layer.frames):
             laFrame = LatkFrame()
+            laFrame.strokes = []
             goToFrame(h)
 
             laFrame.frame_number = frame.frame_number
@@ -164,7 +167,8 @@ def gpToLatk(bake=False, roundValues=False, numPlaces=7):
             if (len(frame.strokes) > 0):
                 for i, stroke in enumerate(frame.strokes):
                     laStroke = LatkStroke()
-
+                    laStroke.points = []
+                    
                     color = (0,0,0)
                     alpha = 0.9
                     fill_color = (1,1,1)
@@ -203,13 +207,13 @@ def gpToLatk(bake=False, roundValues=False, numPlaces=7):
                             strength = roundVal(strength, numPlaces)
 
                         laPoint = LatkPoint((x, y, z), pressure, strength)
-                        laStroke.points.append(laPoint)
+                    laStroke.points.append(laPoint)
                 laFrame.strokes.append(laStroke)
             laLayer.frames.append(laFrame)
         la.layers.append(laLayer)
     return la
 
-def latkToGp(la=None, resizeTimeline=True):
+def fromLatkToGp(la=None, resizeTimeline=True):
     clearLayers()
     clearPalette()
     gp = getActiveGp()
