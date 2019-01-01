@@ -81,7 +81,7 @@ def joinObjects(target=None, center=False):
         except:
             pass
     #~
-    #gc.collect()
+    gc.collect()
     if (center==True):
         centerOrigin(target[0])
     return target[0]
@@ -524,7 +524,7 @@ def applySubdiv(target=None, _subd=1):
                 pass
 
 def gpMeshCleanup(target):
-    #gc.collect()
+    gc.collect()
     removeGroup(target, allGroups=True)
     dn()
 

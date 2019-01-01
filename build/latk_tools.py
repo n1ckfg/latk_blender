@@ -631,7 +631,7 @@ def delete(_obj=None):
     bpy.data.objects[_obj.name].hide = False
     bpy.data.objects[_obj.name].select = True
     bpy.ops.object.delete()
-    #gc.collect()
+    gc.collect()
 
 def refresh():
     bpy.context.scene.update()
