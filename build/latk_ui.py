@@ -709,7 +709,8 @@ class LatkProperties(bpy.types.PropertyGroup):
     numSplitFrames = IntProperty(
         name="Split Frames",
         description="Split layers if they have more than this many frames",
-        default=5
+        default=5,
+        soft_min=2
     )
 
     writeStrokeSteps = IntProperty(
@@ -1134,9 +1135,12 @@ class Latk_Button_BigClean(bpy.types.Operator):
     
     def execute(self, context):
         latk_settings = bpy.context.scene.latk_settings
+        origStrokeCount = len(getAllStrokes())
         la = fromGpToLatk()
         la.clean()
         fromLatkToGp(la)
+        strokeCount = len(getAllStrokes())
+        self.report({'INFO'}, "Before: " + str(origStrokeCount) + " strokes, after: " + str(strokeCount) + " strokes.")
         return {'FINISHED'}
 
 class Latk_Button_MtlShader(bpy.types.Operator):
