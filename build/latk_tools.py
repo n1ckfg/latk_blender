@@ -1202,7 +1202,7 @@ def newLayer(name="NewLayer", setActive=True):
         gp.layers.active = gp.layers[len(gp.layers)-1]
     return gp.layers[len(gp.layers)-1]
 
-def getStrokePoints(target=None):
+def getStrokeCoords(target=None):
     returns = []
     if not target:
         target = getSelectedStroke()
@@ -1210,13 +1210,37 @@ def getStrokePoints(target=None):
         returns.append(point.co)
     return returns
 
+def getStrokePressures(target=None):
+    returns = []
+    if not target:
+        target = getSelectedStroke()
+    for point in target.points:
+        returns.append(point.pressure)
+    return returns
+
+def getStrokeStrengths(target=None):
+    returns = []
+    if not target:
+        target = getSelectedStroke()
+    for point in target.points:
+        returns.append(point.strength)
+    return returns
+
+def getStrokeCoordsPlus(target=None):
+    returns = []
+    if not target:
+        target = getSelectedStroke()
+    for point in target.points:
+        returns.append((point.co[0], point.co[1], point.co[2], point.pressure, point.strength))
+    return returns
+
 def reprojectAllStrokes():
     strokes = getAllStrokes()
     newLayer()
     for stroke in strokes:
-        points = getStrokePoints(stroke)
+        coords = getStrokeCoords(stroke)
         try:
-            drawPoints(points)
+            drawCoords(coords)
         except:
             pass
 

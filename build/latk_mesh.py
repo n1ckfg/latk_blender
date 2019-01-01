@@ -374,9 +374,8 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
                     else:
                         masterParentList.append(None)
                     #~
-                    stroke_points = stroke.points
-                    coords = [ (point.co.x, point.co.y, point.co.z) for point in stroke_points ]
-                    pressures = [ point.pressure for point in stroke_points ]
+                    coords = getStrokeCoords(stroke)
+                    pressures = getStrokePressures(stroke)
                     #~
                     latk_ob = makeCurve(bake=_bakeMesh, name="latk_" + getLayerInfo(layer) + "_" + str(layer.frames[c].frame_number), coords=coords, pressures=pressures, curveType=_curveType, resolution=_resolution, thickness=_thickness, bevelResolution=_bevelResolution, parent=layer.parent, capsObj=capsObj, useUvs=_uvStroke, usePressure=_usePressure)
                     #centerOrigin(latk_ob)
@@ -665,7 +664,7 @@ def curveToStroke(target=None):
         for point in splinePoints:
             points.append((point.co[0], point.co[2], point.co[1]))
         try:
-            drawPoints(points)
+            drawCoords(points)
         except:
             pass
 
@@ -780,7 +779,7 @@ def meshToGp(obj=None, strokeLength=1, strokeGaps=10.0, shuffleOdds=1.0, spreadP
             #col = createAndMatchColorPalette(getColorExplorer(obj, i), 16, 2)
             col = getColorExplorer(obj, i)
             try:
-                drawPoints(points=points, color=col)
+                drawCoords(coords=points, color=col)
                 allPointsCounter = i
                 points = []
             except:
@@ -999,7 +998,7 @@ def getAlembicCurves(obj=None):
             points = []
             for point in spline.points:
                 points.append(point.co)
-            drawPoints(points)
+            drawCoords(points)
 
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
