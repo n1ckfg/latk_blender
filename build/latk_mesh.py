@@ -147,7 +147,7 @@ def assembleMesh(export=False, createPalette=True):
             saveFile(origFileName + "_ASSEMBLY")
             print(origFileName + "_ASSEMBLY.blend" + " was saved but some groups were missing.")
 
-def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _decimate = 0.1, _curveType="nurbs", _useColors=True, _saveLayers=False, _singleFrame=False, _vertexColors=True, _vertexColorName="rgba", _animateFrames=True, _remesh="none", _consolidateMtl=True, _caps=True, _joinMesh=True, _uvStroke=True, _uvFill=True, _usePressure=True, _la=None):
+def gpMeshAlt(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _decimate = 0.1, _curveType="nurbs", _useColors=True, _saveLayers=False, _singleFrame=False, _vertexColors=True, _vertexColorName="rgba", _animateFrames=True, _remesh="none", _consolidateMtl=True, _caps=True, _joinMesh=True, _uvStroke=True, _uvFill=True, _usePressure=True, _la=None):
     if (_joinMesh==True or _remesh != "none"):
         _bakeMesh=True
     #~
@@ -295,25 +295,25 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
             #~
             if (_saveLayers==True):
                 deselect()
-                target = matchName("latk_" + getLayerInfo(layer))
+                target = matchName("latk_" + laLayer.getInfo())
                 for tt in range(0, len(target)):
                     target[tt].select = True
                 print("* baking")
                 # * * * * *
-                bakeParentToChildByName("latk_" + getLayerInfo(layer))
+                bakeParentToChildByName("latk_" + laLayer.getInfo())
                 # * * * * *
                 print("~ ~ ~ ~ ~ ~ ~ ~ ~")
                 #~
-                makeGroup(getLayerInfo(layer))
+                makeGroup(laLayer.getInfo())
                 #~
-                masterGroupList.append(getLayerInfo(layer))
+                masterGroupList.append(laLayer.getInfo())
                 #~
                 print("saving to " + url)
                 saveFile(url)
                 #~
                 masterUrlList.append(url)
                 #~
-                gpMeshCleanup(getLayerInfo(layer))
+                #gpMeshCleanup(laLayer.getInfo())
     #~
     if (_caps==True):
         try:
@@ -333,8 +333,7 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
         #~
         saveFile(origFileName + "_ASSEMBLY")
 
-'''
-def gpMeshOrig(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _decimate = 0.1, _curveType="nurbs", _useColors=True, _saveLayers=False, _singleFrame=False, _vertexColors=True, _vertexColorName="rgba", _animateFrames=True, _remesh="none", _consolidateMtl=True, _caps=True, _joinMesh=True, _uvStroke=True, _uvFill=True, _usePressure=True):
+def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _decimate = 0.1, _curveType="nurbs", _useColors=True, _saveLayers=False, _singleFrame=False, _vertexColors=True, _vertexColorName="rgba", _animateFrames=True, _remesh="none", _consolidateMtl=True, _caps=True, _joinMesh=True, _uvStroke=True, _uvFill=True, _usePressure=True):
     if (_joinMesh==True or _remesh != "none"):
         _bakeMesh=True
     #~
@@ -507,7 +506,6 @@ def gpMeshOrig(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True
         consolidateGroups()
         #~
         saveFile(origFileName + "_ASSEMBLY")
-'''
 
 def gpMeshQ(val = 0.1):
     gpMesh(_decimate=val, _saveLayers=True)
