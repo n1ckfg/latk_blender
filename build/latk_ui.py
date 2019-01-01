@@ -618,9 +618,15 @@ class LatkProperties(bpy.types.PropertyGroup):
     bl_idname = "GREASE_PENCIL_PT_LatkProperties"
 
     bakeMesh = BoolProperty(
-        name="Auto Bake",
+        name="Bake",
         description="Off: major speedup if you're staying in Blender. On: slow but keeps everything exportable",
         default=False
+    )
+
+    joinMesh = BoolProperty(
+        name="Join",
+        description="Join baked meshes",
+        default=True
     )
 
     minRemapPressure = FloatProperty(
@@ -647,7 +653,7 @@ class LatkProperties(bpy.types.PropertyGroup):
     )
 
     saveLayers = BoolProperty(
-        name="Save Layers",
+        name="Layers",
         description="Save every layer to its own file",
         default=False
     )
@@ -719,7 +725,7 @@ class LatkProperties(bpy.types.PropertyGroup):
     )
 
     vertexColorName = StringProperty(
-        name="Vertex Color",
+        name="VCol",
         description="Vertex color name for export",
         default="rgba"
     )
@@ -790,6 +796,7 @@ class LatkProperties_Panel(bpy.types.Panel):
 
         row = layout.row()
         row.prop(latk, "bakeMesh")
+        row.prop(latk, "joinMesh")
         row.prop(latk, "saveLayers")
         row.prop(latk, "vertexColorName")
         
@@ -990,7 +997,10 @@ class Latk_Button_Gpmesh(bpy.types.Operator):
     
     def execute(self, context):
         latk_settings = bpy.context.scene.latk_settings
-        gpMesh(_thickness=latk_settings.thickness, _remesh=latk_settings.remesh_mode.lower(), _resolution=latk_settings.resolution, _bevelResolution=latk_settings.bevelResolution, _decimate=latk_settings.decimate, _bakeMesh=latk_settings.bakeMesh, _joinMesh=latk_settings.bakeMesh, _saveLayers=False, _vertexColorName=latk_settings.vertexColorName)
+        doJoinMesh=False
+        if (latk_settings.bakeMesh==True and latk_settings.joinMesh==True):
+            doJoinMesh = True
+        gpMesh(_thickness=latk_settings.thickness, _remesh=latk_settings.remesh_mode.lower(), _resolution=latk_settings.resolution, _bevelResolution=latk_settings.bevelResolution, _decimate=latk_settings.decimate, _bakeMesh=latk_settings.bakeMesh, _joinMesh=doJoinMesh, _saveLayers=False, _vertexColorName=latk_settings.vertexColorName)
         return {'FINISHED'}
 
 class Latk_Button_RemapPressure(bpy.types.Operator):

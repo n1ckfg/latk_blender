@@ -1226,6 +1226,26 @@ def getStrokeStrengths(target=None):
         returns.append(point.strength)
     return returns
 
+def lookUpStrokeColor(target=None):
+    palette = getActivePalette()
+    if not target:
+        target = getSelectedStroke()
+    return palette.colors[target.colorname]
+
+def getStrokeColor(target=None):
+    color = lookUpStrokeColor(target).color
+    return (color[0], color[1], color[2])
+
+def getStrokeAlpha(target=None):
+    return lookUpStrokeColor(target).alpha
+
+def getStrokeFillColor(target=None):
+    color = lookUpStrokeColor(target).fill_color
+    return (color[0], color[1], color[2])
+
+def getStrokeFillAlpha(target=None):
+    return lookUpStrokeColor(target).fill_alpha
+
 def getStrokeCoordsPlus(target=None):
     returns = []
     if not target:

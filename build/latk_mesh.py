@@ -145,8 +145,7 @@ def assembleMesh(export=False, createPalette=True):
             saveFile(origFileName + "_ASSEMBLY")
             print(origFileName + "_ASSEMBLY.blend" + " was saved but some groups were missing.")
 
-'''
-def gpMeshAlt(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _decimate = 0.1, _curveType="nurbs", _useColors=True, _saveLayers=False, _singleFrame=False, _vertexColors=True, _vertexColorName="rgba", _animateFrames=True, _remesh="none", _consolidateMtl=True, _caps=True, _joinMesh=True, _uvStroke=True, _uvFill=True, _usePressure=True, _la=None):
+def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _decimate = 0.1, _curveType="nurbs", _useColors=True, _saveLayers=False, _singleFrame=False, _vertexColors=True, _vertexColorName="rgba", _animateFrames=True, _remesh="none", _consolidateMtl=True, _caps=True, _joinMesh=True, _uvStroke=True, _uvFill=True, _usePressure=True):
     if (_joinMesh==True or _remesh != "none"):
         _bakeMesh=True
     #~
@@ -175,189 +174,7 @@ def gpMeshAlt(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True,
         capsObj.name="caps_ob"
         capsObj.data.resolution_u = _bevelResolution
     #~
-    if not _la:
-        _la = fromGpToLatk()
-    #~
     for b, layer in enumerate(gp.layers):
-        laLayer = _la.layers[b]
-        url = origFileName + "_layer_" + layer.info
-        if (layer.lock==False):
-            rangeStart = 0
-            rangeEnd = len(layer.frames)
-            if (_singleFrame==True):
-                rangeStart = getActiveFrameNum(layer)
-                rangeEnd = rangeStart + 1
-            for c in range(rangeStart, rangeEnd):
-                print("\n" + "*** gp layer " + str(b+1) + " of " + str(len(gp.layers)) + " | gp frame " + str(c+1) + " of " + str(rangeEnd) + " ***")
-                laFrame = laLayer.frames[c]
-                frameList = []
-                for stroke in laFrame.strokes:
-                    origParent = None
-                    if (layer.parent):
-                        origParent = layer.parent
-                        layer.parent = None
-                        masterParentList.append(origParent.name)
-                    else:
-                        masterParentList.append(None)
-                    #~
-                    coords = stroke.getCoords()
-                    pressures = stroke.getPressures()
-                    #~
-                    latk_ob = makeCurve(name="latk_" + laLayer.getInfo() + "_" + str(laFrame.frame_number), coords=coords, pressures=pressures, curveType=_curveType, resolution=_resolution, thickness=_thickness, bevelResolution=_bevelResolution, parent=layer.parent, capsObj=capsObj, useUvs=_uvStroke, usePressure=_usePressure)
-                    #centerOrigin(latk_ob)
-                    strokeColor = (0.5,0.5,0.5)
-                    if (_useColors==True):
-                        strokeColor = stroke.color #palette.colors[stroke.colorname].color
-                    # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
-                    mat = None
-                    if (_consolidateMtl==False):
-                       mat = bpy.data.materials.new("new_mtl")
-                       mat.diffuse_color = strokeColor
-                    else:
-                        for oldMat in bpy.data.materials:
-                            if (compareTuple(strokeColor, oldMat.diffuse_color) == True):
-                                mat = oldMat
-                                break
-                        if (mat == None):
-                            mat = bpy.data.materials.new("share_mtl")
-                            mat.diffuse_color = strokeColor  
-                    latk_ob.data.materials.append(mat)
-                    # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ 
-                    #~   
-                    bpy.context.scene.objects.active = latk_ob
-                    #~
-                    if (_bakeMesh==True): #or _remesh==True):
-                        bpy.ops.object.modifier_add(type='DECIMATE')
-                        bpy.context.object.modifiers["Decimate"].ratio = _decimate     
-                        meshObj = applyModifiers(latk_ob)
-                        #~
-                        if (_remesh.lower() != "none"):
-                            meshObj = remesher(meshObj, mode=_remesh)
-                        #~
-                        # + + + + + + +
-                        if (stroke.fill_alpha > 0.001):
-                            fill_ob = createFill(stroke.points, useUvs=_uvFill)
-                            joinObjects([meshObj, fill_ob])
-                        # + + + + + + +
-                        #~
-                        if (_vertexColors==True):
-                            colorVertices(meshObj, strokeColor, colorName = _vertexColorName) 
-                        #~ 
-                        frameList.append(meshObj) 
-                    else:
-                        frameList.append(latk_ob)    
-                    # * * * * * * * * * * * * * *
-                    if (origParent != None):
-                        makeParent([frameList[len(frameList)-1], origParent])
-                        layer.parent = origParent
-                    # * * * * * * * * * * * * * *
-                    bpy.ops.object.select_all(action='DESELECT')
-                #~
-                for i in range(0, len(frameList)):
-                    totalCounter += 1
-                    print(frameList[i].name + " | " + str(totalCounter) + " of " + totalStrokes + " total")
-                    if (_animateFrames==True):
-                        hideFrame(frameList[i], start, True)
-                        #~
-                        for j in range(start, end):
-                            if (j == laFrame.frame_number):
-                                hideFrame(frameList[i], j, False)
-                                keyTransform(frameList[i], j)
-                            elif (c < len(laLayer.frames)-1 and j > laFrame.frame_number and j < laLayer.frames[c+1].frame_number):
-                                hideFrame(frameList[i], j, False)
-                            elif (c != len(laLayer.frames)-1):
-                                hideFrame(frameList[i], j, True)
-                #~
-                if (_joinMesh==True): 
-                    target = matchName("latk_" + laLayer.getInfo())
-                    for i in range(start, end):
-                        strokesToJoin = []
-                        if (i == layer.frames[c].frame_number):
-                            goToFrame(i)
-                            for j in range(0, len(target)):
-                                if (target[j].hide==False):
-                                    strokesToJoin.append(target[j])
-                        if (len(strokesToJoin) > 1):
-                            print("~ ~ ~ ~ ~ ~ ~ ~ ~")
-                            print("* joining " + str(len(strokesToJoin))  + " strokes")
-                            joinObjects(strokesToJoin)
-                            print("~ ~ ~ ~ ~ ~ ~ ~ ~")
-            #~
-            if (_saveLayers==True):
-                deselect()
-                target = matchName("latk_" + laLayer.getInfo())
-                for tt in range(0, len(target)):
-                    target[tt].select = True
-                print("* baking")
-                # * * * * *
-                bakeParentToChildByName("latk_" + laLayer.getInfo())
-                # * * * * *
-                print("~ ~ ~ ~ ~ ~ ~ ~ ~")
-                #~
-                makeGroup(laLayer.getInfo())
-                #~
-                masterGroupList.append(laLayer.getInfo())
-                #~
-                print("saving to " + url)
-                saveFile(url)
-                #~
-                masterUrlList.append(url)
-                #~
-                #gpMeshCleanup(laLayer.getInfo())
-    #~
-    if (_caps==True):
-        try:
-            delete(capsObj)
-        except:
-            pass
-    #~
-    if (_saveLayers==True):
-        openFile(origFileName)
-        for i in range(0, len(masterUrlList)):
-            importGroup(getFilePath() + masterUrlList[i] + ".blend", masterGroupList[i], winDir=True)
-        #~
-        if (_consolidateMtl==True):
-            createMtlPalette()
-        #~
-        consolidateGroups()
-        #~
-        saveFile(origFileName + "_ASSEMBLY")
-'''
-
-def gpMesh(_la=None, _thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _decimate = 0.1, _curveType="nurbs", _useColors=True, _saveLayers=False, _singleFrame=False, _vertexColors=True, _vertexColorName="rgba", _animateFrames=True, _remesh="none", _consolidateMtl=True, _caps=True, _joinMesh=True, _uvStroke=True, _uvFill=True, _usePressure=True):
-    if (_joinMesh==True or _remesh != "none"):
-        _bakeMesh=True
-    #~
-    if (_saveLayers==True):
-        dn()
-    #~    
-    origFileName = getFileName()
-    masterUrlList = []
-    masterGroupList = []
-    masterParentList = []
-    #~
-    totalStrokes = str(len(getAllStrokes()))
-    totalCounter = 0
-    start, end = getStartEnd()
-    #~
-    if not _la:
-        _la = fromGpToLatk()
-    #~
-    gp = getActiveGp()
-    palette = getActivePalette()
-    #~
-    capsObj = None
-    if (_caps==True):
-        if (_curveType=="nurbs"):
-            bpy.ops.curve.primitive_nurbs_circle_add(radius=_thickness)
-        else:
-            bpy.ops.curve.primitive_bezier_circle_add(radius=_thickness)
-        capsObj = ss()
-        capsObj.name="caps_ob"
-        capsObj.data.resolution_u = _bevelResolution
-    #~
-    for b, layer in enumerate(gp.layers):
-        laLayer = _la.layers[b]
         url = origFileName + "_layer_" + layer.info
         if (layer.lock==False):
             rangeStart = 0
@@ -367,11 +184,9 @@ def gpMesh(_la=None, _thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMes
                 rangeEnd = rangeStart + 1
             for c in range(rangeStart, rangeEnd):
                 frame = layer.frames[c]
-                laFrame = laLayer.frames[c]
-                print("\n" + "*** gp layer " + str(b+1) + " of " + str(len(gp.layers)) + " | gp frame " + str(c+1) + " of " + str(rangeEnd) + " ***")
+                print("\n" + "*** gp layer " + layer.info + "(" + str(b+1) + " of " + str(len(gp.layers)) + ") | gp frame " + str(c+1) + " of " + str(rangeEnd) + " ***")
                 frameList = []
                 for d, stroke in enumerate(frame.strokes):
-                    laStroke = laFrame.strokes[d]
                     origParent = None
                     if (layer.parent):
                         origParent = layer.parent
@@ -380,14 +195,14 @@ def gpMesh(_la=None, _thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMes
                     else:
                         masterParentList.append(None)
                     #~
-                    coords = laStroke.getCoords()
-                    pressures = laStroke.getPressures()
+                    coords = getStrokeCoords(stroke)
+                    pressures = getStrokePressures(stroke)
                     #~
                     latk_ob = makeCurve(bake=_bakeMesh, name="latk_" + getLayerInfo(layer) + "_" + str(layer.frames[c].frame_number), coords=coords, pressures=pressures, curveType=_curveType, resolution=_resolution, thickness=_thickness, bevelResolution=_bevelResolution, parent=layer.parent, capsObj=capsObj, useUvs=_uvStroke, usePressure=_usePressure)
                     #centerOrigin(latk_ob)
                     strokeColor = (0.5,0.5,0.5)
                     if (_useColors==True):
-                        strokeColor = laStroke.color
+                        strokeColor = getStrokeColor(stroke)
                     # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
                     mat = None
                     if (_consolidateMtl==False):
@@ -416,8 +231,8 @@ def gpMesh(_la=None, _thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMes
                             latk_ob = remesher(latk_ob, mode=_remesh)
                         #~
                         # + + + + + + +
-                        if (laStroke.fill_alpha > 0.001):
-                            fill_ob = createFill(laStroke.points, useUvs=_uvFill)
+                        if (getStrokeFillAlpha(stroke) > 0.001):
+                            fill_ob = createFill(stroke.points, useUvs=_uvFill)
                             joinObjects([latk_ob, fill_ob])
                         # + + + + + + +
                         #~
