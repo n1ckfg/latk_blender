@@ -6321,7 +6321,7 @@ class LatkProperties(bpy.types.PropertyGroup):
     numSplitFrames = IntProperty(
         name="Split Frames",
         description="Split layers if they have more than this many frames",
-        default=20
+        default=5
     )
 
     writeStrokeSteps = IntProperty(
@@ -6470,6 +6470,7 @@ class LatkProperties_Panel(bpy.types.Panel):
         row = layout.row()
         row.prop(latk, "numSplitFrames")
         row.operator("latk_button.splf")
+        row.operator("latk_button.bigclean")
 
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
@@ -6735,6 +6736,19 @@ class Latk_Button_Splf(bpy.types.Operator):
     def execute(self, context):
         latk_settings = bpy.context.scene.latk_settings
         splitLayersAboveFrameLimit(latk_settings.numSplitFrames)
+        return {'FINISHED'}
+
+class Latk_Button_BigClean(bpy.types.Operator):
+    """Split GP stroke layers. Layers with fewer frames mesh faster"""
+    bl_idname = "latk_button.bigclean"
+    bl_label = "Clean GP"
+    bl_options = {'UNDO'}
+    
+    def execute(self, context):
+        latk_settings = bpy.context.scene.latk_settings
+        la = fromGpToLatk()
+        la.clean()
+        fromLatkToGp(la)
         return {'FINISHED'}
 
 class Latk_Button_MtlShader(bpy.types.Operator):
