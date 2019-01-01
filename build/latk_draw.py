@@ -1,8 +1,8 @@
 # 6 of 10. DRAWING
 
 # note that unlike createStroke, this creates a stroke from raw coordinates
-def drawPoints(points=None, color=None, frame=None, layer=None):
-    if (len(points) > 0):
+def drawCoords(coords=None, color=None, frame=None, layer=None):
+    if (len(coords) > 0):
         if not color:
             color = getActiveColor()
         else:
@@ -22,15 +22,15 @@ def drawPoints(points=None, color=None, frame=None, layer=None):
                     pass
         stroke = frame.strokes.new(color.name)
         stroke.draw_mode = "3DSPACE"
-        stroke.points.add(len(points))
-        for i, point in enumerate(points):
+        stroke.points.add(len(coord))
+        for i, coord in enumerate(coords):
             pressure = 1.0
             strength = 1.0
-            if (len(point) > 3):
-                pressure = point[3]
-            if (len(point) > 4):
-                strength = point[4]
-            createPoint(stroke, i, (point[0], point[2], point[1]), pressure, strength)
+            if (len(coord) > 3):
+                pressure = coord[3]
+            if (len(coord) > 4):
+                strength = coord[4]
+            createPoint(stroke, i, (coord[0], coord[2], coord[1]), pressure, strength)
         return stroke
     else:
         return None
@@ -207,7 +207,7 @@ def writeOnStrokes(pointStep=10, step=1):
         distributeStrokes(pointStep=pointStep, step=step)
 
 def makeLine(p1, p2):
-    return drawPoints([p1, p2])
+    return drawCoords([p1, p2])
 
 def makeGrid(gridRows=10, gridColumns=10, cell=0.1, zPos=0):
     strokes = []
@@ -288,14 +288,14 @@ def makeCircle(pos=(0,0,0), size=1, resolution=10, vertical=True):
             points.append(addVec3((x, 0, y), pos))
         angle += step
     #~
-    return drawPoints(points)
+    return drawCoords(points)
 
 def makeSphere(pos=(0,0,0), size=1, resolution=10, lat=10, lon=10):
     points = []
     for i in range(0, lat):
         for j in range(0, lon):
             points.append(multVec3(addVec3(getLatLon(i, j), pos), (size,size,size)))
-    drawPoints(points)
+    drawCoords(points)
 
 def getLatLon(lat, lon):
     eulat = (math.pi / 2.0) - lat
@@ -312,7 +312,7 @@ def makeStarBurst(pos=(0,0,0), size=1, reps=20):
         lat = random.uniform(0, 90)
         lon = random.uniform(0, 180)
         p2 = multVec3(getLatLon(lat, lon), (s, s, s))
-        strokes.append(drawPoints([pos, p2]))
+        strokes.append(drawCoords([pos, p2]))
     return strokes
 
 def makeTriangle(pos=(0,0,0), size=1):
@@ -320,7 +320,7 @@ def makeTriangle(pos=(0,0,0), size=1):
     p1 = (pos[0], pos[1] + s, pos[2])
     p2 = (pos[0] - s, pos[1] - s, pos[2])
     p3 = (pos[0] + s, pos[1] - s, pos[2])
-    return drawPoints([p1, p2, p3, p1])
+    return drawCoords([p1, p2, p3, p1])
 
 def makePyramid(pos=(0,0,0), size=1):
     strokes = []
@@ -329,16 +329,16 @@ def makePyramid(pos=(0,0,0), size=1):
     p2 = (pos[0] - s, pos[1] - s, pos[2] + s)
     p3 = (pos[0] + s, pos[1] - s, pos[2] + s)
     #~
-    strokes.append(drawPoints([p1, p2, p3, p1]))
+    strokes.append(drawCoords([p1, p2, p3, p1]))
     #~
     p4 = (pos[0], pos[1] + s, pos[2])
     p5 = (pos[0] - s, pos[1] - s, pos[2] - s)
     p6 = (pos[0] + s, pos[1] - s, pos[2] - s)
     #~
-    strokes.append(drawPoints([p4, p5, p6, p4]))
+    strokes.append(drawCoords([p4, p5, p6, p4]))
     #~
-    strokes.append(drawPoints([p2, p5]))
-    strokes.append(drawPoints([p3, p6]))
+    strokes.append(drawCoords([p2, p5]))
+    strokes.append(drawCoords([p3, p6]))
     #~
     return strokes
 

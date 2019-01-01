@@ -324,7 +324,7 @@ def gpMeshAlt(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True,
         saveFile(origFileName + "_ASSEMBLY")
 '''
 
-def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _decimate = 0.1, _curveType="nurbs", _useColors=True, _saveLayers=False, _singleFrame=False, _vertexColors=True, _vertexColorName="rgba", _animateFrames=True, _remesh="none", _consolidateMtl=True, _caps=True, _joinMesh=True, _uvStroke=True, _uvFill=True, _usePressure=True):
+def gpMesh(_la=None, _thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _decimate = 0.1, _curveType="nurbs", _useColors=True, _saveLayers=False, _singleFrame=False, _vertexColors=True, _vertexColorName="rgba", _animateFrames=True, _remesh="none", _consolidateMtl=True, _caps=True, _joinMesh=True, _uvStroke=True, _uvFill=True, _usePressure=True):
     if (_joinMesh==True or _remesh != "none"):
         _bakeMesh=True
     #~
@@ -338,8 +338,10 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
     #~
     totalStrokes = str(len(getAllStrokes()))
     totalCounter = 0
-    start = bpy.context.scene.frame_start
-    end = bpy.context.scene.frame_end + 1
+    start, end = getStartEnd()
+    #~
+    if not _la:
+        _la = fromGpToLatk()
     #~
     gp = getActiveGp()
     palette = getActivePalette()
@@ -355,6 +357,7 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
         capsObj.data.resolution_u = _bevelResolution
     #~
     for b, layer in enumerate(gp.layers):
+        laLayer = _la.layers[b]
         url = origFileName + "_layer_" + layer.info
         if (layer.lock==False):
             rangeStart = 0
@@ -363,9 +366,12 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
                 rangeStart = getActiveFrameNum(layer)
                 rangeEnd = rangeStart + 1
             for c in range(rangeStart, rangeEnd):
+                frame = layer.frames[c]
+                laFrame = laLayer.frames[c]
                 print("\n" + "*** gp layer " + str(b+1) + " of " + str(len(gp.layers)) + " | gp frame " + str(c+1) + " of " + str(rangeEnd) + " ***")
                 frameList = []
-                for stroke in layer.frames[c].strokes:
+                for d, stroke in enumerate(frame.strokes):
+                    laStroke = laFrame.strokes[d]
                     origParent = None
                     if (layer.parent):
                         origParent = layer.parent
@@ -374,14 +380,14 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
                     else:
                         masterParentList.append(None)
                     #~
-                    coords = getStrokeCoords(stroke)
-                    pressures = getStrokePressures(stroke)
+                    coords = laStroke.getCoords()
+                    pressures = laStroke.getPressures()
                     #~
                     latk_ob = makeCurve(bake=_bakeMesh, name="latk_" + getLayerInfo(layer) + "_" + str(layer.frames[c].frame_number), coords=coords, pressures=pressures, curveType=_curveType, resolution=_resolution, thickness=_thickness, bevelResolution=_bevelResolution, parent=layer.parent, capsObj=capsObj, useUvs=_uvStroke, usePressure=_usePressure)
                     #centerOrigin(latk_ob)
                     strokeColor = (0.5,0.5,0.5)
                     if (_useColors==True):
-                        strokeColor = palette.colors[stroke.colorname].color
+                        strokeColor = laStroke.color
                     # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
                     mat = None
                     if (_consolidateMtl==False):
@@ -406,12 +412,12 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
                             bpy.context.object.modifiers["Decimate"].ratio = _decimate     
                             latk_ob = applyModifiers(latk_ob)
                         #~
-                        if (_remesh != "none"):
+                        if (_remesh.lower() != "none"):
                             latk_ob = remesher(latk_ob, mode=_remesh)
                         #~
                         # + + + + + + +
-                        if (palette.colors[stroke.colorname].fill_alpha > 0.001):
-                            fill_ob = createFill(stroke.points, useUvs=_uvFill)
+                        if (laStroke.fill_alpha > 0.001):
+                            fill_ob = createFill(laStroke.points, useUvs=_uvFill)
                             joinObjects([latk_ob, fill_ob])
                         # + + + + + + +
                         #~
@@ -943,9 +949,13 @@ def createFill(inputVerts, useUvs=False):
     bm = bmesh.new() # create an empty BMesh
     bm.from_mesh(me) # fill it in from a Mesh
     #~
-    # Hot to create vertices
-    for i in range(0, len(inputVerts)):
-        vert = bm.verts.new((inputVerts[i].co[0], inputVerts[i].co[1], inputVerts[i].co[2]))
+    # How to create vertices
+    for vt in inputVerts:
+        vert = None
+        if not vt.co:
+            vert = bm.verts.new((vt[0], vt[1], vt[2]))
+        else:
+            vert = bm.verts.new((vt.co[0], vt.co[1], vt.co[2]))
         verts.append(vert)
     '''
     vertex1 = bm.verts.new( (0.0, 0.0, 3.0) )

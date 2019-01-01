@@ -2165,7 +2165,7 @@ def getFileName(stripExtension=True):
         name = name[:-6]
     return name
 
-def fromGpToLatk(bake=False, roundValues=False, numPlaces=7, useScaleAndOffset=False, globalScale=(1.0, 1.0, 1.0), globalOffset=(0.0, 0.0, 0.0)):
+def fromGpToLatk(bake=False, skipLocked=False, roundValues=False, numPlaces=7, useScaleAndOffset=False, globalScale=(1.0, 1.0, 1.0), globalOffset=(0.0, 0.0, 0.0)):
     print("Begin building Latk object from Grease Pencil...")
     if(bake == True):
         bakeFrames()
@@ -2176,7 +2176,7 @@ def fromGpToLatk(bake=False, roundValues=False, numPlaces=7, useScaleAndOffset=F
     la.frame_rate = getSceneFps()
     #~
     for layer in gp.layers:
-        if (layer.lock == False):
+        if (skipLocked == False or layer.lock == False):
             laLayer = LatkLayer(layer.info)
             if (layer.parent == True):
                 laLayer.parent = layer.parent.name
@@ -2889,7 +2889,7 @@ def gmlParser(filepath=None, splitStrokes=False, sequenceAnim=False):
                         lastPoint = stroke[len(stroke)-1]
                         if (int(lastPoint[3] * float(fps)) <= frame.frame_number):
                             if (len(stroke) >= minStrokeLength):
-                                drawPoints(stroke, frame=frame, layer=layer)
+                                drawCoords(stroke, frame=frame, layer=layer)
                 #~
                 gpPoints = []
                 for gmlPoint in gmlPoints:
@@ -2900,7 +2900,7 @@ def gmlParser(filepath=None, splitStrokes=False, sequenceAnim=False):
                     if (splitStrokes==True):
                         layer = newLayer(layer.info)
                         masterLayerList.append(layer)
-                    drawPoints(points=gpPoints, frame=frame, layer=layer)
+                    drawCoords(coords=gpPoints, frame=frame, layer=layer)
     # cleanup
     #~
     if (sequenceAnim == False):
@@ -2919,7 +2919,7 @@ def gmlParser(filepath=None, splitStrokes=False, sequenceAnim=False):
                     frame = layer.frames.new(start)
                 except:
                     frame = getActiveFrame()
-            drawPoints(stroke, frame=frame, layer=layer)
+            drawCoords(stroke, frame=frame, layer=layer)
     #~
     if (splitStrokes==True):
         for layer in masterLayerList:
@@ -3067,7 +3067,7 @@ def smilParser(filepath=None):
                 point = (pointsList[i] * globalScale[0], pointsList[i+1] * globalScale[1], 0)
                 points.append(point)
             if (len(points) > 1):
-                drawPoints(points)
+                drawCoords(points)
 
 def getAllTags(name=None, xml=None):
     returns = []
@@ -4388,7 +4388,7 @@ def gpMeshAlt(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True,
         saveFile(origFileName + "_ASSEMBLY")
 '''
 
-def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _decimate = 0.1, _curveType="nurbs", _useColors=True, _saveLayers=False, _singleFrame=False, _vertexColors=True, _vertexColorName="rgba", _animateFrames=True, _remesh="none", _consolidateMtl=True, _caps=True, _joinMesh=True, _uvStroke=True, _uvFill=True, _usePressure=True):
+def gpMesh(_la=None, _thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _decimate = 0.1, _curveType="nurbs", _useColors=True, _saveLayers=False, _singleFrame=False, _vertexColors=True, _vertexColorName="rgba", _animateFrames=True, _remesh="none", _consolidateMtl=True, _caps=True, _joinMesh=True, _uvStroke=True, _uvFill=True, _usePressure=True):
     if (_joinMesh==True or _remesh != "none"):
         _bakeMesh=True
     #~
@@ -4402,8 +4402,10 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
     #~
     totalStrokes = str(len(getAllStrokes()))
     totalCounter = 0
-    start = bpy.context.scene.frame_start
-    end = bpy.context.scene.frame_end + 1
+    start, end = getStartEnd()
+    #~
+    if not _la:
+        _la = fromGpToLatk()
     #~
     gp = getActiveGp()
     palette = getActivePalette()
@@ -4419,6 +4421,7 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
         capsObj.data.resolution_u = _bevelResolution
     #~
     for b, layer in enumerate(gp.layers):
+        laLayer = _la.layers[b]
         url = origFileName + "_layer_" + layer.info
         if (layer.lock==False):
             rangeStart = 0
@@ -4427,9 +4430,12 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
                 rangeStart = getActiveFrameNum(layer)
                 rangeEnd = rangeStart + 1
             for c in range(rangeStart, rangeEnd):
+                frame = layer.frames[c]
+                laFrame = laLayer.frames[c]
                 print("\n" + "*** gp layer " + str(b+1) + " of " + str(len(gp.layers)) + " | gp frame " + str(c+1) + " of " + str(rangeEnd) + " ***")
                 frameList = []
-                for stroke in layer.frames[c].strokes:
+                for d, stroke in enumerate(frame.strokes):
+                    laStroke = laFrame.strokes[d]
                     origParent = None
                     if (layer.parent):
                         origParent = layer.parent
@@ -4438,14 +4444,14 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
                     else:
                         masterParentList.append(None)
                     #~
-                    coords = getStrokeCoords(stroke)
-                    pressures = getStrokePressures(stroke)
+                    coords = laStroke.getCoords()
+                    pressures = laStroke.getPressures()
                     #~
                     latk_ob = makeCurve(bake=_bakeMesh, name="latk_" + getLayerInfo(layer) + "_" + str(layer.frames[c].frame_number), coords=coords, pressures=pressures, curveType=_curveType, resolution=_resolution, thickness=_thickness, bevelResolution=_bevelResolution, parent=layer.parent, capsObj=capsObj, useUvs=_uvStroke, usePressure=_usePressure)
                     #centerOrigin(latk_ob)
                     strokeColor = (0.5,0.5,0.5)
                     if (_useColors==True):
-                        strokeColor = palette.colors[stroke.colorname].color
+                        strokeColor = laStroke.color
                     # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
                     mat = None
                     if (_consolidateMtl==False):
@@ -4470,12 +4476,12 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
                             bpy.context.object.modifiers["Decimate"].ratio = _decimate     
                             latk_ob = applyModifiers(latk_ob)
                         #~
-                        if (_remesh != "none"):
+                        if (_remesh.lower() != "none"):
                             latk_ob = remesher(latk_ob, mode=_remesh)
                         #~
                         # + + + + + + +
-                        if (palette.colors[stroke.colorname].fill_alpha > 0.001):
-                            fill_ob = createFill(stroke.points, useUvs=_uvFill)
+                        if (laStroke.fill_alpha > 0.001):
+                            fill_ob = createFill(laStroke.points, useUvs=_uvFill)
                             joinObjects([latk_ob, fill_ob])
                         # + + + + + + +
                         #~
@@ -5007,9 +5013,13 @@ def createFill(inputVerts, useUvs=False):
     bm = bmesh.new() # create an empty BMesh
     bm.from_mesh(me) # fill it in from a Mesh
     #~
-    # Hot to create vertices
-    for i in range(0, len(inputVerts)):
-        vert = bm.verts.new((inputVerts[i].co[0], inputVerts[i].co[1], inputVerts[i].co[2]))
+    # How to create vertices
+    for vt in inputVerts:
+        vert = None
+        if not vt.co:
+            vert = bm.verts.new((vt[0], vt[1], vt[2]))
+        else:
+            vert = bm.verts.new((vt.co[0], vt.co[1], vt.co[2]))
         verts.append(vert)
     '''
     vertex1 = bm.verts.new( (0.0, 0.0, 3.0) )
@@ -5071,8 +5081,8 @@ def getAlembicCurves(obj=None):
 # 6 of 10. DRAWING
 
 # note that unlike createStroke, this creates a stroke from raw coordinates
-def drawPoints(points=None, color=None, frame=None, layer=None):
-    if (len(points) > 0):
+def drawCoords(coords=None, color=None, frame=None, layer=None):
+    if (len(coords) > 0):
         if not color:
             color = getActiveColor()
         else:
@@ -5092,15 +5102,15 @@ def drawPoints(points=None, color=None, frame=None, layer=None):
                     pass
         stroke = frame.strokes.new(color.name)
         stroke.draw_mode = "3DSPACE"
-        stroke.points.add(len(points))
-        for i, point in enumerate(points):
+        stroke.points.add(len(coord))
+        for i, coord in enumerate(coords):
             pressure = 1.0
             strength = 1.0
-            if (len(point) > 3):
-                pressure = point[3]
-            if (len(point) > 4):
-                strength = point[4]
-            createPoint(stroke, i, (point[0], point[2], point[1]), pressure, strength)
+            if (len(coord) > 3):
+                pressure = coord[3]
+            if (len(coord) > 4):
+                strength = coord[4]
+            createPoint(stroke, i, (coord[0], coord[2], coord[1]), pressure, strength)
         return stroke
     else:
         return None
@@ -5277,7 +5287,7 @@ def writeOnStrokes(pointStep=10, step=1):
         distributeStrokes(pointStep=pointStep, step=step)
 
 def makeLine(p1, p2):
-    return drawPoints([p1, p2])
+    return drawCoords([p1, p2])
 
 def makeGrid(gridRows=10, gridColumns=10, cell=0.1, zPos=0):
     strokes = []
@@ -5358,14 +5368,14 @@ def makeCircle(pos=(0,0,0), size=1, resolution=10, vertical=True):
             points.append(addVec3((x, 0, y), pos))
         angle += step
     #~
-    return drawPoints(points)
+    return drawCoords(points)
 
 def makeSphere(pos=(0,0,0), size=1, resolution=10, lat=10, lon=10):
     points = []
     for i in range(0, lat):
         for j in range(0, lon):
             points.append(multVec3(addVec3(getLatLon(i, j), pos), (size,size,size)))
-    drawPoints(points)
+    drawCoords(points)
 
 def getLatLon(lat, lon):
     eulat = (math.pi / 2.0) - lat
@@ -5382,7 +5392,7 @@ def makeStarBurst(pos=(0,0,0), size=1, reps=20):
         lat = random.uniform(0, 90)
         lon = random.uniform(0, 180)
         p2 = multVec3(getLatLon(lat, lon), (s, s, s))
-        strokes.append(drawPoints([pos, p2]))
+        strokes.append(drawCoords([pos, p2]))
     return strokes
 
 def makeTriangle(pos=(0,0,0), size=1):
@@ -5390,7 +5400,7 @@ def makeTriangle(pos=(0,0,0), size=1):
     p1 = (pos[0], pos[1] + s, pos[2])
     p2 = (pos[0] - s, pos[1] - s, pos[2])
     p3 = (pos[0] + s, pos[1] - s, pos[2])
-    return drawPoints([p1, p2, p3, p1])
+    return drawCoords([p1, p2, p3, p1])
 
 def makePyramid(pos=(0,0,0), size=1):
     strokes = []
@@ -5399,16 +5409,16 @@ def makePyramid(pos=(0,0,0), size=1):
     p2 = (pos[0] - s, pos[1] - s, pos[2] + s)
     p3 = (pos[0] + s, pos[1] - s, pos[2] + s)
     #~
-    strokes.append(drawPoints([p1, p2, p3, p1]))
+    strokes.append(drawCoords([p1, p2, p3, p1]))
     #~
     p4 = (pos[0], pos[1] + s, pos[2])
     p5 = (pos[0] - s, pos[1] - s, pos[2] - s)
     p6 = (pos[0] + s, pos[1] - s, pos[2] - s)
     #~
-    strokes.append(drawPoints([p4, p5, p6, p4]))
+    strokes.append(drawCoords([p4, p5, p6, p4]))
     #~
-    strokes.append(drawPoints([p2, p5]))
-    strokes.append(drawPoints([p3, p6]))
+    strokes.append(drawCoords([p2, p5]))
+    strokes.append(drawCoords([p3, p6]))
     #~
     return strokes
 

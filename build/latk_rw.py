@@ -137,7 +137,7 @@ def getFileName(stripExtension=True):
         name = name[:-6]
     return name
 
-def fromGpToLatk(bake=False, roundValues=False, numPlaces=7, useScaleAndOffset=False, globalScale=(1.0, 1.0, 1.0), globalOffset=(0.0, 0.0, 0.0)):
+def fromGpToLatk(bake=False, skipLocked=False, roundValues=False, numPlaces=7, useScaleAndOffset=False, globalScale=(1.0, 1.0, 1.0), globalOffset=(0.0, 0.0, 0.0)):
     print("Begin building Latk object from Grease Pencil...")
     if(bake == True):
         bakeFrames()
@@ -148,7 +148,7 @@ def fromGpToLatk(bake=False, roundValues=False, numPlaces=7, useScaleAndOffset=F
     la.frame_rate = getSceneFps()
     #~
     for layer in gp.layers:
-        if (layer.lock == False):
+        if (skipLocked == False or layer.lock == False):
             laLayer = LatkLayer(layer.info)
             if (layer.parent == True):
                 laLayer.parent = layer.parent.name
@@ -861,7 +861,7 @@ def gmlParser(filepath=None, splitStrokes=False, sequenceAnim=False):
                         lastPoint = stroke[len(stroke)-1]
                         if (int(lastPoint[3] * float(fps)) <= frame.frame_number):
                             if (len(stroke) >= minStrokeLength):
-                                drawPoints(stroke, frame=frame, layer=layer)
+                                drawCoords(stroke, frame=frame, layer=layer)
                 #~
                 gpPoints = []
                 for gmlPoint in gmlPoints:
@@ -872,7 +872,7 @@ def gmlParser(filepath=None, splitStrokes=False, sequenceAnim=False):
                     if (splitStrokes==True):
                         layer = newLayer(layer.info)
                         masterLayerList.append(layer)
-                    drawPoints(points=gpPoints, frame=frame, layer=layer)
+                    drawCoords(coords=gpPoints, frame=frame, layer=layer)
     # cleanup
     #~
     if (sequenceAnim == False):
@@ -891,7 +891,7 @@ def gmlParser(filepath=None, splitStrokes=False, sequenceAnim=False):
                     frame = layer.frames.new(start)
                 except:
                     frame = getActiveFrame()
-            drawPoints(stroke, frame=frame, layer=layer)
+            drawCoords(stroke, frame=frame, layer=layer)
     #~
     if (splitStrokes==True):
         for layer in masterLayerList:
@@ -1039,7 +1039,7 @@ def smilParser(filepath=None):
                 point = (pointsList[i] * globalScale[0], pointsList[i+1] * globalScale[1], 0)
                 points.append(point)
             if (len(points) > 1):
-                drawPoints(points)
+                drawCoords(points)
 
 def getAllTags(name=None, xml=None):
     returns = []
