@@ -75,11 +75,13 @@ def joinObjects(target=None, center=False):
     #~
     bpy.ops.object.join()
     #~
+    '''
     for i in range(1, len(target)):
         try:
             scn.objects.unlink(target[i])
         except:
             pass
+    '''
     #~
     #gc.collect()
     if (center==True):
@@ -178,6 +180,7 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
         _la = fromGpToLatk()
     #~
     for b, layer in enumerate(gp.layers):
+        laLayer = _la.layers[b]
         url = origFileName + "_layer_" + layer.info
         if (layer.lock==False):
             rangeStart = 0
@@ -187,8 +190,9 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
                 rangeEnd = rangeStart + 1
             for c in range(rangeStart, rangeEnd):
                 print("\n" + "*** gp layer " + str(b+1) + " of " + str(len(gp.layers)) + " | gp frame " + str(c+1) + " of " + str(rangeEnd) + " ***")
+                laFrame = laLayer.frames[c]
                 frameList = []
-                for stroke in _la.layers[b].frames[c].strokes:
+                for stroke in laFrame.strokes:
                     origParent = None
                     if (layer.parent):
                         origParent = layer.parent
@@ -200,7 +204,7 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
                     coords = stroke.getCoords()
                     pressures = stroke.getPressures()
                     #~
-                    latk_ob = makeCurve(name="latk_" + getLayerInfo(layer) + "_" + str(_la.layers[b].frames[c].frame_number), coords=coords, pressures=pressures, curveType=_curveType, resolution=_resolution, thickness=_thickness, bevelResolution=_bevelResolution, parent=layer.parent, capsObj=capsObj, useUvs=_uvStroke, usePressure=_usePressure)
+                    latk_ob = makeCurve(name="latk_" + laLayer.getInfo() + "_" + str(laFrame.frame_number), coords=coords, pressures=pressures, curveType=_curveType, resolution=_resolution, thickness=_thickness, bevelResolution=_bevelResolution, parent=layer.parent, capsObj=capsObj, useUvs=_uvStroke, usePressure=_usePressure)
                     #centerOrigin(latk_ob)
                     strokeColor = (0.5,0.5,0.5)
                     if (_useColors==True):
@@ -257,16 +261,16 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
                         hideFrame(frameList[i], start, True)
                         #~
                         for j in range(start, end):
-                            if (j == layer.frames[c].frame_number):
+                            if (j == laFrame.frame_number):
                                 hideFrame(frameList[i], j, False)
                                 keyTransform(frameList[i], j)
-                            elif (c < len(layer.frames)-1 and j > layer.frames[c].frame_number and j < layer.frames[c+1].frame_number):
+                            elif (c < len(laLayer.frames)-1 and j > laFrame.frame_number and j < laLayer.frames[c+1].frame_number):
                                 hideFrame(frameList[i], j, False)
-                            elif (c != len(layer.frames)-1):
+                            elif (c != len(laLayer.frames)-1):
                                 hideFrame(frameList[i], j, True)
                 #~
                 if (_joinMesh==True): 
-                    target = matchName("latk_" + getLayerInfo(layer))
+                    target = matchName("latk_" + laLayer.getInfo())
                     for i in range(start, end):
                         strokesToJoin = []
                         if (i == layer.frames[c].frame_number):
@@ -822,10 +826,10 @@ def makeCurve(coords, pressures=None, resolution=2, thickness=0.1, bevelResoluti
     #~
     # adding an extra point to the beginning helps with smoothing
     try:
-    	coords.insert(0, coords[0])
-    	pressures.insert(0, pressures[0])
+        coords.insert(0, coords[0])
+        pressures.insert(0, pressures[0])
     except:
-    	pass
+        pass
 
     curveData = bpy.data.curves.new('latk', type='CURVE')
     curveData.dimensions = '3D'

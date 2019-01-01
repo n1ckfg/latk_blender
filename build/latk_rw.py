@@ -148,61 +148,59 @@ def fromGpToLatk(bake=False, roundValues=False, numPlaces=7, useScaleAndOffset=F
     la.frame_rate = getSceneFps()
     #~
     for layer in gp.layers:
-        laLayer = LatkLayer()
-        laLayer.name = layer.info
-        if (layer.parent == True):
-            laLayer.parent = layer.parent.name
-        for frame in layer.frames:
-            laFrame = LatkFrame()
-
-            laFrame.frame_number = frame.frame_number
+        if (layer.lock == False):
+            laLayer = LatkLayer(layer.info)
             if (layer.parent == True):
-                laFrame.parent_location = layer.parent.location
-            for stroke in frame.strokes:
-                laStroke = LatkStroke()
-                
-                color = (0,0,0)
-                alpha = 0.9
-                fill_color = (1,1,1)
-                fill_alpha = 0.0
-                try:
-                    col = pal.colors[stroke.colorname]
-                    color = (col.color[0], col.color[1], col.color[2])
-                    alpha = col.alpha 
-                    fill_color = (col.fill_color[0], col.fill_color[1], col.fill_color[2])
-                    fill_alpha = col.fill_alpha
-                except:
-                    pass
-                laStroke.color = color
-                laStroke.alpha = alpha
-                laStroke.fill_color = fill_color
-                laStroke.fill_alpha = fill_alpha
-                for point in stroke.points:
-                    x = point.co[0]
-                    y = point.co[1]
-                    z = point.co[2]
-                    pressure = 1.0
-                    pressure = point.pressure
-                    strength = 1.0
-                    strength = point.strength
-                    #~
-                    if (useScaleAndOffset == True):
-                        x = (x * globalScale[0]) + globalOffset[0]
-                        y = (y * globalScale[1]) + globalOffset[1]
-                        z = (z * globalScale[2]) + globalOffset[2]
-                    #~
-                    if (roundValues == True):
-                        x = roundVal(x, numPlaces)
-                        y = roundVal(y, numPlaces)
-                        z = roundVal(z, numPlaces)
-                        pressure = roundVal(pressure, numPlaces)
-                        strength = roundVal(strength, numPlaces)
+                laLayer.parent = layer.parent.name
+            for frame in layer.frames:
+                laFrame = LatkFrame(frame.frame_number)
+                if (layer.parent == True):
+                    laFrame.parent_location = layer.parent.location
+                for stroke in frame.strokes:
+                    laStroke = LatkStroke()
+                    
+                    color = (0,0,0)
+                    alpha = 0.9
+                    fill_color = (1,1,1)
+                    fill_alpha = 0.0
+                    try:
+                        col = pal.colors[stroke.colorname]
+                        color = (col.color[0], col.color[1], col.color[2])
+                        alpha = col.alpha 
+                        fill_color = (col.fill_color[0], col.fill_color[1], col.fill_color[2])
+                        fill_alpha = col.fill_alpha
+                    except:
+                        pass
+                    laStroke.color = color
+                    laStroke.alpha = alpha
+                    laStroke.fill_color = fill_color
+                    laStroke.fill_alpha = fill_alpha
+                    for point in stroke.points:
+                        x = point.co[0]
+                        y = point.co[1]
+                        z = point.co[2]
+                        pressure = 1.0
+                        pressure = point.pressure
+                        strength = 1.0
+                        strength = point.strength
+                        #~
+                        if (useScaleAndOffset == True):
+                            x = (x * globalScale[0]) + globalOffset[0]
+                            y = (y * globalScale[1]) + globalOffset[1]
+                            z = (z * globalScale[2]) + globalOffset[2]
+                        #~
+                        if (roundValues == True):
+                            x = roundVal(x, numPlaces)
+                            y = roundVal(y, numPlaces)
+                            z = roundVal(z, numPlaces)
+                            pressure = roundVal(pressure, numPlaces)
+                            strength = roundVal(strength, numPlaces)
 
-                    laPoint = LatkPoint((x, y, z), pressure, strength)
-                    laStroke.points.append(laPoint)
-                laFrame.strokes.append(laStroke)
-            laLayer.frames.append(laFrame)
-        la.layers.append(laLayer)
+                        laPoint = LatkPoint((x, y, z), pressure, strength)
+                        laStroke.points.append(laPoint)
+                    laFrame.strokes.append(laStroke)
+                laLayer.frames.append(laFrame)
+            la.layers.append(laLayer)
     print("...end building Latk object from Grease Pencil.")           
     return la
 
@@ -403,9 +401,9 @@ def readBrushStrokes(filepath=None, resizeTimeline=True, useScaleAndOffset=False
         #~
         for i, frameJson in enumerate(layerJson["frames"]):
             try:
-            	frame = layer.frames.new(layerJson["frames"][i]["frame_number"]) 
+                frame = layer.frames.new(layerJson["frames"][i]["frame_number"]) 
             except:
-            	frame = layer.frames.new(i) 
+                frame = layer.frames.new(i) 
             if (frame.frame_number > longestFrameNum):
                 longestFrameNum = frame.frame_number
             for strokeJson in frameJson["strokes"]:
@@ -447,8 +445,8 @@ def readBrushStrokes(filepath=None, resizeTimeline=True, useScaleAndOffset=False
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 
 def writeSvg(filepath=None):
-	# Note: keep fps at 24 and above to prevent timing artifacts. 
-	# Last frame in timeline must be empty.
+    # Note: keep fps at 24 and above to prevent timing artifacts. 
+    # Last frame in timeline must be empty.
     minLineWidth=3
     camera = getActiveCamera()
     fps = float(getSceneFps())
@@ -1300,7 +1298,7 @@ def exportSculptrVrCsv(filepath=None, strokes=None, sphereRadius=10, octreeSize=
                 z = remap(coord[2], allZ[0], allZ[len(allZ)-1], minValZ, maxValZ)
                 pressure = remap(point.pressure, 0.0, 1.0, sphereRadius/100.0, sphereRadius)
                 if (pressure < 0.01):
-                	pressure = 0.01
+                    pressure = 0.01
                 csvData.append([x, y, z, pressure, r, g, b])
             else:
                 x = remapInt(coord[0], allX[0], allX[len(allX)-1], int(minValX), int(maxValX))

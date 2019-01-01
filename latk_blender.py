@@ -392,6 +392,9 @@ class LatkLayer(object):
         self.name = name
         self.parent = None
     
+    def getInfo(self):
+        return self.name.split(".")[0]
+
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 
 class LatkFrame(object):   
@@ -2149,61 +2152,59 @@ def fromGpToLatk(bake=False, roundValues=False, numPlaces=7, useScaleAndOffset=F
     la.frame_rate = getSceneFps()
     #~
     for layer in gp.layers:
-        laLayer = LatkLayer()
-        laLayer.name = layer.info
-        if (layer.parent == True):
-            laLayer.parent = layer.parent.name
-        for frame in layer.frames:
-            laFrame = LatkFrame()
-
-            laFrame.frame_number = frame.frame_number
+        if (layer.lock == False):
+            laLayer = LatkLayer(layer.info)
             if (layer.parent == True):
-                laFrame.parent_location = layer.parent.location
-            for stroke in frame.strokes:
-                laStroke = LatkStroke()
-                
-                color = (0,0,0)
-                alpha = 0.9
-                fill_color = (1,1,1)
-                fill_alpha = 0.0
-                try:
-                    col = pal.colors[stroke.colorname]
-                    color = (col.color[0], col.color[1], col.color[2])
-                    alpha = col.alpha 
-                    fill_color = (col.fill_color[0], col.fill_color[1], col.fill_color[2])
-                    fill_alpha = col.fill_alpha
-                except:
-                    pass
-                laStroke.color = color
-                laStroke.alpha = alpha
-                laStroke.fill_color = fill_color
-                laStroke.fill_alpha = fill_alpha
-                for point in stroke.points:
-                    x = point.co[0]
-                    y = point.co[1]
-                    z = point.co[2]
-                    pressure = 1.0
-                    pressure = point.pressure
-                    strength = 1.0
-                    strength = point.strength
-                    #~
-                    if (useScaleAndOffset == True):
-                        x = (x * globalScale[0]) + globalOffset[0]
-                        y = (y * globalScale[1]) + globalOffset[1]
-                        z = (z * globalScale[2]) + globalOffset[2]
-                    #~
-                    if (roundValues == True):
-                        x = roundVal(x, numPlaces)
-                        y = roundVal(y, numPlaces)
-                        z = roundVal(z, numPlaces)
-                        pressure = roundVal(pressure, numPlaces)
-                        strength = roundVal(strength, numPlaces)
+                laLayer.parent = layer.parent.name
+            for frame in layer.frames:
+                laFrame = LatkFrame(frame.frame_number)
+                if (layer.parent == True):
+                    laFrame.parent_location = layer.parent.location
+                for stroke in frame.strokes:
+                    laStroke = LatkStroke()
+                    
+                    color = (0,0,0)
+                    alpha = 0.9
+                    fill_color = (1,1,1)
+                    fill_alpha = 0.0
+                    try:
+                        col = pal.colors[stroke.colorname]
+                        color = (col.color[0], col.color[1], col.color[2])
+                        alpha = col.alpha 
+                        fill_color = (col.fill_color[0], col.fill_color[1], col.fill_color[2])
+                        fill_alpha = col.fill_alpha
+                    except:
+                        pass
+                    laStroke.color = color
+                    laStroke.alpha = alpha
+                    laStroke.fill_color = fill_color
+                    laStroke.fill_alpha = fill_alpha
+                    for point in stroke.points:
+                        x = point.co[0]
+                        y = point.co[1]
+                        z = point.co[2]
+                        pressure = 1.0
+                        pressure = point.pressure
+                        strength = 1.0
+                        strength = point.strength
+                        #~
+                        if (useScaleAndOffset == True):
+                            x = (x * globalScale[0]) + globalOffset[0]
+                            y = (y * globalScale[1]) + globalOffset[1]
+                            z = (z * globalScale[2]) + globalOffset[2]
+                        #~
+                        if (roundValues == True):
+                            x = roundVal(x, numPlaces)
+                            y = roundVal(y, numPlaces)
+                            z = roundVal(z, numPlaces)
+                            pressure = roundVal(pressure, numPlaces)
+                            strength = roundVal(strength, numPlaces)
 
-                    laPoint = LatkPoint((x, y, z), pressure, strength)
-                    laStroke.points.append(laPoint)
-                laFrame.strokes.append(laStroke)
-            laLayer.frames.append(laFrame)
-        la.layers.append(laLayer)
+                        laPoint = LatkPoint((x, y, z), pressure, strength)
+                        laStroke.points.append(laPoint)
+                    laFrame.strokes.append(laStroke)
+                laLayer.frames.append(laFrame)
+            la.layers.append(laLayer)
     print("...end building Latk object from Grease Pencil.")           
     return la
 
@@ -2404,9 +2405,9 @@ def readBrushStrokes(filepath=None, resizeTimeline=True, useScaleAndOffset=False
         #~
         for i, frameJson in enumerate(layerJson["frames"]):
             try:
-            	frame = layer.frames.new(layerJson["frames"][i]["frame_number"]) 
+                frame = layer.frames.new(layerJson["frames"][i]["frame_number"]) 
             except:
-            	frame = layer.frames.new(i) 
+                frame = layer.frames.new(i) 
             if (frame.frame_number > longestFrameNum):
                 longestFrameNum = frame.frame_number
             for strokeJson in frameJson["strokes"]:
@@ -2448,8 +2449,8 @@ def readBrushStrokes(filepath=None, resizeTimeline=True, useScaleAndOffset=False
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 
 def writeSvg(filepath=None):
-	# Note: keep fps at 24 and above to prevent timing artifacts. 
-	# Last frame in timeline must be empty.
+    # Note: keep fps at 24 and above to prevent timing artifacts. 
+    # Last frame in timeline must be empty.
     minLineWidth=3
     camera = getActiveCamera()
     fps = float(getSceneFps())
@@ -3301,7 +3302,7 @@ def exportSculptrVrCsv(filepath=None, strokes=None, sphereRadius=10, octreeSize=
                 z = remap(coord[2], allZ[0], allZ[len(allZ)-1], minValZ, maxValZ)
                 pressure = remap(point.pressure, 0.0, 1.0, sphereRadius/100.0, sphereRadius)
                 if (pressure < 0.01):
-                	pressure = 0.01
+                    pressure = 0.01
                 csvData.append([x, y, z, pressure, r, g, b])
             else:
                 x = remapInt(coord[0], allX[0], allX[len(allX)-1], int(minValX), int(maxValX))
@@ -4114,11 +4115,13 @@ def joinObjects(target=None, center=False):
     #~
     bpy.ops.object.join()
     #~
+    '''
     for i in range(1, len(target)):
         try:
             scn.objects.unlink(target[i])
         except:
             pass
+    '''
     #~
     #gc.collect()
     if (center==True):
@@ -4217,6 +4220,7 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
         _la = fromGpToLatk()
     #~
     for b, layer in enumerate(gp.layers):
+        laLayer = _la.layers[b]
         url = origFileName + "_layer_" + layer.info
         if (layer.lock==False):
             rangeStart = 0
@@ -4226,8 +4230,9 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
                 rangeEnd = rangeStart + 1
             for c in range(rangeStart, rangeEnd):
                 print("\n" + "*** gp layer " + str(b+1) + " of " + str(len(gp.layers)) + " | gp frame " + str(c+1) + " of " + str(rangeEnd) + " ***")
+                laFrame = laLayer.frames[c]
                 frameList = []
-                for stroke in _la.layers[b].frames[c].strokes:
+                for stroke in laFrame.strokes:
                     origParent = None
                     if (layer.parent):
                         origParent = layer.parent
@@ -4239,7 +4244,7 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
                     coords = stroke.getCoords()
                     pressures = stroke.getPressures()
                     #~
-                    latk_ob = makeCurve(name="latk_" + getLayerInfo(layer) + "_" + str(_la.layers[b].frames[c].frame_number), coords=coords, pressures=pressures, curveType=_curveType, resolution=_resolution, thickness=_thickness, bevelResolution=_bevelResolution, parent=layer.parent, capsObj=capsObj, useUvs=_uvStroke, usePressure=_usePressure)
+                    latk_ob = makeCurve(name="latk_" + laLayer.getInfo() + "_" + str(laFrame.frame_number), coords=coords, pressures=pressures, curveType=_curveType, resolution=_resolution, thickness=_thickness, bevelResolution=_bevelResolution, parent=layer.parent, capsObj=capsObj, useUvs=_uvStroke, usePressure=_usePressure)
                     #centerOrigin(latk_ob)
                     strokeColor = (0.5,0.5,0.5)
                     if (_useColors==True):
@@ -4296,16 +4301,16 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
                         hideFrame(frameList[i], start, True)
                         #~
                         for j in range(start, end):
-                            if (j == layer.frames[c].frame_number):
+                            if (j == laFrame.frame_number):
                                 hideFrame(frameList[i], j, False)
                                 keyTransform(frameList[i], j)
-                            elif (c < len(layer.frames)-1 and j > layer.frames[c].frame_number and j < layer.frames[c+1].frame_number):
+                            elif (c < len(laLayer.frames)-1 and j > laFrame.frame_number and j < laLayer.frames[c+1].frame_number):
                                 hideFrame(frameList[i], j, False)
-                            elif (c != len(layer.frames)-1):
+                            elif (c != len(laLayer.frames)-1):
                                 hideFrame(frameList[i], j, True)
                 #~
                 if (_joinMesh==True): 
-                    target = matchName("latk_" + getLayerInfo(layer))
+                    target = matchName("latk_" + laLayer.getInfo())
                     for i in range(start, end):
                         strokesToJoin = []
                         if (i == layer.frames[c].frame_number):
@@ -4861,10 +4866,10 @@ def makeCurve(coords, pressures=None, resolution=2, thickness=0.1, bevelResoluti
     #~
     # adding an extra point to the beginning helps with smoothing
     try:
-    	coords.insert(0, coords[0])
-    	pressures.insert(0, pressures[0])
+        coords.insert(0, coords[0])
+        pressures.insert(0, pressures[0])
     except:
-    	pass
+        pass
 
     curveData = bpy.data.curves.new('latk', type='CURVE')
     curveData.dimensions = '3D'
