@@ -75,13 +75,11 @@ def joinObjects(target=None, center=False):
     #~
     bpy.ops.object.join()
     #~
-    '''
     for i in range(1, len(target)):
         try:
             scn.objects.unlink(target[i])
         except:
             pass
-    '''
     #~
     #gc.collect()
     if (center==True):
