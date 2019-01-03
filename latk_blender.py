@@ -6231,8 +6231,8 @@ class LatkProperties(bpy.types.PropertyGroup):
 
     bakeMesh = BoolProperty(
         name="Bake",
-        description="Off: major speedup if you're staying in Blender. On: slow but keeps everything exportable",
-        default=False
+        description="Off: major speedup if you're staying in Blender. On: slower but keeps everything exportable",
+        default=True
     )
 
     joinMesh = BoolProperty(
@@ -6715,7 +6715,7 @@ class Latk_Button_Gpmesh_SingleFrame(bpy.types.Operator):
 
     def execute(self, context):
         latk_settings = bpy.context.scene.latk_settings
-        gpMesh(_singleFrame=True, _animateFrames=False, _thickness=latk_settings.thickness, _remesh=latk_settings.remesh_mode.lower(), _resolution=latk_settings.resolution, _bevelResolution=latk_settings.bevelResolution, _decimate=latk_settings.decimate, _bakeMesh=latk_settings.bakeMesh, _joinMesh=latk_settings.bakeMesh, _saveLayers=False, _vertexColorName=latk_settings.vertexColorName)
+        gpMesh(_singleFrame=True, _animateFrames=False, _thickness=latk_settings.thickness, _remesh=latk_settings.remesh_mode.lower(), _resolution=latk_settings.resolution, _bevelResolution=latk_settings.bevelResolution, _decimate=latk_settings.decimate, _bakeMesh=latk_settings.bakeMesh, _joinMesh=doJoinMesh, _saveLayers=False, _vertexColorName=latk_settings.vertexColorName)
         return {'FINISHED'}
 
 class Latk_Button_Dn(bpy.types.Operator):
