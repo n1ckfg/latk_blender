@@ -742,13 +742,13 @@ class LatkProperties(bpy.types.PropertyGroup):
         default="NONE"
     )
 
-    material_set_mode = EnumProperty( 
-        name="Affect",
+    mesh_fill_mode = EnumProperty( 
+        name="Fill",
         items=(
-            ("ALL", "All", "All materials", 0),
-            ("SELECTED", "Selected", "Selected materials", 1)
+            ("PLANE", "Plane", "Plane", 0),
+            ("HULL", "Hull", "Hull", 1)
         ),
-        default="ALL"
+        default="PLANE"
     )
 
     material_shader_mode = EnumProperty(
@@ -807,6 +807,11 @@ class LatkProperties_Panel(bpy.types.Panel):
         # ~ ~ ~ 
 
         row = layout.row()
+        row.prop(latk, "mesh_fill_mode")
+        row.prop(latk, "material_shader_mode")
+        row.operator("latk_button.mtlshader")
+        
+        row = layout.row()
         row.operator("latk_button.booleanmod") 
         row.operator("latk_button.booleanmodminus") 
         row.operator("latk_button.simpleclean")
@@ -838,17 +843,10 @@ class LatkProperties_Panel(bpy.types.Panel):
         # ~ ~ ~ 
 
         row = layout.row()
-        row.prop(latk, "material_set_mode")
-        row.prop(latk, "material_shader_mode")
-        row.operator("latk_button.mtlshader")
-
-        row = layout.row()
         row.prop(latk, "minRemapPressure")
         row.prop(latk, "maxRemapPressure")
         row.prop(latk, "remapPressureMode")
         row.operator("latk_button.remappressure")
-
-        # ~ ~ ~ 
 
         row = layout.row()
         row.prop(latk, "writeStrokeSteps")
@@ -999,10 +997,15 @@ class Latk_Button_Gpmesh(bpy.types.Operator):
     
     def execute(self, context):
         latk_settings = bpy.context.scene.latk_settings
+        #~
         doJoinMesh=False
         if (latk_settings.bakeMesh==True and latk_settings.joinMesh==True):
             doJoinMesh = True
-        gpMesh(_thickness=latk_settings.thickness, _remesh=latk_settings.remesh_mode.lower(), _resolution=latk_settings.resolution, _bevelResolution=latk_settings.bevelResolution, _decimate=latk_settings.decimate, _bakeMesh=latk_settings.bakeMesh, _joinMesh=doJoinMesh, _saveLayers=False, _vertexColorName=latk_settings.vertexColorName)
+        doHull=False
+        if (latk_settings.mesh_fill_mode.lower() == "hull"):
+            doHull = True
+        #~
+        gpMesh(_thickness=latk_settings.thickness, _remesh=latk_settings.remesh_mode.lower(), _resolution=latk_settings.resolution, _bevelResolution=latk_settings.bevelResolution, _decimate=latk_settings.decimate, _bakeMesh=latk_settings.bakeMesh, _joinMesh=doJoinMesh, _saveLayers=False, _vertexColorName=latk_settings.vertexColorName, _useHull=doHull)
         return {'FINISHED'}
 
 class Latk_Button_RemapPressure(bpy.types.Operator):
@@ -1103,10 +1106,15 @@ class Latk_Button_Gpmesh_SingleFrame(bpy.types.Operator):
 
     def execute(self, context):
         latk_settings = bpy.context.scene.latk_settings
+        #~
         doJoinMesh=False
         if (latk_settings.bakeMesh==True and latk_settings.joinMesh==True):
             doJoinMesh = True
-        gpMesh(_singleFrame=True, _animateFrames=False, _thickness=latk_settings.thickness, _remesh=latk_settings.remesh_mode.lower(), _resolution=latk_settings.resolution, _bevelResolution=latk_settings.bevelResolution, _decimate=latk_settings.decimate, _bakeMesh=latk_settings.bakeMesh, _joinMesh=doJoinMesh, _saveLayers=False, _vertexColorName=latk_settings.vertexColorName)
+        doHull=False
+        if (latk_settings.mesh_fill_mode.lower() == "hull"):
+            doHull = True
+        #~
+        gpMesh(_singleFrame=True, _animateFrames=False, _thickness=latk_settings.thickness, _remesh=latk_settings.remesh_mode.lower(), _resolution=latk_settings.resolution, _bevelResolution=latk_settings.bevelResolution, _decimate=latk_settings.decimate, _bakeMesh=latk_settings.bakeMesh, _joinMesh=doJoinMesh, _saveLayers=False, _vertexColorName=latk_settings.vertexColorName, _useHull=doHull)
         return {'FINISHED'}
 
 class Latk_Button_Dn(bpy.types.Operator):
@@ -1154,10 +1162,11 @@ class Latk_Button_MtlShader(bpy.types.Operator):
     
     def execute(self, context):
         latk_settings = bpy.context.scene.latk_settings
-        if (latk_settings.material_set_mode.lower() == "all"):
-            setAllMtlShader(latk_settings.material_shader_mode.lower())
-        elif (latk_settings.material_set_mode.lower() == "selected"):
-            setMtlShader(latk_settings.material_shader_mode.lower())
+        target = s()
+        if (len(target) < 1):
+            setAllMtlShader(latk_settings.material_shader_mode.lower()) # do all
+        else:
+            setMtlShader(latk_settings.material_shader_mode.lower()) # do selected
         return {'FINISHED'}
 
 # ~ ~ ~ 

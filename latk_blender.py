@@ -4227,7 +4227,7 @@ def assembleMesh(export=False, createPalette=True):
             saveFile(origFileName + "_ASSEMBLY")
             print(origFileName + "_ASSEMBLY.blend" + " was saved but some groups were missing.")
 
-def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _decimate = 0.1, _curveType="nurbs", _useColors=True, _saveLayers=False, _singleFrame=False, _vertexColors=True, _vertexColorName="rgba", _animateFrames=True, _remesh="none", _consolidateMtl=True, _caps=True, _joinMesh=True, _uvStroke=True, _uvFill=True, _usePressure=True):
+def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _decimate = 0.1, _curveType="nurbs", _useColors=True, _saveLayers=False, _singleFrame=False, _vertexColors=True, _vertexColorName="rgba", _animateFrames=True, _remesh="none", _consolidateMtl=True, _caps=True, _joinMesh=True, _uvStroke=True, _uvFill=True, _usePressure=True, _useHull=True):
     if (_joinMesh==True or _remesh != "none"):
         _bakeMesh=True
     #~
@@ -4314,7 +4314,7 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
                         #~
                         # + + + + + + +
                         if (getStrokeFillAlpha(stroke) > 0.001):
-                            fill_ob = createFill(stroke.points, useUvs=_uvFill)
+                            fill_ob = createFill(stroke.points, useUvs=_uvFill, useHull=_useHull)
                             joinObjects([latk_ob, fill_ob])
                         # + + + + + + +
                         #~
@@ -4827,26 +4827,15 @@ def randomMetaballs():
         element.co = coordinate
         element.radius = 2.0
 
-def createFill(inputVerts, useUvs=False):
-    verts = []
-    #~
-    # Create mesh 
+def bmeshTube(inputVerts, thickness=1.0):
     me = bpy.data.meshes.new("myMesh") 
-    #~
-    # Create object
     ob = bpy.data.objects.new("myObject", me) 
-    #~
-    #ob.location = origin
     ob.show_name = True
-    #~
-    # Link object to scene
     bpy.context.scene.objects.link(ob)
-    #~
-    # Get a BMesh representation
     bm = bmesh.new() # create an empty BMesh
     bm.from_mesh(me) # fill it in from a Mesh
     #~
-    # How to create vertices
+    verts = []
     for vt in inputVerts:
         vert = None
         if not vt.co:
@@ -4854,33 +4843,42 @@ def createFill(inputVerts, useUvs=False):
         else:
             vert = bm.verts.new((vt.co[0], vt.co[1], vt.co[2]))
         verts.append(vert)
-    '''
-    vertex1 = bm.verts.new( (0.0, 0.0, 3.0) )
-    vertex2 = bm.verts.new( (2.0, 0.0, 3.0) )
-    vertex3 = bm.verts.new( (2.0, 2.0, 3.0) )
-    vertex4 = bm.verts.new( (0.0, 2.0, 3.0) )
-    '''
-    #~
-    # Initialize the index values of this sequence.
     bm.verts.index_update()
     #~
-    # How to create edges 
-    '''
-    bm.edges.new( (vertex1, vertex2) )
-    bm.edges.new( (vertex2, vertex3) )
-    bm.edges.new( (vertex3, vertex4) )
-    bm.edges.new( (vertex4, vertex1) )
-    '''
-    #~
-    # How to create a face
-    # it's not necessary to create the edges before, I made it only to show how create 
-    # edges too
-    '''
-    bm.faces.new( (vertex1, vertex2, vertex3, vertex4) )
-    '''
+    targetFace = None
     if (len(verts) > 2):
-        bm.faces.new(verts)
+        targetFace = bm.faces.new(verts)
+    bmesh.ops.triangulate(bm, faces=[targetFace])
+    bmesh.ops.bevel(bm, geom=verts, offset=thickness)
+    bm.to_mesh(me)
     #~
+    return ob    
+
+def createFill(inputVerts, useUvs=False, useHull=False):
+    me = bpy.data.meshes.new("myMesh") 
+    ob = bpy.data.objects.new("myObject", me) 
+    ob.show_name = True
+    bpy.context.scene.objects.link(ob)
+    bm = bmesh.new() # create an empty BMesh
+    bm.from_mesh(me) # fill it in from a Mesh
+    #~
+    verts = []
+    for vt in inputVerts:
+        vert = None
+        if not vt.co:
+            vert = bm.verts.new((vt[0], vt[1], vt[2]))
+        else:
+            vert = bm.verts.new((vt.co[0], vt.co[1], vt.co[2]))
+        verts.append(vert)
+    bm.verts.index_update()
+    #~
+    if (useHull==False):
+        targetFace = None
+        if (len(verts) > 2):
+            targetFace = bm.faces.new(verts)
+        bmesh.ops.triangulate(bm, faces=[targetFace])
+    else:
+        bmesh.ops.convex_hull(bm, input=verts, use_existing_faces=True)
     # Finish up, write the bmesh back to the mesh
     bm.to_mesh(me)
     #~
@@ -6354,13 +6352,13 @@ class LatkProperties(bpy.types.PropertyGroup):
         default="NONE"
     )
 
-    material_set_mode = EnumProperty( 
-        name="Affect",
+    mesh_fill_mode = EnumProperty( 
+        name="Fill",
         items=(
-            ("ALL", "All", "All materials", 0),
-            ("SELECTED", "Selected", "Selected materials", 1)
+            ("PLANE", "Plane", "Plane", 0),
+            ("HULL", "Hull", "Hull", 1)
         ),
-        default="ALL"
+        default="PLANE"
     )
 
     material_shader_mode = EnumProperty(
@@ -6419,6 +6417,11 @@ class LatkProperties_Panel(bpy.types.Panel):
         # ~ ~ ~ 
 
         row = layout.row()
+        row.prop(latk, "mesh_fill_mode")
+        row.prop(latk, "material_shader_mode")
+        row.operator("latk_button.mtlshader")
+        
+        row = layout.row()
         row.operator("latk_button.booleanmod") 
         row.operator("latk_button.booleanmodminus") 
         row.operator("latk_button.simpleclean")
@@ -6450,17 +6453,10 @@ class LatkProperties_Panel(bpy.types.Panel):
         # ~ ~ ~ 
 
         row = layout.row()
-        row.prop(latk, "material_set_mode")
-        row.prop(latk, "material_shader_mode")
-        row.operator("latk_button.mtlshader")
-
-        row = layout.row()
         row.prop(latk, "minRemapPressure")
         row.prop(latk, "maxRemapPressure")
         row.prop(latk, "remapPressureMode")
         row.operator("latk_button.remappressure")
-
-        # ~ ~ ~ 
 
         row = layout.row()
         row.prop(latk, "writeStrokeSteps")
@@ -6611,10 +6607,15 @@ class Latk_Button_Gpmesh(bpy.types.Operator):
     
     def execute(self, context):
         latk_settings = bpy.context.scene.latk_settings
+        #~
         doJoinMesh=False
         if (latk_settings.bakeMesh==True and latk_settings.joinMesh==True):
             doJoinMesh = True
-        gpMesh(_thickness=latk_settings.thickness, _remesh=latk_settings.remesh_mode.lower(), _resolution=latk_settings.resolution, _bevelResolution=latk_settings.bevelResolution, _decimate=latk_settings.decimate, _bakeMesh=latk_settings.bakeMesh, _joinMesh=doJoinMesh, _saveLayers=False, _vertexColorName=latk_settings.vertexColorName)
+        doHull=False
+        if (latk_settings.mesh_fill_mode.lower() == "hull"):
+            doHull = True
+        #~
+        gpMesh(_thickness=latk_settings.thickness, _remesh=latk_settings.remesh_mode.lower(), _resolution=latk_settings.resolution, _bevelResolution=latk_settings.bevelResolution, _decimate=latk_settings.decimate, _bakeMesh=latk_settings.bakeMesh, _joinMesh=doJoinMesh, _saveLayers=False, _vertexColorName=latk_settings.vertexColorName, _useHull=doHull)
         return {'FINISHED'}
 
 class Latk_Button_RemapPressure(bpy.types.Operator):
@@ -6715,10 +6716,15 @@ class Latk_Button_Gpmesh_SingleFrame(bpy.types.Operator):
 
     def execute(self, context):
         latk_settings = bpy.context.scene.latk_settings
+        #~
         doJoinMesh=False
         if (latk_settings.bakeMesh==True and latk_settings.joinMesh==True):
             doJoinMesh = True
-        gpMesh(_singleFrame=True, _animateFrames=False, _thickness=latk_settings.thickness, _remesh=latk_settings.remesh_mode.lower(), _resolution=latk_settings.resolution, _bevelResolution=latk_settings.bevelResolution, _decimate=latk_settings.decimate, _bakeMesh=latk_settings.bakeMesh, _joinMesh=doJoinMesh, _saveLayers=False, _vertexColorName=latk_settings.vertexColorName)
+        doHull=False
+        if (latk_settings.mesh_fill_mode.lower() == "hull"):
+            doHull = True
+        #~
+        gpMesh(_singleFrame=True, _animateFrames=False, _thickness=latk_settings.thickness, _remesh=latk_settings.remesh_mode.lower(), _resolution=latk_settings.resolution, _bevelResolution=latk_settings.bevelResolution, _decimate=latk_settings.decimate, _bakeMesh=latk_settings.bakeMesh, _joinMesh=doJoinMesh, _saveLayers=False, _vertexColorName=latk_settings.vertexColorName, _useHull=doHull)
         return {'FINISHED'}
 
 class Latk_Button_Dn(bpy.types.Operator):
@@ -6766,10 +6772,11 @@ class Latk_Button_MtlShader(bpy.types.Operator):
     
     def execute(self, context):
         latk_settings = bpy.context.scene.latk_settings
-        if (latk_settings.material_set_mode.lower() == "all"):
-            setAllMtlShader(latk_settings.material_shader_mode.lower())
-        elif (latk_settings.material_set_mode.lower() == "selected"):
-            setMtlShader(latk_settings.material_shader_mode.lower())
+        target = s()
+        if (len(target) < 1):
+            setAllMtlShader(latk_settings.material_shader_mode.lower()) # do all
+        else:
+            setMtlShader(latk_settings.material_shader_mode.lower()) # do selected
         return {'FINISHED'}
 
 # ~ ~ ~ 
