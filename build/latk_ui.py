@@ -1103,6 +1103,9 @@ class Latk_Button_Gpmesh_SingleFrame(bpy.types.Operator):
 
     def execute(self, context):
         latk_settings = bpy.context.scene.latk_settings
+        doJoinMesh=False
+        if (latk_settings.bakeMesh==True and latk_settings.joinMesh==True):
+            doJoinMesh = True
         gpMesh(_singleFrame=True, _animateFrames=False, _thickness=latk_settings.thickness, _remesh=latk_settings.remesh_mode.lower(), _resolution=latk_settings.resolution, _bevelResolution=latk_settings.bevelResolution, _decimate=latk_settings.decimate, _bakeMesh=latk_settings.bakeMesh, _joinMesh=doJoinMesh, _saveLayers=False, _vertexColorName=latk_settings.vertexColorName)
         return {'FINISHED'}
 
