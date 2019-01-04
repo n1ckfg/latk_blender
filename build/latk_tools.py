@@ -1427,6 +1427,48 @@ def getSelectedStroke():
     else:
         print("No selected strokes.")
 
+def getAllPoints(useCoords=False):
+    returns = []
+    strokes = getAllStrokes()
+    for stroke in strokes:
+        for point in stroke.points:
+            if (useCoords==True):
+                returns.append(point.co)
+            else:
+                returns.append(point)
+    return returns
+
+def getSelectedPoints(useCoords=False):
+    returns = []
+    strokes = getSelectedStrokes()
+    for stroke in strokes:
+        for point in stroke.points:
+            if (point.select):
+                if (useCoords==True):
+                    returns.append(point.co)
+                else:
+                    returns.append(point)
+    return returns
+
+def getSelectedPoint(useCoords=False):
+    stroke = getSelectedStroke()
+    for point in stroke.points:
+        if (point.select):
+            if (useCoords==True):
+                return point.co
+            else:
+                return point
+    return None
+
+def getAllCoords():
+    return getAllPoints(True)
+
+def getSelectedCoords():
+    return getSelectedPoints(True)
+
+def getSelectedCoord():
+    return getSelectedPoint(True)
+
 def deleteSelected(target="strokes"):
     original_type = bpy.context.area.type
     print("Current context: " + original_type)

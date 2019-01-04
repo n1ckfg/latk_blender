@@ -737,7 +737,8 @@ class LatkProperties(bpy.types.PropertyGroup):
             ("NONE", "No Remesh", "No remeshing curves", 0),
             ("SHARP", "Sharp", "Sharp remesh", 1),
             ("SMOOTH", "Smooth", "Smooth remesh", 2),
-            ("BLOCKS", "Blocks", "Blocks remesh", 3)
+            ("BLOCKS", "Blocks", "Blocks remesh", 3),
+            ("HULL", "Hull", "Hull remesh", 4)
         ),
         default="NONE"
     )

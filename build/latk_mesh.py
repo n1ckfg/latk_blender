@@ -146,6 +146,9 @@ def assembleMesh(export=False, createPalette=True):
             print(origFileName + "_ASSEMBLY.blend" + " was saved but some groups were missing.")
 
 def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _decimate = 0.1, _curveType="nurbs", _useColors=True, _saveLayers=False, _singleFrame=False, _vertexColors=True, _vertexColorName="rgba", _animateFrames=True, _remesh="none", _consolidateMtl=True, _caps=True, _joinMesh=True, _uvStroke=True, _uvFill=True, _usePressure=True, _useHull=True):
+    _remesh = _remesh.lower()
+    _curveType = _curveType.lower()
+    #~
     if (_joinMesh==True or _remesh != "none"):
         _bakeMesh=True
     #~
@@ -166,12 +169,11 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
     #~
     capsObj = None
     if (_caps==True):
-        if (_curveType=="nurbs"):
+        if (_curveType == "nurbs"):
             bpy.ops.curve.primitive_nurbs_circle_add(radius=_thickness)
         else:
             bpy.ops.curve.primitive_bezier_circle_add(radius=_thickness)
         capsObj = ss()
-        capsObj.name="caps_ob"
         capsObj.data.resolution_u = _bevelResolution
     #~
     for b, layer in enumerate(gp.layers):
@@ -198,7 +200,11 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
                     coords = getStrokeCoords(stroke)
                     pressures = getStrokePressures(stroke)
                     #~
-                    latk_ob = makeCurve(bake=_bakeMesh, name="latk_" + getLayerInfo(layer) + "_" + str(layer.frames[c].frame_number), coords=coords, pressures=pressures, curveType=_curveType, resolution=_resolution, thickness=_thickness, bevelResolution=_bevelResolution, parent=layer.parent, capsObj=capsObj, useUvs=_uvStroke, usePressure=_usePressure)
+                    latk_ob = None
+                    if (_remesh == "hull"):
+                        latk_ob = createBmeshHull(name="latk_" + getLayerInfo(layer) + "_" + str(layer.frames[c].frame_number), inputVerts=stroke.points)                        
+                    else:
+                        latk_ob = makeCurve(bake=_bakeMesh, name="latk_" + getLayerInfo(layer) + "_" + str(layer.frames[c].frame_number), coords=coords, pressures=pressures, curveType=_curveType, resolution=_resolution, thickness=_thickness, bevelResolution=_bevelResolution, capsObj=capsObj, useUvs=_uvStroke, usePressure=_usePressure)
                     #centerOrigin(latk_ob)
                     strokeColor = (0.5,0.5,0.5)
                     if (_useColors==True):
@@ -216,36 +222,38 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
                         if (mat == None):
                             mat = bpy.data.materials.new("share_mtl")
                             mat.diffuse_color = strokeColor  
-                    latk_ob.data.materials.append(mat)
-                    # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ 
-                    #~   
-                    bpy.context.scene.objects.active = latk_ob
-                    #~
-                    if (_bakeMesh==True): #or _remesh==True):
-                        if (_decimate < 0.999):
-                            bpy.ops.object.modifier_add(type='DECIMATE')
-                            bpy.context.object.modifiers["Decimate"].ratio = _decimate     
-                            latk_ob = applyModifiers(latk_ob)
+                    try:
+                        latk_ob.data.materials.append(mat)
+                        # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ 
+                        #~   
+                        bpy.context.scene.objects.active = latk_ob
                         #~
-                        if (_remesh.lower() != "none"):
-                            latk_ob = remesher(latk_ob, mode=_remesh)
+                        if (_bakeMesh == True):
+                            if (_remesh != "hull"):
+                                if (_decimate < 0.999):
+                                    bpy.ops.object.modifier_add(type='DECIMATE')
+                                    bpy.context.object.modifiers["Decimate"].ratio = _decimate     
+                                    latk_ob = applyModifiers(latk_ob)
+                                #~
+                                if (_remesh != "none"):
+                                    latk_ob = remesher(latk_ob, mode=_remesh)
+                                #~
+                                if (getStrokeFillAlpha(stroke) > 0.001):
+                                    fill_ob = createFill(stroke.points, useUvs=_uvFill, useHull=_useHull)
+                                    joinObjects([latk_ob, fill_ob])
+                            #~
+                            if (_vertexColors == True):
+                                colorVertices(latk_ob, strokeColor, colorName=_vertexColorName) 
+                            #~ 
+                        frameList.append(latk_ob) 
                         #~
-                        # + + + + + + +
-                        if (getStrokeFillAlpha(stroke) > 0.001):
-                            fill_ob = createFill(stroke.points, useUvs=_uvFill, useHull=_useHull)
-                            joinObjects([latk_ob, fill_ob])
-                        # + + + + + + +
-                        #~
-                        if (_vertexColors==True):
-                            colorVertices(latk_ob, strokeColor, colorName = _vertexColorName) 
-                        #~ 
-                    frameList.append(latk_ob) 
-                    # * * * * * * * * * * * * * *
-                    if (origParent != None):
-                        makeParent([frameList[len(frameList)-1], origParent])
-                        layer.parent = origParent
-                    # * * * * * * * * * * * * * *
-                    bpy.ops.object.select_all(action='DESELECT')
+                        if (origParent != None):
+                            makeParent([frameList[len(frameList)-1], origParent])
+                            layer.parent = origParent
+                        # * * * * * * * * * * * * * *
+                        bpy.ops.object.select_all(action='DESELECT')
+                    except:
+                        pass
                 #~
                 for i in range(0, len(frameList)):
                     totalCounter += 1
@@ -590,49 +598,8 @@ def meshToGp(obj=None, strokeLength=1, strokeGaps=10.0, shuffleOdds=1.0, spreadP
             pressure = 1.0
             strength = 1.0
             createPoint(stroke, j, (x, y, z), pressure, strength)
-    '''
-    points = []
-    allPointsCounter = 0
-    for i in range(1, len(allPoints)):
-        if (len(points) < 2 or getDistance(allPoints[allPointsCounter], allPoints[i]) < vertexHitbox):
-            points.append(allPoints[i])
-        else:
-            #col = createAndMatchColorPalette(getColorExplorer(obj, i), 16, 2)
-            col = getColorExplorer(obj, i)
-            try:
-                drawCoords(coords=points, color=col)
-                allPointsCounter = i
-                points = []
-            except:
-                points.append(allPoints[i])
-    '''
 
-def makeCurve(coords, pressures=None, resolution=2, thickness=0.1, bevelResolution=1, curveType="bezier", parent=None, capsObj=None, name="latk_ob", useUvs=True, usePressure=True, bake=False):
-    # http://blender.stackexchange.com/questions/12201/bezier-spline-with-python-adds-unwanted-point
-    # http://blender.stackexchange.com/questions/6750/poly-bezier-curve-from-a-list-of-coordinates
-    # create the curve datablock
-    # https://svn.blender.org/svnroot/bf-extensions/trunk/py/scripts/addons/curve_simplify.py
-    '''
-    options = [
-        0,    # smooth mode
-        0,    # output mode
-        0,    # k_thresh
-        5,    # pointsNr
-        0.0,  # error
-        5,    # degreeOut
-        0.0]  # dis_error
-    if (simplify==True):
-        coordsToVec = []
-        for coord in coords:
-            coordsToVec.append(Vector(coord))
-        coordsToVec = simplypoly(coordsToVec, options)
-        print(coordsToVec)
-        #coords = []
-        #for vec in coordsToVec:
-            #coords.append((vec.x, vec.y, vec.z))
-    '''
-    #~
-    # adding an extra point to the beginning helps with smoothing
+def makeCurve(coords, pressures=None, resolution=2, thickness=0.1, bevelResolution=1, curveType="bezier", capsObj=None, name="latk_ob", useUvs=True, usePressure=True, bake=False):
     try:
         coords.insert(0, coords[0])
         pressures.insert(0, pressures[0])
@@ -744,6 +711,30 @@ def randomMetaballs():
         element = mball.elements.new()
         element.co = coordinate
         element.radius = 2.0
+
+def createBmeshHull(inputVerts, name="myObject"):
+    if (len(inputVerts) < 3):
+        return None
+    me = bpy.data.meshes.new("myMesh") 
+    ob = bpy.data.objects.new(name, me) 
+    ob.show_name = True
+    bpy.context.scene.objects.link(ob)
+    bm = bmesh.new() # create an empty BMesh
+    bm.from_mesh(me) # fill it in from a Mesh
+    #~
+    verts = []
+    for vt in inputVerts:
+        vert = None
+        if not vt.co:
+            vert = bm.verts.new((vt[0], vt[1], vt[2]))
+        else:
+            vert = bm.verts.new((vt.co[0], vt.co[1], vt.co[2]))
+        verts.append(vert)
+    bm.verts.index_update()
+    #~
+    bmesh.ops.convex_hull(bm, input=verts, use_existing_faces=True)
+    bm.to_mesh(me)
+    return ob  
 
 def bmeshTube(inputVerts, thickness=1.0):
     me = bpy.data.meshes.new("myMesh") 
