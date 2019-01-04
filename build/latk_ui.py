@@ -749,10 +749,10 @@ class LatkProperties(bpy.types.PropertyGroup):
     mesh_fill_mode = EnumProperty( 
         name="Fill",
         items=(
-            ("PLANE", "Plane", "Plane", 0),
-            ("HULL", "Hull", "Hull", 1)
+            ("HULL", "Hull", "Hull", 0),
+            ("PLANE", "Plane", "Plane", 1)
         ),
-        default="PLANE"
+        default="HULL"
     )
 
     material_shader_mode = EnumProperty(
