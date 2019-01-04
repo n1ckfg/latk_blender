@@ -4175,6 +4175,17 @@ def getBmesh(target=None):
     bm.from_mesh(target.data)
     return bm
 
+def bmeshOp(op="hull", target=None):
+    op = op.lower()
+    if not target:
+        target = ss()
+    bm = getBmesh(target)
+    if (op == "triangulate"):
+        bmesh.ops.triangulate(bm, faces=bm.faces)
+    elif (op == "hull"):
+        bmesh.ops.convex_hull(bm, input=bm.verts, use_existing_faces=True)
+    bm.to_mesh(target.data)
+
 def getVerts(target=None, useWorldSpace=True, useColors=True, useBmesh=False, useModifiers=True):
     if not target:
         target = bpy.context.scene.objects.active
