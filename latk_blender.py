@@ -4322,13 +4322,15 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
                     else:
                         masterParentList.append(None)
                     #~
-                    coords = getStrokeCoords(stroke)
-                    pressures = getStrokePressures(stroke)
-                    #~
                     latk_ob = None
-                    if (_remesh == "hull"):
-                        latk_ob = createBmeshHull(name="latk_" + getLayerInfo(layer) + "_" + str(layer.frames[c].frame_number), inputVerts=stroke.points)                        
+                    if (_remesh == "hull" or _remesh == "plane"):
+                        doHull = False
+                        if (_remesh == "hull"):
+                            doHull = True
+                        latk_ob = createFill(name="latk_" + getLayerInfo(layer) + "_" + str(layer.frames[c].frame_number), useHull=doHull, useUvs=_uvStroke, inputVerts=stroke.points)                        
                     else:
+                        coords = getStrokeCoords(stroke)
+                        pressures = getStrokePressures(stroke)
                         latk_ob = makeCurve(bake=_bakeMesh, name="latk_" + getLayerInfo(layer) + "_" + str(layer.frames[c].frame_number), coords=coords, pressures=pressures, curveType=_curveType, resolution=_resolution, thickness=_thickness, bevelResolution=_bevelResolution, capsObj=capsObj, useUvs=_uvStroke, usePressure=_usePressure)
                     #centerOrigin(latk_ob)
                     strokeColor = (0.5,0.5,0.5)
@@ -4354,7 +4356,7 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
                         bpy.context.scene.objects.active = latk_ob
                         #~
                         if (_bakeMesh == True):
-                            if (_remesh != "hull"):
+                            if (_remesh != "hull" and _remesh != "plane"):
                                 if (_decimate < 0.999):
                                     bpy.ops.object.modifier_add(type='DECIMATE')
                                     bpy.context.object.modifiers["Decimate"].ratio = _decimate     
@@ -4837,30 +4839,6 @@ def randomMetaballs():
         element.co = coordinate
         element.radius = 2.0
 
-def createBmeshHull(inputVerts, name="myObject"):
-    if (len(inputVerts) < 3):
-        return None
-    me = bpy.data.meshes.new("myMesh") 
-    ob = bpy.data.objects.new(name, me) 
-    ob.show_name = True
-    bpy.context.scene.objects.link(ob)
-    bm = bmesh.new() # create an empty BMesh
-    bm.from_mesh(me) # fill it in from a Mesh
-    #~
-    verts = []
-    for vt in inputVerts:
-        vert = None
-        if not vt.co:
-            vert = bm.verts.new((vt[0], vt[1], vt[2]))
-        else:
-            vert = bm.verts.new((vt.co[0], vt.co[1], vt.co[2]))
-        verts.append(vert)
-    bm.verts.index_update()
-    #~
-    bmesh.ops.convex_hull(bm, input=verts, use_existing_faces=True)
-    bm.to_mesh(me)
-    return ob  
-
 def bmeshTube(inputVerts, thickness=1.0):
     me = bpy.data.meshes.new("myMesh") 
     ob = bpy.data.objects.new("myObject", me) 
@@ -4888,9 +4866,11 @@ def bmeshTube(inputVerts, thickness=1.0):
     #~
     return ob    
 
-def createFill(inputVerts, useUvs=False, useHull=False):
+def createFill(inputVerts, useUvs=False, useHull=False, name="myObject"):
+    if (len(inputVerts) < 3):
+        return None
     me = bpy.data.meshes.new("myMesh") 
-    ob = bpy.data.objects.new("myObject", me) 
+    ob = bpy.data.objects.new(name, me) 
     ob.show_name = True
     bpy.context.scene.objects.link(ob)
     bm = bmesh.new() # create an empty BMesh
@@ -6378,11 +6358,12 @@ class LatkProperties(bpy.types.PropertyGroup):
     remesh_mode = EnumProperty(
         name="Remesh Mode",
         items=(
-            ("NONE", "No Remesh", "No remeshing curves", 0),
+            ("NONE", "None", "No remeshing curves", 0),
             ("SHARP", "Sharp", "Sharp remesh", 1),
             ("SMOOTH", "Smooth", "Smooth remesh", 2),
             ("BLOCKS", "Blocks", "Blocks remesh", 3),
-            ("HULL", "Hull", "Hull remesh", 4)
+            ("PLANE", "Plane", "Plane remesh", 4),
+            ("HULL", "Hull", "Hull remesh", 5)
         ),
         default="NONE"
     )
