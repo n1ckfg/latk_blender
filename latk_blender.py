@@ -3155,7 +3155,7 @@ def writePointCloud(filepath=None, strokes=None):
     writeTextFile(name=name, lines=lines)
 '''
 
-def importAsc(filepath=None, strokeLength=1):
+def importAsc(filepath=None, strokeLength=1, importAsGP=False):
     globalScale = Vector((1, 1, 1))
     globalOffset = Vector((0, 0, 0))
     useScaleAndOffset = True
@@ -3193,32 +3193,44 @@ def importAsc(filepath=None, strokeLength=1):
         allPressures.append(pressure)
         colors.append(color)
 
-    gp = getActiveGp()
-    layer = gp.layers.new("ASC_layer", set_active=True)
-    start, end = getStartEnd()
-    frame = getActiveFrame()
-    if not frame:
-        frame = layer.frames.new(start)
+    if (importAsGP==True):
+        gp = getActiveGp()
+        layer = gp.layers.new("ASC_layer", set_active=True)
+        start, end = getStartEnd()
+        frame = getActiveFrame()
+        if not frame:
+            frame = layer.frames.new(start)
 
-    for i in range(0, len(allPoints), strokeLength):
-        color = colors[i]
-        if (color != None):
-            createColor(color)
-        stroke = frame.strokes.new(getActiveColor().name)
-        stroke.draw_mode = "3DSPACE"
-        stroke.points.add(strokeLength)
+        for i in range(0, len(allPoints)-(strokeLength-1), strokeLength):
+            color = colors[i]
+            if (color != None):
+                createColor(color)
+            stroke = frame.strokes.new(getActiveColor().name)
+            stroke.draw_mode = "3DSPACE"
+            stroke.points.add(strokeLength)
 
-        for j in range(0, strokeLength):
-            x = allPoints[i+j][0]
-            y = allPoints[i+j][2]
-            z = allPoints[i+j][1]
-            pressure = allPressures[i+j]
-            strength = 1.0
-            if useScaleAndOffset == True:
-                x = (x * globalScale.x) + globalOffset.x
-                y = (y * globalScale.y) + globalOffset.y
-                z = (z * globalScale.z) + globalOffset.z
-            createPoint(stroke, j, (x, y, z), pressure, strength)
+            for j in range(0, strokeLength):
+                x = allPoints[i+j][0]
+                y = allPoints[i+j][2]
+                z = allPoints[i+j][1]
+                pressure = allPressures[i+j]
+                strength = 1.0
+                if useScaleAndOffset == True:
+                    x = (x * globalScale.x) + globalOffset.x
+                    y = (y * globalScale.y) + globalOffset.y
+                    z = (z * globalScale.z) + globalOffset.z
+                createPoint(stroke, j, (x, y, z), pressure, strength)
+    else:
+        me = bpy.data.meshes.new("myMesh") 
+        ob = bpy.data.objects.new("myObject", me) 
+        ob.show_name = True
+        bpy.context.scene.objects.link(ob)
+        bm = bmesh.new() # create an empty BMesh
+        bm.from_mesh(me) # fill it in from a Mesh
+        for pt in allPoints:
+            bm.verts.new((pt[0], pt[2], pt[1]))
+        bm.verts.index_update()
+        bm.to_mesh(me)
 
 def exportAsc(filepath=None):
     ascData = []
@@ -4839,33 +4851,6 @@ def randomMetaballs():
         element.co = coordinate
         element.radius = 2.0
 
-def bmeshTube(inputVerts, thickness=1.0):
-    me = bpy.data.meshes.new("myMesh") 
-    ob = bpy.data.objects.new("myObject", me) 
-    ob.show_name = True
-    bpy.context.scene.objects.link(ob)
-    bm = bmesh.new() # create an empty BMesh
-    bm.from_mesh(me) # fill it in from a Mesh
-    #~
-    verts = []
-    for vt in inputVerts:
-        vert = None
-        if not vt.co:
-            vert = bm.verts.new((vt[0], vt[1], vt[2]))
-        else:
-            vert = bm.verts.new((vt.co[0], vt.co[1], vt.co[2]))
-        verts.append(vert)
-    bm.verts.index_update()
-    #~
-    targetFace = None
-    if (len(verts) > 2):
-        targetFace = bm.faces.new(verts)
-    bmesh.ops.triangulate(bm, faces=[targetFace])
-    bmesh.ops.bevel(bm, geom=verts, offset=thickness)
-    bm.to_mesh(me)
-    #~
-    return ob    
-
 def createFill(inputVerts, useUvs=False, useHull=False, name="myObject"):
     if (len(inputVerts) < 3):
         return None
@@ -4876,23 +4861,17 @@ def createFill(inputVerts, useUvs=False, useHull=False, name="myObject"):
     bm = bmesh.new() # create an empty BMesh
     bm.from_mesh(me) # fill it in from a Mesh
     #~
-    verts = []
     for vt in inputVerts:
-        vert = None
-        if not vt.co:
-            vert = bm.verts.new((vt[0], vt[1], vt[2]))
-        else:
-            vert = bm.verts.new((vt.co[0], vt.co[1], vt.co[2]))
-        verts.append(vert)
+        bm.verts.new(vt.co)
     bm.verts.index_update()
     #~
     if (useHull==False):
         targetFace = None
-        if (len(verts) > 2):
-            targetFace = bm.faces.new(verts)
+        if (len(bm.verts) > 2):
+            targetFace = bm.faces.new(bm.verts)
         bmesh.ops.triangulate(bm, faces=[targetFace])
     else:
-        bmesh.ops.convex_hull(bm, input=verts, use_existing_faces=True)
+        bmesh.ops.convex_hull(bm, input=bm.verts, use_existing_faces=True)
     # Finish up, write the bmesh back to the mesh
     bm.to_mesh(me)
     #~
@@ -5809,6 +5788,7 @@ class ImportASC(bpy.types.Operator, ImportHelper):
             options={'HIDDEN'},
             )
 
+    importAsGP = BoolProperty(name="Import as GP", description="Create Grease Pencil strokes instead of vertices", default=True)
     strokeLength = IntProperty(name="Points per Stroke", description="Group every n points into strokes", default=1)
 
     def execute(self, context):
@@ -5817,6 +5797,7 @@ class ImportASC(bpy.types.Operator, ImportHelper):
         if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
             import os
         #~
+        keywords["importAsGP"] = self.importAsGP
         keywords["strokeLength"] = self.strokeLength
         la.importAsc(**keywords)
         return {'FINISHED'} 

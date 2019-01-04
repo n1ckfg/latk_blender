@@ -1067,7 +1067,7 @@ def writePointCloud(filepath=None, strokes=None):
     writeTextFile(name=name, lines=lines)
 '''
 
-def importAsc(filepath=None, strokeLength=1):
+def importAsc(filepath=None, strokeLength=1, importAsGP=False):
     globalScale = Vector((1, 1, 1))
     globalOffset = Vector((0, 0, 0))
     useScaleAndOffset = True
@@ -1105,32 +1105,44 @@ def importAsc(filepath=None, strokeLength=1):
         allPressures.append(pressure)
         colors.append(color)
 
-    gp = getActiveGp()
-    layer = gp.layers.new("ASC_layer", set_active=True)
-    start, end = getStartEnd()
-    frame = getActiveFrame()
-    if not frame:
-        frame = layer.frames.new(start)
+    if (importAsGP==True):
+        gp = getActiveGp()
+        layer = gp.layers.new("ASC_layer", set_active=True)
+        start, end = getStartEnd()
+        frame = getActiveFrame()
+        if not frame:
+            frame = layer.frames.new(start)
 
-    for i in range(0, len(allPoints), strokeLength):
-        color = colors[i]
-        if (color != None):
-            createColor(color)
-        stroke = frame.strokes.new(getActiveColor().name)
-        stroke.draw_mode = "3DSPACE"
-        stroke.points.add(strokeLength)
+        for i in range(0, len(allPoints)-(strokeLength-1), strokeLength):
+            color = colors[i]
+            if (color != None):
+                createColor(color)
+            stroke = frame.strokes.new(getActiveColor().name)
+            stroke.draw_mode = "3DSPACE"
+            stroke.points.add(strokeLength)
 
-        for j in range(0, strokeLength):
-            x = allPoints[i+j][0]
-            y = allPoints[i+j][2]
-            z = allPoints[i+j][1]
-            pressure = allPressures[i+j]
-            strength = 1.0
-            if useScaleAndOffset == True:
-                x = (x * globalScale.x) + globalOffset.x
-                y = (y * globalScale.y) + globalOffset.y
-                z = (z * globalScale.z) + globalOffset.z
-            createPoint(stroke, j, (x, y, z), pressure, strength)
+            for j in range(0, strokeLength):
+                x = allPoints[i+j][0]
+                y = allPoints[i+j][2]
+                z = allPoints[i+j][1]
+                pressure = allPressures[i+j]
+                strength = 1.0
+                if useScaleAndOffset == True:
+                    x = (x * globalScale.x) + globalOffset.x
+                    y = (y * globalScale.y) + globalOffset.y
+                    z = (z * globalScale.z) + globalOffset.z
+                createPoint(stroke, j, (x, y, z), pressure, strength)
+    else:
+        me = bpy.data.meshes.new("myMesh") 
+        ob = bpy.data.objects.new("myObject", me) 
+        ob.show_name = True
+        bpy.context.scene.objects.link(ob)
+        bm = bmesh.new() # create an empty BMesh
+        bm.from_mesh(me) # fill it in from a Mesh
+        for pt in allPoints:
+            bm.verts.new((pt[0], pt[2], pt[1]))
+        bm.verts.index_update()
+        bm.to_mesh(me)
 
 def exportAsc(filepath=None):
     ascData = []

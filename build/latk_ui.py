@@ -185,6 +185,7 @@ class ImportASC(bpy.types.Operator, ImportHelper):
             options={'HIDDEN'},
             )
 
+    importAsGP = BoolProperty(name="Import as GP", description="Create Grease Pencil strokes instead of vertices", default=True)
     strokeLength = IntProperty(name="Points per Stroke", description="Group every n points into strokes", default=1)
 
     def execute(self, context):
@@ -193,6 +194,7 @@ class ImportASC(bpy.types.Operator, ImportHelper):
         if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
             import os
         #~
+        keywords["importAsGP"] = self.importAsGP
         keywords["strokeLength"] = self.strokeLength
         la.importAsc(**keywords)
         return {'FINISHED'} 

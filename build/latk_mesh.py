@@ -715,33 +715,6 @@ def randomMetaballs():
         element.co = coordinate
         element.radius = 2.0
 
-def bmeshTube(inputVerts, thickness=1.0):
-    me = bpy.data.meshes.new("myMesh") 
-    ob = bpy.data.objects.new("myObject", me) 
-    ob.show_name = True
-    bpy.context.scene.objects.link(ob)
-    bm = bmesh.new() # create an empty BMesh
-    bm.from_mesh(me) # fill it in from a Mesh
-    #~
-    verts = []
-    for vt in inputVerts:
-        vert = None
-        if not vt.co:
-            vert = bm.verts.new((vt[0], vt[1], vt[2]))
-        else:
-            vert = bm.verts.new((vt.co[0], vt.co[1], vt.co[2]))
-        verts.append(vert)
-    bm.verts.index_update()
-    #~
-    targetFace = None
-    if (len(verts) > 2):
-        targetFace = bm.faces.new(verts)
-    bmesh.ops.triangulate(bm, faces=[targetFace])
-    bmesh.ops.bevel(bm, geom=verts, offset=thickness)
-    bm.to_mesh(me)
-    #~
-    return ob    
-
 def createFill(inputVerts, useUvs=False, useHull=False, name="myObject"):
     if (len(inputVerts) < 3):
         return None
@@ -752,23 +725,17 @@ def createFill(inputVerts, useUvs=False, useHull=False, name="myObject"):
     bm = bmesh.new() # create an empty BMesh
     bm.from_mesh(me) # fill it in from a Mesh
     #~
-    verts = []
     for vt in inputVerts:
-        vert = None
-        if not vt.co:
-            vert = bm.verts.new((vt[0], vt[1], vt[2]))
-        else:
-            vert = bm.verts.new((vt.co[0], vt.co[1], vt.co[2]))
-        verts.append(vert)
+        bm.verts.new(vt.co)
     bm.verts.index_update()
     #~
     if (useHull==False):
         targetFace = None
-        if (len(verts) > 2):
-            targetFace = bm.faces.new(verts)
+        if (len(bm.verts) > 2):
+            targetFace = bm.faces.new(bm.verts)
         bmesh.ops.triangulate(bm, faces=[targetFace])
     else:
-        bmesh.ops.convex_hull(bm, input=verts, use_existing_faces=True)
+        bmesh.ops.convex_hull(bm, input=bm.verts, use_existing_faces=True)
     # Finish up, write the bmesh back to the mesh
     bm.to_mesh(me)
     #~
