@@ -6359,11 +6359,11 @@ class LatkProperties(bpy.types.PropertyGroup):
         name="Remesh Mode",
         items=(
             ("NONE", "None", "No remeshing curves", 0),
-            ("SHARP", "Sharp", "Sharp remesh", 1),
-            ("SMOOTH", "Smooth", "Smooth remesh", 2),
-            ("BLOCKS", "Blocks", "Blocks remesh", 3),
-            ("PLANE", "Plane", "Plane remesh", 4),
-            ("HULL", "Hull", "Hull remesh", 5)
+            ("HULL", "Hull", "Hull remesh", 1),
+            ("PLANE", "Plane", "Plane remesh", 2),
+            ("SHARP", "Sharp", "Sharp remesh", 3),
+            ("SMOOTH", "Smooth", "Smooth remesh", 4),
+            ("BLOCKS", "Blocks", "Blocks remesh", 5)
         ),
         default="NONE"
     )
