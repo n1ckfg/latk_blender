@@ -3709,6 +3709,27 @@ def getVertexColor(mesh=None, vert=0):
             i += 1   
     return None 
 
+# TODO fix
+def getBmeshVCol(mesh=None, vert=0):
+    if not mesh:
+        mesh = getBmesh()
+    color_layer = mesh.loops.layers.color[0]
+    for face in mesh.faces:
+        for loop in face.loops:
+            if (vert == loop.index):
+                return loop[color_layer]
+    return None 
+
+# TODO fix
+def getBmeshVCols(mesh=None):
+    returns = []
+    if not mesh:
+        mesh = getBmesh()
+    color_layer = mesh.loops.layers.color[0]
+    for i, vert in enumerate(mesh.verts):
+        returns.append(getBmeshVCol(mesh, i))
+    return returns
+
 def colorVertices(obj, color=(1,0,0), makeMaterial=False, colorName="rgba"):
     # start in object mode
     mesh = obj.data
@@ -4146,6 +4167,13 @@ def simpleClean(target=None):
         bpy.ops.mesh.face_make_planar()
         bpy.ops.mesh.tris_convert_to_quads()
         bpy.ops.mesh.delete_loose()
+
+def getBmesh(target=None):
+    if not target:
+        target = ss()
+    bm = bmesh.new()
+    bm.from_mesh(target.data)
+    return bm
 
 def getVerts(target=None, useWorldSpace=True, useColors=True, useBmesh=False, useModifiers=True):
     if not target:
@@ -5420,27 +5448,20 @@ def freestyle_to_gpencil_strokes(strokes, frame, pressure=1, draw_mode="3DSPACE"
             fstrokeCounter += 1
         for i, svert in enumerate(fstroke):
             if (i == int(fstrokeCounter/2)):
-            #if (i == fstrokeCounter-1):
                 sampleVertRaw = mat * svert.point_3d
                 break
-        '''
-        for svert in fstroke:
-            sampleVertRaw = mat * svert.point_3d
-            break
-        '''
+
         sampleVert = (sampleVertRaw[0], sampleVertRaw[1], sampleVertRaw[2])
         #~
         pixel = (1,0,1)
         lastPixel = getActiveColor().color
-        # TODO better hit detection method needed
-        # possibly sort original verts by distance?
-        # http://stackoverflow.com/questions/6618515/sorting-list-based-on-values-from-another-list
-        # X.sort(key=dict(zip(X, Y)).get)
         distances = []
         sortedVerts = bm.verts
+        sortedColors = [(0,0,1)]
         for v in bm.verts:
             distances.append(getDistance(obj.matrix_world * v.co, sampleVert))
         sortedVerts.sort(key=dict(zip(sortedVerts, distances)).get)
+        #sortedColors.sort(key=dict(zip(sortedColors, distances)).get)
         #~ ~ ~ ~ ~ ~ ~ ~ ~ 
         if (scene.freestyle_gpencil_export.use_connecting == True):
             if (firstRun == True):
@@ -5468,31 +5489,24 @@ def freestyle_to_gpencil_strokes(strokes, frame, pressure=1, draw_mode="3DSPACE"
                     gpstroke.points[i].strength = 1
                     gpstroke.points[i].pressure = pressure
         #~ ~ ~ ~ ~ ~ ~ ~ ~
-        targetVert = None
         for v in sortedVerts:
             targetVert = v
             break
-        #~
-            #if (compareTuple(obj.matrix_world * v.co, obj.matrix_world * v.co, numPlaces=1) == True):
-            #if (hitDetect3D(obj.matrix_world * v.co, sampleVert, hitbox=bpy.context.scene.freestyle_gpencil_export.vertexHitbox) == True):
-            #if (getDistance(obj.matrix_world * v.co, sampleVert) <= 0.5):
-        try:
-            uv_first = uv_from_vert_first(uv_layer, targetVert)
-            #uv_average = uv_from_vert_average(uv_layer, v)
-            #print("Vertex: %r, uv_first=%r, uv_average=%r" % (v, uv_first, uv_average))
-            #~
-            pixelRaw = None
-            if (blenderRender == True):
-                pixelRaw = getPixelFromUvArray(images[obj.active_material.texture_slots[0].texture.image.name], uv_first[0], uv_first[1])
-            else:
-                pixelRaw = getPixelFromUvArray(images[obj.active_material.node_tree.nodes["Image Texture"].image.name], uv_first[0], uv_first[1])                
-            #pixelRaw = getPixelFromUv(obj.active_material.texture_slots[0].texture.image, uv_first[0], uv_first[1])
-            #pixelRaw = getPixelFromUv(obj.active_material.texture_slots[0].texture.image, uv_average[0], uv_average[1])
-            pixel = (pixelRaw[0], pixelRaw[1], pixelRaw[2])
-            #break
-            #print("Pixel: " + str(pixel))    
-        except:
-            pixel = lastPixel   
+        targetColor = sortedColors[0]
+
+        if (scene.freestyle_gpencil_export.useVCols == True):
+            pixel = (targetColor[0], targetColor[1], targetColor[2])
+        else:
+            try:
+                uv_first = uv_from_vert_first(uv_layer, targetVert)
+                pixelRaw = None
+                if (blenderRender == True):
+                    pixelRaw = getPixelFromUvArray(images[obj.active_material.texture_slots[0].texture.image.name], uv_first[0], uv_first[1])
+                else:
+                    pixelRaw = getPixelFromUvArray(images[obj.active_material.node_tree.nodes["Image Texture"].image.name], uv_first[0], uv_first[1])                
+                pixel = (pixelRaw[0], pixelRaw[1], pixelRaw[2])
+            except:
+                pixel = lastPixel   
         #~ 
         lastActiveColor = createAndMatchColorPalette(pixel, scene.freestyle_gpencil_export.numMaxColors, scene.freestyle_gpencil_export.numColPlaces)
         #~
@@ -5500,7 +5514,6 @@ def freestyle_to_gpencil_strokes(strokes, frame, pressure=1, draw_mode="3DSPACE"
             lastActiveColor.fill_color = lastActiveColor.color
             lastActiveColor.fill_alpha = 0.9
         gpstroke = frame.strokes.new(lastActiveColor.name)
-        # enum in ('SCREEN', '3DSPACE', '2DSPACE', '2DIMAGE')
         gpstroke.draw_mode = "3DSPACE"
         gpstroke.points.add(count=len(fstroke))
 
@@ -6131,7 +6144,7 @@ class FreestyleGPencil(bpy.types.PropertyGroup):
     )
 
     use_fill = BoolProperty(
-        name="Fill",
+        name="Fill Strokes",
         description="Fill the contour with the object's material color",
         default=False
     )
@@ -6178,6 +6191,12 @@ class FreestyleGPencil(bpy.types.PropertyGroup):
         default=False
     )
 
+    useVCols = BoolProperty(
+        name="Use VCols",
+        description="Use vertex colors instead of UV maps",
+        default=False
+    )
+
 class FreestyleGPencil_Panel(bpy.types.Panel):
     """Creates a Panel in the render context of the properties editor"""
     bl_idname = "RENDER_PT_FreestyleGPencilPanel"
@@ -6201,6 +6220,7 @@ class FreestyleGPencil_Panel(bpy.types.Panel):
         row = layout.row()
         row.prop(gp, "numColPlaces")
         row.prop(gp, "numMaxColors")
+        row.prop(gp, "useVCols")
 
         row = layout.row()
         #row.prop(svg, "split_at_invisible")

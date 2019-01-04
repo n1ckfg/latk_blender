@@ -528,7 +528,7 @@ class FreestyleGPencil(bpy.types.PropertyGroup):
     )
 
     use_fill = BoolProperty(
-        name="Fill",
+        name="Fill Strokes",
         description="Fill the contour with the object's material color",
         default=False
     )
@@ -575,6 +575,12 @@ class FreestyleGPencil(bpy.types.PropertyGroup):
         default=False
     )
 
+    useVCols = BoolProperty(
+        name="Use VCols",
+        description="Use vertex colors instead of UV maps",
+        default=False
+    )
+
 class FreestyleGPencil_Panel(bpy.types.Panel):
     """Creates a Panel in the render context of the properties editor"""
     bl_idname = "RENDER_PT_FreestyleGPencilPanel"
@@ -598,6 +604,7 @@ class FreestyleGPencil_Panel(bpy.types.Panel):
         row = layout.row()
         row.prop(gp, "numColPlaces")
         row.prop(gp, "numMaxColors")
+        row.prop(gp, "useVCols")
 
         row = layout.row()
         #row.prop(svg, "split_at_invisible")

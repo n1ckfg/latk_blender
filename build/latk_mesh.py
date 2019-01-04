@@ -11,6 +11,13 @@ def simpleClean(target=None):
         bpy.ops.mesh.tris_convert_to_quads()
         bpy.ops.mesh.delete_loose()
 
+def getBmesh(target=None):
+    if not target:
+        target = ss()
+    bm = bmesh.new()
+    bm.from_mesh(target.data)
+    return bm
+
 def getVerts(target=None, useWorldSpace=True, useColors=True, useBmesh=False, useModifiers=True):
     if not target:
         target = bpy.context.scene.objects.active

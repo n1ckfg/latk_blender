@@ -89,6 +89,27 @@ def getVertexColor(mesh=None, vert=0):
             i += 1   
     return None 
 
+# TODO fix
+def getBmeshVCol(mesh=None, vert=0):
+    if not mesh:
+        mesh = getBmesh()
+    color_layer = mesh.loops.layers.color[0]
+    for face in mesh.faces:
+        for loop in face.loops:
+            if (vert == loop.index):
+                return loop[color_layer]
+    return None 
+
+# TODO fix
+def getBmeshVCols(mesh=None):
+    returns = []
+    if not mesh:
+        mesh = getBmesh()
+    color_layer = mesh.loops.layers.color[0]
+    for i, vert in enumerate(mesh.verts):
+        returns.append(getBmeshVCol(mesh, i))
+    return returns
+
 def colorVertices(obj, color=(1,0,0), makeMaterial=False, colorName="rgba"):
     # start in object mode
     mesh = obj.data
