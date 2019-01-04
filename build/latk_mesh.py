@@ -174,6 +174,7 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
         else:
             bpy.ops.curve.primitive_bezier_circle_add(radius=_thickness)
         capsObj = ss()
+        capsObj.name = "caps_ob"
         capsObj.data.resolution_u = _bevelResolution
     #~
     for b, layer in enumerate(gp.layers):
