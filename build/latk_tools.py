@@ -1,5 +1,10 @@
 # 2 of 10. TOOLS
 
+def showAlert(message="alert", title="Message Box", icon='INFO'):
+    def draw(self, context):
+        self.layout.label(message)
+    bpy.context.window_manager.popup_menu(draw, title=title, icon=icon)
+
 def setObjectMode():
     bpy.ops.object.mode_set(mode='OBJECT')
 
