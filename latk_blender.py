@@ -4173,12 +4173,47 @@ def simpleClean(target=None):
         bpy.ops.mesh.tris_convert_to_quads()
         bpy.ops.mesh.delete_loose()
 
-def getBmesh(target=None):
+def getBmesh(target=None, update=True):
     if not target:
         target = ss()
     bm = bmesh.new()
     bm.from_mesh(target.data)
+    if (update==True):
+        bm.verts.ensure_lookup_table()
+        bm.faces.ensure_lookup_table()
     return bm
+
+def setBmesh(bm, target=None, update=True)
+    if not target:
+        target = ss()
+    if (update==True):
+        bm.verts.ensure_lookup_table()
+        bm.faces.ensure_lookup_table()
+    bm.to_mesh(target.data)
+
+def updateBmesh(target=None):
+    if not target:
+        target = getBmesh()
+    target.verts.ensure_lookup_table()
+    target.faces.ensure_lookup_table()
+
+def getBmeshVertColors(target=None):
+    returnVerts = []
+    returnColors = []
+    if not target:
+        target = getBmesh(update=True)
+    color_layer = None
+    #~
+    if not target.loops.layers.color:
+        color_layer = target.loops.layers.color.new("color")
+    else:
+        color_layer = target.loops.layers.color[0]
+    #~
+    for face in target.faces:
+        for loop in face.loops:
+            returnVerts.append(loop.vert.co)
+            returnColors.append(loop[color_layer])
+    return returnVerts, returnColors
 
 def bmeshOp(op="hull", target=None):
     op = op.lower()
