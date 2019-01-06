@@ -6123,13 +6123,13 @@ class FreestyleGPencil(bpy.types.PropertyGroup):
     visible_only = BoolProperty(
         name="Visible Only",
         description="Only render visible lines",
-        default=True
+        default=False
     )
 
     use_overwrite = BoolProperty(
         name="Overwrite",
         description="Remove the GPencil strokes from previous renders before a new render",
-        default=True
+        default=False
     )
 
     '''
@@ -6155,7 +6155,7 @@ class FreestyleGPencil(bpy.types.PropertyGroup):
     doClearPalette = BoolProperty(
         name="Clear Palette",
         description="Delete palette before beginning a new render",
-        default=True
+        default=False
     )
 
     '''
