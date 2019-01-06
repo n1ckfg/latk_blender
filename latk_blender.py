@@ -5408,13 +5408,6 @@ def create_gpencil_layer(scene, name, color, alpha, fill_color, fill_alpha):
     if not layer:
         print("making new GPencil layer")
         layer = gp.layers.new(name=name, set_active=True)
-        # set defaults
-        '''
-        layer.fill_color = fill_color
-        layer.fill_alpha = fill_alpha
-        layer.alpha = alpha 
-        layer.color = color
-        '''
     elif scene.freestyle_gpencil_export.use_overwrite:
         # empty the current strokes from the gp layer
         layer.clear()
@@ -5427,46 +5420,33 @@ def frame_from_frame_number(layer, current_frame):
     """Get a reference to the current frame if it exists, else False"""
     return next((frame for frame in layer.frames if frame.frame_number == current_frame), False)
 
-def freestyle_to_gpencil_strokes(strokes, frame, pressure=1, draw_mode="3DSPACE"):
+def freestyle_to_gpencil_strokes(strokes, frame, pressure=1, draw_mode="3DSPACE", blenderRender=False):
     scene = bpy.context.scene
-    fgp = scene.freestyle_gpencil_export
-    if (fgp.doClearPalette == True):
+    if (scene.freestyle_gpencil_export.doClearPalette == True):
         clearPalette()
     """Actually creates the GPencil structure from a collection of strokes"""
-    camMat = scene.camera.matrix_local.copy()
+    mat = scene.camera.matrix_local.copy()
     #~ 
     obj = scene.objects.active #bpy.context.edit_object
-
-    # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
-
-    images = None
-    try:
-        images = getUvImages()
-    except:
-        pass
+    me = obj.data
+    bm = bmesh.new()
+    bm.from_mesh(me) #from_edit_mesh(me)
     #~
-    allPoints, allColors = getVerts(target=obj, useWorldSpace=True, useColors=True, useBmesh=False)
+    # this speeds things up considerably
+    images = getUvImages()
     #~
-    sortedColors = []
-    for i in range(0, len(allPoints)):
-        color = None
-        if not images:
-            try:
-                color = allColors[i]
-            except:
-                color = getColorExplorer(obj, i)
-        else:
-            try:
-                color = getColorExplorer(obj, i, images)
-            except:
-                color = getColorExplorer(obj, i)
-        sortedColors.append(color)
-
-    # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
+    uv_layer = bm.loops.layers.uv.active
+    #~
+    strokeCounter = 0;
+    
+    firstRun = True
+    allPoints = []
+    strokesToRemove = []
+    allPointsCounter = 1
+    lastActiveColor = None
 
     for fstroke in strokes:
         # *** fstroke contains coordinates of original vertices ***
-        #~
         sampleVertRaw = (0,0,0)
         sampleVert = (0,0,0)
         #~
@@ -5475,39 +5455,50 @@ def freestyle_to_gpencil_strokes(strokes, frame, pressure=1, draw_mode="3DSPACE"
             fstrokeCounter += 1
         for i, svert in enumerate(fstroke):
             if (i == int(fstrokeCounter/2)):
-                sampleVertRaw = camMat * svert.point_3d
+                sampleVertRaw = mat * svert.point_3d
                 break
-
         sampleVert = (sampleVertRaw[0], sampleVertRaw[1], sampleVertRaw[2])
         #~
-        pixel = (1,0,0)
+        pixel = (1,0,1)
         lastPixel = getActiveColor().color
-        
         distances = []
-
-        for v in allPoints:
+        sortedVerts = bm.verts
+        for v in bm.verts:
             distances.append(getDistance(obj.matrix_world * v.co, sampleVert))
-        
-        sortedColors.sort(key=dict(zip(sortedColors, distances)).get)
+        sortedVerts.sort(key=dict(zip(sortedVerts, distances)).get)
 
-        try:
-            pixel = sortedColors[0]
-        except:
-            pixel = lastPixel
-
-        lastActiveColor = createAndMatchColorPalette(pixel, fgp.numMaxColors, fgp.numColPlaces)
+        targetVert = None
+        for v in sortedVerts:
+            targetVert = v
+            break
         #~
-        if (fgp.use_fill):
+        try:
+            uv_first = uv_from_vert_first(uv_layer, targetVert)
+            #uv_average = uv_from_vert_average(uv_layer, v)
+            #~
+            pixelRaw = None
+            if (blenderRender == True):
+                pixelRaw = getPixelFromUvArray(images[obj.active_material.texture_slots[0].texture.image.name], uv_first[0], uv_first[1])
+            else:
+                pixelRaw = getPixelFromUvArray(images[obj.active_material.node_tree.nodes["Image Texture"].image.name], uv_first[0], uv_first[1])                
+            pixel = (pixelRaw[0], pixelRaw[1], pixelRaw[2])
+        except:
+            pixel = lastPixel   
+        #~ 
+        lastActiveColor = createAndMatchColorPalette(pixel, scene.freestyle_gpencil_export.numMaxColors, scene.freestyle_gpencil_export.numColPlaces)
+        #~
+        if (scene.freestyle_gpencil_export.use_fill):
             lastActiveColor.fill_color = lastActiveColor.color
             lastActiveColor.fill_alpha = 0.9
         gpstroke = frame.strokes.new(lastActiveColor.name)
         gpstroke.draw_mode = "3DSPACE"
-        gpstroke.points.add(len(fstroke))
-        pointCounter = 0
+        gpstroke.points.add(count=len(fstroke))
+
         for svert, point in zip(fstroke, gpstroke.points):
-            co = camMat * svert.point_3d
-            createPoint(gpstroke, pointCounter, co)
-            pointCounter += 1
+            point.co = mat * svert.point_3d
+            point.select = True
+            point.strength = 1
+            point.pressure = pressure
 
 def freestyle_to_fill(scene):
     default = dict(color=(0, 0, 0), alpha=1, fill_color=(0, 1, 0), fill_alpha=1)
