@@ -4183,6 +4183,7 @@ def getBmesh(target=None, update=True):
         bm.faces.ensure_lookup_table()
     return bm
 
+'''
 def setBmesh(bm, target=None, update=True)
     if not target:
         target = ss()
@@ -4190,6 +4191,7 @@ def setBmesh(bm, target=None, update=True)
         bm.verts.ensure_lookup_table()
         bm.faces.ensure_lookup_table()
     bm.to_mesh(target.data)
+'''
 
 def updateBmesh(target=None):
     if not target:
