@@ -376,6 +376,10 @@ def writeBrushStrokes(filepath=None, bake=True, roundValues=True, numPlaces=7, z
     print("Wrote " + url)
     #~                
     return {'FINISHED'}
+
+def readBrushStrokesUsingObj(filepath=None, resizeTimeline=True, useScaleAndOffset=False, globalScale=Vector((10, 10, 10)), globalOffset=Vector((0, 0, 0))):
+    la = Latk(filepath)
+    fromLatkToGp(la)
     
 def readBrushStrokes(filepath=None, resizeTimeline=True, useScaleAndOffset=False, globalScale=Vector((10, 10, 10)), globalOffset=Vector((0, 0, 0))):
     url = filepath # compatibility with gui keywords
