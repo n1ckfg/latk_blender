@@ -27,16 +27,17 @@ import json
 import zipfile
 from io import BytesIO
 from math import sqrt
+from numpy import float32
 
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 class Latk(object):     
-    def __init__(self, fileName=None, init=False, coords=None, color=None): # args string, Latk array, float tuple array, float tuple           
+    def __init__(self, filepath=None, init=False, coords=None, color=None): # args string, Latk array, float tuple array, float tuple           
         self.layers = [] # LatkLayer
         self.frame_rate = 12
 
-        if (fileName != None):
-            self.read(fileName, True)
+        if (filepath != None):
+            self.read(filepath, True)
         elif (init == True):
             self.layers.append(LatkLayer())
             self.layers[0].frames.append(LatkFrame())
@@ -65,19 +66,19 @@ class Latk(object):
         returns = temp[len(temp)-1]
         return returns
 
-    def read(self, fileName, clearExisting=True, yUp=False, useScaleAndOffset=False, globalScale=(10.0, 10.0, 10.0), globalOffset=(0.0, 0.0, 0.0)): # defaults to Blender Z up
+    def read(self, filepath, clearExisting=True, yUp=False, useScaleAndOffset=False, globalScale=(1.0, 1.0, 1.0), globalOffset=(0.0, 0.0, 0.0)): # defaults to Blender Z up
         data = None
 
         if (clearExisting == True):
             self.layers = []
         
-        fileType = self.getExtFromFileName(fileName)
+        fileType = self.getExtFromFileName(filepath)
         if (fileType == "latk" or fileType == "zip"):
             imz = InMemoryZip()
-            imz.readFromDisk(fileName)
+            imz.readFromDisk(filepath)
             data = json.loads(imz.files[0].decode("utf-8"))        
         else:
-            with open(fileName) as data_file:    
+            with open(filepath) as data_file:    
                 data = json.load(data_file)
                             
         for jsonGp in data["grease_pencil"]:          
@@ -130,7 +131,7 @@ class Latk(object):
                     layer.frames.append(frame)
                 self.layers.append(layer)
 
-    def write(self, fileName, yUp=True, useScaleAndOffset=False, globalScale=(0.1, 0.1, 0.1), globalOffset=(0.0, 0.0, 0.0)): # defaults to Unity, Maya Y up
+    def write(self, filepath, yUp=True, useScaleAndOffset=False, zipped=True, globalScale=(1.0, 1.0, 1.0), globalOffset=(0.0, 0.0, 0.0)): # defaults to Unity, Maya Y up
         FINAL_LAYER_LIST = [] # string array
 
         for layer in self.layers:
@@ -149,7 +150,7 @@ class Latk(object):
                     sbb = [] # string array
                     sbb.append("\t\t\t\t\t\t\t\t{")
                     color = stroke.color
-                    sbb.append("\t\t\t\t\t\t\t\t\t\"color\": [" + str(color[0]) + ", " + str(color[1]) + ", " + str(color[2]) + "],")
+                    sbb.append("\t\t\t\t\t\t\t\t\t\"color\": [" + str(float32(color[0])) + ", " + str(float32(color[1])) + ", " + str(float32(color[2])) + "],")
 
                     if (len(stroke.points) > 0): 
                         sbb.append("\t\t\t\t\t\t\t\t\t\"points\": [")
@@ -170,10 +171,10 @@ class Latk(object):
                                 z = (z * globalScale[2]) + globalOffset[2]
                             #~                                           
                             if (j == len(stroke.points) - 1):
-                                sbb.append("\t\t\t\t\t\t\t\t\t\t{\"co\": [" + str(x) + ", " + str(y) + ", " + str(z) + "], \"pressure\":" + str(point.pressure) + ", \"strength\":" + str(point.strength) + "}")
+                                sbb.append("\t\t\t\t\t\t\t\t\t\t{\"co\": [" + str(float32(x)) + ", " + str(float32(y)) + ", " + str(float32(z)) + "], \"pressure\":" + str(float32(point.pressure)) + ", \"strength\":" + str(float32(point.strength)) + "}")
                                 sbb.append("\t\t\t\t\t\t\t\t\t]")
                             else:
-                                sbb.append("\t\t\t\t\t\t\t\t\t\t{\"co\": [" + str(x) + ", " + str(y) + ", " + str(z) + "], \"pressure\":" + str(point.pressure) + ", \"strength\":" + str(point.strength) + "},")
+                                sbb.append("\t\t\t\t\t\t\t\t\t\t{\"co\": [" + str(float32(x)) + ", " + str(float32(y)) + ", " + str(float32(z)) + "], \"pressure\":" + str(float32(point.pressure)) + ", \"strength\":" + str(float32(point.strength)) + "},")
                     else:
                         sbb.append("\t\t\t\t\t\t\t\t\t\"points\": []")
                     
@@ -221,14 +222,14 @@ class Latk(object):
         s.append("\t]")
         s.append("}")
         
-        fileType = self.getExtFromFileName(fileName)
-        if (fileType == "latk" or fileType == "zip"):
-            fileNameNoExt = self.getFileNameNoExt(fileName)
+        fileType = self.getExtFromFileName(filepath)
+        if (zipped == True or fileType == "latk" or fileType == "zip"):
+            filepathNoExt = self.getFileNameNoExt(filepath)
             imz = InMemoryZip()
-            imz.append(fileNameNoExt + ".json", "\n".join(s))
-            imz.writetofile(fileName)            
+            imz.append(filepathNoExt + ".json", "\n".join(s))
+            imz.writetofile(filepath)            
         else:
-            with open(fileName, "w") as f:
+            with open(filepath, "w") as f:
                 f.write("\n".join(s))
                 f.closed
                              
@@ -2093,6 +2094,351 @@ def multVec3(p1, p2):
 
 # 3 of 10. READ / WRITE
 
+# * * *   * * *   * * *   * * *   * * *   * * *
+
+def writeBrushStrokes(filepath=None, bake=True, roundValues=True, numPlaces=7, zipped=False, useScaleAndOffset=False, globalScale=Vector((1, 1, 1)), globalOffset=Vector((0, 0, 0))):
+    if(bake == True):
+        bakeFrames()
+    latkObj = fromGpToLatk()
+    latkObj.write(filepath=filepath, zipped=zipped, useScaleAndOffset=useScaleAndOffset, globalScale=globalScale, globalOffset=globalOffset)
+    #~
+    return {'FINISHED'}
+
+def readBrushStrokes(filepath=None, resizeTimeline=True, useScaleAndOffset=False, doPreclean=False, limitPalette=0, globalScale=Vector((1, 1, 1)), globalOffset=Vector((0, 0, 0))):
+    latkObj = Latk()
+    latkObj.read(filepath=filepath, useScaleAndOffset=useScaleAndOffset, globalScale=globalScale, globalOffset=globalOffset)
+    #~
+    if (doPreclean == True):
+        latkObj.clean()
+    #~
+    fromLatkToGp(la=latkObj, resizeTimeline=resizeTimeline, useScaleAndOffset=useScaleAndOffset, limitPalette=limitPalette, globalScale=globalScale, globalOffset=globalOffset)
+    #~
+    if (resizeTimeline==True):
+        doResizeTimeline()
+    #~
+    return {'FINISHED'}
+
+def fromGpToLatk(bake=False, skipLocked=False, useScaleAndOffset=False, globalScale=(1.0, 1.0, 1.0), globalOffset=(0.0, 0.0, 0.0)):
+    print("Begin building Latk object from Grease Pencil...")
+    if(bake == True):
+        bakeFrames()
+    gp = getActiveGp()
+    pal = getActivePalette()
+    #~
+    la = Latk()
+    la.frame_rate = getSceneFps()
+    #~
+    for layer in gp.layers:
+        if (skipLocked == False or layer.lock == False):
+            laLayer = LatkLayer(layer.info)
+            if (layer.parent == True):
+                laLayer.parent = layer.parent.name
+            for frame in layer.frames:
+                laFrame = LatkFrame(frame.frame_number)
+                if (layer.parent == True):
+                    laFrame.parent_location = layer.parent.location
+                for stroke in frame.strokes:
+                    laStroke = LatkStroke()
+                    
+                    color = (0,0,0)
+                    alpha = 0.9
+                    fill_color = (1,1,1)
+                    fill_alpha = 0.0
+                    try:
+                        col = pal.colors[stroke.colorname]
+                        color = (col.color[0], col.color[1], col.color[2])
+                        alpha = col.alpha 
+                        fill_color = (col.fill_color[0], col.fill_color[1], col.fill_color[2])
+                        fill_alpha = col.fill_alpha
+                    except:
+                        pass
+                    laStroke.color = color
+                    laStroke.alpha = alpha
+                    laStroke.fill_color = fill_color
+                    laStroke.fill_alpha = fill_alpha
+                    for point in stroke.points:
+                        x = point.co[0]
+                        y = point.co[1]
+                        z = point.co[2]
+                        pressure = 1.0
+                        pressure = point.pressure
+                        strength = 1.0
+                        strength = point.strength
+                        #~
+                        if (useScaleAndOffset == True):
+                            x = (x * globalScale[0]) + globalOffset[0]
+                            y = (y * globalScale[1]) + globalOffset[1]
+                            z = (z * globalScale[2]) + globalOffset[2]
+                        #~
+                        laPoint = LatkPoint((x, y, z), pressure, strength)
+                        laStroke.points.append(laPoint)
+                    laFrame.strokes.append(laStroke)
+                laLayer.frames.append(laFrame)
+            la.layers.append(laLayer)
+    print("...end building Latk object from Grease Pencil.")           
+    return la
+
+def fromLatkToGp(la=None, resizeTimeline=True, useScaleAndOffset=False, limitPalette=0, globalScale=(1.0, 1.0, 1.0), globalOffset=(0.0, 0.0, 0.0)):
+    print("Begin building Grease Pencil from Latk object...")
+    clearAll()
+    gp = getActiveGp()
+    
+    longestFrameNum = 1
+    #~
+    for laLayer in la.layers:
+        layer = gp.layers.new(laLayer.name, set_active=True)
+        #~
+        for i, laFrame in enumerate(laLayer.frames):
+            try:
+                frame = layer.frames.new(laLayer.frames[i].frame_number) 
+            except:
+                frame = layer.frames.new(i) 
+            if (frame.frame_number > longestFrameNum):
+                longestFrameNum = frame.frame_number
+            for laStroke in laFrame.strokes:
+                strokeColor = (0,0,0)
+                try:
+                    color = laStroke.color
+                    strokeColor = (color[0], color[1], color[2])
+                except:
+                    pass
+                if (limitPalette == 0):
+                    createColor(strokeColor)
+                else:
+                    createAndMatchColorPalette(strokeColor, limitPalette, 5) # num places
+                stroke = frame.strokes.new(getActiveColor().name)
+                stroke.draw_mode = "3DSPACE" # either of ("SCREEN", "3DSPACE", "2DSPACE", "2DIMAGE")
+                laPoints = laStroke.points
+                stroke.points.add(len(laPoints)) # add 4 points
+                for l, laPoint in enumerate(laPoints):
+                    co = laPoint.co 
+                    x = co[0]
+                    y = co[1]
+                    z = co[2]
+                    pressure = 1.0
+                    strength = 1.0
+                    if (useScaleAndOffset == True):
+                        x = (x * globalScale[0]) + globalOffset[0]
+                        y = (y * globalScale[1]) + globalOffset[1]
+                        z = (z * globalScale[2]) + globalOffset[2]
+                    #~
+                    if (laPoint.pressure != None):
+                        pressure = laPoint.pressure
+                    if (laPoint.strength != None):
+                        strength = laPoint.strength
+                    createPoint(stroke, l, (x, y, z), pressure, strength)
+    #~  
+    if (resizeTimeline == True):
+        setStartEnd(0, longestFrameNum, pad=False)  
+    print("...end building Grease Pencil from Latk object.")           
+
+# * * *   * * *   * * *   * * *   * * *   * * *
+
+def readBrushStrokesAlt(filepath=None, resizeTimeline=True, useScaleAndOffset=False, doPreclean=False, limitPalette=0, globalScale=Vector((10, 10, 10)), globalOffset=Vector((0, 0, 0))):
+    url = filepath # compatibility with gui keywords
+    #~
+    gp = getActiveGp()
+    data = None
+    #~
+    filename = os.path.split(url)[1].split(".")
+    filetype = filename[len(filename)-1].lower()
+    if (filetype == "latk" or filetype == "zip"):
+        imz = InMemoryZip()
+        imz.readFromDisk(url)
+        # https://stackoverflow.com/questions/6541767/python-urllib-error-attributeerror-bytes-object-has-no-attribute-read/6542236
+        data = json.loads(imz.files[0].decode("utf-8"))        
+    else:
+        with open(url) as data_file:    
+            data = json.load(data_file)
+    #~
+    longestFrameNum = 1
+    for layerJson in data["grease_pencil"][0]["layers"]:
+        layer = gp.layers.new(layerJson["name"], set_active=True)
+        palette = getActivePalette()    
+        #~
+        for i, frameJson in enumerate(layerJson["frames"]):
+            try:
+                frame = layer.frames.new(layerJson["frames"][i]["frame_number"]) 
+            except:
+                frame = layer.frames.new(i) 
+            if (frame.frame_number > longestFrameNum):
+                longestFrameNum = frame.frame_number
+            for strokeJson in frameJson["strokes"]:
+                strokeColor = (0,0,0)
+                try:
+                    colorJson = strokeJson["color"]
+                    strokeColor = (colorJson[0], colorJson[1], colorJson[2])
+                except:
+                    pass
+                if (limitPalette == 0):
+                    createColor(strokeColor)
+                else:
+                    createAndMatchColorPalette(strokeColor, limitPalette, 5) # num places
+                stroke = frame.strokes.new(getActiveColor().name)
+                stroke.draw_mode = "3DSPACE" # either of ("SCREEN", "3DSPACE", "2DSPACE", "2DIMAGE")
+                pointsJson = strokeJson["points"]
+                stroke.points.add(len(pointsJson)) # add 4 points
+                for l, pointJson in enumerate(pointsJson):
+                    coJson = pointJson["co"] 
+                    x = coJson[0]
+                    y = coJson[2]
+                    z = coJson[1]
+                    pressure = 1.0
+                    strength = 1.0
+                    if (useScaleAndOffset == True):
+                        x = (x * globalScale.x) + globalOffset.x
+                        y = (y * globalScale.y) + globalOffset.y
+                        z = (z * globalScale.z) + globalOffset.z
+                    #~
+                    if ("pressure" in pointJson):
+                        pressure = pointJson["pressure"]
+                    if ("strength" in pointJson):
+                        strength = pointJson["strength"]
+                    #stroke.points[l].co = (x, y, z)
+                    createPoint(stroke, l, (x, y, z), pressure, strength)
+    #~  
+    if (resizeTimeline == True):
+        setStartEnd(0, longestFrameNum, pad=False)
+    #~
+    if (doPreclean == True):
+        latkObj = fromGpToLatk()
+        latkObj.clean()
+        fromLatkToGp(latkObj)              
+    return {'FINISHED'}
+
+# http://blender.stackexchange.com/questions/24694/query-grease-pencil-strokes-from-python
+def writeBrushStrokesAlt(filepath=None, bake=True, roundValues=True, numPlaces=7, zipped=False, useScaleAndOffset=False, globalScale=Vector((0.1, 0.1, 0.1)), globalOffset=Vector((0, 0, 0))):
+    url = filepath # compatibility with gui keywords
+    #~
+    if(bake == True):
+        bakeFrames()
+    gp = bpy.context.scene.grease_pencil
+    palette = getActivePalette()
+    #~
+    sg = []
+    sg.append("{")
+    sg.append("\t\"creator\": \"blender\",")
+    sg.append("\t\"grease_pencil\": [")
+    sg.append("\t\t{")
+    sg.append("\t\t\t\"frame_rate\": " + str(getSceneFps()) + ",")
+    sg.append("\t\t\t\"layers\": [")
+    #~
+    sl = []
+    for f, layer in enumerate(gp.layers):
+        sb = []
+        for h, frame in enumerate(layer.frames):
+            currentFrame = h
+            goToFrame(h)
+            sb.append("\t\t\t\t\t\t{") # one frame
+            sb.append("\t\t\t\t\t\t\t\"frame_number\": " + str(frame.frame_number) + ",")
+            if (layer.parent == True):
+                sb.append("\t\t\t\t\t\t\t\"parent_location\": " + "[" + str(layer.parent.location[0]) + ", " + str(layer.parent.location[1]) + ", " + str(layer.parent.location[2]) + "],")
+            sb.append("\t\t\t\t\t\t\t\"strokes\": [")
+            if (len(frame.strokes) > 0):
+                sb.append("\t\t\t\t\t\t\t\t{") # one stroke
+                for i, stroke in enumerate(frame.strokes):
+                    color = (0,0,0)
+                    alpha = 0.9
+                    fill_color = (1,1,1)
+                    fill_alpha = 0.0
+                    try:
+                        col = palette.colors[stroke.colorname]
+                        color = col.color
+                        alpha = col.alpha 
+                        fill_color = col.fill_color
+                        fill_alpha = col.fill_alpha
+                    except:
+                        pass
+                    sb.append("\t\t\t\t\t\t\t\t\t\"color\": [" + str(color[0]) + ", " + str(color[1]) + ", " + str(color[2])+ "],")
+                    sb.append("\t\t\t\t\t\t\t\t\t\"alpha\": " + str(alpha) + ",")
+                    sb.append("\t\t\t\t\t\t\t\t\t\"fill_color\": [" + str(fill_color[0]) + ", " + str(fill_color[1]) + ", " + str(fill_color[2])+ "],")
+                    sb.append("\t\t\t\t\t\t\t\t\t\"fill_alpha\": " + str(fill_alpha) + ",")
+                    sb.append("\t\t\t\t\t\t\t\t\t\"points\": [")
+                    for j, point in enumerate(stroke.points):
+                        x = point.co.x
+                        y = point.co.z
+                        z = point.co.y
+                        pressure = 1.0
+                        pressure = point.pressure
+                        strength = 1.0
+                        strength = point.strength
+                        #~
+                        if useScaleAndOffset == True:
+                            x = (x * globalScale.x) + globalOffset.x
+                            y = (y * globalScale.y) + globalOffset.y
+                            z = (z * globalScale.z) + globalOffset.z
+                        #~
+                        if roundValues == True:
+                            sb.append("\t\t\t\t\t\t\t\t\t\t{\"co\": [" + roundVal(x, numPlaces) + ", " + roundVal(y, numPlaces) + ", " + roundVal(z, numPlaces) + "], \"pressure\": " + roundVal(pressure, numPlaces) + ", \"strength\": " + roundVal(strength, numPlaces))
+                        else:
+                            sb.append("\t\t\t\t\t\t\t\t\t\t{\"co\": [" + str(x) + ", " + str(y) + ", " + str(z) + "], \"pressure\": " + str(pressure) + ", \"strength\": " + str(strength))                  
+                        #~
+                        if j == len(stroke.points) - 1:
+                            sb[len(sb)-1] +="}"
+                            sb.append("\t\t\t\t\t\t\t\t\t]")
+                            if (i == len(frame.strokes) - 1):
+                                sb.append("\t\t\t\t\t\t\t\t}") # last stroke for this frame
+                            else:
+                                sb.append("\t\t\t\t\t\t\t\t},") # end stroke
+                                sb.append("\t\t\t\t\t\t\t\t{") # begin stroke
+                        else:
+                            sb[len(sb)-1] += "},"
+                    if i == len(frame.strokes) - 1:
+                        sb.append("\t\t\t\t\t\t\t]")
+            else:
+                sb.append("\t\t\t\t\t\t\t]")
+            if h == len(layer.frames) - 1:
+                sb.append("\t\t\t\t\t\t}")
+            else:
+                sb.append("\t\t\t\t\t\t},")
+        #~
+        sf = []
+        sf.append("\t\t\t\t{") 
+        sf.append("\t\t\t\t\t\"name\": \"" + layer.info + "\",")
+        if (layer.parent):
+            sf.append("\t\t\t\t\t\"parent\": \"" + layer.parent.name + "\",")
+        sf.append("\t\t\t\t\t\"frames\": [")
+        sf.append("\n".join(sb))
+        sf.append("\t\t\t\t\t]")
+        if (f == len(gp.layers)-1):
+            sf.append("\t\t\t\t}")
+        else:
+            sf.append("\t\t\t\t},")
+        sl.append("\n".join(sf))
+        #~
+    sg.append("\n".join(sl))
+    sg.append("\t\t\t]")
+    sg.append("\t\t}")
+    sg.append("\t]")
+    sg.append("}")
+    #~
+    if (zipped == True):
+        filenameRaw = os.path.split(url)[1].split(".")
+        filename = ""
+        for i in range(0, len(filenameRaw)-1):
+            filename += filenameRaw[i]
+        imz = InMemoryZip()
+        imz.append(filename + ".json", "\n".join(sg))
+        imz.writetofile(url)
+    else:
+        with open(url, "w") as f:
+            f.write("\n".join(sg))
+            f.closed
+    print("Wrote " + url)
+    #~                
+    return {'FINISHED'}
+
+# ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
+# ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
+
+def doResizeTimeline():
+    longestFrameNum = 1
+    gp = getActiveGp()
+    for layer in gp.layers:
+        if (len(layer.frames) > longestFrameNum):
+            longestFrameNum = len(layer.frames)
+    setStartEnd(0, longestFrameNum, pad=False)
+
 def exportAlembic(url="test.abc"):
     bpy.ops.wm.alembic_export(filepath=url, vcolors=True, face_sets=True, renderable_only=False)
 
@@ -2229,338 +2575,6 @@ def getFileName(stripExtension=True):
     if (stripExtension==True):
         name = name[:-6]
     return name
-
-def fromGpToLatk(bake=False, skipLocked=False, roundValues=False, numPlaces=7, useScaleAndOffset=False, globalScale=(1.0, 1.0, 1.0), globalOffset=(0.0, 0.0, 0.0)):
-    print("Begin building Latk object from Grease Pencil...")
-    if(bake == True):
-        bakeFrames()
-    gp = getActiveGp()
-    pal = getActivePalette()
-    #~
-    la = Latk()
-    la.frame_rate = getSceneFps()
-    #~
-    for layer in gp.layers:
-        if (skipLocked == False or layer.lock == False):
-            laLayer = LatkLayer(layer.info)
-            if (layer.parent == True):
-                laLayer.parent = layer.parent.name
-            for frame in layer.frames:
-                laFrame = LatkFrame(frame.frame_number)
-                if (layer.parent == True):
-                    laFrame.parent_location = layer.parent.location
-                for stroke in frame.strokes:
-                    laStroke = LatkStroke()
-                    
-                    color = (0,0,0)
-                    alpha = 0.9
-                    fill_color = (1,1,1)
-                    fill_alpha = 0.0
-                    try:
-                        col = pal.colors[stroke.colorname]
-                        color = (col.color[0], col.color[1], col.color[2])
-                        alpha = col.alpha 
-                        fill_color = (col.fill_color[0], col.fill_color[1], col.fill_color[2])
-                        fill_alpha = col.fill_alpha
-                    except:
-                        pass
-                    laStroke.color = color
-                    laStroke.alpha = alpha
-                    laStroke.fill_color = fill_color
-                    laStroke.fill_alpha = fill_alpha
-                    for point in stroke.points:
-                        x = point.co[0]
-                        y = point.co[1]
-                        z = point.co[2]
-                        pressure = 1.0
-                        pressure = point.pressure
-                        strength = 1.0
-                        strength = point.strength
-                        #~
-                        if (useScaleAndOffset == True):
-                            x = (x * globalScale[0]) + globalOffset[0]
-                            y = (y * globalScale[1]) + globalOffset[1]
-                            z = (z * globalScale[2]) + globalOffset[2]
-                        #~
-                        if (roundValues == True):
-                            x = roundVal(x, numPlaces)
-                            y = roundVal(y, numPlaces)
-                            z = roundVal(z, numPlaces)
-                            pressure = roundVal(pressure, numPlaces)
-                            strength = roundVal(strength, numPlaces)
-
-                        laPoint = LatkPoint((x, y, z), pressure, strength)
-                        laStroke.points.append(laPoint)
-                    laFrame.strokes.append(laStroke)
-                laLayer.frames.append(laFrame)
-            la.layers.append(laLayer)
-    print("...end building Latk object from Grease Pencil.")           
-    return la
-
-def fromLatkToGp(la=None, resizeTimeline=True, useScaleAndOffset=False, globalScale=(1.0, 1.0, 1.0), globalOffset=(0.0, 0.0, 0.0)):
-    print("Begin building Grease Pencil from Latk object...")
-    clearAll()
-    gp = getActiveGp()
-    
-    longestFrameNum = 1
-    #~
-    for laLayer in la.layers:
-        layer = gp.layers.new(laLayer.name, set_active=True)
-        #~
-        for i, laFrame in enumerate(laLayer.frames):
-            try:
-                frame = layer.frames.new(laLayer.frames[i].frame_number) 
-            except:
-                frame = layer.frames.new(i) 
-            if (frame.frame_number > longestFrameNum):
-                longestFrameNum = frame.frame_number
-            for laStroke in laFrame.strokes:
-                strokeColor = (0,0,0)
-                try:
-                    color = laStroke.color
-                    strokeColor = (color[0], color[1], color[2])
-                except:
-                    pass
-                createColor(strokeColor)
-                stroke = frame.strokes.new(getActiveColor().name)
-                stroke.draw_mode = "3DSPACE" # either of ("SCREEN", "3DSPACE", "2DSPACE", "2DIMAGE")
-                laPoints = laStroke.points
-                stroke.points.add(len(laPoints)) # add 4 points
-                for l, laPoint in enumerate(laPoints):
-                    co = laPoint.co 
-                    x = co[0]
-                    y = co[1]
-                    z = co[2]
-                    pressure = 1.0
-                    strength = 1.0
-                    if (useScaleAndOffset == True):
-                        x = (x * globalScale[0]) + globalOffset[0]
-                        y = (y * globalScale[1]) + globalOffset[1]
-                        z = (z * globalScale[2]) + globalOffset[2]
-                    #~
-                    if (laPoint.pressure != None):
-                        pressure = laPoint.pressure
-                    if (laPoint.strength != None):
-                        strength = laPoint.strength
-                    createPoint(stroke, l, (x, y, z), pressure, strength)
-    #~  
-    if (resizeTimeline == True):
-        setStartEnd(0, longestFrameNum, pad=False)  
-    print("...end building Grease Pencil from Latk object.")           
-
-'''
-# TODO option to use vanilla Python method
-def writeBrushStrokesObj(filepath=None, bake=True, roundValues=True, numPlaces=7, zipped=False, useScaleAndOffset=False, globalScale=Vector((0.1, 0.1, 0.1)), globalOffset=Vector((0, 0, 0))):
-    latkObj = fromGpToLatk()
-    latkObj.write(filepath=filepath, bake=bake, roundValues=roundValues, numPlaces=numPlaces, zipped=zipped, useScaleAndOffset=useScaleAndOffset, globalScale=globalScale, globalOffset=globalOffset)
-'''
-
-# http://blender.stackexchange.com/questions/24694/query-grease-pencil-strokes-from-python
-def writeBrushStrokes(filepath=None, bake=True, roundValues=True, numPlaces=7, zipped=False, useScaleAndOffset=False, globalScale=Vector((0.1, 0.1, 0.1)), globalOffset=Vector((0, 0, 0))):
-    url = filepath # compatibility with gui keywords
-    #~
-    if(bake == True):
-        bakeFrames()
-    gp = bpy.context.scene.grease_pencil
-    palette = getActivePalette()
-    #~
-    sg = []
-    sg.append("{")
-    sg.append("\t\"creator\": \"blender\",")
-    sg.append("\t\"grease_pencil\": [")
-    sg.append("\t\t{")
-    sg.append("\t\t\t\"frame_rate\": " + str(getSceneFps()) + ",")
-    sg.append("\t\t\t\"layers\": [")
-    #~
-    sl = []
-    for f, layer in enumerate(gp.layers):
-        sb = []
-        for h, frame in enumerate(layer.frames):
-            currentFrame = h
-            goToFrame(h)
-            sb.append("\t\t\t\t\t\t{") # one frame
-            sb.append("\t\t\t\t\t\t\t\"frame_number\": " + str(frame.frame_number) + ",")
-            if (layer.parent == True):
-                sb.append("\t\t\t\t\t\t\t\"parent_location\": " + "[" + str(layer.parent.location[0]) + ", " + str(layer.parent.location[1]) + ", " + str(layer.parent.location[2]) + "],")
-            sb.append("\t\t\t\t\t\t\t\"strokes\": [")
-            if (len(frame.strokes) > 0):
-                sb.append("\t\t\t\t\t\t\t\t{") # one stroke
-                for i, stroke in enumerate(frame.strokes):
-                    color = (0,0,0)
-                    alpha = 0.9
-                    fill_color = (1,1,1)
-                    fill_alpha = 0.0
-                    try:
-                        col = palette.colors[stroke.colorname]
-                        color = col.color
-                        alpha = col.alpha 
-                        fill_color = col.fill_color
-                        fill_alpha = col.fill_alpha
-                    except:
-                        pass
-                    sb.append("\t\t\t\t\t\t\t\t\t\"color\": [" + str(color[0]) + ", " + str(color[1]) + ", " + str(color[2])+ "],")
-                    sb.append("\t\t\t\t\t\t\t\t\t\"alpha\": " + str(alpha) + ",")
-                    sb.append("\t\t\t\t\t\t\t\t\t\"fill_color\": [" + str(fill_color[0]) + ", " + str(fill_color[1]) + ", " + str(fill_color[2])+ "],")
-                    sb.append("\t\t\t\t\t\t\t\t\t\"fill_alpha\": " + str(fill_alpha) + ",")
-                    sb.append("\t\t\t\t\t\t\t\t\t\"points\": [")
-                    for j, point in enumerate(stroke.points):
-                        x = point.co.x
-                        y = point.co.z
-                        z = point.co.y
-                        pressure = 1.0
-                        pressure = point.pressure
-                        strength = 1.0
-                        strength = point.strength
-                        #~
-                        if useScaleAndOffset == True:
-                            x = (x * globalScale.x) + globalOffset.x
-                            y = (y * globalScale.y) + globalOffset.y
-                            z = (z * globalScale.z) + globalOffset.z
-                        #~
-                        if roundValues == True:
-                            sb.append("\t\t\t\t\t\t\t\t\t\t{\"co\": [" + roundVal(x, numPlaces) + ", " + roundVal(y, numPlaces) + ", " + roundVal(z, numPlaces) + "], \"pressure\": " + roundVal(pressure, numPlaces) + ", \"strength\": " + roundVal(strength, numPlaces))
-                        else:
-                            sb.append("\t\t\t\t\t\t\t\t\t\t{\"co\": [" + str(x) + ", " + str(y) + ", " + str(z) + "], \"pressure\": " + str(pressure) + ", \"strength\": " + str(strength))                  
-                        #~
-                        if j == len(stroke.points) - 1:
-                            sb[len(sb)-1] +="}"
-                            sb.append("\t\t\t\t\t\t\t\t\t]")
-                            if (i == len(frame.strokes) - 1):
-                                sb.append("\t\t\t\t\t\t\t\t}") # last stroke for this frame
-                            else:
-                                sb.append("\t\t\t\t\t\t\t\t},") # end stroke
-                                sb.append("\t\t\t\t\t\t\t\t{") # begin stroke
-                        else:
-                            sb[len(sb)-1] += "},"
-                    if i == len(frame.strokes) - 1:
-                        sb.append("\t\t\t\t\t\t\t]")
-            else:
-                sb.append("\t\t\t\t\t\t\t]")
-            if h == len(layer.frames) - 1:
-                sb.append("\t\t\t\t\t\t}")
-            else:
-                sb.append("\t\t\t\t\t\t},")
-        #~
-        sf = []
-        sf.append("\t\t\t\t{") 
-        sf.append("\t\t\t\t\t\"name\": \"" + layer.info + "\",")
-        if (layer.parent):
-            sf.append("\t\t\t\t\t\"parent\": \"" + layer.parent.name + "\",")
-        sf.append("\t\t\t\t\t\"frames\": [")
-        sf.append("\n".join(sb))
-        sf.append("\t\t\t\t\t]")
-        if (f == len(gp.layers)-1):
-            sf.append("\t\t\t\t}")
-        else:
-            sf.append("\t\t\t\t},")
-        sl.append("\n".join(sf))
-        #~
-    sg.append("\n".join(sl))
-    sg.append("\t\t\t]")
-    sg.append("\t\t}")
-    sg.append("\t]")
-    sg.append("}")
-    #~
-    if (zipped == True):
-        filenameRaw = os.path.split(url)[1].split(".")
-        filename = ""
-        for i in range(0, len(filenameRaw)-1):
-            filename += filenameRaw[i]
-        imz = InMemoryZip()
-        imz.append(filename + ".json", "\n".join(sg))
-        imz.writetofile(url)
-    else:
-        with open(url, "w") as f:
-            f.write("\n".join(sg))
-            f.closed
-    print("Wrote " + url)
-    #~                
-    return {'FINISHED'}
-
-'''
-# TODO option to use vanilla Python method
-def readBrushStrokesObj(filepath=None, resizeTimeline=True, useScaleAndOffset=False, doPreclean=False, globalScale=Vector((10, 10, 10)), globalOffset=Vector((0, 0, 0))):
-    latkObj = Latk()
-    latkObj.read(filepath=filepath, resizeTimeline=resizeTimeline, useScaleAndOffset=useScaleAndOffset, globalScale=globalScale, globalOffset=globalOffset)
-    if (doPreclean == True):
-        latkObj.clean()
-    fromLatkToGp(latkObj)
-'''
-
-def readBrushStrokes(filepath=None, resizeTimeline=True, useScaleAndOffset=False, doPreclean=False, limitPalette=0, globalScale=Vector((10, 10, 10)), globalOffset=Vector((0, 0, 0))):
-    url = filepath # compatibility with gui keywords
-    #~
-    gp = getActiveGp()
-    data = None
-    #~
-    filename = os.path.split(url)[1].split(".")
-    filetype = filename[len(filename)-1].lower()
-    if (filetype == "latk" or filetype == "zip"):
-        imz = InMemoryZip()
-        imz.readFromDisk(url)
-        # https://stackoverflow.com/questions/6541767/python-urllib-error-attributeerror-bytes-object-has-no-attribute-read/6542236
-        data = json.loads(imz.files[0].decode("utf-8"))        
-    else:
-        with open(url) as data_file:    
-            data = json.load(data_file)
-    #~
-    longestFrameNum = 1
-    for layerJson in data["grease_pencil"][0]["layers"]:
-        layer = gp.layers.new(layerJson["name"], set_active=True)
-        palette = getActivePalette()    
-        #~
-        for i, frameJson in enumerate(layerJson["frames"]):
-            try:
-                frame = layer.frames.new(layerJson["frames"][i]["frame_number"]) 
-            except:
-                frame = layer.frames.new(i) 
-            if (frame.frame_number > longestFrameNum):
-                longestFrameNum = frame.frame_number
-            for strokeJson in frameJson["strokes"]:
-                strokeColor = (0,0,0)
-                try:
-                    colorJson = strokeJson["color"]
-                    strokeColor = (colorJson[0], colorJson[1], colorJson[2])
-                except:
-                    pass
-                if (limitPalette == 0):
-                    createColor(strokeColor)
-                else:
-                    createAndMatchColorPalette(strokeColor, limitPalette, 5) # num places
-                stroke = frame.strokes.new(getActiveColor().name)
-                stroke.draw_mode = "3DSPACE" # either of ("SCREEN", "3DSPACE", "2DSPACE", "2DIMAGE")
-                pointsJson = strokeJson["points"]
-                stroke.points.add(len(pointsJson)) # add 4 points
-                for l, pointJson in enumerate(pointsJson):
-                    coJson = pointJson["co"] 
-                    x = coJson[0]
-                    y = coJson[2]
-                    z = coJson[1]
-                    pressure = 1.0
-                    strength = 1.0
-                    if (useScaleAndOffset == True):
-                        x = (x * globalScale.x) + globalOffset.x
-                        y = (y * globalScale.y) + globalOffset.y
-                        z = (z * globalScale.z) + globalOffset.z
-                    #~
-                    if ("pressure" in pointJson):
-                        pressure = pointJson["pressure"]
-                    if ("strength" in pointJson):
-                        strength = pointJson["strength"]
-                    #stroke.points[l].co = (x, y, z)
-                    createPoint(stroke, l, (x, y, z), pressure, strength)
-    #~  
-    if (resizeTimeline == True):
-        setStartEnd(0, longestFrameNum, pad=False)
-    #~
-    if (doPreclean == True):
-        latkObj = fromGpToLatk()
-        latkObj.clean()
-        fromLatkToGp(latkObj)              
-    return {'FINISHED'}
-
-# ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
-# ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 
 def writeSvg(filepath=None):
     # Note: keep fps at 24 and above to prevent timing artifacts. 
@@ -5717,11 +5731,13 @@ class LightningArtistToolkitPreferences(bpy.types.AddonPreferences):
         layout.prop(self, "extraFormats_SVG")
         layout.prop(self, "extraFormats_FBXSequence")
 
+# ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
+# LATK IMPORT 
 
 class ImportLatk(bpy.types.Operator, ImportHelper):
     """Load a Latk File"""
     resizeTimeline = BoolProperty(name="Resize Timeline", description="Set in and out points", default=True)
-    useScaleAndOffset = BoolProperty(name="Use Scale and Offset", description="Compensate scale for Blender viewport", default=True)
+    #useScaleAndOffset = BoolProperty(name="Use Scale and Offset", description="Compensate scale for Blender viewport", default=False)
     doPreclean = BoolProperty(name="Pre-Clean", description="Try to remove duplicate strokes and points", default=False)
     limitPalette = IntProperty(name="Limit Palette", description="Restrict number of colors (0 = unlimited)", default=0)
 
@@ -5737,17 +5753,88 @@ class ImportLatk(bpy.types.Operator, ImportHelper):
 
     def execute(self, context):
         import latk_blender as la
-        keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "resizeTimeline", "useScaleAndOffset", "doPreclean", "limitPalette"))
+        keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "resizeTimeline", "doPreclean", "limitPalette")) # , "useScaleAndOffset")) 
         if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
             import os
         #~
         keywords["resizeTimeline"] = self.resizeTimeline
-        keywords["useScaleAndOffset"] = self.useScaleAndOffset
+        #keywords["useScaleAndOffset"] = self.useScaleAndOffset
         keywords["doPreclean"] = self.doPreclean
         keywords["limitPalette"] = self.limitPalette
         la.readBrushStrokes(**keywords)
         return {'FINISHED'}
 
+# ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
+# LATK EXPORT 
+
+class ExportLatkJson(bpy.types.Operator, ExportHelper): # TODO combine into one class
+    """Save a Latk Json File"""
+
+    bake = BoolProperty(name="Bake Frames", description="Bake Keyframes to All Frames", default=False)
+    #roundValues = BoolProperty(name="Limit Precision", description="Round Values to Reduce Filesize", default=False)    
+    #numPlaces = IntProperty(name="Number Places", description="Number of Decimal Places", default=7)
+    #useScaleAndOffset = BoolProperty(name="Use Scale and Offset", description="Compensate scale for Blender viewport", default=True)
+
+    bl_idname = "export_scene.latkjson"
+    bl_label = 'Export Latk Json'
+    bl_options = {'PRESET'}
+
+    filename_ext = ".json"
+
+    filter_glob = StringProperty(
+            default="*.json",
+            options={'HIDDEN'},
+            )
+
+    def execute(self, context):
+        import latk_blender as la
+        keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "check_existing", "bake")) #, "roundValues", "numPlaces", "useScaleAndOffset"))
+        if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
+            import os
+        #~
+        keywords["bake"] = self.bake
+        #keywords["roundValues"] = self.roundValues
+        #keywords["numPlaces"] = self.numPlaces
+        #keywords["useScaleAndOffset"] = self.useScaleAndOffset
+        #~
+        la.writeBrushStrokes(**keywords, zipped=False)
+        return {'FINISHED'}
+
+class ExportLatk(bpy.types.Operator, ExportHelper):  # TODO combine into one class
+    """Save a Latk File"""
+
+    bake = BoolProperty(name="Bake Frames", description="Bake Keyframes to All Frames", default=False)
+    #roundValues = BoolProperty(name="Limit Precision", description="Round Values to Reduce Filesize", default=False)    
+    #numPlaces = IntProperty(name="Number Places", description="Number of Decimal Places", default=7)
+    #useScaleAndOffset = BoolProperty(name="Use Scale and Offset", description="Compensate scale for Blender viewport", default=True)
+
+    bl_idname = "export_scene.latk"
+    bl_label = 'Export Latk'
+    bl_options = {'PRESET'}
+
+    filename_ext = ".latk"
+
+    filter_glob = StringProperty(
+            default="*.latk",
+            options={'HIDDEN'},
+            )
+
+    def execute(self, context):
+        import latk_blender as la
+        keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "check_existing", "bake"))#, "roundValues", "numPlaces", "useScaleAndOffset"))
+        if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
+            import os
+        #~
+        keywords["bake"] = self.bake
+        #keywords["roundValues"] = self.roundValues
+        #keywords["numPlaces"] = self.numPlaces
+        #keywords["useScaleAndOffset"] = self.useScaleAndOffset
+        #~
+        la.writeBrushStrokes(**keywords, zipped=True)
+        return {'FINISHED'}
+
+# ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
+# ...MORE IMPORT 
 
 class ImportTiltBrush(bpy.types.Operator, ImportHelper):
     """Load a Tilt Brush File"""
@@ -5921,74 +6008,7 @@ class ImportGml(bpy.types.Operator, ImportHelper):
 
 
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
-
-
-class ExportLatkJson(bpy.types.Operator, ExportHelper): # TODO combine into one class
-    """Save a Latk Json File"""
-
-    bake = BoolProperty(name="Bake Frames", description="Bake Keyframes to All Frames", default=False)
-    roundValues = BoolProperty(name="Limit Precision", description="Round Values to Reduce Filesize", default=False)    
-    numPlaces = IntProperty(name="Number Places", description="Number of Decimal Places", default=7)
-    useScaleAndOffset = BoolProperty(name="Use Scale and Offset", description="Compensate scale for Blender viewport", default=True)
-
-    bl_idname = "export_scene.latkjson"
-    bl_label = 'Export Latk Json'
-    bl_options = {'PRESET'}
-
-    filename_ext = ".json"
-
-    filter_glob = StringProperty(
-            default="*.json",
-            options={'HIDDEN'},
-            )
-
-    def execute(self, context):
-        import latk_blender as la
-        keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "check_existing", "bake", "roundValues", "numPlaces", "useScaleAndOffset"))
-        if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
-            import os
-        #~
-        keywords["bake"] = self.bake
-        keywords["roundValues"] = self.roundValues
-        keywords["numPlaces"] = self.numPlaces
-        keywords["useScaleAndOffset"] = self.useScaleAndOffset
-        #~
-        la.writeBrushStrokes(**keywords, zipped=False)
-        return {'FINISHED'}
-
-class ExportLatk(bpy.types.Operator, ExportHelper):  # TODO combine into one class
-    """Save a Latk File"""
-
-    bake = BoolProperty(name="Bake Frames", description="Bake Keyframes to All Frames", default=False)
-    roundValues = BoolProperty(name="Limit Precision", description="Round Values to Reduce Filesize", default=False)    
-    numPlaces = IntProperty(name="Number Places", description="Number of Decimal Places", default=7)
-    useScaleAndOffset = BoolProperty(name="Use Scale and Offset", description="Compensate scale for Blender viewport", default=True)
-
-    bl_idname = "export_scene.latk"
-    bl_label = 'Export Latk'
-    bl_options = {'PRESET'}
-
-    filename_ext = ".latk"
-
-    filter_glob = StringProperty(
-            default="*.latk",
-            options={'HIDDEN'},
-            )
-
-    def execute(self, context):
-        import latk_blender as la
-        keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "check_existing", "bake", "roundValues", "numPlaces", "useScaleAndOffset"))
-        if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
-            import os
-        #~
-        keywords["bake"] = self.bake
-        keywords["roundValues"] = self.roundValues
-        keywords["numPlaces"] = self.numPlaces
-        keywords["useScaleAndOffset"] = self.useScaleAndOffset
-        #~
-        la.writeBrushStrokes(**keywords, zipped=True)
-        return {'FINISHED'}
-
+# ...MORE EXPORT 
 
 class ExportGml(bpy.types.Operator, ExportHelper):
     """Save a GML File"""
