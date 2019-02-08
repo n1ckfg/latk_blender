@@ -255,6 +255,10 @@ def fromLatkToGp(la=None, resizeTimeline=True, useScaleAndOffset=False, globalSc
         setStartEnd(0, longestFrameNum, pad=False)  
     print("...end building Grease Pencil from Latk object.")           
 
+def writeBrushStrokesObj(filepath=None, bake=True, roundValues=True, numPlaces=7, zipped=False, useScaleAndOffset=False, globalScale=Vector((0.1, 0.1, 0.1)), globalOffset=Vector((0, 0, 0))):
+    latkObj = fromGpToLatk()
+    latkObj.write(filepath=filepath, bake=bake, roundValues=roundValues, numPlaces=numPlaces, zipped=zipped, useScaleAndOffset=useScaleAndOffset, globalScale=globalScale, globalOffset=globalOffset)
+
 # http://blender.stackexchange.com/questions/24694/query-grease-pencil-strokes-from-python
 def writeBrushStrokes(filepath=None, bake=True, roundValues=True, numPlaces=7, zipped=False, useScaleAndOffset=False, globalScale=Vector((0.1, 0.1, 0.1)), globalOffset=Vector((0, 0, 0))):
     url = filepath # compatibility with gui keywords
@@ -377,11 +381,14 @@ def writeBrushStrokes(filepath=None, bake=True, roundValues=True, numPlaces=7, z
     #~                
     return {'FINISHED'}
 
-def readBrushStrokesUsingObj(filepath=None, resizeTimeline=True, useScaleAndOffset=False, globalScale=Vector((10, 10, 10)), globalOffset=Vector((0, 0, 0))):
-    la = Latk(filepath)
-    fromLatkToGp(la)
+def readBrushStrokesObj(filepath=None, resizeTimeline=True, useScaleAndOffset=False, doPreclean=False, globalScale=Vector((10, 10, 10)), globalOffset=Vector((0, 0, 0))):
+    latkObj = Latk()
+    latkObj.read(filepath=filepath, resizeTimeline=resizeTimeline, useScaleAndOffset=useScaleAndOffset, globalScale=globalScale, globalOffset=globalOffset)
+    if (doPreclean == True):
+        latkObj.clean()
+    fromLatkToGp(latkObj)
     
-def readBrushStrokes(filepath=None, resizeTimeline=True, useScaleAndOffset=False, globalScale=Vector((10, 10, 10)), globalOffset=Vector((0, 0, 0))):
+def readBrushStrokes(filepath=None, resizeTimeline=True, useScaleAndOffset=False, doPreclean=False, globalScale=Vector((10, 10, 10)), globalOffset=Vector((0, 0, 0))):
     url = filepath # compatibility with gui keywords
     #~
     gp = getActiveGp()

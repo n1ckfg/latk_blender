@@ -81,6 +81,7 @@ class ImportLatk(bpy.types.Operator, ImportHelper):
     """Load a Latk File"""
     resizeTimeline = BoolProperty(name="Resize Timeline", description="Set in and out points", default=True)
     useScaleAndOffset = BoolProperty(name="Use Scale and Offset", description="Compensate scale for Blender viewport", default=True)
+    doPreclean = BoolProperty(name="Pre-Clean", description="Try to remove duplicate strokes and points", default=False)
 
     bl_idname = "import_scene.latk"
     bl_label = "Import Latk"
@@ -94,13 +95,18 @@ class ImportLatk(bpy.types.Operator, ImportHelper):
 
     def execute(self, context):
         import latk_blender as la
-        keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "resizeTimeline", "useScaleAndOffset"))
+        keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "resizeTimeline", "useScaleAndOffset", "doPreclean"))
         if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
             import os
         #~
         keywords["resizeTimeline"] = self.resizeTimeline
         keywords["useScaleAndOffset"] = self.useScaleAndOffset
+        keywords["doPreclean"] = self.doPreclean
         la.readBrushStrokes(**keywords)
+        if (self.doPreclean == True):
+        	latkObj = fromGpToLatk()
+        	latkObj.clean()
+        	fromLatkToGp(latkObj)
         return {'FINISHED'}
 
 
