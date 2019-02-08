@@ -2348,9 +2348,12 @@ def fromLatkToGp(la=None, resizeTimeline=True, useScaleAndOffset=False, globalSc
         setStartEnd(0, longestFrameNum, pad=False)  
     print("...end building Grease Pencil from Latk object.")           
 
+'''
+# TODO option to use vanilla Python method
 def writeBrushStrokesObj(filepath=None, bake=True, roundValues=True, numPlaces=7, zipped=False, useScaleAndOffset=False, globalScale=Vector((0.1, 0.1, 0.1)), globalOffset=Vector((0, 0, 0))):
     latkObj = fromGpToLatk()
     latkObj.write(filepath=filepath, bake=bake, roundValues=roundValues, numPlaces=numPlaces, zipped=zipped, useScaleAndOffset=useScaleAndOffset, globalScale=globalScale, globalOffset=globalOffset)
+'''
 
 # http://blender.stackexchange.com/questions/24694/query-grease-pencil-strokes-from-python
 def writeBrushStrokes(filepath=None, bake=True, roundValues=True, numPlaces=7, zipped=False, useScaleAndOffset=False, globalScale=Vector((0.1, 0.1, 0.1)), globalOffset=Vector((0, 0, 0))):
@@ -2474,14 +2477,17 @@ def writeBrushStrokes(filepath=None, bake=True, roundValues=True, numPlaces=7, z
     #~                
     return {'FINISHED'}
 
+'''
+# TODO option to use vanilla Python method
 def readBrushStrokesObj(filepath=None, resizeTimeline=True, useScaleAndOffset=False, doPreclean=False, globalScale=Vector((10, 10, 10)), globalOffset=Vector((0, 0, 0))):
     latkObj = Latk()
     latkObj.read(filepath=filepath, resizeTimeline=resizeTimeline, useScaleAndOffset=useScaleAndOffset, globalScale=globalScale, globalOffset=globalOffset)
     if (doPreclean == True):
         latkObj.clean()
     fromLatkToGp(latkObj)
-    
-def readBrushStrokes(filepath=None, resizeTimeline=True, useScaleAndOffset=False, doPreclean=False, globalScale=Vector((10, 10, 10)), globalOffset=Vector((0, 0, 0))):
+'''
+
+def readBrushStrokes(filepath=None, resizeTimeline=True, useScaleAndOffset=False, doPreclean=False, limitPalette=0, globalScale=Vector((10, 10, 10)), globalOffset=Vector((0, 0, 0))):
     url = filepath # compatibility with gui keywords
     #~
     gp = getActiveGp()
@@ -2517,7 +2523,10 @@ def readBrushStrokes(filepath=None, resizeTimeline=True, useScaleAndOffset=False
                     strokeColor = (colorJson[0], colorJson[1], colorJson[2])
                 except:
                     pass
-                createColor(strokeColor)
+                if (limitPalette == 0):
+                    createColor(strokeColor)
+                else:
+                    createAndMatchColorPalette(strokeColor, limitPalette, 5) # num places
                 stroke = frame.strokes.new(getActiveColor().name)
                 stroke.draw_mode = "3DSPACE" # either of ("SCREEN", "3DSPACE", "2DSPACE", "2DIMAGE")
                 pointsJson = strokeJson["points"]
@@ -2542,7 +2551,12 @@ def readBrushStrokes(filepath=None, resizeTimeline=True, useScaleAndOffset=False
                     createPoint(stroke, l, (x, y, z), pressure, strength)
     #~  
     if (resizeTimeline == True):
-        setStartEnd(0, longestFrameNum, pad=False)              
+        setStartEnd(0, longestFrameNum, pad=False)
+    #~
+    if (doPreclean == True):
+        latkObj = fromGpToLatk()
+        latkObj.clean()
+        fromLatkToGp(latkObj)              
     return {'FINISHED'}
 
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
@@ -5709,6 +5723,7 @@ class ImportLatk(bpy.types.Operator, ImportHelper):
     resizeTimeline = BoolProperty(name="Resize Timeline", description="Set in and out points", default=True)
     useScaleAndOffset = BoolProperty(name="Use Scale and Offset", description="Compensate scale for Blender viewport", default=True)
     doPreclean = BoolProperty(name="Pre-Clean", description="Try to remove duplicate strokes and points", default=False)
+    limitPalette = IntProperty(name="Limit Palette", description="Restrict number of colors (0 = unlimited)", default=0)
 
     bl_idname = "import_scene.latk"
     bl_label = "Import Latk"
@@ -5722,18 +5737,15 @@ class ImportLatk(bpy.types.Operator, ImportHelper):
 
     def execute(self, context):
         import latk_blender as la
-        keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "resizeTimeline", "useScaleAndOffset", "doPreclean"))
+        keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "resizeTimeline", "useScaleAndOffset", "doPreclean", "limitPalette"))
         if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
             import os
         #~
         keywords["resizeTimeline"] = self.resizeTimeline
         keywords["useScaleAndOffset"] = self.useScaleAndOffset
         keywords["doPreclean"] = self.doPreclean
+        keywords["limitPalette"] = self.limitPalette
         la.readBrushStrokes(**keywords)
-        if (self.doPreclean == True):
-        	latkObj = fromGpToLatk()
-        	latkObj.clean()
-        	fromLatkToGp(latkObj)
         return {'FINISHED'}
 
 
