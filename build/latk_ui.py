@@ -82,7 +82,7 @@ class LightningArtistToolkitPreferences(bpy.types.AddonPreferences):
 class ImportLatk(bpy.types.Operator, ImportHelper):
     """Load a Latk File"""
     resizeTimeline = BoolProperty(name="Resize Timeline", description="Set in and out points", default=True)
-    #useScaleAndOffset = BoolProperty(name="Use Scale and Offset", description="Compensate scale for Blender viewport", default=False)
+    useScaleAndOffset = BoolProperty(name="Use Scale and Offset", description="Compensate scale for Blender viewport", default=True)
     doPreclean = BoolProperty(name="Pre-Clean", description="Try to remove duplicate strokes and points", default=False)
     limitPalette = IntProperty(name="Limit Palette", description="Restrict number of colors (0 = unlimited)", default=0)
 
@@ -98,12 +98,12 @@ class ImportLatk(bpy.types.Operator, ImportHelper):
 
     def execute(self, context):
         import latk_blender as la
-        keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "resizeTimeline", "doPreclean", "limitPalette")) # , "useScaleAndOffset")) 
+        keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "resizeTimeline", "doPreclean", "limitPalette", "useScaleAndOffset")) 
         if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
             import os
         #~
         keywords["resizeTimeline"] = self.resizeTimeline
-        #keywords["useScaleAndOffset"] = self.useScaleAndOffset
+        keywords["useScaleAndOffset"] = self.useScaleAndOffset
         keywords["doPreclean"] = self.doPreclean
         keywords["limitPalette"] = self.limitPalette
         la.readBrushStrokes(**keywords)
@@ -118,7 +118,7 @@ class ExportLatkJson(bpy.types.Operator, ExportHelper): # TODO combine into one 
     bake = BoolProperty(name="Bake Frames", description="Bake Keyframes to All Frames", default=False)
     #roundValues = BoolProperty(name="Limit Precision", description="Round Values to Reduce Filesize", default=False)    
     #numPlaces = IntProperty(name="Number Places", description="Number of Decimal Places", default=7)
-    #useScaleAndOffset = BoolProperty(name="Use Scale and Offset", description="Compensate scale for Blender viewport", default=True)
+    useScaleAndOffset = BoolProperty(name="Use Scale and Offset", description="Compensate scale for Blender viewport", default=True)
 
     bl_idname = "export_scene.latkjson"
     bl_label = 'Export Latk Json'
@@ -133,14 +133,14 @@ class ExportLatkJson(bpy.types.Operator, ExportHelper): # TODO combine into one 
 
     def execute(self, context):
         import latk_blender as la
-        keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "check_existing", "bake")) #, "roundValues", "numPlaces", "useScaleAndOffset"))
+        keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "check_existing", "bake", "useScaleAndOffset")) #, "roundValues", "numPlaces"))
         if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
             import os
         #~
         keywords["bake"] = self.bake
         #keywords["roundValues"] = self.roundValues
         #keywords["numPlaces"] = self.numPlaces
-        #keywords["useScaleAndOffset"] = self.useScaleAndOffset
+        keywords["useScaleAndOffset"] = self.useScaleAndOffset
         #~
         la.writeBrushStrokes(**keywords, zipped=False)
         return {'FINISHED'}
@@ -151,7 +151,7 @@ class ExportLatk(bpy.types.Operator, ExportHelper):  # TODO combine into one cla
     bake = BoolProperty(name="Bake Frames", description="Bake Keyframes to All Frames", default=False)
     #roundValues = BoolProperty(name="Limit Precision", description="Round Values to Reduce Filesize", default=False)    
     #numPlaces = IntProperty(name="Number Places", description="Number of Decimal Places", default=7)
-    #useScaleAndOffset = BoolProperty(name="Use Scale and Offset", description="Compensate scale for Blender viewport", default=True)
+    useScaleAndOffset = BoolProperty(name="Use Scale and Offset", description="Compensate scale for Blender viewport", default=True)
 
     bl_idname = "export_scene.latk"
     bl_label = 'Export Latk'
@@ -166,14 +166,14 @@ class ExportLatk(bpy.types.Operator, ExportHelper):  # TODO combine into one cla
 
     def execute(self, context):
         import latk_blender as la
-        keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "check_existing", "bake"))#, "roundValues", "numPlaces", "useScaleAndOffset"))
+        keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "check_existing", "bake", "useScaleAndOffset")) #, "roundValues", "numPlaces"))
         if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
             import os
         #~
         keywords["bake"] = self.bake
         #keywords["roundValues"] = self.roundValues
         #keywords["numPlaces"] = self.numPlaces
-        #keywords["useScaleAndOffset"] = self.useScaleAndOffset
+        keywords["useScaleAndOffset"] = self.useScaleAndOffset
         #~
         la.writeBrushStrokes(**keywords, zipped=True)
         return {'FINISHED'}

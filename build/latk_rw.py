@@ -2,15 +2,15 @@
 
 # * * *   * * *   * * *   * * *   * * *   * * *
 
-def writeBrushStrokes(filepath=None, bake=True, roundValues=True, numPlaces=7, zipped=False, useScaleAndOffset=False, globalScale=Vector((1, 1, 1)), globalOffset=Vector((0, 0, 0))):
+def writeBrushStrokes(filepath=None, bake=True, roundValues=True, numPlaces=7, zipped=False, useScaleAndOffset=True, globalScale=Vector((0.1, 0.1, 0.1)), globalOffset=Vector((0.0, 0.0, 0.0))):
     if(bake == True):
         bakeFrames()
-    latkObj = fromGpToLatk()
+    latkObj = fromGpToLatk(bake=bake, skipLocked=False, useScaleAndOffset=useScaleAndOffset, globalScale=globalScale, globalOffset=globalOffset)
     latkObj.write(filepath=filepath, zipped=zipped, useScaleAndOffset=useScaleAndOffset, globalScale=globalScale, globalOffset=globalOffset)
     #~
     return {'FINISHED'}
 
-def readBrushStrokes(filepath=None, resizeTimeline=True, useScaleAndOffset=False, doPreclean=False, limitPalette=0, globalScale=Vector((1, 1, 1)), globalOffset=Vector((0, 0, 0))):
+def readBrushStrokes(filepath=None, resizeTimeline=True, useScaleAndOffset=True, doPreclean=False, limitPalette=0, globalScale=Vector((10.0, 10.0, 10.0)), globalOffset=Vector((0.0, 0.0, 0.0))):
     latkObj = Latk()
     latkObj.read(filepath=filepath, useScaleAndOffset=useScaleAndOffset, globalScale=globalScale, globalOffset=globalOffset)
     #~
