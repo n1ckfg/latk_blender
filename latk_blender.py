@@ -4791,7 +4791,7 @@ def writeOnMesh(step=1, name="latk"):
             hideFrame(target[j], 0, True)
             hideFrame(target[j], len(target)-j, False)
 
-def meshToGp(obj=None, strokeLength=1, strokeGaps=10.0, shuffleOdds=1.0, spreadPoints=0.1):
+def meshToGp(obj=None, strokeLength=1, strokeGaps=10.0, shuffleOdds=1.0, spreadPoints=0.1, limitPalette=32):
     if not obj:
         obj = ss()
     mesh = obj.data
@@ -4842,7 +4842,11 @@ def meshToGp(obj=None, strokeLength=1, strokeGaps=10.0, shuffleOdds=1.0, spreadP
             pointSeqsToAdd.append(pointSeq)
     for i, pointSeq in enumerate(pointSeqsToAdd):
         color = colorsToAdd[i]
-        createColor(color)
+        #createColor(color)
+        if (limitPalette == 0):
+            createColor(color)
+        else:
+            createAndMatchColorPalette(color, limitPalette, 5) # num places
         stroke = frame.strokes.new(getActiveColor().name)
         stroke.draw_mode = "3DSPACE"
         stroke.points.add(len(pointSeq))
@@ -6405,6 +6409,12 @@ class LatkProperties(bpy.types.PropertyGroup):
         default=10
     )
 
+    paletteLimit = IntProperty(
+        name="Palette",
+        description="Limit palette to this many colors",
+        default=32
+    )
+
     vertexColorName = StringProperty(
         name="VCol",
         description="Vertex color name for export",
@@ -6481,6 +6491,7 @@ class LatkProperties_Panel(bpy.types.Panel):
         row.prop(latk, "bakeMesh")
         row.prop(latk, "joinMesh")
         row.prop(latk, "saveLayers")
+        row.prop(latk, "paletteLimit")
         row.prop(latk, "vertexColorName")
         
         row = layout.row()
@@ -6720,7 +6731,7 @@ class Latk_Button_StrokesFromMesh(bpy.types.Operator):
     
     def execute(self, context):
         latk_settings = bpy.context.scene.latk_settings
-        meshToGp(strokeLength=latk_settings.strokeLength, strokeGaps=latk_settings.strokeGaps, shuffleOdds=latk_settings.shuffleOdds, spreadPoints=latk_settings.spreadPoints)
+        meshToGp(strokeLength=latk_settings.strokeLength, strokeGaps=latk_settings.strokeGaps, shuffleOdds=latk_settings.shuffleOdds, spreadPoints=latk_settings.spreadPoints, limitPalette=latk_settings.paletteLimit)
         return {'FINISHED'}
 
 class Latk_Button_PointsToggle(bpy.types.Operator):

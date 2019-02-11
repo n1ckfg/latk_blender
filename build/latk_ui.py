@@ -750,6 +750,12 @@ class LatkProperties(bpy.types.PropertyGroup):
         default=10
     )
 
+    paletteLimit = IntProperty(
+        name="Palette",
+        description="Limit palette to this many colors",
+        default=32
+    )
+
     vertexColorName = StringProperty(
         name="VCol",
         description="Vertex color name for export",
@@ -826,6 +832,7 @@ class LatkProperties_Panel(bpy.types.Panel):
         row.prop(latk, "bakeMesh")
         row.prop(latk, "joinMesh")
         row.prop(latk, "saveLayers")
+        row.prop(latk, "paletteLimit")
         row.prop(latk, "vertexColorName")
         
         row = layout.row()
@@ -1065,7 +1072,7 @@ class Latk_Button_StrokesFromMesh(bpy.types.Operator):
     
     def execute(self, context):
         latk_settings = bpy.context.scene.latk_settings
-        meshToGp(strokeLength=latk_settings.strokeLength, strokeGaps=latk_settings.strokeGaps, shuffleOdds=latk_settings.shuffleOdds, spreadPoints=latk_settings.spreadPoints)
+        meshToGp(strokeLength=latk_settings.strokeLength, strokeGaps=latk_settings.strokeGaps, shuffleOdds=latk_settings.shuffleOdds, spreadPoints=latk_settings.spreadPoints, limitPalette=latk_settings.paletteLimit)
         return {'FINISHED'}
 
 class Latk_Button_PointsToggle(bpy.types.Operator):

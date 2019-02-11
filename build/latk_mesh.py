@@ -590,7 +590,7 @@ def writeOnMesh(step=1, name="latk"):
             hideFrame(target[j], 0, True)
             hideFrame(target[j], len(target)-j, False)
 
-def meshToGp(obj=None, strokeLength=1, strokeGaps=10.0, shuffleOdds=1.0, spreadPoints=0.1):
+def meshToGp(obj=None, strokeLength=1, strokeGaps=10.0, shuffleOdds=1.0, spreadPoints=0.1, limitPalette=32):
     if not obj:
         obj = ss()
     mesh = obj.data
@@ -641,7 +641,11 @@ def meshToGp(obj=None, strokeLength=1, strokeGaps=10.0, shuffleOdds=1.0, spreadP
             pointSeqsToAdd.append(pointSeq)
     for i, pointSeq in enumerate(pointSeqsToAdd):
         color = colorsToAdd[i]
-        createColor(color)
+        #createColor(color)
+        if (limitPalette == 0):
+            createColor(color)
+        else:
+            createAndMatchColorPalette(color, limitPalette, 5) # num places
         stroke = frame.strokes.new(getActiveColor().name)
         stroke.draw_mode = "3DSPACE"
         stroke.points.add(len(pointSeq))
