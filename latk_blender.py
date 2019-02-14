@@ -5050,7 +5050,7 @@ def drawCoords(coords=None, color=None, frame=None, layer=None):
                     pass
         stroke = frame.strokes.new(color.name)
         stroke.draw_mode = "3DSPACE"
-        stroke.points.add(len(coord))
+        stroke.points.add(len(coords))
         for i, coord in enumerate(coords):
             pressure = 1.0
             strength = 1.0
