@@ -591,6 +591,8 @@ def writeAeJsx(filepath=None):
     writeTextFile(filepath, jsx)
 
 def aeStroke(stroke, camera):
+    offsetW = bpy.context.scene.render.resolution_x / 4.0
+    offsetH = bpy.context.scene.render.resolution_y / 4.0
     returns = []
 
     points = []
@@ -599,7 +601,7 @@ def aeStroke(stroke, camera):
 
     verts = "["
     for i, point in enumerate(points):
-        verts += "[" + str(point[0]) + "," + str(point[1]) + "]"
+        verts += "[" + str(point[0] - offsetW) + "," + str(point[1] - offsetH) + "]"
         if (i < len(points)-1):
             verts += ","
     verts += "]"
