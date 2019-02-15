@@ -583,7 +583,7 @@ def writeAeJsx(filepath=None):
         jsx.append(line + "\r")
 
     for line in body:
-        jsx.append(line + "\r")
+        jsx.append("\t" + line + "\r")
 
     for line in footer:
         jsx.append(line + "\r")
@@ -605,6 +605,7 @@ def aeStroke(stroke, camera):
     verts += "]"
 
     returns.append("shape = new Shape();")
+    returns.append("shape.closed = false;")
     returns.append("shape.vertices = " + verts + ";") 
     returns.append("pathGroup = group.content.addProperty(\"ADBE Vector Shape - Group\");")
     returns.append("pathGroup.property(\"ADBE Vector Shape\").setValue(shape);")
