@@ -12,7 +12,7 @@ class LightningArtistToolkitPreferences(bpy.types.AddonPreferences):
     extraFormats_GML = bpy.props.BoolProperty(
         name = 'GML',
         description = "Graffiti Markup Language import/export",
-        default = False
+        default = True
     )
 
     extraFormats_ASC = bpy.props.BoolProperty(
@@ -57,6 +57,12 @@ class LightningArtistToolkitPreferences(bpy.types.AddonPreferences):
         default = True
     )
 
+    extraFormats_AfterEffects = bpy.props.BoolProperty(
+        name = 'After Effects JSX',
+        description = "After Effects JSX export",
+        default = True
+    )
+
     def draw(self, context):
         layout = self.layout
         layout.label("Add menu items to import:")
@@ -74,6 +80,7 @@ class LightningArtistToolkitPreferences(bpy.types.AddonPreferences):
         layout.prop(self, "extraFormats_GML")
         layout.prop(self, "extraFormats_Painter")
         layout.prop(self, "extraFormats_SVG")
+        layout.prop(self, "extraFormats_AfterEffects")
         layout.prop(self, "extraFormats_FBXSequence")
 
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
@@ -497,6 +504,30 @@ class ExportSvg(bpy.types.Operator, ExportHelper):
             import os
         #~
         la.writeSvg(**keywords)
+        return {'FINISHED'} 
+
+
+class ExportAfterEffects(bpy.types.Operator, ExportHelper):
+    """Save an After Effects JSX File"""
+
+    bl_idname = "export_scene.aejsx"
+    bl_label = 'Export After Effects JSX'
+    bl_options = {'PRESET'}
+
+    filename_ext = ".jsx"
+    filter_glob = StringProperty(
+            default="*.jsx",
+            options={'HIDDEN'},
+            )
+
+    def execute(self, context):
+        import latk_blender as la
+        #keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "check_existing", "bake"))
+        keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "check_existing"))
+        if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
+            import os
+        #~
+        la.writeAeJsx(**keywords)
         return {'FINISHED'} 
 
 
@@ -1237,6 +1268,8 @@ def menu_func_export(self, context):
         self.layout.operator(ExportPainter.bl_idname, text="Latk - Corel Painter (.txt)")
     if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_SVG == True):
         self.layout.operator(ExportSvg.bl_idname, text="Latk - SVG SMIL (.svg)")
+    if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_AfterEffects == True):
+        self.layout.operator(ExportAfterEffects.bl_idname, text="Latk - After Effects (.jsx)")        
     if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_FBXSequence == True):
         self.layout.operator(ExportFbxSequence.bl_idname, text="Latk - FBX Sequence (.fbx)")
 

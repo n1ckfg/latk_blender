@@ -2650,6 +2650,115 @@ def svgStroke(points=None, stroke=(0,0,1), fill=(1,0,0), strokeWidth=2.0, stroke
 
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 
+def writeAeJsx(filepath=None):
+    header = aeHeader()
+    footer = aeFooter()
+
+    camera = getActiveCamera()
+    gp = getActiveGp()
+
+    body = []
+
+    body.append("var layer, group, shape, pathGroup, pathFill, pathStroke;")
+
+    for layer in gp.layers:
+        for frame in layer.frames:
+            frameLines = aeFrame()
+            for line in frameLines:
+                body.append(line)
+            for stroke in frame.strokes:
+                strokeLines = aeStroke(stroke, camera)
+                for line in strokeLines:
+                    body.append(line)
+
+    jsx = []
+
+    for line in header:
+        jsx.append(line + "\r")
+
+    for line in body:
+        jsx.append(line + "\r")
+
+    for line in footer:
+        jsx.append(line + "\r")
+
+    writeTextFile(filepath, jsx)
+
+def aeStroke(stroke, camera):
+    returns = []
+
+    points = []
+    for point in stroke.points:
+        points.append(getWorldCoords(co=point.co, camera=camera))
+
+    verts = "["
+    for i, point in enumerate(points):
+        verts += "[" + str(point[0]) + "," + str(point[1]) + "]"
+        if (i < len(points)-1):
+            verts += ","
+    verts += "]"
+
+    returns.append("shape = new Shape();")
+    returns.append("shape.vertices = " + verts + ";") 
+    returns.append("pathGroup = group.content.addProperty(\"ADBE Vector Shape - Group\");")
+    returns.append("pathGroup.property(\"ADBE Vector Shape\").setValue(shape);")
+
+    strokeColor = stroke.color.color
+
+    returns.append("pathStroke = group.content.addProperty(\"ADBE Vector Graphic - Stroke\");")
+    returns.append("pathStroke.color.setValue([" + str(strokeColor[0]) + "," + str(strokeColor[1]) + "," + str(strokeColor[2]) + "]);")
+
+    #fillColor = stroke.color.fillColor
+
+    #returns.append("pathFill = group.content.addProperty(\"ADBE Vector Graphic - Fill\");")
+    #returns.append("pathFill.color.setValue([" + str(fillColor[0]) + "," + str(fillColor[1]) + "," + str(fillColor[2]) + "]);")
+
+    return returns
+
+def aeFrame():
+    returns = []
+    returns.append("layer = myComp.layers.addShape();")
+    returns.append("layer.name = \"S Path\";")
+    returns.append("group = layer.content.addProperty(\"ADBE Vector Group\");")
+    return returns
+
+def aeHeader():
+    returns = []
+
+    compW = str(bpy.context.scene.render.resolution_x)
+    compH = str(bpy.context.scene.render.resolution_y)
+    fps = str(bpy.context.scene.render.fps)
+    #compL = str(float32((bpy.context.scene.frame_end / bpy.context.scene.render.fps)))
+    compL = str((bpy.context.scene.frame_end / bpy.context.scene.render.fps))
+
+    returns.append("{  //start script")
+    returns.append("\t" + "app.beginUndoGroup(\"foo\");")
+    returns.append("")
+    returns.append("\t" + "// create project if necessary")
+    returns.append("\t" + "var proj = app.project;")
+    returns.append("\t" + "if(!proj) proj = app.newProject();")
+    returns.append("")
+    returns.append("\t" + "// create new comp named 'my comp'")
+    returns.append("\t" + "var compW = " + compW + "; // comp width")
+    returns.append("\t" + "var compH = " + compH + "; // comp height")
+    returns.append("\t" + "var compL = " + compL + ";  // comp length (seconds)")
+    returns.append("\t" + "var compRate = " + fps + "; // comp frame rate")
+    returns.append("\t" + "var compBG = [0/255,0/255,0/255] // comp background color")
+    returns.append("\t" + "var myItemCollection = app.project.items;")
+    returns.append("\t" + "var myComp = myItemCollection.addComp('my comp',compW,compH,1,compL,compRate);")
+    returns.append("\t" + "myComp.bgColor = compBG;")
+    returns.append("")
+    return returns  
+
+def aeFooter():
+    returns = []
+    returns.append("")
+    returns.append("\t" + "app.endUndoGroup();")
+    returns.append("}  //end script")
+    return returns
+
+# ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
+
 def writePainter(filepath=None):
     camera=getActiveCamera()
     outputFile = []
@@ -5671,7 +5780,7 @@ class LightningArtistToolkitPreferences(bpy.types.AddonPreferences):
     extraFormats_GML = bpy.props.BoolProperty(
         name = 'GML',
         description = "Graffiti Markup Language import/export",
-        default = False
+        default = True
     )
 
     extraFormats_ASC = bpy.props.BoolProperty(
@@ -5716,6 +5825,12 @@ class LightningArtistToolkitPreferences(bpy.types.AddonPreferences):
         default = True
     )
 
+    extraFormats_AfterEffects = bpy.props.BoolProperty(
+        name = 'After Effects JSX',
+        description = "After Effects JSX export",
+        default = True
+    )
+
     def draw(self, context):
         layout = self.layout
         layout.label("Add menu items to import:")
@@ -5733,6 +5848,7 @@ class LightningArtistToolkitPreferences(bpy.types.AddonPreferences):
         layout.prop(self, "extraFormats_GML")
         layout.prop(self, "extraFormats_Painter")
         layout.prop(self, "extraFormats_SVG")
+        layout.prop(self, "extraFormats_AfterEffects")
         layout.prop(self, "extraFormats_FBXSequence")
 
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
@@ -6156,6 +6272,30 @@ class ExportSvg(bpy.types.Operator, ExportHelper):
             import os
         #~
         la.writeSvg(**keywords)
+        return {'FINISHED'} 
+
+
+class ExportAfterEffects(bpy.types.Operator, ExportHelper):
+    """Save an After Effects JSX File"""
+
+    bl_idname = "export_scene.aejsx"
+    bl_label = 'Export After Effects JSX'
+    bl_options = {'PRESET'}
+
+    filename_ext = ".jsx"
+    filter_glob = StringProperty(
+            default="*.jsx",
+            options={'HIDDEN'},
+            )
+
+    def execute(self, context):
+        import latk_blender as la
+        #keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "check_existing", "bake"))
+        keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "check_existing"))
+        if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
+            import os
+        #~
+        la.writeAeJsx(**keywords)
         return {'FINISHED'} 
 
 
@@ -6896,6 +7036,8 @@ def menu_func_export(self, context):
         self.layout.operator(ExportPainter.bl_idname, text="Latk - Corel Painter (.txt)")
     if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_SVG == True):
         self.layout.operator(ExportSvg.bl_idname, text="Latk - SVG SMIL (.svg)")
+    if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_AfterEffects == True):
+        self.layout.operator(ExportAfterEffects.bl_idname, text="Latk - After Effects (.jsx)")        
     if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_FBXSequence == True):
         self.layout.operator(ExportFbxSequence.bl_idname, text="Latk - FBX Sequence (.fbx)")
 

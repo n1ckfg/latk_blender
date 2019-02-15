@@ -556,6 +556,115 @@ def svgStroke(points=None, stroke=(0,0,1), fill=(1,0,0), strokeWidth=2.0, stroke
 
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 
+def writeAeJsx(filepath=None):
+    header = aeHeader()
+    footer = aeFooter()
+
+    camera = getActiveCamera()
+    gp = getActiveGp()
+
+    body = []
+
+    body.append("var layer, group, shape, pathGroup, pathFill, pathStroke;")
+
+    for layer in gp.layers:
+        for frame in layer.frames:
+            frameLines = aeFrame()
+            for line in frameLines:
+                body.append(line)
+            for stroke in frame.strokes:
+                strokeLines = aeStroke(stroke, camera)
+                for line in strokeLines:
+                    body.append(line)
+
+    jsx = []
+
+    for line in header:
+        jsx.append(line + "\r")
+
+    for line in body:
+        jsx.append(line + "\r")
+
+    for line in footer:
+        jsx.append(line + "\r")
+
+    writeTextFile(filepath, jsx)
+
+def aeStroke(stroke, camera):
+    returns = []
+
+    points = []
+    for point in stroke.points:
+        points.append(getWorldCoords(co=point.co, camera=camera))
+
+    verts = "["
+    for i, point in enumerate(points):
+        verts += "[" + str(point[0]) + "," + str(point[1]) + "]"
+        if (i < len(points)-1):
+            verts += ","
+    verts += "]"
+
+    returns.append("shape = new Shape();")
+    returns.append("shape.vertices = " + verts + ";") 
+    returns.append("pathGroup = group.content.addProperty(\"ADBE Vector Shape - Group\");")
+    returns.append("pathGroup.property(\"ADBE Vector Shape\").setValue(shape);")
+
+    strokeColor = stroke.color.color
+
+    returns.append("pathStroke = group.content.addProperty(\"ADBE Vector Graphic - Stroke\");")
+    returns.append("pathStroke.color.setValue([" + str(strokeColor[0]) + "," + str(strokeColor[1]) + "," + str(strokeColor[2]) + "]);")
+
+    #fillColor = stroke.color.fillColor
+
+    #returns.append("pathFill = group.content.addProperty(\"ADBE Vector Graphic - Fill\");")
+    #returns.append("pathFill.color.setValue([" + str(fillColor[0]) + "," + str(fillColor[1]) + "," + str(fillColor[2]) + "]);")
+
+    return returns
+
+def aeFrame():
+    returns = []
+    returns.append("layer = myComp.layers.addShape();")
+    returns.append("layer.name = \"S Path\";")
+    returns.append("group = layer.content.addProperty(\"ADBE Vector Group\");")
+    return returns
+
+def aeHeader():
+    returns = []
+
+    compW = str(bpy.context.scene.render.resolution_x)
+    compH = str(bpy.context.scene.render.resolution_y)
+    fps = str(bpy.context.scene.render.fps)
+    #compL = str(float32((bpy.context.scene.frame_end / bpy.context.scene.render.fps)))
+    compL = str((bpy.context.scene.frame_end / bpy.context.scene.render.fps))
+
+    returns.append("{  //start script")
+    returns.append("\t" + "app.beginUndoGroup(\"foo\");")
+    returns.append("")
+    returns.append("\t" + "// create project if necessary")
+    returns.append("\t" + "var proj = app.project;")
+    returns.append("\t" + "if(!proj) proj = app.newProject();")
+    returns.append("")
+    returns.append("\t" + "// create new comp named 'my comp'")
+    returns.append("\t" + "var compW = " + compW + "; // comp width")
+    returns.append("\t" + "var compH = " + compH + "; // comp height")
+    returns.append("\t" + "var compL = " + compL + ";  // comp length (seconds)")
+    returns.append("\t" + "var compRate = " + fps + "; // comp frame rate")
+    returns.append("\t" + "var compBG = [0/255,0/255,0/255] // comp background color")
+    returns.append("\t" + "var myItemCollection = app.project.items;")
+    returns.append("\t" + "var myComp = myItemCollection.addComp('my comp',compW,compH,1,compL,compRate);")
+    returns.append("\t" + "myComp.bgColor = compBG;")
+    returns.append("")
+    return returns  
+
+def aeFooter():
+    returns = []
+    returns.append("")
+    returns.append("\t" + "app.endUndoGroup();")
+    returns.append("}  //end script")
+    return returns
+
+# ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
+
 def writePainter(filepath=None):
     camera=getActiveCamera()
     outputFile = []
