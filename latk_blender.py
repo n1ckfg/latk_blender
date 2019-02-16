@@ -2577,10 +2577,11 @@ def getFileName(stripExtension=True):
     return name
 
 def writeSvg(filepath=None):
-    # Note: keep fps at 24 and above to prevent timing artifacts. 
+    # Note: keep fps at 12 or below to prevent timing artifacts. 
     # Last frame in timeline must be empty.
     minLineWidth=3
     camera = getActiveCamera()
+    palette = getActivePalette()
     fps = float(getSceneFps())
     start, end = getStartEnd()
     duration = float(end - start) / fps
@@ -2605,7 +2606,6 @@ def writeSvg(filepath=None):
         for i, frame in enumerate(layer.frames):
             goToFrame(frame.frame_number)
             svg.append("\t\t" + "<g id=\"" + layerInfo + "_frame" + str(i) + "\">\r")
-            palette = getActivePalette()
             for stroke in frame.strokes:
                 width = stroke.line_width
                 if (width == None or width < minLineWidth):
@@ -2656,18 +2656,34 @@ def writeAeJsx(filepath=None):
 
     camera = getActiveCamera()
     gp = getActiveGp()
+    palette = getActivePalette()
 
     body = []
 
     body.append("var layer, group, shape, pathGroup, pathFill, pathStroke;")
+    lastFrameNumber = bpy.context.scene.frame_end
 
     for layer in gp.layers:
-        for frame in layer.frames:
-            frameLines = aeFrame()
+        for i, frame in enumerate(layer.frames):
+            goToFrame(frame.frame_number)
+            frameLines = None
+            if (len(layer.frames) < 2):
+                frameLines = aeFrame(layer, frame.frame_number, lastFrameNumber)   
+            else:
+                if (i < len(layer.frames)-1):
+                    frameLines = aeFrame(layer, frame.frame_number, layer.frames[i+1].frame_number)
+                else:
+                    frameLines = aeFrame(layer, frame.frame_number, lastFrameNumber)   
+
             for line in frameLines:
                 body.append(line)
             for stroke in frame.strokes:
-                strokeLines = aeStroke(stroke, camera)
+                color = palette.colors[stroke.colorname]
+                strokeColor = (color.color[0], color.color[1], color.color[2])
+                fillColor = (color.fill_color[0], color.fill_color[1], color.fill_color[2])
+                fillAlpha = color.fill_alpha
+
+                strokeLines = aeStroke(stroke, camera, strokeColor, fillColor, fillAlpha)
                 for line in strokeLines:
                     body.append(line)
 
@@ -2684,7 +2700,7 @@ def writeAeJsx(filepath=None):
 
     writeTextFile(filepath, jsx)
 
-def aeStroke(stroke, camera):
+def aeStroke(stroke, camera, strokeColor, fillColor, fillAlpha):
     offsetW = bpy.context.scene.render.resolution_x / 2.0
     offsetH = bpy.context.scene.render.resolution_y / 2.0
     returns = []
@@ -2706,38 +2722,33 @@ def aeStroke(stroke, camera):
     returns.append("pathGroup = group.content.addProperty(\"ADBE Vector Shape - Group\");")
     returns.append("pathGroup.property(\"ADBE Vector Shape\").setValue(shape);")
 
-    strokeColor = (1,1,1)
-    try:
-        strokeColor = stroke.color.color
-    except:
-        pass
-
     returns.append("pathStroke = group.content.addProperty(\"ADBE Vector Graphic - Stroke\");")
     returns.append("pathStroke.color.setValue([" + str(strokeColor[0]) + "," + str(strokeColor[1]) + "," + str(strokeColor[2]) + "]);")
 
-    fillColor = (1,1,1)
-    fillAlpha = 0
-    try:
-        fillColor = stroke.color.fill_color
-        fillAlpha = stroke.color.fill_alpha
-    except:
-        pass
     if (fillAlpha > 0.001):
         returns.append("pathFill = group.content.addProperty(\"ADBE Vector Graphic - Fill\");")
         returns.append("pathFill.color.setValue([" + str(fillColor[0]) + "," + str(fillColor[1]) + "," + str(fillColor[2]) + "]);")
 
     return returns
 
-def aeFrame():
+def aeFrame(layer, inPoint, outPoint):
+    name = layer.info + "_" + str(inPoint);
+    fps = float(bpy.context.scene.render.fps)
+    startTime = float(inPoint) / fps
+    endTime = float(outPoint) / fps
+
     returns = []
     returns.append("layer = myComp.layers.addShape();")
-    returns.append("layer.name = \"S Path\";")
+    returns.append("layer.name = \"" + name + "\";")
+    returns.append("layer.startTime = " + str(startTime) + ";")
+    returns.append("layer.outPoint = " + str(endTime) + ";")
     returns.append("group = layer.content.addProperty(\"ADBE Vector Group\");")
     return returns
 
 def aeHeader():
     returns = []
-
+    gp = getActiveGp()
+    compName = gp.name
     compW = str(bpy.context.scene.render.resolution_x)
     compH = str(bpy.context.scene.render.resolution_y)
     fps = str(bpy.context.scene.render.fps)
@@ -2745,20 +2756,20 @@ def aeHeader():
     compL = str((bpy.context.scene.frame_end / bpy.context.scene.render.fps))
 
     returns.append("{  //start script")
-    returns.append("\t" + "app.beginUndoGroup(\"foo\");")
+    returns.append("\t" + "app.beginUndoGroup(\"Create Comp from Grease Pencil\");")
     returns.append("")
     returns.append("\t" + "// create project if necessary")
     returns.append("\t" + "var proj = app.project;")
     returns.append("\t" + "if(!proj) proj = app.newProject();")
     returns.append("")
-    returns.append("\t" + "// create new comp named 'my comp'")
+    returns.append("\t" + "// create new comp")
     returns.append("\t" + "var compW = " + compW + "; // comp width")
     returns.append("\t" + "var compH = " + compH + "; // comp height")
     returns.append("\t" + "var compL = " + compL + ";  // comp length (seconds)")
     returns.append("\t" + "var compRate = " + fps + "; // comp frame rate")
     returns.append("\t" + "var compBG = [0/255,0/255,0/255] // comp background color")
     returns.append("\t" + "var myItemCollection = app.project.items;")
-    returns.append("\t" + "var myComp = myItemCollection.addComp('my comp',compW,compH,1,compL,compRate);")
+    returns.append("\t" + "var myComp = myItemCollection.addComp(\"" + compName + "\",compW,compH,1,compL,compRate);")
     returns.append("\t" + "myComp.bgColor = compBG;")
     returns.append("")
     return returns  
