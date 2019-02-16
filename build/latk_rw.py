@@ -569,7 +569,8 @@ def writeAeJsx(filepath=None):
     body.append("var layer, group, shape, pathGroup, pathFill, pathStroke;")
     lastFrameNumber = bpy.context.scene.frame_end
 
-    for layer in gp.layers:
+    for h in reversed(range(0, len(gp.layers))):
+        layer = gp.layers[h]
         for i, frame in enumerate(layer.frames):
             goToFrame(frame.frame_number)
             frameLines = None
