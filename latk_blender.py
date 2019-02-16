@@ -2685,13 +2685,13 @@ def writeAeJsx(filepath=None):
     writeTextFile(filepath, jsx)
 
 def aeStroke(stroke, camera):
-    offsetW = bpy.context.scene.render.resolution_x / 4.0
-    offsetH = bpy.context.scene.render.resolution_y / 4.0
+    offsetW = bpy.context.scene.render.resolution_x / 2.0
+    offsetH = bpy.context.scene.render.resolution_y / 2.0
     returns = []
 
     points = []
     for point in stroke.points:
-        points.append(getWorldCoords(co=point.co, camera=camera))
+        points.append(getWorldCoords(co=point.co, camera=camera, useRenderScale=False))
 
     verts = "["
     for i, point in enumerate(points):
@@ -2706,15 +2706,25 @@ def aeStroke(stroke, camera):
     returns.append("pathGroup = group.content.addProperty(\"ADBE Vector Shape - Group\");")
     returns.append("pathGroup.property(\"ADBE Vector Shape\").setValue(shape);")
 
-    strokeColor = stroke.color.color
+    strokeColor = (1,1,1)
+    try:
+        strokeColor = stroke.color.color
+    except:
+        pass
 
     returns.append("pathStroke = group.content.addProperty(\"ADBE Vector Graphic - Stroke\");")
     returns.append("pathStroke.color.setValue([" + str(strokeColor[0]) + "," + str(strokeColor[1]) + "," + str(strokeColor[2]) + "]);")
 
-    #fillColor = stroke.color.fillColor
-
-    #returns.append("pathFill = group.content.addProperty(\"ADBE Vector Graphic - Fill\");")
-    #returns.append("pathFill.color.setValue([" + str(fillColor[0]) + "," + str(fillColor[1]) + "," + str(fillColor[2]) + "]);")
+    fillColor = (1,1,1)
+    fillAlpha = 0
+    try:
+        fillColor = stroke.color.fill_color
+        fillAlpha = stroke.color.fill_alpha
+    except:
+        pass
+    if (fillAlpha > 0.001):
+        returns.append("pathFill = group.content.addProperty(\"ADBE Vector Graphic - Fill\");")
+        returns.append("pathFill.color.setValue([" + str(fillColor[0]) + "," + str(fillColor[1]) + "," + str(fillColor[2]) + "]);")
 
     return returns
 
