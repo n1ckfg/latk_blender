@@ -28,6 +28,7 @@ import zipfile
 from io import BytesIO
 from math import sqrt
 from numpy import float32
+from numpy import isnan
 
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
 
@@ -118,10 +119,14 @@ class Latk(object):
                             strength = 1.0
                             try:
                                 pressure = jsonPoint["pressure"]
+                                if (isnan(pressure) == True):
+                                	pressure = 1.0
                             except:
                                 pass
                             try:
                                 strength = jsonPoint["strength"]
+                                if (isnan(strength) == True):
+                                	strenght = 1.0
                             except:
                                 pass
                             points.append(LatkPoint((x,y,z), pressure, strength))
