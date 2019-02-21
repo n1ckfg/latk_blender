@@ -6700,6 +6700,10 @@ class LatkProperties_Panel(bpy.types.Panel):
         row.operator("latk_button.hidetrue") 
         row.operator("latk_button.hidescale")
         row.operator("latk_button.makeloop") 
+
+        row = layout.row()
+        row.operator("latk_button.pointstoggle")
+        row.operator("latk_button.matchfills") 
         row.operator("latk_button.makeroot") 
 
         row = layout.row()
@@ -6707,7 +6711,6 @@ class LatkProperties_Panel(bpy.types.Panel):
         row.prop(latk, "strokeGaps")
         row.prop(latk, "shuffleOdds")
         row.prop(latk, "spreadPoints")
-        #row.prop(latk, "fast_colors")
         row.operator("latk_button.strokesfrommesh")
 
         # ~ ~ ~ 
@@ -6722,7 +6725,6 @@ class LatkProperties_Panel(bpy.types.Panel):
         row.prop(latk, "writeStrokeSteps")
         row.prop(latk, "writeStrokePoints")
         row.operator("latk_button.writeonstrokes")
-        row.operator("latk_button.pointstoggle")
 
         row = layout.row()
         row.prop(latk, "numSplitFrames")
@@ -6733,9 +6735,9 @@ class LatkProperties_Panel(bpy.types.Panel):
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 
 class Latk_Button_SimpleClean(bpy.types.Operator):
-    """Loop all latk keyframes"""
+    """Clean up geometry"""
     bl_idname = "latk_button.simpleclean"
-    bl_label = "Clean"
+    bl_label = "Clean Mesh"
     bl_options = {'UNDO'}
     
     def execute(self, context):
@@ -6743,7 +6745,7 @@ class Latk_Button_SimpleClean(bpy.types.Operator):
         return {'FINISHED'}
 
 class Latk_Button_ScopeTimeline(bpy.types.Operator):
-    """Loop all latk keyframes"""
+    """Match timeline start and end to Grease Pencil"""
     bl_idname = "latk_button.scopetimeline"
     bl_label = "Scope"
     bl_options = {'UNDO'}
@@ -6763,13 +6765,23 @@ class Latk_Button_MakeLoop(bpy.types.Operator):
         return {'FINISHED'}
 
 class Latk_Button_MakeRoot(bpy.types.Operator):
-    """Parent all latk objects to locator"""
+    """Parent all latk mesh objects to locator"""
     bl_idname = "latk_button.makeroot"
     bl_label = "Root"
     bl_options = {'UNDO'}
     
     def execute(self, context):
         makeRoot()
+        return {'FINISHED'}
+
+class Latk_Button_MatchFills(bpy.types.Operator):
+    """Match fill colors to stroke colors"""
+    bl_idname = "latk_button.matchfills"
+    bl_label = "Fills"
+    bl_options = {'UNDO'}
+    
+    def execute(self, context):
+        matchFills()
         return {'FINISHED'}
 
 class Latk_Button_HideScale(bpy.types.Operator):
@@ -6823,7 +6835,7 @@ class Latk_Button_SmoothMod(bpy.types.Operator):
         return {'FINISHED'}
 
 class Latk_Button_DecimateMod(bpy.types.Operator):
-    """Smooth using defaults and bake"""
+    """Decimate and bake"""
     bl_idname = "latk_button.decimatemod"
     bl_label = "Decimate"
     bl_options = {'UNDO'}
@@ -6969,7 +6981,7 @@ class Latk_Button_BakeAnim(bpy.types.Operator):
         return {'FINISHED'}
 
 class Latk_Button_Gpmesh_SingleFrame(bpy.types.Operator):
-    """Mesh a single frame. Great for fast previews"""
+    """Mesh a single frame"""
     bl_idname = "latk_button.gpmesh_singleframe"
     bl_label = "Mesh Frame"
     bl_options = {'UNDO'}
@@ -7009,7 +7021,7 @@ class Latk_Button_Splf(bpy.types.Operator):
         return {'FINISHED'}
 
 class Latk_Button_BigClean(bpy.types.Operator):
-    """Split GP stroke layers. Layers with fewer frames mesh faster"""
+    """Regenerate and simplify all strokes"""
     bl_idname = "latk_button.bigclean"
     bl_label = "Clean GP"
     bl_options = {'UNDO'}
