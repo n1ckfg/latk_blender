@@ -91,7 +91,7 @@ class ImportLatk(bpy.types.Operator, ImportHelper):
     resizeTimeline = BoolProperty(name="Resize Timeline", description="Set in and out points", default=True)
     useScaleAndOffset = BoolProperty(name="Use Scale and Offset", description="Compensate scale for Blender viewport", default=True)
     doPreclean = BoolProperty(name="Pre-Clean", description="Try to remove duplicate strokes and points", default=False)
-    limitPalette = IntProperty(name="Limit Palette", description="Restrict number of colors (0 = unlimited)", default=0)
+    limitPalette = IntProperty(name="Limit Palette", description="Restrict number of colors (0 = unlimited)", default=256)
 
     bl_idname = "import_scene.latk"
     bl_label = "Import Latk"
@@ -765,7 +765,7 @@ class LatkProperties(bpy.types.PropertyGroup):
     numSplitFrames = IntProperty(
         name="Split Frames",
         description="Split layers if they have more than this many frames",
-        default=5,
+        default=3,
         soft_min=2
     )
 
@@ -894,8 +894,8 @@ class LatkProperties_Panel(bpy.types.Panel):
         row = layout.row()
         row.operator("latk_button.hidetrue") 
         row.operator("latk_button.hidescale")
-        row.operator("latk_button.makeroot") 
         row.operator("latk_button.makeloop") 
+        row.operator("latk_button.makeroot") 
 
         row = layout.row()
         row.prop(latk, "strokeLength")

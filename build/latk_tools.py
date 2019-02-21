@@ -30,6 +30,13 @@ def scatterObjects(target=None, val=10):
         z = (2 * random.random() * val) - val
         obj.location = (x, y, z)
 
+def matchFills(alpha=None):
+    palette = getActivePalette()
+    for color in palette.colors:
+        color.fill_color = color.color
+        if (alpha != None):
+            color.fill_alpha = alpha
+
 def resizeToFitGp():
     least = 1
     most = 1
