@@ -6488,7 +6488,7 @@ class ExportAfterEffects(bpy.types.Operator, ExportHelper):
             options={'HIDDEN'},
             )
 
-    useNulls = BoolProperty(name="Use 3D Nulls", description="Use nulls to store 3D data in AE", default=False)
+    #useNulls = BoolProperty(name="Use 3D Nulls", description="Use nulls to store 3D data in AE", default=False)
 
     def execute(self, context):
         import latk_blender as la
@@ -6497,7 +6497,7 @@ class ExportAfterEffects(bpy.types.Operator, ExportHelper):
         if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
             import os
         #~
-        keywords["useNulls"] = self.useNulls
+        #keywords["useNulls"] = self.useNulls
         la.writeAeJsx(**keywords)
         return {'FINISHED'} 
 
