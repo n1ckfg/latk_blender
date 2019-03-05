@@ -2673,6 +2673,8 @@ def writeAeJsx(filepath=None, useNulls=False):
     body = []
 
     body.append("var layer, group, shape, pathGroup, pathFill, pathStroke;")
+    body.append("var counter = 1;")
+    body.append("var nullCounter = 1;")
     lastFrameNumber = bpy.context.scene.frame_end
 
     for h in reversed(range(0, len(gp.layers))):
@@ -2722,16 +2724,25 @@ def aeStroke(stroke, camera, strokeColor, fillColor, fillAlpha, useNulls):
     for point in stroke.points:
         points.append(getWorldCoords(co=point.co, camera=camera, useRenderScale=False))
 
-    verts = "["
+    verts2D = "["
     for i, point in enumerate(points):
-        verts += "[" + str(point[0] - offsetW) + "," + str(point[1] - offsetH) + "]"
+        verts2D += "[" + str(point[0] - offsetW) + "," + str(point[1] - offsetH) + "]"
         if (i < len(points)-1):
-            verts += ","
-    verts += "]"
+            verts2D += ","
+    verts2D += "]"
 
+    verts = "["
+    if (useNulls == True):
+        for i, point in enumerate(stroke.points):
+            verts += "[" + str(point.co[0] * 100) + "," + str(point.co[1] * 100) + "," + str(point.co[2] * 100) + "]"
+            if (i < len(stroke.points)-1):
+                verts += ","
+        verts += "]"
+
+    returns.append("")
     returns.append("shape = new Shape();")
     returns.append("shape.closed = false;")
-    returns.append("shape.vertices = " + verts + ";") 
+    returns.append("shape.vertices = " + verts2D + ";") 
     returns.append("pathGroup = group.content.addProperty(\"ADBE Vector Shape - Group\");")
     returns.append("pathGroup.property(\"ADBE Vector Shape\").setValue(shape);")
 
@@ -2743,64 +2754,34 @@ def aeStroke(stroke, camera, strokeColor, fillColor, fillAlpha, useNulls):
         returns.append("pathFill.color.setValue([" + str(fillColor[0]) + "," + str(fillColor[1]) + "," + str(fillColor[2]) + "]);")
 
     if (useNulls == True):
-        returns.append("forEachPath(function(comp,selectedLayer,path) {")
-        returns.append("\t" + "var pathHierarchy = [];")
-        returns.append("\t" + "var pathPath = getPropPath(path, pathHierarchy);")
-        returns.append("\t" + "var nullSet = [];")
-        returns.append("\t" + "var pathPoints = getPathPoints(path);")
-        returns.append("\t" + "for (var i = 0, ii = pathPoints.length; i < ii; i++) {")
-        returns.append("\t" + "\tvar nullName = selectedLayer.name + \": \" + path.parentProperty.name + \" [\" + pathHierarchy.join(\".\") + \".\" + i + \"]\";")
-        returns.append("\t" + "\tnullSet.push(nullName);")
-        returns.append("\t" + "\tif(comp.layer(nullName) == undefined) {")
-        returns.append("\t" + "\t\tvar newNull = createNull(comp);")
-        returns.append("\t" + "\t\tnewNull.moveBefore(selectedLayer);")
-        returns.append("\t" + "\t\tnewNull.name = nullName;")
-        returns.append("\t" + "\t\tnewNull.label = 11;")
-        returns.append("\t" + "\t\tnewNull.position.setValue(pathPoints[i]);")
-        returns.append("\t" + "\t\tnewNull.position.expression =")
-        returns.append("\t" + "\t\t\t\"var srcLayer = thisComp.layer(\\\"\" + selectedLayer.name + \"\\\"); \\r\" +")
-        returns.append("\t" + "\t\t\t\"var srcPath = srcLayer\" + pathPath + \".points()[\" + i + \"]; \\r\" +")
-        returns.append("\t" + "\t\t\t\"srcLayer.toComp(srcPath);\";")
-        returns.append("\t" + "\t\tnewNull.position.setValue(newNull.position.value);")
-        returns.append("\t" + "\t\tnewNull.position.expression = '';")
-        returns.append("\t" + "\t}")
-        returns.append("\t" + "}")
-        returns.append("\t" + "var existingEffects = [];")
-        returns.append("\t" + "forEachEffect(selectedLayer,function(targetEffect){")
-        returns.append("\t" + "\tif(matchMatchName(targetEffect,\"ADBE Layer Control\") != null) {")
-        returns.append("\t" + "\t\texistingEffects.push(targetEffect.name);")
-        returns.append("\t" + "\t}")
-        returns.append("\t" + "});")
-        returns.append("\t" + "for(var n = 0, nl = nullSet.length; n < nl; n++) {")
-        returns.append("\t" + "\tif (existingEffects.join(\"|\").indexOf(nullSet[n]) != -1) {")
-        returns.append("\t" + "\t\tselectedLayer.property(\"ADBE Effect Parade\")(nullSet[n]).property(\"ADBE Layer Control-0001\").setValue(comp.layer(nullSet[n]).index);")
-        returns.append("\t" + "\t} else {")
-        returns.append("\t" + "\t\tvar newControl = selectedLayer.property(\"ADBE Effect Parade\").addProperty(\"ADBE Layer Control\");")
-        returns.append("\t" + "\t\tnewControl.name = nullSet[n];")
-        returns.append("\t" + "\t\tnewControl.property(\"ADBE Layer Control-0001\").setValue(comp.layer(nullSet[n]).index);")
-        returns.append("\t" + "\t}")
-        returns.append("\t" + "}")
-        returns.append("\t" + "path.expression =")
-        returns.append("\t" + "\t\t\t\"var nullLayerNames = [\\\"\" + nullSet.join(\"\\\",\\\"\") + \"\\\"]; \\r\" +")
-        returns.append("\t" + "\t\t\t\"var origPath = thisProperty; \\r\" +")
-        returns.append("\t" + "\t\t\t\"var origPoints = origPath.points(); \\r\" +")
-        returns.append("\t" + "\t\t\t\"var origInTang = origPath.inTangents(); \\r\" +")
-        returns.append("\t" + "\t\t\t\"var origOutTang = origPath.outTangents(); \\r\" +")
-        returns.append("\t" + "\t\t\t\"var getNullLayers = []; \\r\" +")
-        returns.append("\t" + "\t\t\t\"for (var i = 0, il = nullLayerNames.length; i < il; i++){ \\r\" +")
-        returns.append("\t" + "\t\t\t\t\"try {  \\r\" +")
-        returns.append("\t" + "\t\t\t\t\t\"getNullLayers.push(effect(nullLayerNames[i])(\\\"ADBE Layer Control-0001\\\")); \\r\" +")
-        returns.append("\t" + "\t\t\t\t\"} catch(err) { \\r\" +")
-        returns.append("\t" + "\t\t\t\t\t\"getNullLayers.push(null); \\r\" +")
-        returns.append("\t" + "\t\t\t\t\"} \\r\" +")
-        returns.append("\t" + "\t\t\t\"} \\r\" +")
-        returns.append("\t" + "\t\t\t\"for (var i = 0, il = getNullLayers.length; i < il; i++) { \\r\" +")
-        returns.append("\t" + "\t\t\t\t\"if (getNullLayers[i] != null && getNullLayers[i].index != thisLayer.index) { \\r\" +")
-        returns.append("\t" + "\t\t\t\t\t\"origPoints[i] = fromCompToSurface(getNullLayers[i].toComp(getNullLayers[i].anchorPoint));  \\r\" +")
-        returns.append("\t" + "\t\t\t\t\"} \\r\" +")
-        returns.append("\t" + "\t\t\t\"} \\r\" +")
-        returns.append("\t" + "\t\t\t\"createPath(origPoints,origInTang,origOutTang,origPath.isClosed());\";")
-        returns.append("});")
+        returns.append("var pathHierarchy = [];")
+        returns.append("var nullSet = [];")
+        returns.append("var pathPoints = " + verts + ";")
+        returns.append("for (var i = 0, ii = pathPoints.length; i < ii; i++) {")
+        returns.append("\tvar nullName = layer.name + \"_\" + nullCounter;")
+        returns.append("\tnullCounter++;")
+        returns.append("\tnullSet.push(\"thisComp.layer(\\\"\" + nullName + \"\\\")\");")
+        returns.append("")
+        returns.append("\tvar newNull = myComp.layers.addNull();")
+        returns.append("\tnewNull.threeDLayer = true;")
+        returns.append("\tnewNull.moveBefore(layer);")
+        returns.append("\tnewNull.name = nullName;")
+        returns.append("\tnewNull.label = 11;")
+        returns.append("\tnewNull.position.setValue(pathPoints[i]);")
+        returns.append("}")
+        returns.append("")
+        returns.append("group.property(\"Contents\").property(\"Path \" + counter).property(\"Path\").expression =")
+        returns.append("\t\t\t\"var nullLayers = [ \" + nullSet.join(\",\") + \" ]; \\r\" +")
+        returns.append("\t\t\t\"var origPath = thisProperty; \\r\" +")
+        returns.append("\t\t\t\"var origPoints = origPath.points(); \\r\" +")
+        returns.append("\t\t\t\"var origInTang = origPath.inTangents(); \\r\" +")
+        returns.append("\t\t\t\"var origOutTang = origPath.outTangents(); \\r\" +")
+        returns.append("\t\t\t\"\\r\" +")
+        returns.append("\t\t\t\"for (var i=0; i<origPoints.length; i++) {\\r\" +")
+        returns.append("\t\t\t\"    origPoints[i] = fromCompToSurface(nullLayers[i].toComp(nullLayers[i].anchorPoint));\\r\" +")
+        returns.append("\t\t\t\"}\\r\" +")
+        returns.append("\t\t\t\"createPath(origPoints, origInTang, origOutTang, origPath.isClosed());\";")
+        returns.append("counter++;")
 
     return returns
 
@@ -2845,108 +2826,6 @@ def aeHeader(useNulls):
     returns.append("\t" + "var myComp = myItemCollection.addComp(\"" + compName + "\",compW,compH,1,compL,compRate);")
     returns.append("\t" + "myComp.bgColor = compBG;")
     returns.append("")
-
-    if (useNulls == True):
-        returns.append("\t" + "function getActiveComp() {")
-        returns.append("\t" + "\tvar theComp = app.project.activeItem;")
-        returns.append("\t" + "\tif (theComp == undefined){")
-        returns.append("\t" + "\t\tvar errorMsg = localize(\"$$$/AE/Script/CreatePathNulls/ErrorNoComp=Error: Please select a composition.\");")
-        returns.append("\t" + "\t\talert(errorMsg);")
-        returns.append("\t" + "\t\treturn null")
-        returns.append("\t" + "\t}")
-        returns.append("\t" + "\treturn theComp")
-        returns.append("\t" + "}")
-        returns.append("")
-        returns.append("\t" + "function getSelectedLayers(targetComp) {")
-        returns.append("\t" + "\tvar targetLayers = targetComp.selectedLayers;")
-        returns.append("\t" + "\treturn targetLayers")
-        returns.append("\t" + "}")
-        returns.append("\t" + "")
-        returns.append("\t" + "function createNull(targetComp) {")
-        returns.append("\t" + "\treturn targetComp.layers.addNull();")
-        returns.append("\t" + "}")
-        returns.append("")
-        returns.append("\t" + "function getSelectedProperties(targetLayer) {")
-        returns.append("\t" + "\tvar props = targetLayer.selectedProperties;")
-        returns.append("\t" + "\tif (props.length < 1) {")
-        returns.append("\t" + "\t\treturn null")
-        returns.append("\t" + "\t}")
-        returns.append("\t" + "\treturn props")
-        returns.append("\t" + "}")
-        returns.append("")
-        returns.append("\t" + "function forEachLayer(targetLayerArray, doSomething) {")
-        returns.append("\t" + "\tfor (var i = 0, ii = targetLayerArray.length; i < ii; i++){")
-        returns.append("\t" + "\t\tdoSomething(targetLayerArray[i]);")
-        returns.append("\t" + "\t}")
-        returns.append("\t" + "}")
-        returns.append("")
-        returns.append("\t" + "function forEachProperty(targetProps, doSomething){")
-        returns.append("\t" + "\tfor (var i = 0, ii = targetProps.length; i < ii; i++){")
-        returns.append("\t" + "\t\tdoSomething(targetProps[i]);")
-        returns.append("\t" + "\t}")
-        returns.append("\t" + "}")
-        returns.append("")
-        returns.append("\t" + "function forEachEffect(targetLayer, doSomething){")
-        returns.append("\t" + "\tfor (var i = 1, ii = targetLayer.property(\"ADBE Effect Parade\").numProperties; i <= ii; i++) {")
-        returns.append("\t" + "\t\tdoSomething(targetLayer.property(\"ADBE Effect Parade\").property(i));")
-        returns.append("\t" + "\t}")
-        returns.append("\t" + "}")
-        returns.append("")
-        returns.append("\t" + "function matchMatchName(targetEffect,matchNameString){")
-        returns.append("\t" + "\tif (targetEffect != null && targetEffect.matchName === matchNameString) {")
-        returns.append("\t" + "\t\treturn targetEffect")
-        returns.append("\t" + "\t} else {")
-        returns.append("\t" + "\t\treturn null")
-        returns.append("\t" + "\t}")
-        returns.append("\t" + "}")
-        returns.append("")
-        returns.append("\t" + "function getPropPath(currentProp,pathHierarchy) {")
-        returns.append("\t" + "\tvar pathPath = \"\";")
-        returns.append("\t" + "\twhile (currentProp.parentProperty !== null) {")
-        returns.append("\t" + "\t\tif ((currentProp.parentProperty.propertyType === PropertyType.INDEXED_GROUP)) {")
-        returns.append("\t" + "\t\t\tpathHierarchy.unshift(currentProp.propertyIndex);")
-        returns.append("\t" + "\t\t\tpathPath = \"(\" + currentProp.propertyIndex + \")\" + pathPath;")
-        returns.append("\t" + "\t\t} else {")
-        returns.append("\t" + "\t\t\tpathPath = \"(\\\"\" + currentProp.matchName.toString() + \"\\\")\" + pathPath;")
-        returns.append("\t" + "\t\t}")
-        returns.append("\t" + "\t\tcurrentProp = currentProp.parentProperty;")
-        returns.append("\t" + "\t}")
-        returns.append("\t" + "\treturn pathPath;")
-        returns.append("\t" + "}")
-        returns.append("\t" + "")
-        returns.append("\t" + "function getPathPoints(path){")
-        returns.append("\t" + "\treturn path.value.vertices;")
-        returns.append("\t" + "}")
-        returns.append("")
-        returns.append("\t" + "function forEachPath(doSomething) {")
-        returns.append("\t" + "\tvar comp = getActiveComp();")
-        returns.append("\t" + "\tif (comp == null) return")
-        returns.append("\t" + "\tvar selectedLayers = getSelectedLayers(comp);")
-        returns.append("\t" + "\tif (selectedLayers == null) return")
-        returns.append("\t" + "\tvar selectedPaths = [];")
-        returns.append("\t" + "\tvar parentLayers = [];")
-        returns.append("\t" + "\tforEachLayer(selectedLayers,function(selectedLayer) {")
-        returns.append("\t" + "\t\tvar paths = getSelectedProperties(selectedLayer);")
-        returns.append("\t" + "\t\tif (paths == null) return")
-        returns.append("\t" + "\t\tforEachProperty(paths,function(path) {")
-        returns.append("\t" + "\t\t\tvar isShapePath = matchMatchName(path,\"ADBE Vector Shape\");")
-        returns.append("\t" + "\t\t\tvar isMaskPath = matchMatchName(path,\"ADBE Mask Shape\");")
-        returns.append("\t" + "\t\t\tif(isShapePath != null || isMaskPath != null ) {")
-        returns.append("\t" + "\t\t\t\tselectedPaths.push(path);")
-        returns.append("\t" + "\t\t\t\tparentLayers.push(selectedLayer);")
-        returns.append("\t" + "\t\t\t}")
-        returns.append("\t" + "\t\t});")
-        returns.append("\t" + "\t});")
-        returns.append("\t" + "\tif (selectedPaths.length == 0) {")
-        returns.append("\t" + "\t\tvar pathError = localize(\"$$$/AE/Script/CreatePathNulls/ErrorNoPathsSelected=Error: No paths selected.\");")
-        returns.append("\t" + "\t\talert(pathError);")
-        returns.append("\t" + "\t\treturn")
-        returns.append("\t" + "\t}")
-        returns.append("\t" + "\tfor (var p = 0, pl = selectedPaths.length; p < pl; p++) {")
-        returns.append("\t" + "\t\tdoSomething(comp,parentLayers[p],selectedPaths[p]);")
-        returns.append("\t" + "\t}")
-        returns.append("\t" + "}")
-        returns.append("")
 
     return returns  
 
@@ -6488,7 +6367,7 @@ class ExportAfterEffects(bpy.types.Operator, ExportHelper):
             options={'HIDDEN'},
             )
 
-    #useNulls = BoolProperty(name="Use 3D Nulls", description="Use nulls to store 3D data in AE", default=False)
+    useNulls = BoolProperty(name="Use 3D Nulls", description="Use nulls to store 3D data in AE", default=False)
 
     def execute(self, context):
         import latk_blender as la
@@ -6497,7 +6376,7 @@ class ExportAfterEffects(bpy.types.Operator, ExportHelper):
         if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
             import os
         #~
-        #keywords["useNulls"] = self.useNulls
+        keywords["useNulls"] = self.useNulls
         la.writeAeJsx(**keywords)
         return {'FINISHED'} 
 
