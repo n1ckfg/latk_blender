@@ -91,6 +91,7 @@ class ImportLatk(bpy.types.Operator, ImportHelper):
     resizeTimeline = BoolProperty(name="Resize Timeline", description="Set in and out points", default=True)
     useScaleAndOffset = BoolProperty(name="Use Scale and Offset", description="Compensate scale for Blender viewport", default=True)
     doPreclean = BoolProperty(name="Pre-Clean", description="Try to remove duplicate strokes and points", default=False)
+    clearExisting = BoolProperty(name="Clear Existing", description="Delete existing Grease Pencil strokes", default=False)
     limitPalette = IntProperty(name="Limit Palette", description="Restrict number of colors (0 = unlimited)", default=256)
 
     bl_idname = "import_scene.latk"
@@ -105,7 +106,7 @@ class ImportLatk(bpy.types.Operator, ImportHelper):
 
     def execute(self, context):
         import latk_blender as la
-        keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "resizeTimeline", "doPreclean", "limitPalette", "useScaleAndOffset")) 
+        keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "resizeTimeline", "doPreclean", "limitPalette", "useScaleAndOffset", "clearExisting")) 
         if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
             import os
         #~
@@ -113,6 +114,7 @@ class ImportLatk(bpy.types.Operator, ImportHelper):
         keywords["useScaleAndOffset"] = self.useScaleAndOffset
         keywords["doPreclean"] = self.doPreclean
         keywords["limitPalette"] = self.limitPalette
+        keywords["clearExisting"] = self.clearExisting
         la.readBrushStrokes(**keywords)
         return {'FINISHED'}
 
