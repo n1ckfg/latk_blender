@@ -910,6 +910,45 @@ def getWorldCoords(co=None, camera=None, usePixelCoords=True, useRenderScale=Tru
         print("Pixel Coords: ", pixel_2d)
         return pixel_2d
 
+def projectAllToCamera(flatten=True):
+    strokes = getAllStrokes()
+    camera = getActiveCamera()
+    scene = bpy.context.scene
+    render_size = getSceneResolution(True)
+    #~
+    allX = []
+    allY = []
+    minX = 0.0
+    minY = 0.0
+    maxX = 1.0
+    maxY = 1.0
+    for stroke in strokes:
+        for point in stroke.points:
+            allX.append(point.co[0])
+            allY.append(point.co[2])
+    allX.sort()
+    allY.sort()
+    minX = allX[0]
+    minY = allY[0]
+    maxX = allX[len(allX)-1]
+    maxY = allY[len(allY)-1]
+    if (render_size[0] > render_size[1]):
+        minX *= (render_size[0]/render_size[1])
+        maxX *= (render_size[0]/render_size[1])
+    elif (render_size[1] > render_size[0]):
+        minY *= (render_size[1]/render_size[0]) 
+        maxY *= (render_size[1]/render_size[0]) 
+    #~
+    for stroke in strokes:
+        for point in stroke.points:
+            co = bpy_extras.object_utils.world_to_camera_view(scene, camera, point.co)
+            x = remap(co[0], 0.0, 1.0, minX, maxX)
+            y = remap(co[1], 0.0, 1.0, minY, maxY)
+            if (flatten == True):
+                point.co = (x, 0.0, y)
+            else:
+                point.co = (x, point.co[1], y)
+
 def getSceneResolution(useRenderScale=True):
     # https://blender.stackexchange.com/questions/882/how-to-find-image-coordinates-of-the-rendered-vertex
     scene = bpy.context.scene
