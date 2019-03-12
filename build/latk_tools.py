@@ -328,7 +328,7 @@ def getWorldCoords(co=None, camera=None, usePixelCoords=True, useRenderScale=Tru
         print("Pixel Coords: ", pixel_2d)
         return pixel_2d
 
-def projectAllToCamera(usePixelCoords=False):
+def projectAllToCamera(usePixelCoords=False, discardDepth=False):
     strokes = getAllStrokes()
     camera = getActiveCamera()
     scene = bpy.context.scene
@@ -339,15 +339,20 @@ def projectAllToCamera(usePixelCoords=False):
             co = bpy_extras.object_utils.world_to_camera_view(scene, camera, point.co)
             x = co[0]
             y = co[1]
-            if (usePixelCoords == False):
+            z = co[2]
+            if (usePixelCoords == True):
+                x *= render_size[0] * 100.0
+                y *= render_size[1] * 100.0
+                z *= 255.0
+            else:
                 if (render_size[0] > render_size[1]):
                     x *= render_size[0] / render_size[1]
                 elif (render_size[1] > render_size[0]):
                     y *= render_size[1] / render_size[0]
+            if (discardDepth == True):
+                point.co = (x, 0, y)
             else:
-                x *= render_size[0]
-                y *= render_size[1]
-            point.co = (x, 0, y)
+                point.co = (x, z, y)
 
 def getSceneResolution(useRenderScale=True):
     # https://blender.stackexchange.com/questions/882/how-to-find-image-coordinates-of-the-rendered-vertex
