@@ -2357,12 +2357,12 @@ def writeBrushStrokes(filepath=None, bake=True, roundValues=True, numPlaces=7, z
     #~
     return {'FINISHED'}
 
-def readBrushStrokes(filepath=None, resizeTimeline=True, useScaleAndOffset=True, doPreclean=False, limitPalette=0, globalScale=Vector((10.0, 10.0, 10.0)), globalOffset=Vector((0.0, 0.0, 0.0)), clearExisting=False):
+def readBrushStrokes(filepath=None, resizeTimeline=True, useScaleAndOffset=True, doPreclean=False, limitPalette=0, globalScale=Vector((10.0, 10.0, 10.0)), globalOffset=Vector((0.0, 0.0, 0.0)), clearExisting=False, cleanFactor=0.01):
     latkObj = Latk()
     latkObj.read(filepath=filepath, useScaleAndOffset=useScaleAndOffset, globalScale=globalScale, globalOffset=globalOffset)
     #~
     if (doPreclean == True):
-        latkObj.clean()
+        latkObj.clean(epsilon=cleanFactor)
     #~
     fromLatkToGp(la=latkObj, resizeTimeline=resizeTimeline, useScaleAndOffset=useScaleAndOffset, limitPalette=limitPalette, globalScale=globalScale, globalOffset=globalOffset, clearExisting=clearExisting)
     #~
@@ -6180,6 +6180,7 @@ class ImportLatk(bpy.types.Operator, ImportHelper):
     resizeTimeline = BoolProperty(name="Resize Timeline", description="Set in and out points", default=True)
     useScaleAndOffset = BoolProperty(name="Use Scale and Offset", description="Compensate scale for Blender viewport", default=True)
     doPreclean = BoolProperty(name="Pre-Clean", description="Try to remove duplicate strokes and points", default=False)
+    cleanFactor = FloatProperty(name="Clean Factor", description="Strength of clean method", default=0.01)
     clearExisting = BoolProperty(name="Clear Existing", description="Delete existing Grease Pencil strokes", default=False)
     limitPalette = IntProperty(name="Limit Palette", description="Restrict number of colors (0 = unlimited)", default=256)
 
@@ -6195,7 +6196,7 @@ class ImportLatk(bpy.types.Operator, ImportHelper):
 
     def execute(self, context):
         import latk_blender as la
-        keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "resizeTimeline", "doPreclean", "limitPalette", "useScaleAndOffset", "clearExisting")) 
+        keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "resizeTimeline", "doPreclean", "limitPalette", "useScaleAndOffset", "clearExisting", "cleanFactor")) 
         if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
             import os
         #~
@@ -6204,6 +6205,7 @@ class ImportLatk(bpy.types.Operator, ImportHelper):
         keywords["doPreclean"] = self.doPreclean
         keywords["limitPalette"] = self.limitPalette
         keywords["clearExisting"] = self.clearExisting
+        keywords["cleanFactor"] = self.cleanFactor
         la.readBrushStrokes(**keywords)
         return {'FINISHED'}
 
@@ -6863,6 +6865,14 @@ class LatkProperties(bpy.types.PropertyGroup):
         soft_min=2
     )
 
+    cleanFactor = FloatProperty(
+        name="Clean Factor",
+        description="Strength of clean method",
+        default=0.1,
+        soft_min=0.001,
+        soft_max=0.999
+    )
+
     writeStrokeSteps = IntProperty(
         name="Steps",
         description="Write-on steps",
@@ -6996,29 +7006,30 @@ class LatkProperties_Panel(bpy.types.Panel):
         row.operator("latk_button.makeroot") 
 
         row = layout.row()
-        row.prop(latk, "strokeLength")
-        row.prop(latk, "strokeGaps")
-        row.prop(latk, "shuffleOdds")
-        row.prop(latk, "spreadPoints")
-        row.operator("latk_button.strokesfrommesh")
-
-        # ~ ~ ~ 
-
-        row = layout.row()
         row.prop(latk, "minRemapPressure")
         row.prop(latk, "maxRemapPressure")
         row.prop(latk, "remapPressureMode")
         row.operator("latk_button.remappressure")
 
         row = layout.row()
+        row.prop(latk, "numSplitFrames")
+        row.operator("latk_button.splf")
+        row.prop(latk, "cleanFactor")
+        row.operator("latk_button.bigclean")
+
+        # ~ ~ ~ 
+
+        row = layout.row()
+        row.prop(latk, "strokeLength")
+        row.prop(latk, "strokeGaps")
+        row.prop(latk, "shuffleOdds")
+        row.prop(latk, "spreadPoints")
+        row.operator("latk_button.strokesfrommesh")
+
+        row = layout.row()
         row.prop(latk, "writeStrokeSteps")
         row.prop(latk, "writeStrokePoints")
         row.operator("latk_button.writeonstrokes")
-
-        row = layout.row()
-        row.prop(latk, "numSplitFrames")
-        row.operator("latk_button.splf")
-        row.operator("latk_button.bigclean")
 
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
@@ -7319,7 +7330,7 @@ class Latk_Button_BigClean(bpy.types.Operator):
         latk_settings = bpy.context.scene.latk_settings
         origStrokeCount = len(getAllStrokes())
         la = fromGpToLatk()
-        la.clean(epsilon=0.1)
+        la.clean(epsilon=latk_settings.cleanFactor)
         fromLatkToGp(la, clearExisting=True)
         strokeCount = len(getAllStrokes())
         self.report({'INFO'}, "Before: " + str(origStrokeCount) + " strokes, after: " + str(strokeCount) + " strokes.")

@@ -10,12 +10,12 @@ def writeBrushStrokes(filepath=None, bake=True, roundValues=True, numPlaces=7, z
     #~
     return {'FINISHED'}
 
-def readBrushStrokes(filepath=None, resizeTimeline=True, useScaleAndOffset=True, doPreclean=False, limitPalette=0, globalScale=Vector((10.0, 10.0, 10.0)), globalOffset=Vector((0.0, 0.0, 0.0)), clearExisting=False):
+def readBrushStrokes(filepath=None, resizeTimeline=True, useScaleAndOffset=True, doPreclean=False, limitPalette=0, globalScale=Vector((10.0, 10.0, 10.0)), globalOffset=Vector((0.0, 0.0, 0.0)), clearExisting=False, cleanFactor=0.01):
     latkObj = Latk()
     latkObj.read(filepath=filepath, useScaleAndOffset=useScaleAndOffset, globalScale=globalScale, globalOffset=globalOffset)
     #~
     if (doPreclean == True):
-        latkObj.clean()
+        latkObj.clean(epsilon=cleanFactor)
     #~
     fromLatkToGp(la=latkObj, resizeTimeline=resizeTimeline, useScaleAndOffset=useScaleAndOffset, limitPalette=limitPalette, globalScale=globalScale, globalOffset=globalOffset, clearExisting=clearExisting)
     #~
