@@ -245,7 +245,7 @@ class Latk(object):
                     coords = getStrokeCoords(stroke)
                     stroke.setCoords(rdp(coords, epsilon=epsilon))
 
-    def cleanAlt(self, cleanMinPoints = 2, cleanMinLength = 0.1):
+    def filter(self, cleanMinPoints = 2, cleanMinLength = 0.1):
         if (cleanMinPoints < 2):
             cleanMinPoints = 2 
         for layer in self.layers:
@@ -289,12 +289,11 @@ class Latk(object):
         #~
         weight = 18
         scale = 1.0 / (weight + 2)
-        nPointsMinusTwo = len(points) - 2
         lower = 0
         upper = 0
         center = 0
         #~
-        for i in range(1, nPointsMinusTwo):
+        for i in range(1, len(points) - 2):
             lower = points[i-1].co
             center = points[i].co
             upper = points[i+1].co
@@ -302,13 +301,10 @@ class Latk(object):
             x = (lower[0] + weight * center[0] + upper[0]) * scale
             y = (lower[1] + weight * center[1] + upper[1]) * scale
             z = (lower[2] + weight * center[2] + upper[2]) * scale
-            center = (x, y, z)
+            stroke.points[i].co = (x, y, z) #center = (x, y, z)
         
     def splitStroke(self, stroke): 
         points = stroke.points
-        co = []
-        pressure = []
-        strength = []
         #~
         for i in range(1, len(points), 2):
             center = (points[i].co[0], points[i].co[1], points[i].co[2])
@@ -318,25 +314,21 @@ class Latk(object):
             z = (center[2] + lower[2]) / 2
             p = (x, y, z)
             #~
-            co.append(lower)
-            co.append(p)
-            co.append(center)
+            pressure = (points[i-1].pressure + points[i].pressure) / 2
+            strength = (points[i-1].strength + points[i].strength) / 2
             #~
-            pressure.append(points[i-1].pressure)
-            pressure.append((points[i-1].pressure + points[i].pressure) / 2)
-            pressure.append(points[i].pressure)
-            #~
-            strength.append(points[i-1].strength)
-            strength.append((points[i-1].strength + points[i].strength) / 2)
-            strength.append(points[i].strength)
-        #~
-        for i in range(len(co), len(points)):
-            pt = LatkPoint(co[i], pressure[i], strength[i])
+            pt = LatkPoint(p, pressure, strength)
             stroke.points.insert(i, pt)
 
-    def refine(self, splitReps=2, smoothReps=10, doClean=True):
+    def reduceStroke(self, stroke):
+        for i in range(0, len(stroke.points), 2):
+            stroke.points.remove(stroke.points[i])
+
+    def refine(self, splitReps=2, smoothReps=10, reduceReps=0, doClean=True):
         if (doClean==True):
             self.clean()
+        if (smoothReps < splitReps):
+            smoothReps = splitReps
         for layer in self.layers:
             for frame in layer.frames: 
                 for stroke in frame.strokes:   
@@ -347,7 +339,10 @@ class Latk(object):
                         self.smoothStroke(stroke)  
                     #~
                     for i in range(0, smoothReps - splitReps):
-                        self.smoothStroke(stroke)    
+                        self.smoothStroke(stroke)
+                    #~
+                    for i in range(0, reduceReps):
+                        self.reduceStroke(stroke)    
 
     def setStroke(self, stroke):
         lastLayer = self.layers[len(self.layers)-1]
