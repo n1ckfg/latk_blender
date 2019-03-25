@@ -1230,8 +1230,8 @@ class Latk_Button_BigClean(bpy.types.Operator):
         latk_settings = bpy.context.scene.latk_settings
         origStrokeCount = len(getAllStrokes())
         la = fromGpToLatk()
-        la.clean()
-        fromLatkToGp(la)
+        la.clean(epsilon=0.1)
+        fromLatkToGp(la, clearExisting=True)
         strokeCount = len(getAllStrokes())
         self.report({'INFO'}, "Before: " + str(origStrokeCount) + " strokes, after: " + str(strokeCount) + " strokes.")
         return {'FINISHED'}

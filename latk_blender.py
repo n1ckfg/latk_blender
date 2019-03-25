@@ -243,19 +243,7 @@ class Latk(object):
             for frame in layer.frames:
                 for stroke in frame.strokes:
                     coords = getStrokeCoords(stroke)
-                    coords = rdp(coords, epsilon=epsilon)
-                    if (len(coords) < len(stroke.points)):
-	                    while (len(stroke.points) > len(coords)):
-	                        stroke.points.remove(stroke.points[len(stroke.points)-1])
-	                    for i, coord in enumerate(coords):
-	                    	# TODO preserve pressure and strength from original stroke
-	                        pressure = 1.0
-	                        strength = 1.0
-	                        if (len(coord) > 3):
-	                            pressure = coord[3]
-	                        if (len(coord) > 4):
-	                            strength = coord[4]
-	                        createPoint(stroke, i, (coord[0], coord[1], coord[2]), pressure, strength)
+                    stroke.setCoords(rdp(coords, epsilon=epsilon))
 
     def cleanAlt(self, cleanMinPoints = 2, cleanMinLength = 0.1):
         if (cleanMinPoints < 2):
@@ -7331,8 +7319,8 @@ class Latk_Button_BigClean(bpy.types.Operator):
         latk_settings = bpy.context.scene.latk_settings
         origStrokeCount = len(getAllStrokes())
         la = fromGpToLatk()
-        la.clean()
-        fromLatkToGp(la)
+        la.clean(epsilon=0.1)
+        fromLatkToGp(la, clearExisting=True)
         strokeCount = len(getAllStrokes())
         self.report({'INFO'}, "Before: " + str(origStrokeCount) + " strokes, after: " + str(strokeCount) + " strokes.")
         return {'FINISHED'}
