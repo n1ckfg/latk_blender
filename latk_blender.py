@@ -243,9 +243,17 @@ class Latk(object):
             for frame in layer.frames:
                 for stroke in frame.strokes:
                     coords = []
+                    pressures = []
+                    strengths = []
                     for point in stroke.points:
                         coords.append(point.co)
+                        pressures.append(point.pressure)
+                        strengths.append(point.strength)
                     stroke.setCoords(rdp(coords, epsilon=epsilon))
+                    for i in range(0, len(stroke.points)):
+                        index = remapInt(i, 0, len(stroke.points), 0, len(pressures))
+                        stroke.points[i].pressure = pressures[index]
+                        stroke.points[i].strength = strengths[index]
 
     def filter(self, cleanMinPoints = 2, cleanMinLength = 0.1):
         if (cleanMinPoints < 2):
@@ -383,6 +391,15 @@ class Latk(object):
     def roundValInt(self, a):
         formatter = "{0:." + str(0) + "f}"
         return int(formatter.format(a))
+
+    def remap(self, value, min1, max1, min2, max2):
+        range1 = max1 - min1
+        range2 = max2 - min2
+        valueScaled = float(value - min1) / float(range1)
+        return min2 + (valueScaled * range2)
+
+    def remapInt(self, value, min1, max1, min2, max2):
+        return int(self.remap(value, min1, max1, min2, max2))
 
     def writeTextFile(self, name="test.txt", lines=None):
         file = open(name,"w") 
@@ -6908,7 +6925,7 @@ class LatkProperties(bpy.types.PropertyGroup):
     )
 
     mesh_fill_mode = EnumProperty( 
-        name="Fill",
+        name="Fill As",
         items=(
             ("HULL", "Hull", "Hull", 0),
             ("PLANE", "Plane", "Plane", 1)
@@ -7003,18 +7020,21 @@ class LatkProperties_Panel(bpy.types.Panel):
         row.operator("latk_button.makeroot") 
 
         row = layout.row()
-        row.prop(latk, "minRemapPressure")
-        row.prop(latk, "maxRemapPressure")
-        row.prop(latk, "remapPressureMode")
-        row.operator("latk_button.remappressure")
+        row.operator("latk_button.refine")
+        row.prop(latk, "cleanFactor")
+        row.operator("latk_button.bigclean")
 
         row = layout.row()
         row.prop(latk, "numSplitFrames")
         row.operator("latk_button.splf")
-        row.prop(latk, "cleanFactor")
-        row.operator("latk_button.bigclean")
-
+        
         # ~ ~ ~ 
+
+        row = layout.row()
+        row.prop(latk, "minRemapPressure")
+        row.prop(latk, "maxRemapPressure")
+        row.prop(latk, "remapPressureMode")
+        row.operator("latk_button.remappressure")
 
         row = layout.row()
         row.prop(latk, "strokeLength")
@@ -7152,6 +7172,18 @@ class Latk_Button_HideTrue(bpy.types.Operator):
         target = s()
         for obj in target:
             hideFrame(obj, currentFrame(), True)
+        return {'FINISHED'}
+
+class Latk_Button_Refine(bpy.types.Operator):
+    """Refine all strokes"""
+    bl_idname = "latk_button.refine"
+    bl_label = "Refine GP"
+    bl_options = {'UNDO'}
+    
+    def execute(self, context):
+        la = fromGpToLatk()
+        la.refine()
+        fromLatkToGp(la, clearExisting=True)
         return {'FINISHED'}
 
 '''

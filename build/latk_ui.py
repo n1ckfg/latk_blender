@@ -822,7 +822,7 @@ class LatkProperties(bpy.types.PropertyGroup):
     )
 
     mesh_fill_mode = EnumProperty( 
-        name="Fill",
+        name="Fill As",
         items=(
             ("HULL", "Hull", "Hull", 0),
             ("PLANE", "Plane", "Plane", 1)
@@ -917,18 +917,21 @@ class LatkProperties_Panel(bpy.types.Panel):
         row.operator("latk_button.makeroot") 
 
         row = layout.row()
-        row.prop(latk, "minRemapPressure")
-        row.prop(latk, "maxRemapPressure")
-        row.prop(latk, "remapPressureMode")
-        row.operator("latk_button.remappressure")
+        row.operator("latk_button.refine")
+        row.prop(latk, "cleanFactor")
+        row.operator("latk_button.bigclean")
 
         row = layout.row()
         row.prop(latk, "numSplitFrames")
         row.operator("latk_button.splf")
-        row.prop(latk, "cleanFactor")
-        row.operator("latk_button.bigclean")
-
+        
         # ~ ~ ~ 
+
+        row = layout.row()
+        row.prop(latk, "minRemapPressure")
+        row.prop(latk, "maxRemapPressure")
+        row.prop(latk, "remapPressureMode")
+        row.operator("latk_button.remappressure")
 
         row = layout.row()
         row.prop(latk, "strokeLength")
@@ -1066,6 +1069,18 @@ class Latk_Button_HideTrue(bpy.types.Operator):
         target = s()
         for obj in target:
             hideFrame(obj, currentFrame(), True)
+        return {'FINISHED'}
+
+class Latk_Button_Refine(bpy.types.Operator):
+    """Refine all strokes"""
+    bl_idname = "latk_button.refine"
+    bl_label = "Refine GP"
+    bl_options = {'UNDO'}
+    
+    def execute(self, context):
+        la = fromGpToLatk()
+        la.refine()
+        fromLatkToGp(la, clearExisting=True)
         return {'FINISHED'}
 
 '''
