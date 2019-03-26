@@ -242,7 +242,9 @@ class Latk(object):
         for layer in self.layers:
             for frame in layer.frames:
                 for stroke in frame.strokes:
-                    coords = getStrokeCoords(stroke)
+                    coords = []
+                    for point in stroke.points:
+                        coords.append(point.co)
                     stroke.setCoords(rdp(coords, epsilon=epsilon))
 
     def filter(self, cleanMinPoints = 2, cleanMinLength = 0.1):
