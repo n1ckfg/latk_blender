@@ -917,7 +917,7 @@ class LatkProperties_Panel(bpy.types.Panel):
         row.operator("latk_button.makeroot") 
 
         row = layout.row()
-        row.operator("latk_button.refine")
+        #row.operator("latk_button.refine")
         row.prop(latk, "cleanFactor")
         row.operator("latk_button.bigclean")
 
