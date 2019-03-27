@@ -940,11 +940,13 @@ class LatkProperties_Panel(bpy.types.Panel):
         row.prop(latk, "spreadPoints")
         row.operator("latk_button.strokesfrommesh")
 
+        '''
         row = layout.row()
         row.prop(latk, "writeStrokeSteps")
         row.prop(latk, "writeStrokePoints")
         row.operator("latk_button.writeonstrokes")
-
+		'''
+		
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 
