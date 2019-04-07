@@ -251,7 +251,7 @@ class Latk(object):
                         strengths.append(point.strength)
                     stroke.setCoords(rdp(coords, epsilon=epsilon))
                     for i in range(0, len(stroke.points)):
-                        index = remapInt(i, 0, len(stroke.points), 0, len(pressures))
+                        index = self.remapInt(i, 0, len(stroke.points), 0, len(pressures))
                         stroke.points[i].pressure = pressures[index]
                         stroke.points[i].strength = strengths[index]
 
