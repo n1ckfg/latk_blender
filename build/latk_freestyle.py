@@ -1,4 +1,4 @@
-# 7 of 10. FREESTYLE
+# 8 of 12. FREESTYLE
 
 # based on freestyle_to_gpencil by Folkert de Vries
 # https://github.com/folkertdev/freestyle-gpencil-exporter

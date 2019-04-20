@@ -1,4 +1,4 @@
-# 4 of 10. MATERIALS / RENDERING
+# 5 of 12. MATERIALS / RENDERING
 
 def cleanUvs(target=None, limit=1):
     if not target:

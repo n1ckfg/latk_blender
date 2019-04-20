@@ -27,7 +27,7 @@ along with the Lightning Artist Toolkit (Blender).  If not, see
 <http://www.gnu.org/licenses/>.
 '''
 
-# 1 of 10. MAIN
+# 2 of 12. MAIN
 
 bl_info = {
     "name": "Lightning Artist Toolkit (Latk)", 

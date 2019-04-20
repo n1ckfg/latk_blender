@@ -1,4 +1,4 @@
-# 10 of 10. UI
+# 10 of 12. UI
 
 class LightningArtistToolkitPreferences(bpy.types.AddonPreferences):
     bl_idname = __name__
@@ -28,14 +28,14 @@ class LightningArtistToolkitPreferences(bpy.types.AddonPreferences):
     )
 
     extraFormats_SVG = bpy.props.BoolProperty(
-        name = 'SVG SMIL',
-        description = "SVG SMIL export (experimental)",
-        default = False
+        name = 'SVG',
+        description = "SVG import/export",
+        default = True
     )
 
     extraFormats_Norman = bpy.props.BoolProperty(
         name = 'NormanVR',
-        description = "NormanVR import (experimental)",
+        description = "NormanVR import",
         default = False
     )
 
@@ -60,7 +60,7 @@ class LightningArtistToolkitPreferences(bpy.types.AddonPreferences):
     extraFormats_AfterEffects = bpy.props.BoolProperty(
         name = 'After Effects JSX',
         description = "After Effects JSX export",
-        default = True
+        default = False
     )
 
     def draw(self, context):
@@ -71,6 +71,7 @@ class LightningArtistToolkitPreferences(bpy.types.AddonPreferences):
         layout.prop(self, "extraFormats_ASC")
         layout.prop(self, "extraFormats_GML")
         layout.prop(self, "extraFormats_Painter")
+        layout.prop(self, "extraFormats_SVG")
         layout.prop(self, "extraFormats_Norman")
         layout.prop(self, "extraFormats_VRDoodler")
         #~
@@ -260,6 +261,26 @@ class ImportVRDoodler(bpy.types.Operator, ImportHelper):
         la.importVRDoodler(**keywords)
         return {'FINISHED'} 
 
+class ImportSvg(bpy.types.Operator, ImportHelper):
+    """Load an SVG image to Grease Pencil"""
+    bl_idname = "import_scene.svg"
+    bl_label = "Import SVG"
+    bl_options = {'PRESET', 'UNDO'}
+
+    filename_ext = ".svg"
+    filter_glob = StringProperty(
+            default="*.svg",
+            options={'HIDDEN'},
+            )
+
+    def execute(self, context):
+        import latk_blender as la
+        keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode"))
+        if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
+            import os
+        #~
+        la.load_svg(**keywords)
+        return {'FINISHED'} 
 
 class ImportASC(bpy.types.Operator, ImportHelper):
     """Load an ASC point cloud"""
@@ -1294,6 +1315,8 @@ def menu_func_import(self, context):
         self.layout.operator(ImportGml.bl_idname, text="Latk - GML (.gml)")
     if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_Painter == True):
         self.layout.operator(ImportPainter.bl_idname, text="Latk - Corel Painter (.txt)")
+    if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_SVG == True):
+        self.layout.operator(ImportSvg.bl_idname, text="Latk - SVG (.svg)")
     if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_Norman == True):
         self.layout.operator(ImportNorman.bl_idname, text="Latk - NormanVR (.json)")
     if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_VRDoodler == True):

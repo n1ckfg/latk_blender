@@ -1,4 +1,4 @@
-# 8 of 10. SHORTCUTS
+# 9 of 12. SHORTCUTS
 
 def up():
     makeParent(unParent=True)

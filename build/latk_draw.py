@@ -1,4 +1,4 @@
-# 6 of 10. DRAWING
+# 7 of 12. DRAWING
 
 # note that unlike createStroke, this creates a stroke from raw coordinates
 def drawCoords(coords=None, color=None, frame=None, layer=None):
