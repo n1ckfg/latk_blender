@@ -28,6 +28,7 @@ import bpy
 from mathutils import Vector, Matrix
 
 #### Common utilities ####
+svgColorList = []
 
 # TODO: "em" and "ex" aren't actually supported
 SVGUnits = {"": 1.0,
@@ -307,6 +308,8 @@ def SVGGetMaterial(color, context):
     mat.diffuse_intensity = 1.0
 
     materials[color] = mat
+
+    svgColorList.append(diffuse_color)
 
     return mat
 
@@ -1889,6 +1892,7 @@ def load_svg(filepath, do_colormanage=False):
     if bpy.ops.object.mode_set.poll():
         bpy.ops.object.mode_set(mode='OBJECT')
 
+    svgColorList = []
     loader = SVGLoader(filepath, do_colormanage)
     loader.parse()
     loader.createGeom(False)
@@ -1904,13 +1908,14 @@ def load_svg(filepath, do_colormanage=False):
     #~
     latkObj = Latk(init=True)
     #~
-    for obj in target:
+    for i, obj in enumerate(target):
         coords = []
         if (len(obj.data.vertices) > 1):
             for v in obj.data.vertices:
                 coords.append((v.co[0]*10, v.co[2]*10, v.co[1]*10))
             if (len(coords) > 1):
-                latkObj.setCoords(coords)
+                color = (0,0,0)
+                latkObj.setCoords(coords=coords, color=color)
         delete(obj)
     #~
     fromLatkToGp(latkObj)
