@@ -2361,8 +2361,6 @@ def multVec3(p1, p2):
 
 # 4 of 12. READ / WRITE
 
-# * * *   * * *   * * *   * * *   * * *   * * *
-
 def writeBrushStrokes(filepath=None, bake=True, roundValues=True, numPlaces=7, zipped=False, useScaleAndOffset=True, globalScale=Vector((0.1, 0.1, 0.1)), globalOffset=Vector((0.0, 0.0, 0.0))):
     if(bake == True):
         bakeFrames()
@@ -2499,8 +2497,6 @@ def fromLatkToGp(la=None, resizeTimeline=True, useScaleAndOffset=False, limitPal
     if (resizeTimeline == True):
         setStartEnd(0, longestFrameNum, pad=False)  
     print("...end building Grease Pencil from Latk object.")           
-
-# * * *   * * *   * * *   * * *   * * *   * * *
 
 def readBrushStrokesAlt(filepath=None, resizeTimeline=True, useScaleAndOffset=False, doPreclean=False, limitPalette=0, globalScale=Vector((10, 10, 10)), globalOffset=Vector((0, 0, 0))):
     url = filepath # compatibility with gui keywords
@@ -7475,7 +7471,7 @@ if __name__ == "__main__":
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
 
-# 11 of 12. TILT BRUSH binary reader -- use of Blender Python API stops here.
+# 11 of 12. TILT BRUSH binary reader
 
 # Copyright 2016 Google Inc. All Rights Reserved.
 # 
@@ -9930,8 +9926,29 @@ def load_svg(filepath, do_colormanage=False):
 
     loader = SVGLoader(filepath, do_colormanage)
     loader.parse()
-    loader.createGeom(True)
+    loader.createGeom(False)
 
+    gp = getActiveGp()
+    layer = gp.layers.new(os.path.basename(filepath))
+    gp.layers.active = layer
+    frame = layer.frames.new(currentFrame())
+    
+    target = matchName("Curve")
+    decimateAndBake(target)
+    target = matchName("Curve")
+    #~
+    latkObj = Latk(init=True)
+    #~
+    for obj in target:
+        coords = []
+        if (len(obj.data.vertices) > 1):
+            for v in obj.data.vertices:
+                coords.append((v.co[0]*10, v.co[2]*10, v.co[1]*10))
+            if (len(coords) > 1):
+                latkObj.setCoords(coords)
+        delete(obj)
+    #~
+    fromLatkToGp(latkObj)
 
 def load(operator, context, filepath=""):
 

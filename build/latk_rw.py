@@ -1,7 +1,5 @@
 # 4 of 12. READ / WRITE
 
-# * * *   * * *   * * *   * * *   * * *   * * *
-
 def writeBrushStrokes(filepath=None, bake=True, roundValues=True, numPlaces=7, zipped=False, useScaleAndOffset=True, globalScale=Vector((0.1, 0.1, 0.1)), globalOffset=Vector((0.0, 0.0, 0.0))):
     if(bake == True):
         bakeFrames()
@@ -138,8 +136,6 @@ def fromLatkToGp(la=None, resizeTimeline=True, useScaleAndOffset=False, limitPal
     if (resizeTimeline == True):
         setStartEnd(0, longestFrameNum, pad=False)  
     print("...end building Grease Pencil from Latk object.")           
-
-# * * *   * * *   * * *   * * *   * * *   * * *
 
 def readBrushStrokesAlt(filepath=None, resizeTimeline=True, useScaleAndOffset=False, doPreclean=False, limitPalette=0, globalScale=Vector((10, 10, 10)), globalOffset=Vector((0, 0, 0))):
     url = filepath # compatibility with gui keywords

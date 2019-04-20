@@ -1893,6 +1893,27 @@ def load_svg(filepath, do_colormanage=False):
     loader.parse()
     loader.createGeom(False)
 
+    gp = getActiveGp()
+    layer = gp.layers.new(os.path.basename(filepath))
+    gp.layers.active = layer
+    frame = layer.frames.new(currentFrame())
+    
+    target = matchName("Curve")
+    decimateAndBake(target)
+    target = matchName("Curve")
+    #~
+    latkObj = Latk(init=True)
+    #~
+    for obj in target:
+        coords = []
+        if (len(obj.data.vertices) > 1):
+            for v in obj.data.vertices:
+                coords.append((v.co[0]*10, v.co[2]*10, v.co[1]*10))
+            if (len(coords) > 1):
+                latkObj.setCoords(coords)
+        delete(obj)
+    #~
+    fromLatkToGp(latkObj)
 
 def load(operator, context, filepath=""):
 
