@@ -10094,17 +10094,13 @@ def load_svg(filepath, do_colormanage=False):
     loader = SVGLoader(filepath, do_colormanage)
     loader.parse()
     loader.createGeom(False)
-
-    gp = getActiveGp()
-    layer = gp.layers.new(os.path.basename(filepath))
-    gp.layers.active = layer
-    frame = layer.frames.new(currentFrame())
     
     target = matchName("Curve")
     decimateAndBake(target)
     target = matchName("Curve")
     #~
     latkObj = Latk(init=True)
+    latkObj.layers[0].name = os.path.basename(filepath).replace(".svg","")
     #~
     for i, obj in enumerate(target):
         coords = []
