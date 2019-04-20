@@ -9920,7 +9920,7 @@ def parseAbstractNode(node, context):
 
     return None
 
-def load_svg(filepath, do_colormanage=True):
+def load_svg(filepath, do_colormanage=False):
     """
     Load specified SVG file
     """
@@ -9930,7 +9930,7 @@ def load_svg(filepath, do_colormanage=True):
 
     loader = SVGLoader(filepath, do_colormanage)
     loader.parse()
-    loader.createGeom(False)
+    loader.createGeom(True)
 
 
 def load(operator, context, filepath=""):

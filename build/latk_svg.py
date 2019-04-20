@@ -1881,7 +1881,7 @@ def parseAbstractNode(node, context):
 
     return None
 
-def load_svg(filepath, do_colormanage=True):
+def load_svg(filepath, do_colormanage=False):
     """
     Load specified SVG file
     """
