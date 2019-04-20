@@ -10095,7 +10095,7 @@ def load_svg(filepath, do_colormanage=False):
     svgStrokeList = []
     for obj in loader._context["defines"]:
         objL = obj.lower()
-        if (objL.startswith("#stroke") or objL.startswith("#path") or objL.startswith("#use")):
+        if (objL.startswith("#stroke") or objL.startswith("#path")):
             svgStrokeList.append(obj)
 
     svgColorList = []
