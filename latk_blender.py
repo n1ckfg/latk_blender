@@ -8228,8 +8228,6 @@ SVGColors = {'aliceblue': (240, 248, 255),
              'yellowgreen': (154, 205, 50)}
              
 #### Common utilities ####
-svgColorList = []
-
 # TODO: "em" and "ex" aren't actually supported
 SVGUnits = {"": 1.0,
             "px": 1.0,
@@ -10090,11 +10088,25 @@ def load_svg(filepath, do_colormanage=False):
     if bpy.ops.object.mode_set.poll():
         bpy.ops.object.mode_set(mode='OBJECT')
 
-    svgColorList = []
     loader = SVGLoader(filepath, do_colormanage)
     loader.parse()
     loader.createGeom(False)
-    
+
+    svgStrokeList = []
+    for obj in loader._context["defines"]:
+        objL = obj.lower()
+        if (objL.startswith("#stroke") or objL.startswith("#path") or objL.startswith("#use")):
+            svgStrokeList.append(obj)
+
+    svgColorList = []
+    svgLastColor = (0,0,0)
+    for obj in svgStrokeList:
+        mat = loader._context["defines"][obj]._styles["fill"]
+        if (mat != None):
+            col = mat.diffuse_color
+            svgLastColor = (col[0], col[1], col[2])
+        svgColorList.append(svgLastColor)
+
     target = matchName("Curve")
     decimateAndBake(target)
     target = matchName("Curve")
@@ -10108,13 +10120,10 @@ def load_svg(filepath, do_colormanage=False):
             for v in obj.data.vertices:
                 coords.append((v.co[0]*10, v.co[2]*10, v.co[1]*10))
             if (len(coords) > 1):
-                color = (0,0,0)
-                if (i < len(svgColorList)):
-                    try:
-                        color = svgColorList[i]
-                    except:
-                        pass
-                latkObj.setCoords(coords=coords, color=color)
+                col = (0,0,0)
+                if (len(svgColorList) == len(target)):
+                    col = svgColorList[i]
+                latkObj.setCoords(coords=coords, color=col)
         delete(obj)
     #~
     latkObj.clean(epsilon=0.001)
