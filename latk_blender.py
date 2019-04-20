@@ -1736,6 +1736,18 @@ def rgbIntToTuple(rgbint, normalized=False):
 def normRgbToHex(color):
     return rgbToHex(color, normalized=True)
 
+def hexToRgb(color, normalized=False):
+    hex = color.lstrip('#')
+    hlen = len(hex)
+    rgb = tuple(int(hex[i:i+hlen // 3], 16) for i in range(0, hlen, hlen // 3))
+    if (normalized==True):
+        return (rgb[0]/255.0, rgb[1]/255.0, rgb[2]/255.0)
+    else:
+        return rgb
+
+def normHexToRgb(color):
+    return hexToRgb(color, normalized=True)
+
 def moveShot(start, end, x, y, z):
     gp = bpy.context.scene.grease_pencil
     target = (start, end)
@@ -8497,8 +8509,6 @@ def SVGGetMaterial(color, context):
 
     materials[color] = mat
 
-    svgColorList.append(diffuse_color)
-
     return mat
 
 
@@ -10111,6 +10121,7 @@ def load_svg(filepath, do_colormanage=False):
                 latkObj.setCoords(coords=coords, color=color)
         delete(obj)
     #~
+    latkObj.clean(epsilon=0.001)
     fromLatkToGp(latkObj)
 
 def load(operator, context, filepath=""):

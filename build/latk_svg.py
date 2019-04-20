@@ -462,8 +462,6 @@ def SVGGetMaterial(color, context):
 
     materials[color] = mat
 
-    svgColorList.append(diffuse_color)
-
     return mat
 
 
@@ -2076,6 +2074,7 @@ def load_svg(filepath, do_colormanage=False):
                 latkObj.setCoords(coords=coords, color=color)
         delete(obj)
     #~
+    latkObj.clean(epsilon=0.001)
     fromLatkToGp(latkObj)
 
 def load(operator, context, filepath=""):
