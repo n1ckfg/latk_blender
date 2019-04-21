@@ -2054,10 +2054,12 @@ def load_svg(filepath, do_colormanage=False):
     svgColorList = []
     svgLastColor = (0,0,0)
     for obj in svgStrokeList:
-        mat = loader._context["defines"][obj]._styles["fill"]
-        if (mat != None):
+        try:
+            mat = loader._context["defines"][obj]._styles["fill"]
             col = mat.diffuse_color
             svgLastColor = (col[0], col[1], col[2])
+        except:
+            pass
         svgColorList.append(svgLastColor)
 
     target = matchName("Curve")
@@ -2069,14 +2071,12 @@ def load_svg(filepath, do_colormanage=False):
     #~
     for i, obj in enumerate(target):
         coords = []
-        if (len(obj.data.vertices) > 1):
-            for v in obj.data.vertices:
-                coords.append((v.co[0]*10, v.co[2]*10, v.co[1]*10))
-            if (len(coords) > 1):
-                col = (0,0,0)
-                if (len(svgColorList) == len(target)):
-                    col = svgColorList[i]
-                latkObj.setCoords(coords=coords, color=col)
+        for v in obj.data.vertices:
+            coords.append((v.co[0]*10, v.co[2]*10, v.co[1]*10))
+        col = (0,0,0)
+        if (i < len(svgColorList)):
+            col = svgColorList[i]
+        latkObj.setCoords(coords=coords, color=col)
         delete(obj)
     #~
     latkObj.clean(epsilon=0.001)
