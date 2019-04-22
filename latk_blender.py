@@ -8611,7 +8611,7 @@ def SVGParseStyles(node, context):
     """
 
     styles = SVGEmptyStyles.copy()
-
+    '''
     style = node.getAttribute('style')
     if style:
         elems = style.split(';')
@@ -8654,6 +8654,16 @@ def SVGParseStyles(node, context):
     if styles['useFill'] is None:
         styles['useFill'] = True
         styles['fill'] = SVGGetMaterial('#000', context)
+    '''
+
+    styles['useFill'] = False
+
+    stroke = node.getAttribute('stroke')
+    if stroke:
+        stroke = stroke.lower()
+        styles['fill'] = SVGGetMaterial(stroke, context)
+    else:
+        styles['fill'] = "none"
 
     return styles
 
@@ -10099,15 +10109,15 @@ def load_svg(filepath, do_colormanage=False):
             svgStrokeList.append(obj)
 
     svgColorList = []
-    svgLastColor = (0,0,0)
     for obj in svgStrokeList:
+        col = (0,0,0)
         try:
             mat = loader._context["defines"][obj]._styles["fill"]
-            col = mat.diffuse_color
-            svgLastColor = (col[0], col[1], col[2])
+            diffuse_color = mat.diffuse_color
+            col = (diffuse_color[0], diffuse_color[1], diffuse_color[2])
         except:
             pass
-        svgColorList.append(svgLastColor)
+        svgColorList.append(col)
 
     target = matchName("Curve")
     decimateAndBake(target)
@@ -10121,8 +10131,10 @@ def load_svg(filepath, do_colormanage=False):
         for v in obj.data.vertices:
             coords.append((v.co[0]*10, v.co[2]*10, v.co[1]*10))
         col = (0,0,0)
-        if (i < len(svgColorList)):
+        try:
             col = svgColorList[i]
+        except:
+            pass
         latkObj.setCoords(coords=coords, color=col)
         delete(obj)
     #~
