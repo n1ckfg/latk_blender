@@ -9402,6 +9402,7 @@ class SVGGeometryContainer(SVGGeometry):
 
         return self._geometries
 
+svgStyleList = []
 
 class SVGGeometryPATH(SVGGeometry):
     """
@@ -9429,6 +9430,7 @@ class SVGGeometryPATH(SVGGeometry):
         d = self._node.getAttribute('d')
 
         self._styles = SVGParseStyles(self._node, self._context)
+        svgStyleList.append(self._styles)
 
         pathParser = SVGPathParser(d, self._styles['useFill'])
         pathParser.parse()
@@ -10139,7 +10141,7 @@ def load_svg(filepath, do_colormanage=False, do_clean=False):
             coords.append((v.co[0]*10, v.co[2]*10, v.co[1]*10))
         col = (0,0,0)
         try:
-            mat = loader._context["defines"][strokesList[i]]._styles["stroke"]
+            mat = svgStyleList[i]["stroke"]
             diffuse_color = mat.diffuse_color
             col = (diffuse_color[0], diffuse_color[1], diffuse_color[2])
         except:
