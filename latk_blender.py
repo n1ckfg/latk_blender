@@ -6374,6 +6374,10 @@ class ImportVRDoodler(bpy.types.Operator, ImportHelper):
 
 class ImportSvg(bpy.types.Operator, ImportHelper):
     """Load an SVG image to Grease Pencil"""
+    useScaleAndOffset = BoolProperty(name="Use Scale and Offset", description="Compensate scale for Blender viewport", default=True)
+    doPreclean = BoolProperty(name="Pre-Clean", description="Try to remove duplicate strokes and points", default=True)
+    cleanFactor = FloatProperty(name="Clean Factor", description="Strength of clean method", default=0.001)
+
     bl_idname = "import_scene.svg"
     bl_label = "Import SVG"
     bl_options = {'PRESET', 'UNDO'}
@@ -6386,9 +6390,12 @@ class ImportSvg(bpy.types.Operator, ImportHelper):
 
     def execute(self, context):
         import latk_blender as la
-        keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode"))
+        keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "useScaleAndOffset", "doPreclean", "cleanFactor"))
         if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
             import os
+        keywords["useScaleAndOffset"] = self.useScaleAndOffset
+        keywords["doPreclean"] = self.doPreclean
+        keywords["cleanFactor"] = self.cleanFactor            
         #~
         la.load_svg(**keywords)
         return {'FINISHED'} 
@@ -10115,12 +10122,12 @@ def parseAbstractNode(node, context):
 
     return None
 
-def load_svg(filepath, do_colormanage=False, do_clean=False):
+def load_svg(filepath, do_colormanage=False, useScaleAndOffset=True, doPreclean=True, cleanFactor=0.001):
     """
     Load specified SVG file
     """
     global svgStyleList
-    
+
     if bpy.ops.object.mode_set.poll():
         bpy.ops.object.mode_set(mode='OBJECT')
 
@@ -10138,7 +10145,10 @@ def load_svg(filepath, do_colormanage=False, do_clean=False):
     for i, obj in enumerate(target):
         coords = []
         for v in obj.data.vertices:
-            coords.append((v.co[0]*10, v.co[2]*10, v.co[1]*10))
+            if (useScaleAndOffset == True):
+                coords.append((v.co[0]*10, v.co[2]*10, v.co[1]*10))
+            else:
+                coords.append((v.co[0], v.co[2], v.co[1]))
         col = (0,0,0)
         try:
             mat = svgStyleList[i]["stroke"]
@@ -10150,8 +10160,8 @@ def load_svg(filepath, do_colormanage=False, do_clean=False):
         latkObj.setCoords(coords=coords, color=col)
         delete(obj)
     #~
-    if (do_clean == True):
-        latkObj.clean(epsilon=0.001)
+    if (doPreclean == True):
+        latkObj.clean(epsilon=cleanFactor)
     fromLatkToGp(latkObj)
 
 def load(operator, context, filepath=""):

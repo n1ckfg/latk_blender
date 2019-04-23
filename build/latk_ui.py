@@ -263,6 +263,10 @@ class ImportVRDoodler(bpy.types.Operator, ImportHelper):
 
 class ImportSvg(bpy.types.Operator, ImportHelper):
     """Load an SVG image to Grease Pencil"""
+    useScaleAndOffset = BoolProperty(name="Use Scale and Offset", description="Compensate scale for Blender viewport", default=True)
+    doPreclean = BoolProperty(name="Pre-Clean", description="Try to remove duplicate strokes and points", default=True)
+    cleanFactor = FloatProperty(name="Clean Factor", description="Strength of clean method", default=0.001)
+
     bl_idname = "import_scene.svg"
     bl_label = "Import SVG"
     bl_options = {'PRESET', 'UNDO'}
@@ -275,9 +279,12 @@ class ImportSvg(bpy.types.Operator, ImportHelper):
 
     def execute(self, context):
         import latk_blender as la
-        keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode"))
+        keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "useScaleAndOffset", "doPreclean", "cleanFactor"))
         if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
             import os
+        keywords["useScaleAndOffset"] = self.useScaleAndOffset
+        keywords["doPreclean"] = self.doPreclean
+        keywords["cleanFactor"] = self.cleanFactor            
         #~
         la.load_svg(**keywords)
         return {'FINISHED'} 

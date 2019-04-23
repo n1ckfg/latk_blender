@@ -2068,12 +2068,12 @@ def parseAbstractNode(node, context):
 
     return None
 
-def load_svg(filepath, do_colormanage=False, do_clean=False):
+def load_svg(filepath, do_colormanage=False, useScaleAndOffset=True, doPreclean=True, cleanFactor=0.001):
     """
     Load specified SVG file
     """
     global svgStyleList
-    
+
     if bpy.ops.object.mode_set.poll():
         bpy.ops.object.mode_set(mode='OBJECT')
 
@@ -2091,7 +2091,10 @@ def load_svg(filepath, do_colormanage=False, do_clean=False):
     for i, obj in enumerate(target):
         coords = []
         for v in obj.data.vertices:
-            coords.append((v.co[0]*10, v.co[2]*10, v.co[1]*10))
+            if (useScaleAndOffset == True):
+                coords.append((v.co[0]*10, v.co[2]*10, v.co[1]*10))
+            else:
+                coords.append((v.co[0], v.co[2], v.co[1]))
         col = (0,0,0)
         try:
             mat = svgStyleList[i]["stroke"]
@@ -2103,8 +2106,8 @@ def load_svg(filepath, do_colormanage=False, do_clean=False):
         latkObj.setCoords(coords=coords, color=col)
         delete(obj)
     #~
-    if (do_clean == True):
-        latkObj.clean(epsilon=0.001)
+    if (doPreclean == True):
+        latkObj.clean(epsilon=cleanFactor)
     fromLatkToGp(latkObj)
 
 def load(operator, context, filepath=""):
