@@ -8242,7 +8242,9 @@ SVGUnits = {"": 1.0,
             }
 
 SVGEmptyStyles = {'useFill': None,
-                  'fill': None}
+                  'fill': None,
+                  'useStroke': None,
+                  'stroke': None}
 
 def srgb_to_linearrgb(c):
     if c < 0.04045:
@@ -8611,14 +8613,14 @@ def SVGParseStyles(node, context):
     """
 
     styles = SVGEmptyStyles.copy()
-    '''
+
     style = node.getAttribute('style')
     if style:
         elems = style.split(';')
         for elem in elems:
             s = elem.split(':')
 
-            if len(s) != 2:
+            if len(s) < 2:
                 continue
 
             name = s[0].strip().lower()
@@ -8632,9 +8634,23 @@ def SVGParseStyles(node, context):
                     styles['useFill'] = True
                     styles['fill'] = SVGGetMaterial(val, context)
 
+            name = s[2].strip().lower()
+            val = s[3].strip()
+
+            if name == 'stroke':
+                val = val.lower()
+                if val == 'none':
+                    styles['useStroke'] = False
+                else:
+                    styles['useStroke'] = True
+                    styles['stroke'] = SVGGetMaterial(val, context)
+
         if styles['useFill'] is None:
             styles['useFill'] = True
             styles['fill'] = SVGGetMaterial('#000', context)
+        if styles['useStroke'] is None:
+            styles['useStroke'] = True
+            styles['stroke'] = SVGGetMaterial('#000', context)
 
         return styles
 
@@ -8647,23 +8663,27 @@ def SVGParseStyles(node, context):
             else:
                 styles['useFill'] = True
                 styles['fill'] = SVGGetMaterial(fill, context)
+    if styles['useStroke'] is None:
+        stroke = node.getAttribute('stroke')
+        if stroke:
+            stroke = stroke.lower()
+            if stroke == 'none':
+                styles['useStroke'] = False
+            else:
+                styles['useStroke'] = True
+                styles['stroke'] = SVGGetMaterial(stroke, context)
 
     if styles['useFill'] is None and context['style']:
+        styles = context['style'].copy()
+    if styles['useStroke'] is None and context['style']:
         styles = context['style'].copy()
 
     if styles['useFill'] is None:
         styles['useFill'] = True
         styles['fill'] = SVGGetMaterial('#000', context)
-    '''
-
-    styles['useFill'] = False
-
-    stroke = node.getAttribute('stroke')
-    if stroke:
-        stroke = stroke.lower()
-        styles['fill'] = SVGGetMaterial(stroke, context)
-    else:
-        styles['fill'] = "none"
+    if styles['useStroke'] is None:
+        styles['useStroke'] = True
+        styles['stroke'] = SVGGetMaterial('#000', context)
 
     return styles
 
@@ -10090,7 +10110,7 @@ def parseAbstractNode(node, context):
 
     return None
 
-def load_svg(filepath, do_colormanage=False):
+def load_svg(filepath, do_colormanage=False, do_clean=False):
     """
     Load specified SVG file
     """
@@ -10102,22 +10122,9 @@ def load_svg(filepath, do_colormanage=False):
     loader.parse()
     loader.createGeom(False)
 
-    svgStrokeList = []
+    strokesList = []
     for obj in loader._context["defines"]:
-        objL = obj.lower()
-        if (objL.startswith("#stroke") or objL.startswith("#path")):
-            svgStrokeList.append(obj)
-
-    svgColorList = []
-    for obj in svgStrokeList:
-        col = (0,0,0)
-        try:
-            mat = loader._context["defines"][obj]._styles["fill"]
-            diffuse_color = mat.diffuse_color
-            col = (diffuse_color[0], diffuse_color[1], diffuse_color[2])
-        except:
-            pass
-        svgColorList.append(col)
+        strokesList.append(obj)
 
     target = matchName("Curve")
     decimateAndBake(target)
@@ -10132,13 +10139,16 @@ def load_svg(filepath, do_colormanage=False):
             coords.append((v.co[0]*10, v.co[2]*10, v.co[1]*10))
         col = (0,0,0)
         try:
-            col = svgColorList[i]
+            mat = loader._context["defines"][strokesList[i]]._styles["stroke"]
+            diffuse_color = mat.diffuse_color
+            col = (diffuse_color[0], diffuse_color[1], diffuse_color[2])
         except:
             pass
         latkObj.setCoords(coords=coords, color=col)
         delete(obj)
     #~
-    latkObj.clean(epsilon=0.001)
+    if (do_clean == True):
+        latkObj.clean(epsilon=0.001)
     fromLatkToGp(latkObj)
 
 def load(operator, context, filepath=""):
