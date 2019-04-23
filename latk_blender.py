@@ -8633,21 +8633,34 @@ def SVGParseStyles(node, context):
                 continue
 
             name = s[0].strip().lower()
-            val = s[1].strip()
+            val = s[1].strip().lower()
 
             if name == 'fill':
-                val = val.lower()
                 if val == 'none':
                     styles['useFill'] = False
                 else:
                     styles['useFill'] = True
                     styles['fill'] = SVGGetMaterial(val, context)
+            elif name == 'stroke':
+                if val == 'none':
+                    styles['useStroke'] = False
+                else:
+                    styles['useStroke'] = True
+                    styles['stroke'] = SVGGetMaterial(val, context)
+
+            if len(s) < 4:
+                continue
 
             name = s[2].strip().lower()
-            val = s[3].strip()
+            val = s[3].strip().lower()
 
-            if name == 'stroke':
-                val = val.lower()
+            if name == 'fill':
+                if val == 'none':
+                    styles['useFill'] = False
+                else:
+                    styles['useFill'] = True
+                    styles['fill'] = SVGGetMaterial(val, context)
+            elif name == 'stroke':
                 if val == 'none':
                     styles['useStroke'] = False
                 else:
