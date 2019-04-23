@@ -8079,6 +8079,8 @@ from mathutils import Vector, Matrix
 # Copyright (c) jm soler juillet/novembre 2004-april 2009,
 #
 
+svgStyleList = []
+
 SVGColors = {'aliceblue': (240, 248, 255),
              'antiquewhite': (250, 235, 215),
              'aqua': (0, 255, 255),
@@ -9402,8 +9404,6 @@ class SVGGeometryContainer(SVGGeometry):
 
         return self._geometries
 
-svgStyleList = []
-
 class SVGGeometryPATH(SVGGeometry):
     """
     SVG path geometry
@@ -10059,7 +10059,7 @@ class SVGLoader(SVGGeometryContainer):
         """
         Initialize SVG loader
         """
-
+        svgStyleList = []
         node = xml.dom.minidom.parse(filepath)
 
         m = Matrix()
@@ -10124,10 +10124,6 @@ def load_svg(filepath, do_colormanage=False, do_clean=False):
     loader.parse()
     loader.createGeom(False)
 
-    strokesList = []
-    for obj in loader._context["defines"]:
-        strokesList.append(obj)
-
     target = matchName("Curve")
     decimateAndBake(target)
     target = matchName("Curve")
@@ -10145,7 +10141,8 @@ def load_svg(filepath, do_colormanage=False, do_clean=False):
             diffuse_color = mat.diffuse_color
             col = (diffuse_color[0], diffuse_color[1], diffuse_color[2])
         except:
-            pass
+            col = (0,0,0)
+
         latkObj.setCoords(coords=coords, color=col)
         delete(obj)
     #~
