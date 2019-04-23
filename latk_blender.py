@@ -9426,6 +9426,7 @@ class SVGGeometryPATH(SVGGeometry):
         """
         Parse SVG path node
         """
+        global svgStyleList
 
         d = self._node.getAttribute('d')
 
@@ -10059,7 +10060,9 @@ class SVGLoader(SVGGeometryContainer):
         """
         Initialize SVG loader
         """
+        global svgStyleList
         svgStyleList = []
+        
         node = xml.dom.minidom.parse(filepath)
 
         m = Matrix()
@@ -10116,7 +10119,8 @@ def load_svg(filepath, do_colormanage=False, do_clean=False):
     """
     Load specified SVG file
     """
-
+    global svgStyleList
+    
     if bpy.ops.object.mode_set.poll():
         bpy.ops.object.mode_set(mode='OBJECT')
 
