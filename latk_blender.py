@@ -5,7 +5,7 @@ The Lightning Artist Toolkit was developed with support from:
    Ontario Arts Council
    Toronto Arts Council
    
-Copyright (c) 2018 Nick Fox-Gieg
+Copyright (c) 2019 Nick Fox-Gieg
 http://fox-gieg.com
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
