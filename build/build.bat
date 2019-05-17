@@ -1,7 +1,7 @@
 @echo off
 
 set BUILD_TARGET=..\latk_blender.py
-cd %cd%
+cd /D %~dp0
 
 del %BUILD_TARGET%
 
