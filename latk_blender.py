@@ -334,9 +334,9 @@ class Latk(object):
                 for stroke in frame.strokes:
                     for point in stroke.points:  
                         coord = point.co
-                        x = remap(coord[0], allX[0], allX[len(allX)-1], minValX, maxValX)
-                        y = remap(coord[1], allY[0], allY[len(allY)-1], minValY, maxValY)
-                        z = remap(coord[2], allZ[0], allZ[len(allZ)-1], minValZ, maxValZ)
+                        x = self.remap(coord[0], allX[0], allX[len(allX)-1], minValX, maxValX)
+                        y = self.remap(coord[1], allY[0], allY[len(allY)-1], minValY, maxValY)
+                        z = self.remap(coord[2], allZ[0], allZ[len(allZ)-1], minValZ, maxValZ)
                         point.co = (x,y,z)
 
     def smoothStroke(self, stroke):
