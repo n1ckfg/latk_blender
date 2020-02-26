@@ -3796,25 +3796,46 @@ def exportAsc(filepath=None):
 
 def exportXyz(filepath=None):
     xyzData = []
-    gp = getActiveGp()
-    palette = getActivePalette()
-    for layer in gp.layers:
-        for frame in layer.frames:
-            for stroke in frame.strokes:
-                color = palette.colors[stroke.colorname].color
-                for point in stroke.points:
-                    coord = point.co
-                    x = coord[0]
-                    y = coord[2]
-                    z = coord[1]
-                    pressure = point.pressure
-                    r = color[0]
-                    g = color[1]
-                    b = color[2]
-                    xyzData.append(str(x) + "," + str(y) + "," + str(z) + "," + str(pressure) + "," + str(r) + "," + str(g) + "," + str(b)) 
+    obj=None
+
+    if not obj:
+        obj = ss()
+    mesh = obj.data
+    mat = obj.matrix_world
+    #~
+    images = None
+    try:
+        images = getUvImages()
+    except:
+        pass
+    #~
+    allPoints, allColors = getVerts(target=obj, useWorldSpace=True, useColors=True, useBmesh=False)
+    #~
+    for i in range(0, len(allPoints)):
+        color = None
+        if not images:
+            try:
+                color = allColors[i]
+            except:
+                color = getColorExplorer(obj, i)
+        else:
+            try:
+                color = getColorExplorer(obj, i, images)
+            except:
+                color = getColorExplorer(obj, i)
+        #~
+        coord = allPoints[i]
+        x = coord[0]
+        y = coord[2]
+        z = coord[1]
+        pressure = 1.0 #point.pressure
+        r = color[0]
+        g = color[1]
+        b = color[2]
+        xyzData.append(str(x) + "," + str(y) + "," + str(z) + "," + str(pressure) + "," + str(r) + "," + str(g) + "," + str(b)) 
 
     writeTextFile(filepath, "\n".join(xyzData))
-    
+
 def importSculptrVr(filepath=None, strokeLength=1, scale=0.01, startLine=1):
     globalScale = Vector((scale, scale, scale))
     globalOffset = Vector((0, 0, 0))
