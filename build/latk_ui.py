@@ -63,6 +63,12 @@ class LightningArtistToolkitPreferences(bpy.types.AddonPreferences):
         default = False
     )
 
+    extraFormats_UnrealXYZ = bpy.props.BoolProperty(
+        name = 'Unreal XYZ Point Cloud',
+        description = "Color point cloud for Unreal",
+        default = False
+    )
+
     def draw(self, context):
         layout = self.layout
         layout.label("Add menu items to import:")
@@ -83,6 +89,7 @@ class LightningArtistToolkitPreferences(bpy.types.AddonPreferences):
         layout.prop(self, "extraFormats_SVG")
         layout.prop(self, "extraFormats_AfterEffects")
         layout.prop(self, "extraFormats_FBXSequence")
+        layout.prop(self, "extraFormats_UnrealXYZ")
 
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 # LATK IMPORT 
@@ -514,6 +521,27 @@ class ExportASC(bpy.types.Operator, ExportHelper):
         la.exportAsc(**keywords)
         return {'FINISHED'} 
 
+class ExportUnrealXYZ(bpy.types.Operator, ExportHelper):
+    """Save an ASC point cloud"""
+
+    bl_idname = "export_scene.xyz"
+    bl_label = 'Export Unreal XYZ'
+    bl_options = {'PRESET'}
+
+    filename_ext = ".xyz"
+    filter_glob = StringProperty(
+            default="*.xyz",
+            options={'HIDDEN'},
+            )
+
+    def execute(self, context):
+        import latk_blender as la
+        keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "check_existing"))
+        if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
+            import os
+        #~
+        la.exportXyz(**keywords)
+        return {'FINISHED'} 
 
 class ExportSvg(bpy.types.Operator, ExportHelper):
     """Save an SVG SMIL File"""
@@ -1347,6 +1375,8 @@ def menu_func_export(self, context):
         self.layout.operator(ExportAfterEffects.bl_idname, text="Latk - After Effects (.jsx)")        
     if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_FBXSequence == True):
         self.layout.operator(ExportFbxSequence.bl_idname, text="Latk - FBX Sequence (.fbx)")
+    if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_UnrealXYZ == True):
+        self.layout.operator(ExportUnrealXYZ.bl_idname, text="Unreal Point Cloud (.xyz)")
 
 def register():
     bpy.utils.register_module(__name__)
