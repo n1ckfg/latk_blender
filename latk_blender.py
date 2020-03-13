@@ -7354,7 +7354,7 @@ class Latk_Button_HideFalse(bpy.types.Operator):
 '''
 
 class Latk_Button_Gpmesh(bpy.types.Operator):
-    """Mesh all GP strokes. Takes a while.."""
+    """Mesh all GP strokes. Takes a while"""
     bl_idname = "latk_button.gpmesh"
     bl_label = "MESH ALL"
     bl_options = {'UNDO'}
