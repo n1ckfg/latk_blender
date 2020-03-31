@@ -126,7 +126,10 @@ def joinObjects(target=None, center=False):
     target[0].select = True
     bpy.context.scene.objects.active = target[0]
     for i in range(1, len(target)):
-        target[i].select = True
+        try:
+            target[i].select = True
+        except:
+            pass
     #~
     bpy.ops.object.join()
     #~
@@ -280,38 +283,36 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
                         if (mat == None):
                             mat = bpy.data.materials.new("share_mtl")
                             mat.diffuse_color = strokeColor  
-                    try:
-                        latk_ob.data.materials.append(mat)
-                        # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ 
-                        #~   
-                        bpy.context.scene.objects.active = latk_ob
-                        #~
-                        if (_bakeMesh == True):
-                            if (_remesh != "hull" and _remesh != "plane"):
-                                if (_decimate < 0.999):
-                                    bpy.ops.object.modifier_add(type='DECIMATE')
-                                    bpy.context.object.modifiers["Decimate"].ratio = _decimate     
-                                    latk_ob = applyModifiers(latk_ob)
-                                #~
-                                if (_remesh != "none"):
-                                    latk_ob = remesher(latk_ob, mode=_remesh)
-                                #~
-                                if (getStrokeFillAlpha(stroke) > 0.001):
-                                    fill_ob = createFill(stroke.points, useUvs=_uvFill, useHull=_useHull)
-                                    joinObjects([latk_ob, fill_ob])
+                    latk_ob.data.materials.append(mat)
+                    # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ 
+                    #~   
+                    bpy.context.scene.objects.active = latk_ob
+                    #~
+                    if (_bakeMesh == True):
+                        if (_remesh != "hull" and _remesh != "plane"):
+                            if (_decimate < 0.999):
+                                bpy.ops.object.modifier_add(type='DECIMATE')
+                                bpy.context.object.modifiers["Decimate"].ratio = _decimate     
+                                latk_ob = applyModifiers(latk_ob)
                             #~
-                            if (_vertexColors == True):
-                                colorVertices(latk_ob, strokeColor, colorName=_vertexColorName) 
-                            #~ 
-                        frameList.append(latk_ob) 
+                            if (_remesh != "none"):
+                                latk_ob = remesher(latk_ob, mode=_remesh)
+                            #~
+                            if (getStrokeFillAlpha(stroke) > 0.001):
+                                fill_ob = createFill(stroke.points, useUvs=_uvFill, useHull=_useHull)
+                                joinObjects([latk_ob, fill_ob])
                         #~
-                        if (origParent != None):
-                            makeParent([frameList[len(frameList)-1], origParent])
-                            layer.parent = origParent
-                        # * * * * * * * * * * * * * *
-                        bpy.ops.object.select_all(action='DESELECT')
-                    except:
-                        pass
+                        if (_vertexColors == True):
+                            colorVertices(latk_ob, strokeColor, colorName=_vertexColorName) 
+                        #~ 
+                    frameList.append(latk_ob) 
+                    #~
+                    if (origParent != None):
+                        makeParent([frameList[len(frameList)-1], origParent])
+                        layer.parent = origParent
+                    # * * * * * * * * * * * * * *
+                    bpy.ops.object.select_all(action='DESELECT')
+
                 #~
                 for i in range(0, len(frameList)):
                     totalCounter += 1
