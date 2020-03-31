@@ -1504,6 +1504,21 @@ def makeRoot():
     parentMultiple(target, root)
     return root
 
+def makeLayerParent():
+    layer = getActiveLayer()
+    empty = bpy.data.objects.new(layer.info, None)
+    bpy.context.scene.objects.link(empty)
+    bpy.context.scene.update()
+    try:
+        empty.location = getSelectedPoint().co
+    except:
+        empty.location = (0,0,0)
+    bpy.context.scene.update()
+    origLoc = empty.matrix_world.translation
+    layer.parent = empty
+    empty.location = origLoc
+    return empty
+
 def keyTransform(_obj, _frame):
     _obj.keyframe_insert(data_path="location", frame=_frame) 
     _obj.keyframe_insert(data_path="rotation_euler", frame=_frame) 
@@ -7236,13 +7251,13 @@ class Latk_Button_MakeLoop(bpy.types.Operator):
         return {'FINISHED'}
 
 class Latk_Button_MakeRoot(bpy.types.Operator):
-    """Parent all latk mesh objects to locator"""
+    """Parent GP layer to locator"""
     bl_idname = "latk_button.makeroot"
     bl_label = "Root"
     bl_options = {'UNDO'}
     
     def execute(self, context):
-        makeRoot()
+        makeLayerParent()
         return {'FINISHED'}
 
 class Latk_Button_MatchFills(bpy.types.Operator):

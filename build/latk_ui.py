@@ -1037,13 +1037,13 @@ class Latk_Button_MakeLoop(bpy.types.Operator):
         return {'FINISHED'}
 
 class Latk_Button_MakeRoot(bpy.types.Operator):
-    """Parent all latk mesh objects to locator"""
+    """Parent GP layer to locator"""
     bl_idname = "latk_button.makeroot"
     bl_label = "Root"
     bl_options = {'UNDO'}
     
     def execute(self, context):
-        makeRoot()
+        makeLayerParent()
         return {'FINISHED'}
 
 class Latk_Button_MatchFills(bpy.types.Operator):
