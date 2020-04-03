@@ -6226,13 +6226,13 @@ class LightningArtistToolkitPreferences(bpy.types.AddonPreferences):
     extraFormats_GML = bpy.props.BoolProperty(
         name = 'GML',
         description = "Graffiti Markup Language import/export",
-        default = True
+        default = False
     )
 
     extraFormats_ASC = bpy.props.BoolProperty(
         name = 'ASC Point Cloud',
         description = "ASC point cloud import/export",
-        default = False
+        default = True
     )
 
     extraFormats_Painter = bpy.props.BoolProperty(
@@ -6260,9 +6260,9 @@ class LightningArtistToolkitPreferences(bpy.types.AddonPreferences):
     )
 
     extraFormats_FBXSequence = bpy.props.BoolProperty(
-        name = 'FBX Sequence',
+        name = 'Sketchfab FBX Sequence',
         description = "FBX Sequence export",
-        default = False
+        default = True
     )
 
     extraFormats_SculptrVR = bpy.props.BoolProperty(
@@ -6280,7 +6280,7 @@ class LightningArtistToolkitPreferences(bpy.types.AddonPreferences):
     extraFormats_UnrealXYZ = bpy.props.BoolProperty(
         name = 'Unreal XYZ Point Cloud',
         description = "Color point cloud for Unreal",
-        default = False
+        default = True
     )
 
     def draw(self, context):
@@ -7588,9 +7588,9 @@ def menu_func_export(self, context):
     if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_AfterEffects == True):
         self.layout.operator(ExportAfterEffects.bl_idname, text="Latk - After Effects (.jsx)")        
     if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_FBXSequence == True):
-        self.layout.operator(ExportFbxSequence.bl_idname, text="Latk - FBX Sequence (.fbx)")
+        self.layout.operator(ExportFbxSequence.bl_idname, text="Latk - Sketchfab FBX Sequence (.fbx)")
     if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_UnrealXYZ == True):
-        self.layout.operator(ExportUnrealXYZ.bl_idname, text="Unreal Point Cloud (.xyz)")
+        self.layout.operator(ExportUnrealXYZ.bl_idname, text="Latk - Unreal Point Cloud (.xyz)")
 
 def register():
     bpy.utils.register_module(__name__)
