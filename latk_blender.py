@@ -81,34 +81,25 @@ class Latk(object):
         else:
             with open(filepath) as data_file:    
                 data = json.load(data_file)
-                            
-        for jsonGp in data["grease_pencil"]:          
-            for jsonLayer in jsonGp["layers"]:
-                layer = LatkLayer(jsonLayer["name"])
-                
-                for jsonFrame in jsonLayer["frames"]:
+        
+        if ("version" not in data): # latk format v2.7 or older
+            if ("grease_pencil" not in data): # latk format v2.0 or older
+                layer = LatkLayer()
+                if ("x" in data["brushstrokes"][0][0]): # latk format v1.0, single frame 
                     frame = LatkFrame()
-                    for jsonStroke in jsonFrame["strokes"]:                       
-                        color = (1,1,1)
-                        try:
-                            r = jsonStroke["color"][0]
-                            g = jsonStroke["color"][1]
-                            b = jsonStroke["color"][2]
-                            color = (r,g,b)
-                        except:
-                            pass
-                        
+                    for jsonStroke in data["brushstrokes"]:                       
+                        color = (1,1,1)                 
                         points = []
-                        for jsonPoint in jsonStroke["points"]:
-                            x = float(jsonPoint["co"][0])
+                        for jsonPoint in jsonStroke:
+                            x = float(jsonPoint["x"])
                             y = None
                             z = None
                             if (yUp == False):
-                                y = float(jsonPoint["co"][2])
-                                z = float(jsonPoint["co"][1])  
+                                y = float(jsonPoint["z"])
+                                z = float(jsonPoint["y"])  
                             else:
-                                y = float(jsonPoint["co"][1])
-                                z = float(jsonPoint["co"][2]) 
+                                y = float(jsonPoint["y"])
+                                z = float(jsonPoint["z"]) 
                             #~
                             if (useScaleAndOffset == True):
                                 x = (x * globalScale[0]) + globalOffset[0]
@@ -117,24 +108,151 @@ class Latk(object):
                             #~                                                           
                             pressure = 1.0
                             strength = 1.0
-                            try:
-                                pressure = jsonPoint["pressure"]
-                                if (isnan(pressure) == True):
-                                    pressure = 1.0
-                            except:
-                                pass
-                            try:
-                                strength = jsonPoint["strength"]
-                                if (isnan(strength) == True):
-                                    strenght = 1.0
-                            except:
-                                pass
-                            points.append(LatkPoint((x,y,z), pressure, strength))
-                                                
+                            points.append(LatkPoint((x,y,z), pressure, strength))                                         
                         stroke = LatkStroke(points, color)
                         frame.strokes.append(stroke)
-                    layer.frames.append(frame)
-                self.layers.append(layer)
+                        layer.frames.append(frame)
+                    self.layers.append(layer)
+                else: # latk format v2.0, animation
+                    for jsonFrame in data["brushstrokes"]:                          
+                        frame = LatkFrame()
+                        for jsonStroke in jsonFrame:                       
+                            color = (1,1,1)
+                            
+                            points = []
+                            for jsonPoint in jsonStroke:
+                                x = float(jsonPoint["x"])
+                                y = None
+                                z = None
+                                if (yUp == False):
+                                    y = float(jsonPoint["z"])
+                                    z = float(jsonPoint["y"])  
+                                else:
+                                    y = float(jsonPoint["y"])
+                                    z = float(jsonPoint["z"]) 
+                                #~
+                                if (useScaleAndOffset == True):
+                                    x = (x * globalScale[0]) + globalOffset[0]
+                                    y = (y * globalScale[1]) + globalOffset[1]
+                                    z = (z * globalScale[2]) + globalOffset[2]
+                                #~                                                           
+                                pressure = 1.0
+                                strength = 1.0
+                                points.append(LatkPoint((x,y,z), pressure, strength))
+                                                    
+                            stroke = LatkStroke(points, color)
+                            frame.strokes.append(stroke)
+                        layer.frames.append(frame)
+                    self.layers.append(layer)
+            else: # latk format v2.7, Blender 2.7 Grease Pencil
+                for jsonGp in data["grease_pencil"]:          
+                    for jsonLayer in jsonGp["layers"]:
+                        layer = LatkLayer(jsonLayer["name"])
+                        
+                        for jsonFrame in jsonLayer["frames"]:
+                            frame = LatkFrame()
+                            for jsonStroke in jsonFrame["strokes"]:                       
+                                color = (1,1,1)
+                                try:
+                                    r = jsonStroke["color"][0]
+                                    g = jsonStroke["color"][1]
+                                    b = jsonStroke["color"][2]
+                                    color = (r,g,b)
+                                except:
+                                    pass
+                                
+                                points = []
+                                for jsonPoint in jsonStroke["points"]:
+                                    x = float(jsonPoint["co"][0])
+                                    y = None
+                                    z = None
+                                    if (yUp == False):
+                                        y = float(jsonPoint["co"][2])
+                                        z = float(jsonPoint["co"][1])  
+                                    else:
+                                        y = float(jsonPoint["co"][1])
+                                        z = float(jsonPoint["co"][2]) 
+                                    #~
+                                    if (useScaleAndOffset == True):
+                                        x = (x * globalScale[0]) + globalOffset[0]
+                                        y = (y * globalScale[1]) + globalOffset[1]
+                                        z = (z * globalScale[2]) + globalOffset[2]
+                                    #~                                                           
+                                    pressure = 1.0
+                                    strength = 1.0
+                                    try:
+                                        pressure = jsonPoint["pressure"]
+                                        if (isnan(pressure) == True):
+                                            pressure = 1.0
+                                    except:
+                                        pass
+                                    try:
+                                        strength = jsonPoint["strength"]
+                                        if (isnan(strength) == True):
+                                            strenght = 1.0
+                                    except:
+                                        pass
+                                    points.append(LatkPoint((x,y,z), pressure, strength))
+                                                        
+                                stroke = LatkStroke(points, color)
+                                frame.strokes.append(stroke)
+                            layer.frames.append(frame)
+                        self.layers.append(layer)
+        else: # v2.8 and newer use version keys
+            if (float(data["version"]) >= 2.8): # latk format v2.8, Blender 2.8 Grease Pencil
+                for jsonGp in data["grease_pencil"]:          
+                    for jsonLayer in jsonGp["layers"]:
+                        layer = LatkLayer(jsonLayer["name"])
+                        
+                        for jsonFrame in jsonLayer["frames"]:
+                            frame = LatkFrame()
+                            for jsonStroke in jsonFrame["strokes"]:                       
+                                color = (1,1,1)
+                                try:
+                                    r = jsonStroke["color"][0]
+                                    g = jsonStroke["color"][1]
+                                    b = jsonStroke["color"][2]
+                                    color = (r,g,b)
+                                except:
+                                    pass
+                                
+                                points = []
+                                for jsonPoint in jsonStroke["points"]:
+                                    x = float(jsonPoint["co"][0])
+                                    y = None
+                                    z = None
+                                    if (yUp == False):
+                                        y = float(jsonPoint["co"][2])
+                                        z = float(jsonPoint["co"][1])  
+                                    else:
+                                        y = float(jsonPoint["co"][1])
+                                        z = float(jsonPoint["co"][2]) 
+                                    #~
+                                    if (useScaleAndOffset == True):
+                                        x = (x * globalScale[0]) + globalOffset[0]
+                                        y = (y * globalScale[1]) + globalOffset[1]
+                                        z = (z * globalScale[2]) + globalOffset[2]
+                                    #~                                                           
+                                    pressure = 1.0
+                                    strength = 1.0
+                                    try:
+                                        pressure = jsonPoint["pressure"]
+                                        if (isnan(pressure) == True):
+                                            pressure = 1.0
+                                    except:
+                                        pass
+                                    try:
+                                        strength = jsonPoint["strength"]
+                                        if (isnan(strength) == True):
+                                            strenght = 1.0
+                                    except:
+                                        pass
+                                    points.append(LatkPoint((x,y,z), pressure, strength))
+                                                        
+                                stroke = LatkStroke(points, color)
+                                frame.strokes.append(stroke)
+                            layer.frames.append(frame)
+                        self.layers.append(layer)
 
     def write(self, filepath, yUp=True, useScaleAndOffset=False, zipped=True, globalScale=(1.0, 1.0, 1.0), globalOffset=(0.0, 0.0, 0.0)): # defaults to Unity, Maya Y up
         FINAL_LAYER_LIST = [] # string array
