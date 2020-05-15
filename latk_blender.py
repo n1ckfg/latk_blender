@@ -5130,7 +5130,8 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
                         masterParentList.append(None)
                     #~
                     latk_ob = None
-                    if (_remesh == "hull" or _remesh == "plane"):
+                    thisIsAFill = getStrokeFillAlpha(stroke) > 0.001 or _remesh == "hull" or _remesh == "plane"
+                    if (thisIsAFill == True):
                         doHull = False
                         if (_remesh == "hull"):
                             doHull = True
@@ -5162,7 +5163,7 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
                     bpy.context.scene.objects.active = latk_ob
                     #~
                     if (_bakeMesh == True):
-                        if (_remesh != "hull" and _remesh != "plane"):
+                        if (thisIsAFill == False and _remesh != "hull" and _remesh != "plane"):
                             if (_decimate < 0.999):
                                 bpy.ops.object.modifier_add(type='DECIMATE')
                                 bpy.context.object.modifiers["Decimate"].ratio = _decimate     
@@ -5171,9 +5172,9 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
                             if (_remesh != "none"):
                                 latk_ob = remesher(latk_ob, mode=_remesh)
                             #~
-                            if (getStrokeFillAlpha(stroke) > 0.001):
-                                fill_ob = createFill(stroke.points, useUvs=_uvFill, useHull=_useHull)
-                                joinObjects([latk_ob, fill_ob])
+                            #if (getStrokeFillAlpha(stroke) > 0.001):
+                                #fill_ob = createFill(stroke.points, useUvs=_uvFill, useHull=_useHull)
+                                #joinObjects([latk_ob, fill_ob])
                         #~
                         if (_vertexColors == True):
                             colorVertices(latk_ob, strokeColor, colorName=_vertexColorName) 
