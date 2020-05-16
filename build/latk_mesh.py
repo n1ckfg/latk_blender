@@ -677,9 +677,12 @@ def makeCurve(coords, pressures=None, resolution=2, thickness=0.1, bevelResoluti
     curveData.bevel_depth = thickness
     curveData.bevel_resolution = bevelResolution
     #~
-    if (capsObj != None):
-        curveData.bevel_object = capsObj
-        curveData.use_fill_caps = True
+    try:
+        if (capsObj != None):
+            curveData.bevel_object = capsObj
+            curveData.use_fill_caps = True
+    except:
+        curveData.use_fill_caps = False
     #~
     # map coords to spline
     curveType=curveType.upper()
