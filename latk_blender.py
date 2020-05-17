@@ -923,6 +923,7 @@ along with the Lightning Artist Toolkit (Blender).  If not, see
 bl_info = {
     "name": "Lightning Artist Toolkit (Latk)", 
     "author": "Nick Fox-Gieg",
+    "blender": (2, 79, 0),
     "description": "Import and export Latk format",
     "category": "Animation"
 }
