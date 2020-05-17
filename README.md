@@ -1,7 +1,7 @@
 # latk_blender
 Read and write Latk files in Blender Grease Pencil. Last tested in Blender 2.83 LTS.
 
-To install, copy latk.py to:
+To install, copy latk_blender.py to:
 
 Windows:
 C:\Users\USER_NAME\AppData\Roaming\Blender Foundation\Blender\2.83\scripts\addons\
