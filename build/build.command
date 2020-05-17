@@ -19,7 +19,7 @@ cat "latk.py/latk.py" "latk_main.py" "latk_tools.py" "latk_rw.py" "latk_mtl.py" 
 
 #cp $BUILD_TARGET "${HOME}/Library/Application Support/Blender/2.77/scripts/addons/"
 #cp $BUILD_TARGET "${HOME}/Library/Application Support/Blender/2.78/scripts/addons/"
-cp $BUILD_TARGET "${HOME}/Library/Application Support/Blender/2.79/scripts/addons/"
+#cp $BUILD_TARGET "${HOME}/Library/Application Support/Blender/2.79/scripts/addons/"
 #cp $BUILD_TARGET "${HOME}/Library/Application Support/Blender/2.80/scripts/addons/"
 #cp $BUILD_TARGET "${HOME}/Library/Application Support/Blender/2.81/scripts/addons/"
 cp $BUILD_TARGET "${HOME}/Library/Application Support/Blender/2.82/scripts/addons/"
