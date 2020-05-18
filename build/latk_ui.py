@@ -1378,7 +1378,60 @@ def menu_func_export(self, context):
     if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_UnrealXYZ == True):
         self.layout.operator(ExportUnrealXYZ.bl_idname, text="Latk - Unreal Point Cloud (.xyz)")
 
+classes = (
+    LightningArtistToolkitPreferences,
+    ImportLatk,
+    ExportLatkJson,
+    ExportLatk,
+    ImportTiltBrush,
+    ImportNorman,
+    ImportVRDoodler,
+    ImportSvg,
+    ImportASC,
+    ImportSculptrVR,
+    ImportPainter,
+    ImportGml,
+    ExportGml,
+    ExportFbxSequence,
+    ExportSculptrVR,
+    ExportASC,
+    ExportUnrealXYZ,
+    ExportSvg,
+    ExportAfterEffects,
+    ExportPainter,
+    FreestyleGPencil,
+    FreestyleGPencil_Panel,
+    LatkProperties,
+    LatkProperties_Panel,
+    Latk_Button_SimpleClean,
+    Latk_Button_ScopeTimeline,
+    Latk_Button_MakeLoop,
+    Latk_Button_MakeRoot,
+    Latk_Button_MatchFills,
+    Latk_Button_HideScale,
+    Latk_Button_BooleanMod,
+    Latk_Button_BooleanModMinus,
+    Latk_Button_SubsurfMod,
+    Latk_Button_SmoothMod,
+    Latk_Button_DecimateMod,
+    Latk_Button_HideTrue,
+    Latk_Button_Refine,
+    Latk_Button_Gpmesh,
+    Latk_Button_RemapPressure,
+    Latk_Button_WriteOnStrokes,
+    Latk_Button_StrokesFromMesh,
+    Latk_Button_PointsToggle,
+    Latk_Button_BakeAllCurves,
+    Latk_Button_BakeAnim,
+    Latk_Button_Gpmesh_SingleFrame,
+    Latk_Button_Dn,
+    Latk_Button_Splf,
+    Latk_Button_BigClean,
+    Latk_Button_MtlShader
+)
+
 def register():
+    '''
     bpy.utils.register_module(__name__)
 
     bpy.types.Scene.latk_settings = PointerProperty(type=LatkProperties)
@@ -1389,8 +1442,12 @@ def register():
     
     parameter_editor.callbacks_lineset_pre.append(export_fill)
     parameter_editor.callbacks_lineset_post.append(export_stroke)
+    '''
+    for cls in classes:
+        bpy.utils.register_class(cls)   
 
 def unregister():
+    '''
     bpy.utils.unregister_module(__name__)
 
     del bpy.types.Scene.latk_settings
@@ -1401,6 +1458,9 @@ def unregister():
     
     parameter_editor.callbacks_lineset_pre.remove(export_fill)
     parameter_editor.callbacks_lineset_post.remove(export_stroke)
+    '''
+    for cls in reversed(classes):
+        bpy.utils.unregister_class(cls)
 
 if __name__ == "__main__":
     register()
