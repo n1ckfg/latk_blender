@@ -42,7 +42,7 @@ def resizeToFitGp():
     most = 1
     #~
     gp = getActiveGp()
-    for layer in gp.layers:
+    for layer in gp.data.layers:
         if (layer.lock == False):
             for frame in layer.frames:
                 if frame.frame_number < least:
@@ -77,7 +77,7 @@ def makeLoop():
 def breakUpStrokes():
     gp = getActiveGp()
     palette = getActivePalette()
-    for layer in gp.layers:
+    for layer in gp.data.layers:
         for frame in layer.frames:
             tempPoints = []
             tempColorNames = []
@@ -101,7 +101,7 @@ def normalizePoints(minVal=0.0, maxVal=1.0):
     allX = []
     allY = []
     allZ = []
-    for layer in gp.layers:
+    for layer in gp.data.layers:
         for frame in layer.frames:
             for stroke in frame.strokes:
                 for point in stroke.points:
@@ -132,7 +132,7 @@ def normalizePoints(minVal=0.0, maxVal=1.0):
     maxValY = maxVal * yRange
     maxValZ = maxVal * zRange
     #~
-    for layer in gp.layers:
+    for layer in gp.data.layers:
         for frame in layer.frames:
             for stroke in frame.strokes:
                 for point in stroke.points:  
@@ -163,7 +163,7 @@ def gpWorldRoot(name="Empty"):
 def pressureRange(_min=0.1, _max=1.0, _mode="clamp_p"):
     gp = getActiveGp()
     if (_mode == "clamp_p"):
-        for layer in gp.layers:
+        for layer in gp.data.layers:
             for frame in layer.frames:
                 for stroke in frame.strokes:
                     for point in stroke.points:
@@ -172,13 +172,13 @@ def pressureRange(_min=0.1, _max=1.0, _mode="clamp_p"):
                         elif (point.pressure > _max):
                             point.pressure = _max
     elif (_mode == "remap_p"):
-        for layer in gp.layers:
+        for layer in gp.data.layers:
             for frame in layer.frames:
                 for stroke in frame.strokes:
                     for point in stroke.points:
                         point.pressure = remap(point.pressure, 0.0, 1.0, _min, _max)
     elif (_mode == "clamp_s"):
-        for layer in gp.layers:
+        for layer in gp.data.layers:
             for frame in layer.frames:
                 for stroke in frame.strokes:
                     for point in stroke.points:
@@ -187,7 +187,7 @@ def pressureRange(_min=0.1, _max=1.0, _mode="clamp_p"):
                         elif (point.strength > _max):
                             point.strength = _max
     elif (_mode == "remap_s"):
-        for layer in gp.layers:
+        for layer in gp.data.layers:
             for frame in layer.frames:
                 for stroke in frame.strokes:
                     for point in stroke.points:
@@ -745,7 +745,7 @@ def bakeFrames():
     end = bpy.context.scene.frame_end + 1
     scene = bpy.context.scene
     gp = getActiveGp()
-    for layer in gp.layers:   
+    for layer in gp.data.layers:   
         for i in range(start, end):
             try:
                 layer.frames.new(i)
@@ -956,8 +956,8 @@ def moveShot(start, end, x, y, z):
     gp = bpy.context.scene.grease_pencil
     target = (start, end)
     for g in range(target[0], target[1]+1):
-        for f in range(0, len(gp.layers)):
-            layer = gp.layers[f]
+        for f in range(0, len(gp.data.layers)):
+            layer = gp.data.layers[f]
             currentFrame = g
             for i in range(0, len(layer.frames[currentFrame].strokes)):
                 for j in range(0, len(layer.frames[currentFrame].strokes[i].points)):
@@ -984,17 +984,17 @@ def alignCamera():
     bpy.context.area.type = original_type
 
 # ~ ~ ~ ~ ~ ~ grease pencil ~ ~ ~ ~ ~ ~
-def getActiveGp(_name="GPencil"):
-    try:
-        pencil = bpy.context.scene.grease_pencil
-    except:
-        pencil = None
-    try:
-        gp = bpy.data.grease_pencil[pencil.name]
-    except:
-        gp = bpy.data.grease_pencil.new(_name)
-        bpy.context.scene.grease_pencil = gp
-    #print("Active GP block is: " + gp.name)
+def getActiveGp(_name=None):
+    gp = None
+    if not _name:
+        obj = ss()
+        if (obj.type == "GPENCIL"):
+            gp = obj
+    else:
+        for obj in bpy.data.objects:
+            if (obj.name == _name and obj.type == "GPENCIL"):
+                gp = obj
+                break
     return gp
 
 def forceDrawMode():
@@ -1039,19 +1039,19 @@ def getActiveColor():
 
 def getActiveLayer():
     gp = getActiveGp()
-    layer = gp.layers.active
+    layer = gp.data.layers.active
     return layer
 
 def setActiveLayer(name="Layer"):
     gp = getActiveGp()
-    gp.layers.active = gp.layers[name]
-    return gp.layers.active
+    gp.data.layers.active = gp.data.layers[name]
+    return gp.data.layers.active
 
 def deleteLayer(name=None):
     gp = getActiveGp()
     if not name:
-        name = gp.layers.active.info
-    gp.layers.remove(gp.layers[name])
+        name = gp.data.layers.active.info
+    gp.data.layers.remove(gp.data.layers[name])
 
 def duplicateLayer():
     ctx = fixContext()
@@ -1115,7 +1115,7 @@ def checkLayersAboveFrameLimit(limit=20):
     gp = getActiveGp()
     returns = []
     print("~ ~ ~ ~")
-    for layer in gp.layers:
+    for layer in gp.data.layers:
         if (len(layer.frames) > limit + 1): # accounting for extra end cap frame
             returns.append(layer)
             print("layer " + layer.info + " is over limit " + str(limit) + " with " + str(len(layer.frames)) + " frames.")
@@ -1150,14 +1150,14 @@ def getLayerLength(name=None):
 
 def cleanEmptyLayers():
     gp = getActiveGp()
-    for layer in gp.layers:
+    for layer in gp.data.layers:
         if (len(layer.frames) == 0):
-            gp.layers.remove(layer)
+            gp.data.layers.remove(layer)
 
 def clearLayers():
     gp = getActiveGp()
-    for layer in gp.layers:
-        gp.layers.remove(layer)
+    for layer in gp.data.layers:
+        gp.data.layers.remove(layer)
 
 def clearPalette():
     palette = getActivePalette()
@@ -1262,10 +1262,10 @@ def changeColor():
 
 def newLayer(name="NewLayer", setActive=True):
     gp = getActiveGp()
-    gp.layers.new(name)
+    gp.data.layers.new(name)
     if (setActive==True):
-        gp.layers.active = gp.layers[len(gp.layers)-1]
-    return gp.layers[len(gp.layers)-1]
+        gp.data.layers.active = gp.data.layers[len(gp.data.layers)-1]
+    return gp.data.layers[len(gp.data.layers)-1]
 
 def getStrokeCoords(target=None):
     returns = []
@@ -1386,8 +1386,8 @@ def deleteFromAllFrames():
 
 def getAllLayers():
     gp = getActiveGp()
-    print("Got " + str(len(gp.layers)) + " layers.")
-    return gp.layers
+    print("Got " + str(len(gp.data.layers)) + " layers.")
+    return gp.data.layers
 
 def getAllFrames(active=False):
     returns = []
@@ -1403,7 +1403,7 @@ def getAllFrames(active=False):
 
 def getActiveFrame():
     gp = getActiveGp()
-    layer = gp.layers.active
+    layer = gp.data.layers.active
     frame = layer.active_frame
     return frame
 
@@ -1430,8 +1430,8 @@ def getAllStrokes(active=False):
 def getLayerStrokes(name=None):
     gp = getActiveGp()
     if not name:
-        name = gp.layers.active.info
-    layer = gp.layers[name]
+        name = gp.data.layers.active.info
+    layer = gp.data.layers[name]
     strokes = []
     for frame in layer.frames:
         for stroke in frame.strokes:
@@ -1441,8 +1441,8 @@ def getLayerStrokes(name=None):
 def getFrameStrokes(num=None, name=None):
     gp = getActiveGp()
     if not name:
-        name = gp.layers.active.info
-    layer = gp.layers[name]
+        name = gp.data.layers.active.info
+    layer = gp.data.layers[name]
     if not num:
         num = layer.active_frame.frame_number
     strokes = []
@@ -1455,17 +1455,17 @@ def getFrameStrokes(num=None, name=None):
 def getLayerStrokesAvg(name=None):
     gp = getActiveGp()
     if not name:
-        name = gp.layers.active.info
-    layer = gp.layers[name]
+        name = gp.data.layers.active.info
+    layer = gp.data.layers[name]
     return float(roundVal(len(getLayerStrokes(name)) / len(layer.frames), 2))
 
 def getAllStrokesAvg(locked=True):
     gp = getActiveGp()
     avg = 0
-    for layer in gp.layers:
+    for layer in gp.data.layers:
         if (layer.lock == False or locked == True):
             avg += getLayerStrokesAvg(layer.info)
-    return float(roundVal(avg / len(gp.layers), 2))
+    return float(roundVal(avg / len(gp.data.layers), 2))
 
 def getSelectedStrokes(active=True):
     returns = []
