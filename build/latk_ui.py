@@ -621,117 +621,6 @@ class ExportPainter(bpy.types.Operator, ExportHelper):
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 
-
-class FreestyleGPencil(bpy.types.PropertyGroup):
-    """Properties for the Freestyle to Grease Pencil exporter"""
-    bl_idname = "RENDER_PT_gpencil_export"
-
-    use_freestyle_gpencil_export = BoolProperty(
-        name="Grease Pencil Export",
-        description="Export Freestyle edges to Grease Pencil"
-    )
-
-    use_fill = BoolProperty(
-        name="Fill Strokes",
-        description="Fill the contour with the object's material color",
-        default=False
-    )
-
-    '''
-    use_connecting = BoolProperty(
-        name="Connecting Strokes",
-        description="Connect all vertices with strokes",
-        default=False
-    )
-    '''
-
-    visible_only = BoolProperty(
-        name="Visible Only",
-        description="Only render visible lines",
-        default=False
-    )
-
-    use_overwrite = BoolProperty(
-        name="Overwrite",
-        description="Remove the GPencil strokes from previous renders before a new render",
-        default=False
-    )
-
-    '''
-    vertexHitbox = FloatProperty(
-        name="Vertex Hitbox",
-        description="How close a GP stroke needs to be to a vertex",
-        default=1.5
-    )
-    '''
-
-    numColPlaces = IntProperty(
-        name="Color Places",
-        description="How many decimal places used to find matching colors",
-        default=5,
-    )
-
-    numMaxColors = IntProperty(
-        name="Max Colors",
-        description="How many colors are in the Grease Pencil palette",
-        default=16
-    )
-
-    doClearPalette = BoolProperty(
-        name="Clear Palette",
-        description="Delete palette before beginning a new render",
-        default=False
-    )
-
-    '''
-    useVCols = BoolProperty(
-        name="Use VCols",
-        description="Use vertex colors instead of UV maps",
-        default=False
-    )
-    '''
-
-class FreestyleGPencil_Panel(bpy.types.Panel):
-    """Creates a Panel in the render context of the properties editor"""
-    bl_idname = "RENDER_PT_FreestyleGPencilPanel"
-    bl_space_type = 'PROPERTIES'
-    bl_label = "Latk Freestyle"
-    bl_region_type = 'WINDOW'
-    bl_context = "render"
-
-    def draw_header(self, context):
-        self.layout.prop(context.scene.freestyle_gpencil_export, "use_freestyle_gpencil_export", text="")
-
-    def draw(self, context):
-        layout = self.layout
-
-        scene = context.scene
-        gp = scene.freestyle_gpencil_export
-        freestyle = scene.render.layers.active.freestyle_settings
-
-        layout.active = (gp.use_freestyle_gpencil_export and freestyle.mode != 'SCRIPT')
-
-        row = layout.row()
-        row.prop(gp, "numColPlaces")
-        row.prop(gp, "numMaxColors")
-        row.prop(gp, "doClearPalette")
-
-        row = layout.row()
-        row.prop(gp, "use_overwrite")
-        row.prop(gp, "use_fill")
-        row.prop(gp, "visible_only")
-
-        #row = layout.row()
-        #row.prop(gp, "useVCols")
-        #row.prop(svg, "split_at_invisible")
-        #row.prop(gp, "use_connecting")
-        #row.prop(gp, "vertexHitbox")
-
-
-# ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
-# ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
-
-
 class LatkProperties(bpy.types.PropertyGroup):
     """Properties for Latk"""
     bl_idname = "GREASE_PENCIL_PT_LatkProperties"
@@ -1399,8 +1288,6 @@ classes = (
     ExportSvg,
     ExportAfterEffects,
     ExportPainter,
-    FreestyleGPencil,
-    FreestyleGPencil_Panel,
     LatkProperties,
     LatkProperties_Panel,
     Latk_Button_SimpleClean,
@@ -1431,7 +1318,6 @@ classes = (
 )
 
 def register():
-    #bpy.utils.register_module(__name__)
     for cls in classes:
         bpy.utils.register_class(cls)   
 
@@ -1439,26 +1325,13 @@ def register():
     bpy.types.TOPBAR_MT_file_import.append(menu_func_import)
     bpy.types.TOPBAR_MT_file_export.append(menu_func_export)
 
-    bpy.types.Scene.freestyle_gpencil_export = PointerProperty(type=FreestyleGPencil)
-    
-    parameter_editor.callbacks_lineset_pre.append(export_fill)
-    parameter_editor.callbacks_lineset_post.append(export_stroke)
-
 def unregister():
-    #bpy.utils.unregister_module(__name__)
     for cls in reversed(classes):
         bpy.utils.unregister_class(cls)
 
     del bpy.types.Scene.latk_settings
     bpy.types.TOPBAR_MT_file_import.remove(menu_func_import)
     bpy.types.TOPBAR_MT_file_export.remove(menu_func_export)
-
-    del bpy.types.Scene.freestyle_gpencil_export
-    
-    parameter_editor.callbacks_lineset_pre.remove(export_fill)
-    parameter_editor.callbacks_lineset_post.remove(export_stroke)
-
-
 
 if __name__ == "__main__":
     register()

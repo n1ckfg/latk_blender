@@ -27,7 +27,7 @@ def fromGpToLatk(bake=False, skipLocked=False, useScaleAndOffset=False, globalSc
     if(bake == True):
         bakeFrames()
     gp = getActiveGp()
-    pal = getActivePalette()
+    palette = getActivePalette()
     #~
     la = Latk()
     la.frame_rate = getSceneFps()
@@ -44,28 +44,23 @@ def fromGpToLatk(bake=False, skipLocked=False, useScaleAndOffset=False, globalSc
                 for stroke in frame.strokes:
                     laStroke = LatkStroke()
                     
-                    color = (0,0,0)
-                    alpha = 0.9
-                    fill_color = (1,1,1)
-                    fill_alpha = 0.0
+                    color = (0,0,0,1)
+                    fill_color = (0,0,0,1)
                     try:
-                        col = pal.colors[stroke.colorname]
-                        color = (col.color[0], col.color[1], col.color[2])
-                        alpha = col.alpha 
-                        fill_color = (col.fill_color[0], col.fill_color[1], col.fill_color[2])
-                        fill_alpha = col.fill_alpha
+                        color = palette[stroke.material_index].grease_pencil.color
+                        fill_color = palette[stroke.material_index].grease_pencil.fill_color
                     except:
                         pass
-                    laStroke.color = color
-                    laStroke.alpha = alpha
-                    laStroke.fill_color = fill_color
-                    laStroke.fill_alpha = fill_alpha
+                    laStroke.color = (color[0], color[1], color[2])
+                    laStroke.alpha = color[3]
+                    laStroke.fill_color = (fill_color[0], fill_color[1], fill_color[2])
+                    laStroke.fill_alpha = fill_color[3]
                     for point in stroke.points:
                         x = point.co[0]
                         y = point.co[1]
                         z = point.co[2]
                         pressure = 1.0
-                        pressure = point.pressure / 1000.0
+                        pressure = point.pressure
                         strength = 1.0
                         strength = point.strength
                         #~
@@ -86,7 +81,7 @@ def fromLatkToGp(la=None, resizeTimeline=True, useScaleAndOffset=False, limitPal
     print("Begin building Grease Pencil from Latk object...")
     if (clearExisting == True):
         clearAll()
-    gp = getActiveGp()
+    gp = createGp()
     
     longestFrameNum = 1
     #~
@@ -112,7 +107,9 @@ def fromLatkToGp(la=None, resizeTimeline=True, useScaleAndOffset=False, limitPal
                 else:
                     createAndMatchColorPalette(strokeColor, limitPalette, 5) # num places
                 stroke = frame.strokes.new()
-                #stroke.draw_mode = "3DSPACE" # either of ("SCREEN", "3DSPACE", "2DSPACE", "2DIMAGE")
+                stroke.display_mode = '3DSPACE'
+                stroke.line_width = 100
+                stroke.material_index = gp.active_material_index
                 laPoints = laStroke.points
                 stroke.points.add(len(laPoints)) # add 4 points
                 for l, laPoint in enumerate(laPoints):
@@ -128,7 +125,7 @@ def fromLatkToGp(la=None, resizeTimeline=True, useScaleAndOffset=False, limitPal
                         z = (z * globalScale[2]) + globalOffset[2]
                     #~
                     if (laPoint.pressure != None):
-                        pressure = laPoint.pressure * 1000.0
+                        pressure = laPoint.pressure
                     if (laPoint.strength != None):
                         strength = laPoint.strength
                     createPoint(stroke, l, (x, y, z), pressure, strength)

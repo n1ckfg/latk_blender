@@ -937,12 +937,6 @@ from bpy.types import Operator, AddonPreferences
 from bpy.props import (BoolProperty, FloatProperty, StringProperty, IntProperty, PointerProperty, EnumProperty)
 from bpy_extras.io_utils import (ImportHelper, ExportHelper)
 #~
-from freestyle.shaders import *
-from freestyle.predicates import *
-from freestyle.types import Operators, StrokeShader, StrokeVertex
-from freestyle.chainingiterators import ChainSilhouetteIterator, ChainPredicateIterator
-from freestyle.functions import *
-#~
 import math
 from math import sqrt
 from mathutils import *
@@ -2008,11 +2002,7 @@ def initGp():
 
 def getActivePalette():
     gp = getActiveGp()
-    palette = gp.data.materials
-    if (len(palette) < 1):
-        mat = bpy.data.materials.new(name="Material")
-        palette.append(mat)
-    return palette
+    return gp.data.materials
 
 def getActiveColor():
     gp = getActiveGp()
@@ -2159,20 +2149,18 @@ def createColor(_color=(0,0,0)):
     palette = getActivePalette()
     places = 7
     #~
-    if (len(palette) < 1):
-        mat = createGpMaterial(_color)
-        return mat.grease_pencil.color
-    else:
-        for i in range(0, len(palette)):
-            color = palette[i].grease_pencil.color
-            if (roundVal(_color[0], places) == roundVal(color[0], places) and roundVal(_color[1], places) == roundVal(color[1], places) and roundVal(_color[2], places) == roundVal(color[2], places)):
-                gp.active_material_index = i
-                return palette[i].grease_pencil.color
-        mat = createGpMaterial(_color)
-        return mat.grease_pencil.color
+    for i in range(0, len(palette)):
+        color = palette[i].grease_pencil.color
+        if (roundVal(_color[0], places) == roundVal(color[0], places) and roundVal(_color[1], places) == roundVal(color[1], places) and roundVal(_color[2], places) == roundVal(color[2], places)):
+            gp.active_material_index = i
+            return palette[i].grease_pencil.color
+    mat = createGpMaterial(_color)
+    return mat.grease_pencil.color
 
 def createGpMaterial(_color=(0,0,0)):
+    gp = getActiveGp()
     palette = getActivePalette()
+    print(len(palette))
     if (len(_color) == 3):
         _color = (_color[0], _color[1], _color[2], 1)
     mat = bpy.data.materials.new(name="Material")
@@ -2180,7 +2168,7 @@ def createGpMaterial(_color=(0,0,0)):
     mat.grease_pencil.color = _color
     mat.grease_pencil.fill_color = _color
     palette.append(mat)
-    bpy.ops.object.material_slot_remove() # bug? adds empty material slot
+    gp.active_material_index = len(palette)-1
     return mat
 
 # ~ ~ ~ 
@@ -2605,7 +2593,7 @@ def fromGpToLatk(bake=False, skipLocked=False, useScaleAndOffset=False, globalSc
     if(bake == True):
         bakeFrames()
     gp = getActiveGp()
-    pal = getActivePalette()
+    palette = getActivePalette()
     #~
     la = Latk()
     la.frame_rate = getSceneFps()
@@ -2622,28 +2610,23 @@ def fromGpToLatk(bake=False, skipLocked=False, useScaleAndOffset=False, globalSc
                 for stroke in frame.strokes:
                     laStroke = LatkStroke()
                     
-                    color = (0,0,0)
-                    alpha = 0.9
-                    fill_color = (1,1,1)
-                    fill_alpha = 0.0
+                    color = (0,0,0,1)
+                    fill_color = (0,0,0,1)
                     try:
-                        col = pal.colors[stroke.colorname]
-                        color = (col.color[0], col.color[1], col.color[2])
-                        alpha = col.alpha 
-                        fill_color = (col.fill_color[0], col.fill_color[1], col.fill_color[2])
-                        fill_alpha = col.fill_alpha
+                        color = palette[stroke.material_index].grease_pencil.color
+                        fill_color = palette[stroke.material_index].grease_pencil.fill_color
                     except:
                         pass
-                    laStroke.color = color
-                    laStroke.alpha = alpha
-                    laStroke.fill_color = fill_color
-                    laStroke.fill_alpha = fill_alpha
+                    laStroke.color = (color[0], color[1], color[2])
+                    laStroke.alpha = color[3]
+                    laStroke.fill_color = (fill_color[0], fill_color[1], fill_color[2])
+                    laStroke.fill_alpha = fill_color[3]
                     for point in stroke.points:
                         x = point.co[0]
                         y = point.co[1]
                         z = point.co[2]
                         pressure = 1.0
-                        pressure = point.pressure / 1000.0
+                        pressure = point.pressure
                         strength = 1.0
                         strength = point.strength
                         #~
@@ -2664,7 +2647,7 @@ def fromLatkToGp(la=None, resizeTimeline=True, useScaleAndOffset=False, limitPal
     print("Begin building Grease Pencil from Latk object...")
     if (clearExisting == True):
         clearAll()
-    gp = getActiveGp()
+    gp = createGp()
     
     longestFrameNum = 1
     #~
@@ -2690,7 +2673,9 @@ def fromLatkToGp(la=None, resizeTimeline=True, useScaleAndOffset=False, limitPal
                 else:
                     createAndMatchColorPalette(strokeColor, limitPalette, 5) # num places
                 stroke = frame.strokes.new()
-                #stroke.draw_mode = "3DSPACE" # either of ("SCREEN", "3DSPACE", "2DSPACE", "2DIMAGE")
+                stroke.display_mode = '3DSPACE'
+                stroke.line_width = 100
+                stroke.material_index = gp.active_material_index
                 laPoints = laStroke.points
                 stroke.points.add(len(laPoints)) # add 4 points
                 for l, laPoint in enumerate(laPoints):
@@ -2706,7 +2691,7 @@ def fromLatkToGp(la=None, resizeTimeline=True, useScaleAndOffset=False, limitPal
                         z = (z * globalScale[2]) + globalOffset[2]
                     #~
                     if (laPoint.pressure != None):
-                        pressure = laPoint.pressure * 1000.0
+                        pressure = laPoint.pressure
                     if (laPoint.strength != None):
                         strength = laPoint.strength
                     createPoint(stroke, l, (x, y, z), pressure, strength)
@@ -6143,183 +6128,6 @@ def refine(stroke=None, splitReps=2, smoothReps=10):
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
 
-# 8 of 12. FREESTYLE
-
-# based on freestyle_to_gpencil by Folkert de Vries
-# https://github.com/folkertdev/freestyle-gpencil-exporter
-
-# a tuple containing all strokes from the current render. should get replaced by freestyle.context at some point
-def get_strokes():
-    return tuple(map(Operators().get_stroke_from_index, range(Operators().get_strokes_size())))
-
-# get the exact scene dimensions
-def render_height(scene):
-    return int(scene.render.resolution_y * scene.render.resolution_percentage / 100)
-
-def render_width(scene):
-    return int(scene.render.resolution_x * scene.render.resolution_percentage / 100)
-
-def render_dimensions(scene):
-    return render_width(scene), render_height(scene)
-
-def render_visible_strokes():
-    """Renders the scene, selects visible strokes and returns them as a tuple"""
-    if (bpy.context.scene.freestyle_gpencil_export.visible_only == True):
-        upred = QuantitativeInvisibilityUP1D(0) # visible lines only
-    else:
-        upred = TrueUP1D() # all lines
-    Operators.select(upred)
-    Operators.bidirectional_chain(ChainSilhouetteIterator(), NotUP1D(upred))
-    Operators.create(TrueUP1D(), [])
-    return get_strokes()
-
-def render_external_contour():
-    """Renders the scene, selects visible strokes of the Contour nature and returns them as a tuple"""
-    upred = AndUP1D(QuantitativeInvisibilityUP1D(0), ContourUP1D())
-    Operators.select(upred)
-    # chain when the same shape and visible
-    bpred = SameShapeIdBP1D()
-    Operators.bidirectional_chain(ChainPredicateIterator(upred, bpred), NotUP1D(upred))
-    Operators.create(TrueUP1D(), [])
-    return get_strokes()
-
-
-def create_gpencil_layer(scene, name, color, alpha, fill_color, fill_alpha):
-    """Creates a new GPencil layer (if needed) to store the Freestyle result"""
-    gp = bpy.data.grease_pencil.get("FreestyleGPencil", False) or bpy.data.grease_pencil.new(name="FreestyleGPencil")
-    scene.grease_pencil = gp
-    layer = gp.layers.get(name, False)
-    if not layer:
-        print("making new GPencil layer")
-        layer = gp.layers.new(name=name, set_active=True)
-    elif scene.freestyle_gpencil_export.use_overwrite:
-        # empty the current strokes from the gp layer
-        layer.clear()
-
-    # can this be done more neatly? layer.frames.get(..., ...) doesn't seem to work
-    frame = frame_from_frame_number(layer, scene.frame_current) or layer.frames.new(scene.frame_current)
-    return layer, frame 
-
-def frame_from_frame_number(layer, current_frame):
-    """Get a reference to the current frame if it exists, else False"""
-    return next((frame for frame in layer.frames if frame.frame_number == current_frame), False)
-
-def freestyle_to_gpencil_strokes(strokes, frame, pressure=1, draw_mode="3DSPACE", blenderRender=False):
-    scene = bpy.context.scene
-    if (scene.freestyle_gpencil_export.doClearPalette == True):
-        clearPalette()
-    """Actually creates the GPencil structure from a collection of strokes"""
-    mat = scene.camera.matrix_local.copy()
-    #~ 
-    obj = scene.objects.active #bpy.context.edit_object
-    me = obj.data
-    bm = bmesh.new()
-    bm.from_mesh(me) #from_edit_mesh(me)
-    #~
-    # this speeds things up considerably
-    images = getUvImages()
-    #~
-    uv_layer = bm.loops.layers.uv.active
-    #~
-    strokeCounter = 0;
-    
-    firstRun = True
-    allPoints = []
-    strokesToRemove = []
-    allPointsCounter = 1
-    lastActiveColor = None
-
-    for fstroke in strokes:
-        # *** fstroke contains coordinates of original vertices ***
-        sampleVertRaw = (0,0,0)
-        sampleVert = (0,0,0)
-        #~
-        fstrokeCounter = 0
-        for svert in fstroke:
-            fstrokeCounter += 1
-        for i, svert in enumerate(fstroke):
-            if (i == int(fstrokeCounter/2)):
-                sampleVertRaw = mat * svert.point_3d
-                break
-        sampleVert = (sampleVertRaw[0], sampleVertRaw[1], sampleVertRaw[2])
-        #~
-        pixel = (1,0,1)
-        lastPixel = getActiveColor().color
-        distances = []
-        sortedVerts = bm.verts
-        for v in bm.verts:
-            distances.append(getDistance(obj.matrix_world * v.co, sampleVert))
-        sortedVerts.sort(key=dict(zip(sortedVerts, distances)).get)
-
-        targetVert = None
-        for v in sortedVerts:
-            targetVert = v
-            break
-        #~
-        try:
-            uv_first = uv_from_vert_first(uv_layer, targetVert)
-            #uv_average = uv_from_vert_average(uv_layer, v)
-            #~
-            pixelRaw = None
-            if (blenderRender == True):
-                pixelRaw = getPixelFromUvArray(images[obj.active_material.texture_slots[0].texture.image.name], uv_first[0], uv_first[1])
-            else:
-                pixelRaw = getPixelFromUvArray(images[obj.active_material.node_tree.nodes["Image Texture"].image.name], uv_first[0], uv_first[1])                
-            pixel = (pixelRaw[0], pixelRaw[1], pixelRaw[2])
-        except:
-            pixel = lastPixel   
-        #~ 
-        lastActiveColor = createAndMatchColorPalette(pixel, scene.freestyle_gpencil_export.numMaxColors, scene.freestyle_gpencil_export.numColPlaces)
-        #~
-        if (scene.freestyle_gpencil_export.use_fill):
-            lastActiveColor.fill_color = lastActiveColor.color
-            lastActiveColor.fill_alpha = 0.9
-        gpstroke = frame.strokes.new(lastActiveColor.name)
-        gpstroke.draw_mode = "3DSPACE"
-        gpstroke.points.add(count=len(fstroke))
-
-        for svert, point in zip(fstroke, gpstroke.points):
-            point.co = mat * svert.point_3d
-            point.select = True
-            point.strength = 1
-            point.pressure = pressure
-
-def freestyle_to_fill(scene):
-    default = dict(color=(0, 0, 0), alpha=1, fill_color=(0, 1, 0), fill_alpha=1)
-    layer, frame = create_gpencil_layer(scene, "freestyle fill", **default)
-    # render the external contour 
-    strokes = render_external_contour()
-    freestyle_to_gpencil_strokes(strokes, frame, draw_mode="3DSPACE")#scene.freestyle_gpencil_export.draw_mode)
-
-def freestyle_to_strokes(scene):
-    default = dict(color=(0, 0, 0), alpha=1, fill_color=(0, 1, 0), fill_alpha=0)
-    layer, frame = create_gpencil_layer(scene, "freestyle stroke", **default)
-    # render the normal strokes 
-    #strokes = render_visible_strokes()
-    strokes = get_strokes()
-    freestyle_to_gpencil_strokes(strokes, frame, draw_mode="3DSPACE")#scene.freestyle_gpencil_export.draw_mode)
-
-def export_stroke(scene, _, x):
-    # create stroke layer
-    freestyle_to_strokes(scene)
-
-def export_fill(scene, layer, lineset):
-    # Doesn't work for 3D due to concave edges
-    return
-
-    #if not scene.freestyle_gpencil_export.use_freestyle_gpencil_export:
-    #    return 
-
-    #if scene.freestyle_gpencil_export.use_fill:
-    #    # create the fill layer
-    #    freestyle_to_fill(scene)
-    #    # delete these strokes
-    #    Operators.reset(delete_strokes=True)
-
-# * * * * * * * * * * * * * * * * * * * * * * * * * *
-# * * * * * * * * * * * * * * * * * * * * * * * * * *
-# * * * * * * * * * * * * * * * * * * * * * * * * * *
-
 # 9 of 12. SHORTCUTS
 
 def up():
@@ -6983,117 +6791,6 @@ class ExportPainter(bpy.types.Operator, ExportHelper):
 
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
-
-
-class FreestyleGPencil(bpy.types.PropertyGroup):
-    """Properties for the Freestyle to Grease Pencil exporter"""
-    bl_idname = "RENDER_PT_gpencil_export"
-
-    use_freestyle_gpencil_export = BoolProperty(
-        name="Grease Pencil Export",
-        description="Export Freestyle edges to Grease Pencil"
-    )
-
-    use_fill = BoolProperty(
-        name="Fill Strokes",
-        description="Fill the contour with the object's material color",
-        default=False
-    )
-
-    '''
-    use_connecting = BoolProperty(
-        name="Connecting Strokes",
-        description="Connect all vertices with strokes",
-        default=False
-    )
-    '''
-
-    visible_only = BoolProperty(
-        name="Visible Only",
-        description="Only render visible lines",
-        default=False
-    )
-
-    use_overwrite = BoolProperty(
-        name="Overwrite",
-        description="Remove the GPencil strokes from previous renders before a new render",
-        default=False
-    )
-
-    '''
-    vertexHitbox = FloatProperty(
-        name="Vertex Hitbox",
-        description="How close a GP stroke needs to be to a vertex",
-        default=1.5
-    )
-    '''
-
-    numColPlaces = IntProperty(
-        name="Color Places",
-        description="How many decimal places used to find matching colors",
-        default=5,
-    )
-
-    numMaxColors = IntProperty(
-        name="Max Colors",
-        description="How many colors are in the Grease Pencil palette",
-        default=16
-    )
-
-    doClearPalette = BoolProperty(
-        name="Clear Palette",
-        description="Delete palette before beginning a new render",
-        default=False
-    )
-
-    '''
-    useVCols = BoolProperty(
-        name="Use VCols",
-        description="Use vertex colors instead of UV maps",
-        default=False
-    )
-    '''
-
-class FreestyleGPencil_Panel(bpy.types.Panel):
-    """Creates a Panel in the render context of the properties editor"""
-    bl_idname = "RENDER_PT_FreestyleGPencilPanel"
-    bl_space_type = 'PROPERTIES'
-    bl_label = "Latk Freestyle"
-    bl_region_type = 'WINDOW'
-    bl_context = "render"
-
-    def draw_header(self, context):
-        self.layout.prop(context.scene.freestyle_gpencil_export, "use_freestyle_gpencil_export", text="")
-
-    def draw(self, context):
-        layout = self.layout
-
-        scene = context.scene
-        gp = scene.freestyle_gpencil_export
-        freestyle = scene.render.layers.active.freestyle_settings
-
-        layout.active = (gp.use_freestyle_gpencil_export and freestyle.mode != 'SCRIPT')
-
-        row = layout.row()
-        row.prop(gp, "numColPlaces")
-        row.prop(gp, "numMaxColors")
-        row.prop(gp, "doClearPalette")
-
-        row = layout.row()
-        row.prop(gp, "use_overwrite")
-        row.prop(gp, "use_fill")
-        row.prop(gp, "visible_only")
-
-        #row = layout.row()
-        #row.prop(gp, "useVCols")
-        #row.prop(svg, "split_at_invisible")
-        #row.prop(gp, "use_connecting")
-        #row.prop(gp, "vertexHitbox")
-
-
-# ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
-# ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
-
 
 class LatkProperties(bpy.types.PropertyGroup):
     """Properties for Latk"""
@@ -7762,8 +7459,6 @@ classes = (
     ExportSvg,
     ExportAfterEffects,
     ExportPainter,
-    FreestyleGPencil,
-    FreestyleGPencil_Panel,
     LatkProperties,
     LatkProperties_Panel,
     Latk_Button_SimpleClean,
@@ -7794,7 +7489,6 @@ classes = (
 )
 
 def register():
-    #bpy.utils.register_module(__name__)
     for cls in classes:
         bpy.utils.register_class(cls)   
 
@@ -7802,26 +7496,13 @@ def register():
     bpy.types.TOPBAR_MT_file_import.append(menu_func_import)
     bpy.types.TOPBAR_MT_file_export.append(menu_func_export)
 
-    bpy.types.Scene.freestyle_gpencil_export = PointerProperty(type=FreestyleGPencil)
-    
-    parameter_editor.callbacks_lineset_pre.append(export_fill)
-    parameter_editor.callbacks_lineset_post.append(export_stroke)
-
 def unregister():
-    #bpy.utils.unregister_module(__name__)
     for cls in reversed(classes):
         bpy.utils.unregister_class(cls)
 
     del bpy.types.Scene.latk_settings
     bpy.types.TOPBAR_MT_file_import.remove(menu_func_import)
     bpy.types.TOPBAR_MT_file_export.remove(menu_func_export)
-
-    del bpy.types.Scene.freestyle_gpencil_export
-    
-    parameter_editor.callbacks_lineset_pre.remove(export_fill)
-    parameter_editor.callbacks_lineset_post.remove(export_stroke)
-
-
 
 if __name__ == "__main__":
     register()

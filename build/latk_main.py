@@ -46,12 +46,6 @@ from bpy.types import Operator, AddonPreferences
 from bpy.props import (BoolProperty, FloatProperty, StringProperty, IntProperty, PointerProperty, EnumProperty)
 from bpy_extras.io_utils import (ImportHelper, ExportHelper)
 #~
-from freestyle.shaders import *
-from freestyle.predicates import *
-from freestyle.types import Operators, StrokeShader, StrokeVertex
-from freestyle.chainingiterators import ChainSilhouetteIterator, ChainPredicateIterator
-from freestyle.functions import *
-#~
 import math
 from math import sqrt
 from mathutils import *

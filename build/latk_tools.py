@@ -1033,11 +1033,7 @@ def initGp():
 
 def getActivePalette():
     gp = getActiveGp()
-    palette = gp.data.materials
-    if (len(palette) < 1):
-        mat = bpy.data.materials.new(name="Material")
-        palette.append(mat)
-    return palette
+    return gp.data.materials
 
 def getActiveColor():
     gp = getActiveGp()
@@ -1184,20 +1180,18 @@ def createColor(_color=(0,0,0)):
     palette = getActivePalette()
     places = 7
     #~
-    if (len(palette) < 1):
-        mat = createGpMaterial(_color)
-        return mat.grease_pencil.color
-    else:
-        for i in range(0, len(palette)):
-            color = palette[i].grease_pencil.color
-            if (roundVal(_color[0], places) == roundVal(color[0], places) and roundVal(_color[1], places) == roundVal(color[1], places) and roundVal(_color[2], places) == roundVal(color[2], places)):
-                gp.active_material_index = i
-                return palette[i].grease_pencil.color
-        mat = createGpMaterial(_color)
-        return mat.grease_pencil.color
+    for i in range(0, len(palette)):
+        color = palette[i].grease_pencil.color
+        if (roundVal(_color[0], places) == roundVal(color[0], places) and roundVal(_color[1], places) == roundVal(color[1], places) and roundVal(_color[2], places) == roundVal(color[2], places)):
+            gp.active_material_index = i
+            return palette[i].grease_pencil.color
+    mat = createGpMaterial(_color)
+    return mat.grease_pencil.color
 
 def createGpMaterial(_color=(0,0,0)):
+    gp = getActiveGp()
     palette = getActivePalette()
+    print(len(palette))
     if (len(_color) == 3):
         _color = (_color[0], _color[1], _color[2], 1)
     mat = bpy.data.materials.new(name="Material")
@@ -1205,7 +1199,7 @@ def createGpMaterial(_color=(0,0,0)):
     mat.grease_pencil.color = _color
     mat.grease_pencil.fill_color = _color
     palette.append(mat)
-    bpy.ops.object.material_slot_remove() # bug? adds empty material slot
+    gp.active_material_index = len(palette)-1
     return mat
 
 # ~ ~ ~ 
