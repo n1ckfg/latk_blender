@@ -1198,6 +1198,7 @@ def createGpMaterial(_color=(0,0,0)):
     mat.grease_pencil.color = _color
     mat.grease_pencil.fill_color = _color
     palette.append(mat)
+    gp.active_material_index = len(palette)-1
     return mat
 
 # ~ ~ ~ 
