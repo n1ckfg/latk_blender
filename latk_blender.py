@@ -1007,10 +1007,8 @@ def scatterObjects(target=None, val=10):
 
 def matchFills(alpha=None):
     palette = getActivePalette()
-    for color in palette.colors:
-        color.fill_color = color.color
-        if (alpha != None):
-            color.fill_alpha = alpha
+    for mat in palette:
+        palette.grease_pencil.fill_color = palette.grease_pencil.color
 
 def resizeToFitGp():
     least = 1
@@ -1066,7 +1064,7 @@ def breakUpStrokes():
             #~  
             for i, point in enumerate(tempPoints):
                 stroke = frame.strokes.new(tempColorNames[i])
-                stroke.draw_mode = "3DSPACE"
+                #stroke.draw_mode = "3DSPACE"
                 stroke.points.add(1)
                 coord = point.co
                 createPoint(stroke, 0, (coord[0], coord[1], coord[2]), point.pressure, point.strength)
@@ -1974,8 +1972,15 @@ def getActiveGp(_name=None):
     for obj in bpy.data.objects:
         if (obj.type == "GPENCIL"):
             return obj
+    return createGp()
+
+def createGp(_name=None):
     bpy.ops.object.gpencil_add(type="EMPTY")
-    return ss()
+    bpy.data.grease_pencils[len(bpy.data.grease_pencils)-1].stroke_depth_order = "3D"  
+    createGpMaterial()
+    newLayer()
+    gp = ss()
+    return gp
 
 def forceDrawMode():
     #https://blenderartists.org/forum/showthread.php?255425-How-to-use-quot-bpy-ops-gpencil-draw()-quot
@@ -2147,29 +2152,36 @@ def clearAll():
     clearLayers()
     clearPalette()
 
-def createColor(_color):
+def createColor(_color=(0,0,0)):
     if (len(_color) == 3):
         _color = (_color[0], _color[1], _color[2], 1)
     gp = getActiveGp()
-    frame = getActiveFrame()
     palette = getActivePalette()
-    matchingColorIndex = -1
     places = 7
-    for i in range(0, len(palette)):
-        color = palette[i].grease_pencil.color
-        if (roundVal(_color[0], places) == roundVal(color[0], places) and roundVal(_color[1], places) == roundVal(color[1], places) and roundVal(_color[2], places) == roundVal(color[2], places)):
-            matchingColorIndex = i
     #~
-    if (matchingColorIndex == -1):
-        mat = bpy.data.materials.new(name="Material")
-        bpy.data.materials.create_gpencil_data(mat)
-        mat.grease_pencil.color = _color
-        palette.append(mat)
+    if (len(palette) < 1):
+        mat = createGpMaterial(_color)
+        return mat.grease_pencil.color
     else:
-        gp.active_material_index = matchingColorIndex
-        color = palette[matchingColorIndex].grease_pencil.color
-    #~        
-    return color
+        for i in range(0, len(palette)):
+            color = palette[i].grease_pencil.color
+            if (roundVal(_color[0], places) == roundVal(color[0], places) and roundVal(_color[1], places) == roundVal(color[1], places) and roundVal(_color[2], places) == roundVal(color[2], places)):
+                gp.active_material_index = i
+                return palette[i].grease_pencil.color
+        mat = createGpMaterial(_color)
+        return mat.grease_pencil.color
+
+def createGpMaterial(_color=(0,0,0)):
+    palette = getActivePalette()
+    if (len(_color) == 3):
+        _color = (_color[0], _color[1], _color[2], 1)
+    mat = bpy.data.materials.new(name="Material")
+    bpy.data.materials.create_gpencil_data(mat)
+    mat.grease_pencil.color = _color
+    mat.grease_pencil.fill_color = _color
+    palette.append(mat)
+    bpy.ops.object.material_slot_remove() # bug? adds empty material slot
+    return mat
 
 # ~ ~ ~ 
 def createColorWithPalette(_color, numPlaces=7, maxColors=0):
@@ -2631,7 +2643,7 @@ def fromGpToLatk(bake=False, skipLocked=False, useScaleAndOffset=False, globalSc
                         y = point.co[1]
                         z = point.co[2]
                         pressure = 1.0
-                        pressure = point.pressure
+                        pressure = point.pressure / 1000.0
                         strength = 1.0
                         strength = point.strength
                         #~
@@ -2694,7 +2706,7 @@ def fromLatkToGp(la=None, resizeTimeline=True, useScaleAndOffset=False, limitPal
                         z = (z * globalScale[2]) + globalOffset[2]
                     #~
                     if (laPoint.pressure != None):
-                        pressure = laPoint.pressure
+                        pressure = laPoint.pressure * 1000.0
                     if (laPoint.strength != None):
                         strength = laPoint.strength
                     createPoint(stroke, l, (x, y, z), pressure, strength)

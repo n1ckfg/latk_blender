@@ -65,7 +65,7 @@ def fromGpToLatk(bake=False, skipLocked=False, useScaleAndOffset=False, globalSc
                         y = point.co[1]
                         z = point.co[2]
                         pressure = 1.0
-                        pressure = point.pressure
+                        pressure = point.pressure / 1000.0
                         strength = 1.0
                         strength = point.strength
                         #~
@@ -128,7 +128,7 @@ def fromLatkToGp(la=None, resizeTimeline=True, useScaleAndOffset=False, limitPal
                         z = (z * globalScale[2]) + globalOffset[2]
                     #~
                     if (laPoint.pressure != None):
-                        pressure = laPoint.pressure
+                        pressure = laPoint.pressure * 1000.0
                     if (laPoint.strength != None):
                         strength = laPoint.strength
                     createPoint(stroke, l, (x, y, z), pressure, strength)
