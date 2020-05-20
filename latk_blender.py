@@ -2646,7 +2646,7 @@ def fromLatkToGp(la=None, resizeTimeline=True, useScaleAndOffset=False, limitPal
     print("Begin building Grease Pencil from Latk object...")
     if (clearExisting == True):
         clearAll()
-    gp = createGp()
+    gp = getActiveGp()
     
     longestFrameNum = 1
     #~
