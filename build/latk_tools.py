@@ -1184,14 +1184,13 @@ def createColor(_color=(0,0,0)):
         color = palette[i].grease_pencil.color
         if (roundVal(_color[0], places) == roundVal(color[0], places) and roundVal(_color[1], places) == roundVal(color[1], places) and roundVal(_color[2], places) == roundVal(color[2], places)):
             gp.active_material_index = i
-            return palette[i].grease_pencil.color
+            return color
     mat = createGpMaterial(_color)
     return mat.grease_pencil.color
 
 def createGpMaterial(_color=(0,0,0)):
     gp = getActiveGp()
     palette = getActivePalette()
-    print(len(palette))
     if (len(_color) == 3):
         _color = (_color[0], _color[1], _color[2], 1)
     mat = bpy.data.materials.new(name="Material")
@@ -1199,7 +1198,6 @@ def createGpMaterial(_color=(0,0,0)):
     mat.grease_pencil.color = _color
     mat.grease_pencil.fill_color = _color
     palette.append(mat)
-    gp.active_material_index = len(palette)-1
     return mat
 
 # ~ ~ ~ 
