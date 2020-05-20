@@ -785,7 +785,7 @@ def createFill(inputVerts, useUvs=False, useHull=False, name="myObject"):
     me = bpy.data.meshes.new("myMesh") 
     ob = bpy.data.objects.new(name, me) 
     ob.show_name = True
-    bpy.context.scene.objects.link(ob)
+    bpy.context.collection.objects.link(ob)
     bm = bmesh.new() # create an empty BMesh
     bm.from_mesh(me) # fill it in from a Mesh
     #~
@@ -804,8 +804,8 @@ def createFill(inputVerts, useUvs=False, useHull=False, name="myObject"):
     bm.to_mesh(me)
     #~
     if (useUvs==True):
-        ob.select = True
-        bpy.context.scene.objects.active = ob
+        ob.select_set(True)
+        bpy.context.view_layer.objects.active = ob
         planarUvProject()
     #~
     return ob

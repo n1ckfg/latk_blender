@@ -1003,7 +1003,7 @@ def createGp(_name=None):
     bpy.ops.object.gpencil_add(type="EMPTY")
     bpy.data.grease_pencils[len(bpy.data.grease_pencils)-1].stroke_depth_order = "3D"  
     createGpMaterial()
-    newLayer()
+    #newLayer()
     gp = ss()
     return gp
 
@@ -1314,21 +1314,19 @@ def lookUpStrokeColor(target=None):
     palette = getActivePalette()
     if not target:
         target = getSelectedStroke()
-    return palette.colors[target.colorname]
+    return palette[target.material_index]
 
 def getStrokeColor(target=None):
-    color = lookUpStrokeColor(target).color
-    return (color[0], color[1], color[2])
+    return lookUpStrokeColor(target).grease_pencil.color
 
 def getStrokeAlpha(target=None):
-    return lookUpStrokeColor(target).alpha
+    return lookUpStrokeColor(target).grease_pencil.color[3]
 
 def getStrokeFillColor(target=None):
-    color = lookUpStrokeColor(target).fill_color
-    return (color[0], color[1], color[2])
+    return lookUpStrokeColor(target).grease_pencil.fill_color
 
 def getStrokeFillAlpha(target=None):
-    return lookUpStrokeColor(target).fill_alpha
+    return lookUpStrokeColor(target).grease_pencil.fill_color[3]
 
 def getStrokeCoordsPlus(target=None):
     returns = []
@@ -1486,7 +1484,7 @@ def getAllStrokesAvg(locked=True):
             avg += getLayerStrokesAvg(layer.info)
     return float(roundVal(avg / len(gp.data.layers), 2))
 
-def getSelectedStrokes(active=True):
+def getSelectedStrokes(active=False):
     returns = []
     strokes = getAllStrokes(active)
     for stroke in strokes:
