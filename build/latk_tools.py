@@ -985,17 +985,22 @@ def alignCamera():
 
 # ~ ~ ~ ~ ~ ~ grease pencil ~ ~ ~ ~ ~ ~
 def getActiveGp(_name=None):
-    gp = None
     if not _name:
-        obj = ss()
-        if (obj.type == "GPENCIL"):
-            gp = obj
+        try:
+            gp = ss()
+            if (gp.type == "GPENCIL"):
+                return gp
+        except:
+            pass
     else:
         for obj in bpy.data.objects:
             if (obj.name == _name and obj.type == "GPENCIL"):
-                gp = obj
-                break
-    return gp
+                return obj
+    for obj in bpy.data.objects:
+        if (obj.type == "GPENCIL"):
+            return obj
+    bpy.ops.object.gpencil_add(type="EMPTY")
+    return ss()
 
 def forceDrawMode():
     #https://blenderartists.org/forum/showthread.php?255425-How-to-use-quot-bpy-ops-gpencil-draw()-quot
@@ -1023,22 +1028,21 @@ def initGp():
 
 def getActivePalette():
     gp = getActiveGp()
-    palette = gp.palettes.active
-    if (palette == None):
-        palette = gp.palettes.new(gp.name + "_Palette", set_active = True)
-    if (len(palette.colors) < 1):
-        color = palette.colors.new()
-        color.color = (0,0,0)
-    #print("Active palette is: " + gp.palettes.active.name)
+    palette = gp.data.materials
+    if (len(palette) < 1):
+        mat = bpy.data.materials.new(name="Material")
+        palette.append(mat)
     return palette
 
 def getActiveColor():
+    gp = getActiveGp()
     palette = getActivePalette()
-    #print("Active color is: " + "\"" + palette.colors.active.name + "\" " + str(palette.colors.active.color))
-    return palette.colors.active
+    return palette[gp.active_material_index].grease_pencil.color
 
 def getActiveLayer():
     gp = getActiveGp()
+    if (len(gp.data.layers) < 1):
+        bpy.ops.gpencil.layer_add()
     layer = gp.data.layers.active
     return layer
 
@@ -1169,70 +1173,80 @@ def clearAll():
     clearPalette()
 
 def createColor(_color):
+    if (len(_color) == 3):
+        _color = (_color[0], _color[1], _color[2], 1)
+    gp = getActiveGp()
     frame = getActiveFrame()
     palette = getActivePalette()
     matchingColorIndex = -1
     places = 7
-    for i in range(0, len(palette.colors)):
-        if (roundVal(_color[0], places) == roundVal(palette.colors[i].color.r, places) and roundVal(_color[1], places) == roundVal(palette.colors[i].color.g, places) and roundVal(_color[2], places) == roundVal(palette.colors[i].color.b, places)):
+    for i in range(0, len(palette)):
+        color = palette[i].grease_pencil.color
+        if (roundVal(_color[0], places) == roundVal(color[0], places) and roundVal(_color[1], places) == roundVal(color[1], places) and roundVal(_color[2], places) == roundVal(color[2], places)):
             matchingColorIndex = i
     #~
     if (matchingColorIndex == -1):
-        color = palette.colors.new()
-        color.color = _color
+        mat = bpy.data.materials.new(name="Material")
+        bpy.data.materials.create_gpencil_data(mat)
+        mat.grease_pencil.color = _color
+        palette.append(mat)
     else:
-        palette.colors.active = palette.colors[matchingColorIndex]
-        color = palette.colors[matchingColorIndex]
+        gp.active_material_index = matchingColorIndex
+        color = palette[matchingColorIndex].grease_pencil.color
     #~        
-    #print("Active color is: " + "\"" + palette.colors.active.name + "\" " + str(palette.colors.active.color))
     return color
 
 # ~ ~ ~ 
 def createColorWithPalette(_color, numPlaces=7, maxColors=0):
+    if (len(_color) == 3):
+        _color = (_color[0], _color[1], _color[2], 1)
     palette = getActivePalette()
+    gp = getActiveGp()
     matchingColorIndex = -1
     places = numPlaces
-    for i in range(0, len(palette.colors)):
-        if (roundVal(_color[0], places) == roundVal(palette.colors[i].color.r, places) and roundVal(_color[1], places) == roundVal(palette.colors[i].color.g, places) and roundVal(_color[2], places) == roundVal(palette.colors[i].color.b, places)):
+    for i in range(0, len(palette)):
+        color = palette[i].grease_pencil.color
+        if (roundVal(_color[0], places) == roundVal(color[0], places) and roundVal(_color[1], places) == roundVal(color[1], places) and roundVal(_color[2], places) == roundVal(color[2], places)):
             matchingColorIndex = i
     #~
     if (matchingColorIndex == -1):
-        if (maxColors<1 or len(palette.colors)<maxColors):
-            color = palette.colors.new()
-            color.color = _color
+        if (maxColors<1 or len(palette)<maxColors):
+            color = createColor(_color)
         else:
             distances = []
             sortedColors = []
-            for color in palette.colors:
-                sortedColors.append(color)
+            for mat in palette:
+                sortedColors.append(mat.grease_pencil.color)
             for color in sortedColors:
-                distances.append(getDistance(_color, color.color))
+                distances.append(getDistance(_color, (color[0], color[1], color[2], color[3])))
             sortedColors.sort(key=dict(zip(sortedColors, distances)).get)
-            palette.colors.active = palette.colors[sortedColors[0].name]
+            createColor(sortedColors[0])
     else:
-        palette.colors.active = palette.colors[matchingColorIndex]
-        color = palette.colors[matchingColorIndex]
+        gp.active_material_index = matchingColorIndex
+        color = palette[matchingColorIndex].grease_pencil.color
     #~        
-    #print("Active color is: " + "\"" + palette.colors.active.name + "\" " + str(palette.colors.active.color))
     return color
 # ~ ~ ~
 
 def matchColorToPalette(_color):
+    if (len(_color) == 3):
+        _color = (_color[0], _color[1], _color[2], 1)
     palette = getActivePalette()
+    gp = getActiveGp()
     distances = []
     sortedColors = []
-    for color in palette.colors:
-        sortedColors.append(color)
+    for mat in palette:
+        sortedColors.append(mat.grease_pencil.color)
     for color in sortedColors:
-        distances.append(getDistance(_color, color.color))
+        distances.append(getDistance(_color, (color[0], color[1], color[2], color[3])))
     sortedColors.sort(key=dict(zip(sortedColors, distances)).get)
-    returns = palette.colors[sortedColors[0].name]
-    palette.colors.active = returns
-    return returns
+    return createColor(sortedColors[0])
 
 def createAndMatchColorPalette(color, numMaxColors=16, numColPlaces=5):
+    if (len(color) == 3):
+        color = (color[0], color[1], color[2], 1)
     palette = getActivePalette()
-    if (len(palette.colors) < numMaxColors):
+    if (len(palette) < numMaxColors):
         createColorWithPalette(color, numColPlaces, numMaxColors)
     else:
         matchColorToPalette(color)
@@ -1258,7 +1272,7 @@ def changeColor():
         newStroke.points.add(len(points))
         for j in range(0, len(points)):
             createPoint(newStroke, j, points[j].co)
-    print(str(len(strokes)) + " changed to " + palette.colors.active.name)
+    #print(str(len(strokes)) + " changed to " + palette.colors.active.name)
 
 def newLayer(name="NewLayer", setActive=True):
     gp = getActiveGp()

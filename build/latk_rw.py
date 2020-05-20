@@ -32,7 +32,7 @@ def fromGpToLatk(bake=False, skipLocked=False, useScaleAndOffset=False, globalSc
     la = Latk()
     la.frame_rate = getSceneFps()
     #~
-    for layer in gp.layers:
+    for layer in gp.data.layers:
         if (skipLocked == False or layer.lock == False):
             laLayer = LatkLayer(layer.info)
             if (layer.parent == True):
@@ -91,7 +91,7 @@ def fromLatkToGp(la=None, resizeTimeline=True, useScaleAndOffset=False, limitPal
     longestFrameNum = 1
     #~
     for laLayer in la.layers:
-        layer = gp.layers.new(laLayer.name, set_active=True)
+        layer = gp.data.layers.new(laLayer.name, set_active=True)
         #~
         for i, laFrame in enumerate(laLayer.frames):
             try:
@@ -111,8 +111,8 @@ def fromLatkToGp(la=None, resizeTimeline=True, useScaleAndOffset=False, limitPal
                     createColor(strokeColor)
                 else:
                     createAndMatchColorPalette(strokeColor, limitPalette, 5) # num places
-                stroke = frame.strokes.new(getActiveColor().name)
-                stroke.draw_mode = "3DSPACE" # either of ("SCREEN", "3DSPACE", "2DSPACE", "2DIMAGE")
+                stroke = frame.strokes.new()
+                #stroke.draw_mode = "3DSPACE" # either of ("SCREEN", "3DSPACE", "2DSPACE", "2DIMAGE")
                 laPoints = laStroke.points
                 stroke.points.add(len(laPoints)) # add 4 points
                 for l, laPoint in enumerate(laPoints):
@@ -156,7 +156,7 @@ def readBrushStrokesAlt(filepath=None, resizeTimeline=True, useScaleAndOffset=Fa
     #~
     longestFrameNum = 1
     for layerJson in data["grease_pencil"][0]["layers"]:
-        layer = gp.layers.new(layerJson["name"], set_active=True)
+        layer = gp.data.layers.new(layerJson["name"], set_active=True)
         palette = getActivePalette()    
         #~
         for i, frameJson in enumerate(layerJson["frames"]):
@@ -227,7 +227,7 @@ def writeBrushStrokesAlt(filepath=None, bake=True, roundValues=True, numPlaces=7
     sg.append("\t\t\t\"layers\": [")
     #~
     sl = []
-    for f, layer in enumerate(gp.layers):
+    for f, layer in enumerate(gp.data.layers):
         sb = []
         for h, frame in enumerate(layer.frames):
             currentFrame = h
@@ -303,7 +303,7 @@ def writeBrushStrokesAlt(filepath=None, bake=True, roundValues=True, numPlaces=7
         sf.append("\t\t\t\t\t\"frames\": [")
         sf.append("\n".join(sb))
         sf.append("\t\t\t\t\t]")
-        if (f == len(gp.layers)-1):
+        if (f == len(gp.data.layers)-1):
             sf.append("\t\t\t\t}")
         else:
             sf.append("\t\t\t\t},")
@@ -337,7 +337,7 @@ def writeBrushStrokesAlt(filepath=None, bake=True, roundValues=True, numPlaces=7
 def doResizeTimeline():
     longestFrameNum = 1
     gp = getActiveGp()
-    for layer in gp.layers:
+    for layer in gp.data.layers:
         if (len(layer.frames) > longestFrameNum):
             longestFrameNum = len(layer.frames)
     setStartEnd(0, longestFrameNum, pad=False)
@@ -503,7 +503,7 @@ def writeSvg(filepath=None):
     svg.append("\t" + "width=\"" + str(sW) + "px\" height=\"" + str(sH) + "px\" viewBox=\"0 0 " + str(sW) + " " + str(sH) + "\" enable-background=\"new 0 0 " + str(sW) + " " + str(sH) +"\" xml:space=\"preserve\">\r")
     #~
     # BODY
-    for layer in gp.layers:
+    for layer in gp.data.layers:
         layerInfo = layer.info.replace(" ", "_").replace(".", "_")
         svg.append("\t" + "<g id=\"" + layerInfo + "\">\r")
         for i, frame in enumerate(layer.frames):
@@ -568,8 +568,8 @@ def writeAeJsx(filepath=None, useNulls=False):
     body.append("var nullCounter = 1;")
     lastFrameNumber = bpy.context.scene.frame_end
 
-    for h in reversed(range(0, len(gp.layers))):
-        layer = gp.layers[h]
+    for h in reversed(range(0, len(gp.data.layers))):
+        layer = gp.data.layers[h]
         for i, frame in enumerate(layer.frames):
             goToFrame(frame.frame_number)
             frameLines = None
@@ -738,7 +738,7 @@ def writePainter(filepath=None):
     strokes = []
     gp = getActiveGp()
     palette = getActivePalette()
-    for layer in gp.layers:
+    for layer in gp.data.layers:
         if (layer.lock == False):
             for stroke in layer.active_frame.strokes:
                 strokes.append(stroke)
@@ -837,7 +837,7 @@ def importVRDoodler(filepath=None):
             vrd_points.append(vrd_point)
 
     gp = getActiveGp()
-    layer = gp.layers.new("VRDoodler_layer", set_active=True)
+    layer = gp.data.layers.new("VRDoodler_layer", set_active=True)
     start, end = getStartEnd()
     frame = layer.frames.new(start)
     for vrd_stroke in vrd_strokes:
@@ -867,7 +867,7 @@ def importPainter(filepath=None):
     #roundValues = True
 
     gp = getActiveGp()
-    layer = gp.layers.new("Painter_layer", set_active=True)
+    layer = gp.data.layers.new("Painter_layer", set_active=True)
     start, end = getStartEnd()
     frame = getActiveFrame()
     if not frame:
@@ -959,7 +959,7 @@ def importNorman(filepath=None):
         frames.append(strokes)
     #~
     gp = getActiveGp()
-    layer = gp.layers.new("Norman_layer", set_active=True)
+    layer = gp.data.layers.new("Norman_layer", set_active=True)
     for i in range(0, len(frames)):
         frame = layer.frames.new(i)
         for j in range(0, len(frames[i])):
@@ -1110,7 +1110,7 @@ def gmlParser(filepath=None, splitStrokes=False, sequenceAnim=False):
                 deleteLayer(layer.info)
         cleanCounter = 1
         for layer in masterLayerList:
-            for gpLayer in gp.layers:
+            for gpLayer in gp.data.layers:
                 if (layer.info==gpLayer.info):
                     gpLayer.info = origLayerName + "_" + str(cleanCounter)
                     cleanCounter += 1
@@ -1318,7 +1318,7 @@ def importAsc(filepath=None, strokeLength=1, importAsGP=False):
 
     if (importAsGP==True):
         gp = getActiveGp()
-        layer = gp.layers.new("ASC_layer", set_active=True)
+        layer = gp.data.layers.new("ASC_layer", set_active=True)
         start, end = getStartEnd()
         frame = getActiveFrame()
         if not frame:
@@ -1359,7 +1359,7 @@ def exportAsc(filepath=None):
     ascData = []
     gp = getActiveGp()
     palette = getActivePalette()
-    for layer in gp.layers:
+    for layer in gp.data.layers:
         for frame in layer.frames:
             for stroke in frame.strokes:
                 color = palette.colors[stroke.colorname].color
@@ -1459,7 +1459,7 @@ def importSculptrVr(filepath=None, strokeLength=1, scale=0.01, startLine=1):
         colors.append(color)
 
     gp = getActiveGp()
-    layer = gp.layers.new("ASC_layer", set_active=True)
+    layer = gp.data.layers.new("ASC_layer", set_active=True)
     start, end = getStartEnd()
     frame = getActiveFrame()
     if not frame:
@@ -1657,7 +1657,7 @@ def importTiltBrush(filepath=None, vertSkip=1):
     if (filetype == "tilt" or filetype == "zip"): # Tilt Brush binary file with original stroke data
         t = Tilt(filepath)
         #~
-        layer = gp.layers.new("TiltBrush", set_active=True)
+        layer = gp.data.layers.new("TiltBrush", set_active=True)
         frame = layer.frames.new(1)
         #~
         for tstroke in t.sketch.strokes:
@@ -1731,7 +1731,7 @@ def importTiltBrush(filepath=None, vertSkip=1):
         with open(filepath) as data_file: 
             data = json.load(data_file)
         #~
-        layer = gp.layers.new("TiltBrush", set_active=True)
+        layer = gp.data.layers.new("TiltBrush", set_active=True)
         frame = layer.frames.new(1)
         #~
         for strokeJson in data["strokes"]:
