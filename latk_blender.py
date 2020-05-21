@@ -2165,7 +2165,7 @@ def createGpMaterial(_color=(0,0,0)):
     mat = bpy.data.materials.new(name="Material")
     bpy.data.materials.create_gpencil_data(mat)
     mat.grease_pencil.color = _color
-    mat.grease_pencil.fill_color = _color
+    mat.grease_pencil.fill_color = (_color[0], _color[1], _color[2], 0)
     palette.append(mat)
     gp.active_material_index = len(palette)-1
     return mat
@@ -4255,9 +4255,11 @@ def importTiltBrush(filepath=None, vertSkip=1):
                     pointGroup.append((x, y, z, pressure, strength))
                     #~
             createColor(strokeColor)
-            stroke = frame.strokes.new(getActiveColor().name)
+            stroke = frame.strokes.new()
+            stroke.display_mode = '3DSPACE'
+            stroke.line_width = 100
+            stroke.material_index = gp.active_material_index
             stroke.points.add(len(pointGroup)) # add 4 points
-            stroke.draw_mode = "3DSPACE" # either of ("SCREEN", "3DSPACE", "2DSPACE", "2DIMAGE")  
             for l, point in enumerate(pointGroup):
                 createPoint(stroke, l, (point[0], point[1], point[2]), point[3], point[4])
         # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
@@ -4460,7 +4462,7 @@ def colorVertices(obj, color=(1,0,0), makeMaterial=False, colorName="rgba"):
     mesh = obj.data
     #~
     if not mesh.vertex_colors:
-        mesh.vertex_colors.new(colorName) 
+        mesh.vertex_colors.new(name=colorName) 
     #~
     color_layer = mesh.vertex_colors.active  
     #~
@@ -5169,7 +5171,7 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
                     latk_ob.data.materials.append(mat)
                     # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ 
                     #~   
-                    bpy.context.scene.objects.active = latk_ob
+                    bpy.context.view_layer.objects.active = latk_ob
                     #~
                     if (_bakeMesh == True):
                         if (thisIsAFill == False and _remesh != "hull" and _remesh != "plane"):
@@ -5590,12 +5592,14 @@ def makeCurve(coords, pressures=None, resolution=2, thickness=0.1, bevelResoluti
     latk_ob = bpy.data.objects.new(name, curveData)
     #~
     # attach to scene and validate context
-    scn = bpy.context.scene
-    scn.objects.link(latk_ob)
-    scn.objects.active = latk_ob
-    latk_ob.select = True
+    bpy.context.collection.objects.link(latk_ob)
+    bpy.context.view_layer.objects.active = latk_ob
+    latk_ob.select_set(True)
     if (useUvs==True):
-        latk_ob.data.use_uv_as_generated = True
+        try: # 2.83 beta bug
+            latk_ob.data.use_uv_as_generated = True
+        except:
+            pass
     if (bake==True):
         bpy.ops.object.convert(target="MESH")
     return latk_ob
@@ -6171,11 +6175,13 @@ gotoFrame = goToFrame
 class LightningArtistToolkitPreferences(bpy.types.AddonPreferences):
     bl_idname = __name__
     
+    '''
     extraFormats_TiltBrush = bpy.props.BoolProperty(
         name = 'Tilt Brush',
         description = "Tilt Brush import",
         default = True
     )
+    '''
 
     extraFormats_GML = bpy.props.BoolProperty(
         name = 'GML',
@@ -6240,7 +6246,7 @@ class LightningArtistToolkitPreferences(bpy.types.AddonPreferences):
     def draw(self, context):
         layout = self.layout
         layout.label("Add menu items to import:")
-        layout.prop(self, "extraFormats_TiltBrush")
+        #layout.prop(self, "extraFormats_TiltBrush")
         layout.prop(self, "extraFormats_SculptrVR")
         layout.prop(self, "extraFormats_ASC")
         layout.prop(self, "extraFormats_GML")
@@ -7396,9 +7402,10 @@ class Latk_Button_MtlShader(bpy.types.Operator):
 
 def menu_func_import(self, context):
     self.layout.operator(ImportLatk.bl_idname, text="Latk Animation (.latk, .json)")
+    #if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_TiltBrush == True):
+    self.layout.operator(ImportTiltBrush.bl_idname, text="Latk - Tilt Brush (.tilt, .json)")
     #~
-    if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_TiltBrush == True):
-        self.layout.operator(ImportTiltBrush.bl_idname, text="Latk - Tilt Brush (.tilt, .json)")
+    '''
     if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_SculptrVR == True):
         self.layout.operator(ImportSculptrVR.bl_idname, text="Latk - SculptrVR (.csv)")
     if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_ASC == True):
@@ -7413,11 +7420,13 @@ def menu_func_import(self, context):
         self.layout.operator(ImportNorman.bl_idname, text="Latk - NormanVR (.json)")
     if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_VRDoodler == True):
         self.layout.operator(ImportVRDoodler.bl_idname, text="Latk - VRDoodler (.obj)")
+    '''
 
 def menu_func_export(self, context):
     self.layout.operator(ExportLatk.bl_idname, text="Latk Animation (.latk)")
     self.layout.operator(ExportLatkJson.bl_idname, text="Latk Animation (.json)")
     #~
+    '''
     if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_SculptrVR == True):
         self.layout.operator(ExportSculptrVR.bl_idname, text="Latk - SculptrVR (.csv)")
     if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_ASC == True):
@@ -7434,62 +7443,66 @@ def menu_func_export(self, context):
         self.layout.operator(ExportFbxSequence.bl_idname, text="Latk - Sketchfab FBX Sequence (.fbx)")
     if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_UnrealXYZ == True):
         self.layout.operator(ExportUnrealXYZ.bl_idname, text="Latk - Unreal Point Cloud (.xyz)")
+    '''
 
 classes = (
-    LightningArtistToolkitPreferences,
     ImportLatk,
-    ExportLatkJson,
-    ExportLatk,
     ImportTiltBrush,
-    ImportNorman,
-    ImportVRDoodler,
-    ImportSvg,
-    ImportASC,
-    ImportSculptrVR,
-    ImportPainter,
-    ImportGml,
-    ExportGml,
-    ExportFbxSequence,
-    ExportSculptrVR,
-    ExportASC,
-    ExportUnrealXYZ,
-    ExportSvg,
-    ExportAfterEffects,
-    ExportPainter,
-    LatkProperties,
-    LatkProperties_Panel,
-    Latk_Button_SimpleClean,
-    Latk_Button_ScopeTimeline,
-    Latk_Button_MakeLoop,
-    Latk_Button_MakeRoot,
-    Latk_Button_MatchFills,
-    Latk_Button_HideScale,
-    Latk_Button_BooleanMod,
-    Latk_Button_BooleanModMinus,
-    Latk_Button_SubsurfMod,
-    Latk_Button_SmoothMod,
-    Latk_Button_DecimateMod,
-    Latk_Button_HideTrue,
-    Latk_Button_Refine,
-    Latk_Button_Gpmesh,
-    Latk_Button_RemapPressure,
-    Latk_Button_WriteOnStrokes,
-    Latk_Button_StrokesFromMesh,
-    Latk_Button_PointsToggle,
-    Latk_Button_BakeAllCurves,
-    Latk_Button_BakeAnim,
-    Latk_Button_Gpmesh_SingleFrame,
-    Latk_Button_Dn,
-    Latk_Button_Splf,
-    Latk_Button_BigClean,
-    Latk_Button_MtlShader
+    ExportLatkJson,
+    ExportLatk
 )
+
+'''
+LightningArtistToolkitPreferences,
+ImportNorman,
+ImportVRDoodler,
+ImportSvg,
+ImportASC,
+ImportSculptrVR,
+ImportPainter,
+ImportGml,
+ExportGml,
+ExportFbxSequence,
+ExportSculptrVR,
+ExportASC,
+ExportUnrealXYZ,
+ExportSvg,
+ExportAfterEffects,
+ExportPainter,
+LatkProperties,
+LatkProperties_Panel,
+Latk_Button_SimpleClean,
+Latk_Button_ScopeTimeline,
+Latk_Button_MakeLoop,
+Latk_Button_MakeRoot,
+Latk_Button_MatchFills,
+Latk_Button_HideScale,
+Latk_Button_BooleanMod,
+Latk_Button_BooleanModMinus,
+Latk_Button_SubsurfMod,
+Latk_Button_SmoothMod,
+Latk_Button_DecimateMod,
+Latk_Button_HideTrue,
+Latk_Button_Refine,
+Latk_Button_Gpmesh,
+Latk_Button_RemapPressure,
+Latk_Button_WriteOnStrokes,
+Latk_Button_StrokesFromMesh,
+Latk_Button_PointsToggle,
+Latk_Button_BakeAllCurves,
+Latk_Button_BakeAnim,
+Latk_Button_Gpmesh_SingleFrame,
+Latk_Button_Dn,
+Latk_Button_Splf,
+Latk_Button_BigClean,
+Latk_Button_MtlShader
+'''
 
 def register():
     for cls in classes:
         bpy.utils.register_class(cls)   
 
-    bpy.types.Scene.latk_settings = PointerProperty(type=LatkProperties)
+    #bpy.types.Scene.latk_settings = PointerProperty(type=LatkProperties)
     bpy.types.TOPBAR_MT_file_import.append(menu_func_import)
     bpy.types.TOPBAR_MT_file_export.append(menu_func_export)
 
@@ -7497,7 +7510,7 @@ def unregister():
     for cls in reversed(classes):
         bpy.utils.unregister_class(cls)
 
-    del bpy.types.Scene.latk_settings
+    #del bpy.types.Scene.latk_settings
     bpy.types.TOPBAR_MT_file_import.remove(menu_func_import)
     bpy.types.TOPBAR_MT_file_export.remove(menu_func_export)
 

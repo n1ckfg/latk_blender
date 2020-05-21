@@ -287,7 +287,7 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
                     latk_ob.data.materials.append(mat)
                     # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ 
                     #~   
-                    bpy.context.scene.objects.active = latk_ob
+                    bpy.context.view_layer.objects.active = latk_ob
                     #~
                     if (_bakeMesh == True):
                         if (thisIsAFill == False and _remesh != "hull" and _remesh != "plane"):
@@ -708,12 +708,14 @@ def makeCurve(coords, pressures=None, resolution=2, thickness=0.1, bevelResoluti
     latk_ob = bpy.data.objects.new(name, curveData)
     #~
     # attach to scene and validate context
-    scn = bpy.context.scene
-    scn.objects.link(latk_ob)
-    scn.objects.active = latk_ob
-    latk_ob.select = True
+    bpy.context.collection.objects.link(latk_ob)
+    bpy.context.view_layer.objects.active = latk_ob
+    latk_ob.select_set(True)
     if (useUvs==True):
-        latk_ob.data.use_uv_as_generated = True
+        try: # 2.83 beta bug
+            latk_ob.data.use_uv_as_generated = True
+        except:
+            pass
     if (bake==True):
         bpy.ops.object.convert(target="MESH")
     return latk_ob

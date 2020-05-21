@@ -1196,7 +1196,7 @@ def createGpMaterial(_color=(0,0,0)):
     mat = bpy.data.materials.new(name="Material")
     bpy.data.materials.create_gpencil_data(mat)
     mat.grease_pencil.color = _color
-    mat.grease_pencil.fill_color = _color
+    mat.grease_pencil.fill_color = (_color[0], _color[1], _color[2], 0)
     palette.append(mat)
     gp.active_material_index = len(palette)-1
     return mat
