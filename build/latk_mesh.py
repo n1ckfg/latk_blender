@@ -68,7 +68,7 @@ def bmeshOp(op="hull", target=None):
 
 def getVerts(target=None, useWorldSpace=True, useColors=True, useBmesh=False, useModifiers=True):
     if not target:
-        target = bpy.context.scene.objects.active
+        target = bpy.context.view_layer.objects.active 
     mesh = None
     if (useModifiers==True):
         mesh = target.to_mesh(scene=bpy.context.scene, apply_modifiers=True, settings='PREVIEW')
@@ -108,7 +108,7 @@ def getVerts(target=None, useWorldSpace=True, useColors=True, useBmesh=False, us
 
 def countVerts(target=None):
     if not target:
-        target = bpy.context.scene.objects.active
+        target = bpy.context.view_layer.objects.active 
     return len(getVerts(target)[0])
 
 # TODO decimate does not work, context error
@@ -124,7 +124,7 @@ def joinObjects(target=None, center=False):
     #~
     bpy.ops.object.select_all(action='DESELECT') 
     target[0].select = True
-    bpy.context.scene.objects.active = target[0]
+    bpy.context.view_layer.objects.active  = target[0]
     for i in range(1, len(target)):
         try:
             target[i].select = True
@@ -427,7 +427,7 @@ def decimateAndBake(target=None, _decimate=0.1):
             meshObj = applyModifiers(obj)
 
 def remesher(obj, bake=True, mode="blocks", octree=6, threshold=0.0001, smoothShade=False, removeDisconnected=False):
-        bpy.context.scene.objects.active = obj
+        bpy.context.view_layer.objects.active  = obj
         bpy.ops.object.modifier_add(type="REMESH")
         bpy.context.object.modifiers["Remesh"].mode = mode.upper() #sharp, smooth, blocks
         bpy.context.object.modifiers["Remesh"].octree_depth = octree
@@ -443,7 +443,7 @@ def remesher(obj, bake=True, mode="blocks", octree=6, threshold=0.0001, smoothSh
 def decimator(target=None, ratio=0.1, bake=True):
     if not target:
         target = ss()
-    bpy.context.scene.objects.active = target
+    bpy.context.view_layer.objects.active  = target
     bpy.ops.object.modifier_add(type='DECIMATE')
     bpy.context.object.modifiers["Decimate"].ratio = ratio     
     if (bake == True):
@@ -456,7 +456,7 @@ def booleanMod(target=None, op="union"):
     if not target:
         target=s()
     for i in range(1, len(target)):
-            bpy.context.scene.objects.active = target[i]
+            bpy.context.view_layer.objects.active  = target[i]
             bpy.ops.object.modifier_add(type="BOOLEAN")
             bpy.context.object.modifiers["Boolean"].operation = op.upper()
             bpy.context.object.modifiers["Boolean"].object = target[i-1]
@@ -471,7 +471,7 @@ def subsurfMod(target=None):
         target=s()
     returns = []
     for obj in target:
-        bpy.context.scene.objects.active = obj
+        bpy.context.view_layer.objects.active  = obj
         bpy.ops.object.modifier_add(type="SUBSURF")
         bpy.ops.object.modifier_apply(apply_as='DATA', modifier="Subsurf")
         returns.append(obj)
@@ -482,7 +482,7 @@ def smoothMod(target=None):
         target=s()
     returns = []
     for obj in target:
-        bpy.context.scene.objects.active = obj
+        bpy.context.view_layer.objects.active  = obj
         bpy.ops.object.modifier_add(type="SMOOTH")
         bpy.ops.object.modifier_apply(apply_as='DATA', modifier="Smooth")
         returns.append(obj)
@@ -493,7 +493,7 @@ def decimateMod(target=None, _decimate=0.1):
         target = s()
     returns = []
     for obj in target:
-        bpy.context.scene.objects.active = obj
+        bpy.context.view_layer.objects.active  = obj
         bpy.ops.object.modifier_add(type='DECIMATE')
         bpy.context.object.modifiers["Decimate"].ratio = _decimate     
         bpy.ops.object.modifier_apply(apply_as='DATA', modifier="Decimate")
@@ -514,7 +514,10 @@ def applyModifiers(obj):
     bpy.context.scene.objects.link(meshObj)
     bpy.context.scene.objects.active = meshObj
     meshObj.matrix_world = obj.matrix_world
-    delete(obj)
+    bpy.ops.object.select_all(action='DESELECT')
+    bpy.data.objects[obj.name].hide = False
+    bpy.data.objects[obj.name].select = True
+    bpy.ops.object.delete()
     return meshObj
 
 def getGeometryCenter(obj):
@@ -576,7 +579,7 @@ def centerOrigin(target=None):
     deselect()
 
 def setOrigin(target, point):
-    bpy.context.scene.objects.active = target
+    bpy.context.view_layer.objects.active  = target
     bpy.context.scene.cursor_location = point
     bpy.ops.object.origin_set(type='ORIGIN_CURSOR')
     #bpy.context.scene.update()
