@@ -685,7 +685,7 @@ def delete(_obj=None):
     gc.collect()
 
 def refresh():
-    bpy.context.scene.update()
+    bpy.context.view_layer.update()
 
 def remap(value, min1, max1, min2, max2):
     range1 = max1 - min1
@@ -855,9 +855,9 @@ def goToFrame(_index):
     return bpy.context.scene.frame_current
 
 def hideFrame(_obj, _frame, _hide):
-    _obj.hide = _hide
+    _obj.hide_set(_hide)
     _obj.hide_render = _hide
-    _obj.keyframe_insert(data_path="hide", frame=_frame) 
+    _obj.keyframe_insert(data_path="hide_viewport", frame=_frame) 
     _obj.keyframe_insert(data_path="hide_render", frame=_frame) 
 
 def hideFrameByScale(_obj, _frame, _hide):
