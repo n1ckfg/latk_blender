@@ -509,16 +509,12 @@ def polyCube(pos=(0,0,0), scale=(1,1,1), rot=(0,0,0)):
     return cube
 
 def applyModifiers(obj):
-    mesh = obj.to_mesh(scene = bpy.context.scene, apply_modifiers=True, settings = 'PREVIEW')
-    meshObj = bpy.data.objects.new(obj.name + "_mesh", mesh)
-    bpy.context.scene.objects.link(meshObj)
-    bpy.context.scene.objects.active = meshObj
-    meshObj.matrix_world = obj.matrix_world
     bpy.ops.object.select_all(action='DESELECT')
-    bpy.data.objects[obj.name].hide = False
-    bpy.data.objects[obj.name].select = True
-    bpy.ops.object.delete()
-    return meshObj
+    #bpy.data.objects[obj.name].hide_set(False)
+    bpy.data.objects[obj.name].select_set(True)
+    bpy.context.view_layer.objects.active = obj
+    bpy.ops.object.convert(target='MESH')
+    return obj
 
 def getGeometryCenter(obj):
     sumWCoord = [0,0,0]

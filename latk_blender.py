@@ -5393,7 +5393,10 @@ def polyCube(pos=(0,0,0), scale=(1,1,1), rot=(0,0,0)):
     return cube
 
 def applyModifiers(obj):
-    bpy.context.view_layer.objects.active  = obj
+    bpy.ops.object.select_all(action='DESELECT')
+    #bpy.data.objects[obj.name].hide_set(False)
+    bpy.data.objects[obj.name].select_set(True)
+    bpy.context.view_layer.objects.active = obj
     bpy.ops.object.convert(target='MESH')
     return obj
 
