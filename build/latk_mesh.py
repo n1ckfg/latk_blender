@@ -68,7 +68,7 @@ def bmeshOp(op="hull", target=None):
 
 def getVerts(target=None, useWorldSpace=True, useColors=True, useBmesh=False, useModifiers=True):
     if not target:
-        target = bpy.context.scene.objects.active
+        target = bpy.context.view_layer.objects.active 
     mesh = None
     if (useModifiers==True):
         mesh = target.to_mesh(scene=bpy.context.scene, apply_modifiers=True, settings='PREVIEW')
@@ -108,7 +108,7 @@ def getVerts(target=None, useWorldSpace=True, useColors=True, useBmesh=False, us
 
 def countVerts(target=None):
     if not target:
-        target = bpy.context.scene.objects.active
+        target = bpy.context.view_layer.objects.active 
     return len(getVerts(target)[0])
 
 # TODO decimate does not work, context error
@@ -123,11 +123,11 @@ def joinObjects(target=None, center=False):
         target = s()
     #~
     bpy.ops.object.select_all(action='DESELECT') 
-    target[0].select = True
-    bpy.context.scene.objects.active = target[0]
+    target[0].select_set(True)
+    bpy.context.view_layer.objects.active  = target[0]
     for i in range(1, len(target)):
         try:
-            target[i].select = True
+            target[i].select_set(True)
         except:
             pass
     #~
@@ -166,7 +166,7 @@ def assembleMesh(export=False, createPalette=True):
     gp = getActiveGp()
     palette = getActivePalette()
     #~
-    for b, layer in enumerate(gp.layers):
+    for b, layer in enumerate(gp.data.layers):
         url = origFileName + "_layer_" + layer.info
         masterGroupList.append(getLayerInfo(layer))
         masterUrlList.append(url)
@@ -235,7 +235,7 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
         capsObj.name = "caps_ob"
         capsObj.data.resolution_u = _bevelResolution
     #~
-    for b, layer in enumerate(gp.layers):
+    for b, layer in enumerate(gp.data.layers):
         url = origFileName + "_layer_" + layer.info
         if (layer.lock==False):
             rangeStart = 0
@@ -245,7 +245,7 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
                 rangeEnd = rangeStart + 1
             for c in range(rangeStart, rangeEnd):
                 frame = layer.frames[c]
-                print("\n" + "*** gp layer " + layer.info + "(" + str(b+1) + " of " + str(len(gp.layers)) + ") | gp frame " + str(c+1) + " of " + str(rangeEnd) + " ***")
+                print("\n" + "*** gp layer " + layer.info + "(" + str(b+1) + " of " + str(len(gp.data.layers)) + ") | gp frame " + str(c+1) + " of " + str(rangeEnd) + " ***")
                 frameList = []
                 for d, stroke in enumerate(frame.strokes):
                     origParent = None
@@ -287,7 +287,7 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
                     latk_ob.data.materials.append(mat)
                     # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ 
                     #~   
-                    bpy.context.scene.objects.active = latk_ob
+                    bpy.context.view_layer.objects.active = latk_ob
                     #~
                     if (_bakeMesh == True):
                         if (thisIsAFill == False and _remesh != "hull" and _remesh != "plane"):
@@ -337,7 +337,7 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
                         if (i == layer.frames[c].frame_number):
                             goToFrame(i)
                             for j in range(0, len(target)):
-                                if (target[j].hide==False):
+                                if (target[j].hide_get()==False):
                                     strokesToJoin.append(target[j])
                         if (len(strokesToJoin) > 1):
                             print("~ ~ ~ ~ ~ ~ ~ ~ ~")
@@ -427,7 +427,7 @@ def decimateAndBake(target=None, _decimate=0.1):
             meshObj = applyModifiers(obj)
 
 def remesher(obj, bake=True, mode="blocks", octree=6, threshold=0.0001, smoothShade=False, removeDisconnected=False):
-        bpy.context.scene.objects.active = obj
+        bpy.context.view_layer.objects.active  = obj
         bpy.ops.object.modifier_add(type="REMESH")
         bpy.context.object.modifiers["Remesh"].mode = mode.upper() #sharp, smooth, blocks
         bpy.context.object.modifiers["Remesh"].octree_depth = octree
@@ -443,7 +443,7 @@ def remesher(obj, bake=True, mode="blocks", octree=6, threshold=0.0001, smoothSh
 def decimator(target=None, ratio=0.1, bake=True):
     if not target:
         target = ss()
-    bpy.context.scene.objects.active = target
+    bpy.context.view_layer.objects.active  = target
     bpy.ops.object.modifier_add(type='DECIMATE')
     bpy.context.object.modifiers["Decimate"].ratio = ratio     
     if (bake == True):
@@ -456,7 +456,7 @@ def booleanMod(target=None, op="union"):
     if not target:
         target=s()
     for i in range(1, len(target)):
-            bpy.context.scene.objects.active = target[i]
+            bpy.context.view_layer.objects.active  = target[i]
             bpy.ops.object.modifier_add(type="BOOLEAN")
             bpy.context.object.modifiers["Boolean"].operation = op.upper()
             bpy.context.object.modifiers["Boolean"].object = target[i-1]
@@ -471,7 +471,7 @@ def subsurfMod(target=None):
         target=s()
     returns = []
     for obj in target:
-        bpy.context.scene.objects.active = obj
+        bpy.context.view_layer.objects.active  = obj
         bpy.ops.object.modifier_add(type="SUBSURF")
         bpy.ops.object.modifier_apply(apply_as='DATA', modifier="Subsurf")
         returns.append(obj)
@@ -482,7 +482,7 @@ def smoothMod(target=None):
         target=s()
     returns = []
     for obj in target:
-        bpy.context.scene.objects.active = obj
+        bpy.context.view_layer.objects.active  = obj
         bpy.ops.object.modifier_add(type="SMOOTH")
         bpy.ops.object.modifier_apply(apply_as='DATA', modifier="Smooth")
         returns.append(obj)
@@ -493,7 +493,7 @@ def decimateMod(target=None, _decimate=0.1):
         target = s()
     returns = []
     for obj in target:
-        bpy.context.scene.objects.active = obj
+        bpy.context.view_layer.objects.active  = obj
         bpy.ops.object.modifier_add(type='DECIMATE')
         bpy.context.object.modifiers["Decimate"].ratio = _decimate     
         bpy.ops.object.modifier_apply(apply_as='DATA', modifier="Decimate")
@@ -509,13 +509,12 @@ def polyCube(pos=(0,0,0), scale=(1,1,1), rot=(0,0,0)):
     return cube
 
 def applyModifiers(obj):
-    mesh = obj.to_mesh(scene = bpy.context.scene, apply_modifiers=True, settings = 'PREVIEW')
-    meshObj = bpy.data.objects.new(obj.name + "_mesh", mesh)
-    bpy.context.scene.objects.link(meshObj)
-    bpy.context.scene.objects.active = meshObj
-    meshObj.matrix_world = obj.matrix_world
-    delete(obj)
-    return meshObj
+    bpy.ops.object.select_all(action='DESELECT')
+    #bpy.data.objects[obj.name].hide_set(False)
+    bpy.data.objects[obj.name].select_set(True)
+    bpy.context.view_layer.objects.active = obj
+    bpy.ops.object.convert(target='MESH')
+    return obj
 
 def getGeometryCenter(obj):
     sumWCoord = [0,0,0]
@@ -576,7 +575,7 @@ def centerOrigin(target=None):
     deselect()
 
 def setOrigin(target, point):
-    bpy.context.scene.objects.active = target
+    bpy.context.view_layer.objects.active  = target
     bpy.context.scene.cursor_location = point
     bpy.ops.object.origin_set(type='ORIGIN_CURSOR')
     #bpy.context.scene.update()
@@ -601,7 +600,7 @@ def meshToGp(obj=None, strokeLength=1, strokeGaps=10.0, shuffleOdds=1.0, spreadP
     gp = getActiveGp()
     layer = getActiveLayer()
     if not layer:
-        layer = gp.layers.new(name="meshToGp")
+        layer = gp.data.layers.new(name="meshToGp")
     frame = getActiveFrame()
     if not frame or frame.frame_number != currentFrame():
         frame = layer.frames.new(currentFrame())
@@ -708,12 +707,14 @@ def makeCurve(coords, pressures=None, resolution=2, thickness=0.1, bevelResoluti
     latk_ob = bpy.data.objects.new(name, curveData)
     #~
     # attach to scene and validate context
-    scn = bpy.context.scene
-    scn.objects.link(latk_ob)
-    scn.objects.active = latk_ob
-    latk_ob.select = True
+    bpy.context.collection.objects.link(latk_ob)
+    bpy.context.view_layer.objects.active = latk_ob
+    latk_ob.select_set(True)
     if (useUvs==True):
-        latk_ob.data.use_uv_as_generated = True
+        try: # 2.83 beta bug
+            latk_ob.data.use_uv_as_generated = True
+        except:
+            pass
     if (bake==True):
         bpy.ops.object.convert(target="MESH")
     return latk_ob
@@ -785,7 +786,7 @@ def createFill(inputVerts, useUvs=False, useHull=False, name="myObject"):
     me = bpy.data.meshes.new("myMesh") 
     ob = bpy.data.objects.new(name, me) 
     ob.show_name = True
-    bpy.context.scene.objects.link(ob)
+    bpy.context.collection.objects.link(ob)
     bm = bmesh.new() # create an empty BMesh
     bm.from_mesh(me) # fill it in from a Mesh
     #~
@@ -804,8 +805,8 @@ def createFill(inputVerts, useUvs=False, useHull=False, name="myObject"):
     bm.to_mesh(me)
     #~
     if (useUvs==True):
-        ob.select = True
-        bpy.context.scene.objects.active = ob
+        ob.select_set(True)
+        bpy.context.view_layer.objects.active = ob
         planarUvProject()
     #~
     return ob

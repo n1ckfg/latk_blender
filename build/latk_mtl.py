@@ -115,7 +115,7 @@ def colorVertices(obj, color=(1,0,0), makeMaterial=False, colorName="rgba"):
     mesh = obj.data
     #~
     if not mesh.vertex_colors:
-        mesh.vertex_colors.new(colorName) 
+        mesh.vertex_colors.new(name=colorName) 
     #~
     color_layer = mesh.vertex_colors.active  
     #~

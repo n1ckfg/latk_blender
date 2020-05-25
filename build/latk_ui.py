@@ -3,11 +3,13 @@
 class LightningArtistToolkitPreferences(bpy.types.AddonPreferences):
     bl_idname = __name__
     
+    '''
     extraFormats_TiltBrush = bpy.props.BoolProperty(
         name = 'Tilt Brush',
         description = "Tilt Brush import",
         default = True
     )
+    '''
 
     extraFormats_GML = bpy.props.BoolProperty(
         name = 'GML',
@@ -72,7 +74,7 @@ class LightningArtistToolkitPreferences(bpy.types.AddonPreferences):
     def draw(self, context):
         layout = self.layout
         layout.label("Add menu items to import:")
-        layout.prop(self, "extraFormats_TiltBrush")
+        #layout.prop(self, "extraFormats_TiltBrush")
         layout.prop(self, "extraFormats_SculptrVR")
         layout.prop(self, "extraFormats_ASC")
         layout.prop(self, "extraFormats_GML")
@@ -620,117 +622,6 @@ class ExportPainter(bpy.types.Operator, ExportHelper):
 
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
-
-
-class FreestyleGPencil(bpy.types.PropertyGroup):
-    """Properties for the Freestyle to Grease Pencil exporter"""
-    bl_idname = "RENDER_PT_gpencil_export"
-
-    use_freestyle_gpencil_export = BoolProperty(
-        name="Grease Pencil Export",
-        description="Export Freestyle edges to Grease Pencil"
-    )
-
-    use_fill = BoolProperty(
-        name="Fill Strokes",
-        description="Fill the contour with the object's material color",
-        default=False
-    )
-
-    '''
-    use_connecting = BoolProperty(
-        name="Connecting Strokes",
-        description="Connect all vertices with strokes",
-        default=False
-    )
-    '''
-
-    visible_only = BoolProperty(
-        name="Visible Only",
-        description="Only render visible lines",
-        default=False
-    )
-
-    use_overwrite = BoolProperty(
-        name="Overwrite",
-        description="Remove the GPencil strokes from previous renders before a new render",
-        default=False
-    )
-
-    '''
-    vertexHitbox = FloatProperty(
-        name="Vertex Hitbox",
-        description="How close a GP stroke needs to be to a vertex",
-        default=1.5
-    )
-    '''
-
-    numColPlaces = IntProperty(
-        name="Color Places",
-        description="How many decimal places used to find matching colors",
-        default=5,
-    )
-
-    numMaxColors = IntProperty(
-        name="Max Colors",
-        description="How many colors are in the Grease Pencil palette",
-        default=16
-    )
-
-    doClearPalette = BoolProperty(
-        name="Clear Palette",
-        description="Delete palette before beginning a new render",
-        default=False
-    )
-
-    '''
-    useVCols = BoolProperty(
-        name="Use VCols",
-        description="Use vertex colors instead of UV maps",
-        default=False
-    )
-    '''
-
-class FreestyleGPencil_Panel(bpy.types.Panel):
-    """Creates a Panel in the render context of the properties editor"""
-    bl_idname = "RENDER_PT_FreestyleGPencilPanel"
-    bl_space_type = 'PROPERTIES'
-    bl_label = "Latk Freestyle"
-    bl_region_type = 'WINDOW'
-    bl_context = "render"
-
-    def draw_header(self, context):
-        self.layout.prop(context.scene.freestyle_gpencil_export, "use_freestyle_gpencil_export", text="")
-
-    def draw(self, context):
-        layout = self.layout
-
-        scene = context.scene
-        gp = scene.freestyle_gpencil_export
-        freestyle = scene.render.layers.active.freestyle_settings
-
-        layout.active = (gp.use_freestyle_gpencil_export and freestyle.mode != 'SCRIPT')
-
-        row = layout.row()
-        row.prop(gp, "numColPlaces")
-        row.prop(gp, "numMaxColors")
-        row.prop(gp, "doClearPalette")
-
-        row = layout.row()
-        row.prop(gp, "use_overwrite")
-        row.prop(gp, "use_fill")
-        row.prop(gp, "visible_only")
-
-        #row = layout.row()
-        #row.prop(gp, "useVCols")
-        #row.prop(svg, "split_at_invisible")
-        #row.prop(gp, "use_connecting")
-        #row.prop(gp, "vertexHitbox")
-
-
-# ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
-# ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
-
 
 class LatkProperties(bpy.types.PropertyGroup):
     """Properties for Latk"""
@@ -1339,9 +1230,10 @@ class Latk_Button_MtlShader(bpy.types.Operator):
 
 def menu_func_import(self, context):
     self.layout.operator(ImportLatk.bl_idname, text="Latk Animation (.latk, .json)")
+    #if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_TiltBrush == True):
+    self.layout.operator(ImportTiltBrush.bl_idname, text="Latk - Tilt Brush (.tilt, .json)")
     #~
-    if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_TiltBrush == True):
-        self.layout.operator(ImportTiltBrush.bl_idname, text="Latk - Tilt Brush (.tilt, .json)")
+    '''
     if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_SculptrVR == True):
         self.layout.operator(ImportSculptrVR.bl_idname, text="Latk - SculptrVR (.csv)")
     if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_ASC == True):
@@ -1356,11 +1248,13 @@ def menu_func_import(self, context):
         self.layout.operator(ImportNorman.bl_idname, text="Latk - NormanVR (.json)")
     if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_VRDoodler == True):
         self.layout.operator(ImportVRDoodler.bl_idname, text="Latk - VRDoodler (.obj)")
+    '''
 
 def menu_func_export(self, context):
     self.layout.operator(ExportLatk.bl_idname, text="Latk Animation (.latk)")
     self.layout.operator(ExportLatkJson.bl_idname, text="Latk Animation (.json)")
     #~
+    '''
     if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_SculptrVR == True):
         self.layout.operator(ExportSculptrVR.bl_idname, text="Latk - SculptrVR (.csv)")
     if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_ASC == True):
@@ -1377,30 +1271,76 @@ def menu_func_export(self, context):
         self.layout.operator(ExportFbxSequence.bl_idname, text="Latk - Sketchfab FBX Sequence (.fbx)")
     if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_UnrealXYZ == True):
         self.layout.operator(ExportUnrealXYZ.bl_idname, text="Latk - Unreal Point Cloud (.xyz)")
+    '''
+
+classes = (
+    ImportLatk,
+    ImportTiltBrush,
+    ExportLatkJson,
+    ExportLatk
+)
+
+'''
+LightningArtistToolkitPreferences,
+ImportNorman,
+ImportVRDoodler,
+ImportSvg,
+ImportASC,
+ImportSculptrVR,
+ImportPainter,
+ImportGml,
+ExportGml,
+ExportFbxSequence,
+ExportSculptrVR,
+ExportASC,
+ExportUnrealXYZ,
+ExportSvg,
+ExportAfterEffects,
+ExportPainter,
+LatkProperties,
+LatkProperties_Panel,
+Latk_Button_SimpleClean,
+Latk_Button_ScopeTimeline,
+Latk_Button_MakeLoop,
+Latk_Button_MakeRoot,
+Latk_Button_MatchFills,
+Latk_Button_HideScale,
+Latk_Button_BooleanMod,
+Latk_Button_BooleanModMinus,
+Latk_Button_SubsurfMod,
+Latk_Button_SmoothMod,
+Latk_Button_DecimateMod,
+Latk_Button_HideTrue,
+Latk_Button_Refine,
+Latk_Button_Gpmesh,
+Latk_Button_RemapPressure,
+Latk_Button_WriteOnStrokes,
+Latk_Button_StrokesFromMesh,
+Latk_Button_PointsToggle,
+Latk_Button_BakeAllCurves,
+Latk_Button_BakeAnim,
+Latk_Button_Gpmesh_SingleFrame,
+Latk_Button_Dn,
+Latk_Button_Splf,
+Latk_Button_BigClean,
+Latk_Button_MtlShader
+'''
 
 def register():
-    bpy.utils.register_module(__name__)
+    for cls in classes:
+        bpy.utils.register_class(cls)   
 
-    bpy.types.Scene.latk_settings = PointerProperty(type=LatkProperties)
-    bpy.types.INFO_MT_file_import.append(menu_func_import)
-    bpy.types.INFO_MT_file_export.append(menu_func_export)
-
-    bpy.types.Scene.freestyle_gpencil_export = PointerProperty(type=FreestyleGPencil)
-    
-    parameter_editor.callbacks_lineset_pre.append(export_fill)
-    parameter_editor.callbacks_lineset_post.append(export_stroke)
+    #bpy.types.Scene.latk_settings = PointerProperty(type=LatkProperties)
+    bpy.types.TOPBAR_MT_file_import.append(menu_func_import)
+    bpy.types.TOPBAR_MT_file_export.append(menu_func_export)
 
 def unregister():
-    bpy.utils.unregister_module(__name__)
+    for cls in reversed(classes):
+        bpy.utils.unregister_class(cls)
 
-    del bpy.types.Scene.latk_settings
-    bpy.types.INFO_MT_file_import.remove(menu_func_import)
-    bpy.types.INFO_MT_file_export.remove(menu_func_export)
-
-    del bpy.types.Scene.freestyle_gpencil_export
-    
-    parameter_editor.callbacks_lineset_pre.remove(export_fill)
-    parameter_editor.callbacks_lineset_post.remove(export_stroke)
+    #del bpy.types.Scene.latk_settings
+    bpy.types.TOPBAR_MT_file_import.remove(menu_func_import)
+    bpy.types.TOPBAR_MT_file_export.remove(menu_func_export)
 
 if __name__ == "__main__":
     register()

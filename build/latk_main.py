@@ -7,7 +7,7 @@ The Lightning Artist Toolkit was developed with support from:
    Ontario Arts Council
    Toronto Arts Council
    
-Copyright (c) 2018 Nick Fox-Gieg
+Copyright (c) 2020 Nick Fox-Gieg
 http://fox-gieg.com
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -32,6 +32,7 @@ along with the Lightning Artist Toolkit (Blender).  If not, see
 bl_info = {
     "name": "Lightning Artist Toolkit (Latk)", 
     "author": "Nick Fox-Gieg",
+    "blender": (2, 80, 0),
     "description": "Import and export Latk format",
     "category": "Animation"
 }
@@ -44,12 +45,6 @@ from bpy_extras.io_utils import unpack_list
 from bpy.types import Operator, AddonPreferences
 from bpy.props import (BoolProperty, FloatProperty, StringProperty, IntProperty, PointerProperty, EnumProperty)
 from bpy_extras.io_utils import (ImportHelper, ExportHelper)
-#~
-from freestyle.shaders import *
-from freestyle.predicates import *
-from freestyle.types import Operators, StrokeShader, StrokeVertex
-from freestyle.chainingiterators import ChainSilhouetteIterator, ChainPredicateIterator
-from freestyle.functions import *
 #~
 import math
 from math import sqrt

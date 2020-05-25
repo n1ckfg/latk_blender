@@ -898,7 +898,7 @@ The Lightning Artist Toolkit was developed with support from:
    Ontario Arts Council
    Toronto Arts Council
    
-Copyright (c) 2018 Nick Fox-Gieg
+Copyright (c) 2020 Nick Fox-Gieg
 http://fox-gieg.com
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -923,6 +923,7 @@ along with the Lightning Artist Toolkit (Blender).  If not, see
 bl_info = {
     "name": "Lightning Artist Toolkit (Latk)", 
     "author": "Nick Fox-Gieg",
+    "blender": (2, 80, 0),
     "description": "Import and export Latk format",
     "category": "Animation"
 }
@@ -935,12 +936,6 @@ from bpy_extras.io_utils import unpack_list
 from bpy.types import Operator, AddonPreferences
 from bpy.props import (BoolProperty, FloatProperty, StringProperty, IntProperty, PointerProperty, EnumProperty)
 from bpy_extras.io_utils import (ImportHelper, ExportHelper)
-#~
-from freestyle.shaders import *
-from freestyle.predicates import *
-from freestyle.types import Operators, StrokeShader, StrokeVertex
-from freestyle.chainingiterators import ChainSilhouetteIterator, ChainPredicateIterator
-from freestyle.functions import *
 #~
 import math
 from math import sqrt
@@ -1006,17 +1001,15 @@ def scatterObjects(target=None, val=10):
 
 def matchFills(alpha=None):
     palette = getActivePalette()
-    for color in palette.colors:
-        color.fill_color = color.color
-        if (alpha != None):
-            color.fill_alpha = alpha
+    for mat in palette:
+        palette.grease_pencil.fill_color = palette.grease_pencil.color
 
 def resizeToFitGp():
     least = 1
     most = 1
     #~
     gp = getActiveGp()
-    for layer in gp.layers:
+    for layer in gp.data.layers:
         if (layer.lock == False):
             for frame in layer.frames:
                 if frame.frame_number < least:
@@ -1051,7 +1044,7 @@ def makeLoop():
 def breakUpStrokes():
     gp = getActiveGp()
     palette = getActivePalette()
-    for layer in gp.layers:
+    for layer in gp.data.layers:
         for frame in layer.frames:
             tempPoints = []
             tempColorNames = []
@@ -1065,7 +1058,7 @@ def breakUpStrokes():
             #~  
             for i, point in enumerate(tempPoints):
                 stroke = frame.strokes.new(tempColorNames[i])
-                stroke.draw_mode = "3DSPACE"
+                #stroke.draw_mode = "3DSPACE"
                 stroke.points.add(1)
                 coord = point.co
                 createPoint(stroke, 0, (coord[0], coord[1], coord[2]), point.pressure, point.strength)
@@ -1075,7 +1068,7 @@ def normalizePoints(minVal=0.0, maxVal=1.0):
     allX = []
     allY = []
     allZ = []
-    for layer in gp.layers:
+    for layer in gp.data.layers:
         for frame in layer.frames:
             for stroke in frame.strokes:
                 for point in stroke.points:
@@ -1106,7 +1099,7 @@ def normalizePoints(minVal=0.0, maxVal=1.0):
     maxValY = maxVal * yRange
     maxValZ = maxVal * zRange
     #~
-    for layer in gp.layers:
+    for layer in gp.data.layers:
         for frame in layer.frames:
             for stroke in frame.strokes:
                 for point in stroke.points:  
@@ -1137,7 +1130,7 @@ def gpWorldRoot(name="Empty"):
 def pressureRange(_min=0.1, _max=1.0, _mode="clamp_p"):
     gp = getActiveGp()
     if (_mode == "clamp_p"):
-        for layer in gp.layers:
+        for layer in gp.data.layers:
             for frame in layer.frames:
                 for stroke in frame.strokes:
                     for point in stroke.points:
@@ -1146,13 +1139,13 @@ def pressureRange(_min=0.1, _max=1.0, _mode="clamp_p"):
                         elif (point.pressure > _max):
                             point.pressure = _max
     elif (_mode == "remap_p"):
-        for layer in gp.layers:
+        for layer in gp.data.layers:
             for frame in layer.frames:
                 for stroke in frame.strokes:
                     for point in stroke.points:
                         point.pressure = remap(point.pressure, 0.0, 1.0, _min, _max)
     elif (_mode == "clamp_s"):
-        for layer in gp.layers:
+        for layer in gp.data.layers:
             for frame in layer.frames:
                 for stroke in frame.strokes:
                     for point in stroke.points:
@@ -1161,7 +1154,7 @@ def pressureRange(_min=0.1, _max=1.0, _mode="clamp_p"):
                         elif (point.strength > _max):
                             point.strength = _max
     elif (_mode == "remap_s"):
-        for layer in gp.layers:
+        for layer in gp.data.layers:
             for frame in layer.frames:
                 for stroke in frame.strokes:
                     for point in stroke.points:
@@ -1661,7 +1654,7 @@ def delete(_obj=None):
     gc.collect()
 
 def refresh():
-    bpy.context.scene.update()
+    bpy.context.view_layer.update()
 
 def remap(value, min1, max1, min2, max2):
     range1 = max1 - min1
@@ -1719,7 +1712,7 @@ def bakeFrames():
     end = bpy.context.scene.frame_end + 1
     scene = bpy.context.scene
     gp = getActiveGp()
-    for layer in gp.layers:   
+    for layer in gp.data.layers:   
         for i in range(start, end):
             try:
                 layer.frames.new(i)
@@ -1831,9 +1824,9 @@ def goToFrame(_index):
     return bpy.context.scene.frame_current
 
 def hideFrame(_obj, _frame, _hide):
-    _obj.hide = _hide
+    _obj.hide_set(_hide)
     _obj.hide_render = _hide
-    _obj.keyframe_insert(data_path="hide", frame=_frame) 
+    _obj.keyframe_insert(data_path="hide_viewport", frame=_frame) 
     _obj.keyframe_insert(data_path="hide_render", frame=_frame) 
 
 def hideFrameByScale(_obj, _frame, _hide):
@@ -1930,8 +1923,8 @@ def moveShot(start, end, x, y, z):
     gp = bpy.context.scene.grease_pencil
     target = (start, end)
     for g in range(target[0], target[1]+1):
-        for f in range(0, len(gp.layers)):
-            layer = gp.layers[f]
+        for f in range(0, len(gp.data.layers)):
+            layer = gp.data.layers[f]
             currentFrame = g
             for i in range(0, len(layer.frames[currentFrame].strokes)):
                 for j in range(0, len(layer.frames[currentFrame].strokes[i].points)):
@@ -1958,17 +1951,29 @@ def alignCamera():
     bpy.context.area.type = original_type
 
 # ~ ~ ~ ~ ~ ~ grease pencil ~ ~ ~ ~ ~ ~
-def getActiveGp(_name="GPencil"):
-    try:
-        pencil = bpy.context.scene.grease_pencil
-    except:
-        pencil = None
-    try:
-        gp = bpy.data.grease_pencil[pencil.name]
-    except:
-        gp = bpy.data.grease_pencil.new(_name)
-        bpy.context.scene.grease_pencil = gp
-    #print("Active GP block is: " + gp.name)
+def getActiveGp(_name=None):
+    if not _name:
+        try:
+            gp = ss()
+            if (gp.type == "GPENCIL"):
+                return gp
+        except:
+            pass
+    else:
+        for obj in bpy.data.objects:
+            if (obj.name == _name and obj.type == "GPENCIL"):
+                return obj
+    for obj in bpy.data.objects:
+        if (obj.type == "GPENCIL"):
+            return obj
+    return createGp()
+
+def createGp(_name=None):
+    bpy.ops.object.gpencil_add(type="EMPTY")
+    bpy.data.grease_pencils[len(bpy.data.grease_pencils)-1].stroke_depth_order = "3D"  
+    createGpMaterial()
+    #newLayer()
+    gp = ss()
     return gp
 
 def forceDrawMode():
@@ -1997,35 +2002,30 @@ def initGp():
 
 def getActivePalette():
     gp = getActiveGp()
-    palette = gp.palettes.active
-    if (palette == None):
-        palette = gp.palettes.new(gp.name + "_Palette", set_active = True)
-    if (len(palette.colors) < 1):
-        color = palette.colors.new()
-        color.color = (0,0,0)
-    #print("Active palette is: " + gp.palettes.active.name)
-    return palette
+    return gp.data.materials
 
 def getActiveColor():
+    gp = getActiveGp()
     palette = getActivePalette()
-    #print("Active color is: " + "\"" + palette.colors.active.name + "\" " + str(palette.colors.active.color))
-    return palette.colors.active
+    return palette[gp.active_material_index].grease_pencil.color
 
 def getActiveLayer():
     gp = getActiveGp()
-    layer = gp.layers.active
+    if (len(gp.data.layers) < 1):
+        bpy.ops.gpencil.layer_add()
+    layer = gp.data.layers.active
     return layer
 
 def setActiveLayer(name="Layer"):
     gp = getActiveGp()
-    gp.layers.active = gp.layers[name]
-    return gp.layers.active
+    gp.data.layers.active = gp.data.layers[name]
+    return gp.data.layers.active
 
 def deleteLayer(name=None):
     gp = getActiveGp()
     if not name:
-        name = gp.layers.active.info
-    gp.layers.remove(gp.layers[name])
+        name = gp.data.layers.active.info
+    gp.data.layers.remove(gp.data.layers[name])
 
 def duplicateLayer():
     ctx = fixContext()
@@ -2089,7 +2089,7 @@ def checkLayersAboveFrameLimit(limit=20):
     gp = getActiveGp()
     returns = []
     print("~ ~ ~ ~")
-    for layer in gp.layers:
+    for layer in gp.data.layers:
         if (len(layer.frames) > limit + 1): # accounting for extra end cap frame
             returns.append(layer)
             print("layer " + layer.info + " is over limit " + str(limit) + " with " + str(len(layer.frames)) + " frames.")
@@ -2124,14 +2124,14 @@ def getLayerLength(name=None):
 
 def cleanEmptyLayers():
     gp = getActiveGp()
-    for layer in gp.layers:
+    for layer in gp.data.layers:
         if (len(layer.frames) == 0):
-            gp.layers.remove(layer)
+            gp.data.layers.remove(layer)
 
 def clearLayers():
     gp = getActiveGp()
-    for layer in gp.layers:
-        gp.layers.remove(layer)
+    for layer in gp.data.layers:
+        gp.data.layers.remove(layer)
 
 def clearPalette():
     palette = getActivePalette()
@@ -2142,71 +2142,85 @@ def clearAll():
     clearLayers()
     clearPalette()
 
-def createColor(_color):
-    frame = getActiveFrame()
+def createColor(_color=(0,0,0)):
+    if (len(_color) == 3):
+        _color = (_color[0], _color[1], _color[2], 1)
+    gp = getActiveGp()
     palette = getActivePalette()
-    matchingColorIndex = -1
     places = 7
-    for i in range(0, len(palette.colors)):
-        if (roundVal(_color[0], places) == roundVal(palette.colors[i].color.r, places) and roundVal(_color[1], places) == roundVal(palette.colors[i].color.g, places) and roundVal(_color[2], places) == roundVal(palette.colors[i].color.b, places)):
-            matchingColorIndex = i
     #~
-    if (matchingColorIndex == -1):
-        color = palette.colors.new()
-        color.color = _color
-    else:
-        palette.colors.active = palette.colors[matchingColorIndex]
-        color = palette.colors[matchingColorIndex]
-    #~        
-    #print("Active color is: " + "\"" + palette.colors.active.name + "\" " + str(palette.colors.active.color))
-    return color
+    for i in range(0, len(palette)):
+        color = palette[i].grease_pencil.color
+        if (roundVal(_color[0], places) == roundVal(color[0], places) and roundVal(_color[1], places) == roundVal(color[1], places) and roundVal(_color[2], places) == roundVal(color[2], places)):
+            gp.active_material_index = i
+            return color
+    mat = createGpMaterial(_color)
+    return mat.grease_pencil.color
+
+def createGpMaterial(_color=(0,0,0)):
+    gp = getActiveGp()
+    palette = getActivePalette()
+    if (len(_color) == 3):
+        _color = (_color[0], _color[1], _color[2], 1)
+    mat = bpy.data.materials.new(name="Material")
+    bpy.data.materials.create_gpencil_data(mat)
+    mat.grease_pencil.color = _color
+    mat.grease_pencil.fill_color = (_color[0], _color[1], _color[2], 0)
+    palette.append(mat)
+    gp.active_material_index = len(palette)-1
+    return mat
 
 # ~ ~ ~ 
 def createColorWithPalette(_color, numPlaces=7, maxColors=0):
+    if (len(_color) == 3):
+        _color = (_color[0], _color[1], _color[2], 1)
     palette = getActivePalette()
+    gp = getActiveGp()
     matchingColorIndex = -1
     places = numPlaces
-    for i in range(0, len(palette.colors)):
-        if (roundVal(_color[0], places) == roundVal(palette.colors[i].color.r, places) and roundVal(_color[1], places) == roundVal(palette.colors[i].color.g, places) and roundVal(_color[2], places) == roundVal(palette.colors[i].color.b, places)):
+    for i in range(0, len(palette)):
+        color = palette[i].grease_pencil.color
+        if (roundVal(_color[0], places) == roundVal(color[0], places) and roundVal(_color[1], places) == roundVal(color[1], places) and roundVal(_color[2], places) == roundVal(color[2], places)):
             matchingColorIndex = i
     #~
     if (matchingColorIndex == -1):
-        if (maxColors<1 or len(palette.colors)<maxColors):
-            color = palette.colors.new()
-            color.color = _color
+        if (maxColors<1 or len(palette)<maxColors):
+            color = createColor(_color)
         else:
             distances = []
             sortedColors = []
-            for color in palette.colors:
-                sortedColors.append(color)
+            for mat in palette:
+                sortedColors.append(mat.grease_pencil.color)
             for color in sortedColors:
-                distances.append(getDistance(_color, color.color))
+                distances.append(getDistance(_color, (color[0], color[1], color[2], color[3])))
             sortedColors.sort(key=dict(zip(sortedColors, distances)).get)
-            palette.colors.active = palette.colors[sortedColors[0].name]
+            createColor(sortedColors[0])
     else:
-        palette.colors.active = palette.colors[matchingColorIndex]
-        color = palette.colors[matchingColorIndex]
+        gp.active_material_index = matchingColorIndex
+        color = palette[matchingColorIndex].grease_pencil.color
     #~        
-    #print("Active color is: " + "\"" + palette.colors.active.name + "\" " + str(palette.colors.active.color))
     return color
 # ~ ~ ~
 
 def matchColorToPalette(_color):
+    if (len(_color) == 3):
+        _color = (_color[0], _color[1], _color[2], 1)
     palette = getActivePalette()
+    gp = getActiveGp()
     distances = []
     sortedColors = []
-    for color in palette.colors:
-        sortedColors.append(color)
+    for mat in palette:
+        sortedColors.append(mat.grease_pencil.color)
     for color in sortedColors:
-        distances.append(getDistance(_color, color.color))
+        distances.append(getDistance(_color, (color[0], color[1], color[2], color[3])))
     sortedColors.sort(key=dict(zip(sortedColors, distances)).get)
-    returns = palette.colors[sortedColors[0].name]
-    palette.colors.active = returns
-    return returns
+    return createColor(sortedColors[0])
 
 def createAndMatchColorPalette(color, numMaxColors=16, numColPlaces=5):
+    if (len(color) == 3):
+        color = (color[0], color[1], color[2], 1)
     palette = getActivePalette()
-    if (len(palette.colors) < numMaxColors):
+    if (len(palette) < numMaxColors):
         createColorWithPalette(color, numColPlaces, numMaxColors)
     else:
         matchColorToPalette(color)
@@ -2232,14 +2246,14 @@ def changeColor():
         newStroke.points.add(len(points))
         for j in range(0, len(points)):
             createPoint(newStroke, j, points[j].co)
-    print(str(len(strokes)) + " changed to " + palette.colors.active.name)
+    #print(str(len(strokes)) + " changed to " + palette.colors.active.name)
 
 def newLayer(name="NewLayer", setActive=True):
     gp = getActiveGp()
-    gp.layers.new(name)
+    gp.data.layers.new(name)
     if (setActive==True):
-        gp.layers.active = gp.layers[len(gp.layers)-1]
-    return gp.layers[len(gp.layers)-1]
+        gp.data.layers.active = gp.data.layers[len(gp.data.layers)-1]
+    return gp.data.layers[len(gp.data.layers)-1]
 
 def getStrokeCoords(target=None):
     returns = []
@@ -2269,21 +2283,19 @@ def lookUpStrokeColor(target=None):
     palette = getActivePalette()
     if not target:
         target = getSelectedStroke()
-    return palette.colors[target.colorname]
+    return palette[target.material_index]
 
 def getStrokeColor(target=None):
-    color = lookUpStrokeColor(target).color
-    return (color[0], color[1], color[2])
+    return lookUpStrokeColor(target).grease_pencil.color
 
 def getStrokeAlpha(target=None):
-    return lookUpStrokeColor(target).alpha
+    return lookUpStrokeColor(target).grease_pencil.color[3]
 
 def getStrokeFillColor(target=None):
-    color = lookUpStrokeColor(target).fill_color
-    return (color[0], color[1], color[2])
+    return lookUpStrokeColor(target).grease_pencil.fill_color
 
 def getStrokeFillAlpha(target=None):
-    return lookUpStrokeColor(target).fill_alpha
+    return lookUpStrokeColor(target).grease_pencil.fill_color[3]
 
 def getStrokeCoordsPlus(target=None):
     returns = []
@@ -2360,8 +2372,8 @@ def deleteFromAllFrames():
 
 def getAllLayers():
     gp = getActiveGp()
-    print("Got " + str(len(gp.layers)) + " layers.")
-    return gp.layers
+    print("Got " + str(len(gp.data.layers)) + " layers.")
+    return gp.data.layers
 
 def getAllFrames(active=False):
     returns = []
@@ -2377,7 +2389,7 @@ def getAllFrames(active=False):
 
 def getActiveFrame():
     gp = getActiveGp()
-    layer = gp.layers.active
+    layer = gp.data.layers.active
     frame = layer.active_frame
     return frame
 
@@ -2404,8 +2416,8 @@ def getAllStrokes(active=False):
 def getLayerStrokes(name=None):
     gp = getActiveGp()
     if not name:
-        name = gp.layers.active.info
-    layer = gp.layers[name]
+        name = gp.data.layers.active.info
+    layer = gp.data.layers[name]
     strokes = []
     for frame in layer.frames:
         for stroke in frame.strokes:
@@ -2415,8 +2427,8 @@ def getLayerStrokes(name=None):
 def getFrameStrokes(num=None, name=None):
     gp = getActiveGp()
     if not name:
-        name = gp.layers.active.info
-    layer = gp.layers[name]
+        name = gp.data.layers.active.info
+    layer = gp.data.layers[name]
     if not num:
         num = layer.active_frame.frame_number
     strokes = []
@@ -2429,19 +2441,19 @@ def getFrameStrokes(num=None, name=None):
 def getLayerStrokesAvg(name=None):
     gp = getActiveGp()
     if not name:
-        name = gp.layers.active.info
-    layer = gp.layers[name]
+        name = gp.data.layers.active.info
+    layer = gp.data.layers[name]
     return float(roundVal(len(getLayerStrokes(name)) / len(layer.frames), 2))
 
 def getAllStrokesAvg(locked=True):
     gp = getActiveGp()
     avg = 0
-    for layer in gp.layers:
+    for layer in gp.data.layers:
         if (layer.lock == False or locked == True):
             avg += getLayerStrokesAvg(layer.info)
-    return float(roundVal(avg / len(gp.layers), 2))
+    return float(roundVal(avg / len(gp.data.layers), 2))
 
-def getSelectedStrokes(active=True):
+def getSelectedStrokes(active=False):
     returns = []
     strokes = getAllStrokes(active)
     for stroke in strokes:
@@ -2578,12 +2590,12 @@ def fromGpToLatk(bake=False, skipLocked=False, useScaleAndOffset=False, globalSc
     if(bake == True):
         bakeFrames()
     gp = getActiveGp()
-    pal = getActivePalette()
+    palette = getActivePalette()
     #~
     la = Latk()
     la.frame_rate = getSceneFps()
     #~
-    for layer in gp.layers:
+    for layer in gp.data.layers:
         if (skipLocked == False or layer.lock == False):
             laLayer = LatkLayer(layer.info)
             if (layer.parent == True):
@@ -2595,22 +2607,17 @@ def fromGpToLatk(bake=False, skipLocked=False, useScaleAndOffset=False, globalSc
                 for stroke in frame.strokes:
                     laStroke = LatkStroke()
                     
-                    color = (0,0,0)
-                    alpha = 0.9
-                    fill_color = (1,1,1)
-                    fill_alpha = 0.0
+                    color = (0,0,0,1)
+                    fill_color = (0,0,0,1)
                     try:
-                        col = pal.colors[stroke.colorname]
-                        color = (col.color[0], col.color[1], col.color[2])
-                        alpha = col.alpha 
-                        fill_color = (col.fill_color[0], col.fill_color[1], col.fill_color[2])
-                        fill_alpha = col.fill_alpha
+                        color = palette[stroke.material_index].grease_pencil.color
+                        fill_color = palette[stroke.material_index].grease_pencil.fill_color
                     except:
                         pass
-                    laStroke.color = color
-                    laStroke.alpha = alpha
-                    laStroke.fill_color = fill_color
-                    laStroke.fill_alpha = fill_alpha
+                    laStroke.color = (color[0], color[1], color[2])
+                    laStroke.alpha = color[3]
+                    laStroke.fill_color = (fill_color[0], fill_color[1], fill_color[2])
+                    laStroke.fill_alpha = fill_color[3]
                     for point in stroke.points:
                         x = point.co[0]
                         y = point.co[1]
@@ -2642,7 +2649,7 @@ def fromLatkToGp(la=None, resizeTimeline=True, useScaleAndOffset=False, limitPal
     longestFrameNum = 1
     #~
     for laLayer in la.layers:
-        layer = gp.layers.new(laLayer.name, set_active=True)
+        layer = gp.data.layers.new(laLayer.name, set_active=True)
         #~
         for i, laFrame in enumerate(laLayer.frames):
             try:
@@ -2662,8 +2669,10 @@ def fromLatkToGp(la=None, resizeTimeline=True, useScaleAndOffset=False, limitPal
                     createColor(strokeColor)
                 else:
                     createAndMatchColorPalette(strokeColor, limitPalette, 5) # num places
-                stroke = frame.strokes.new(getActiveColor().name)
-                stroke.draw_mode = "3DSPACE" # either of ("SCREEN", "3DSPACE", "2DSPACE", "2DIMAGE")
+                stroke = frame.strokes.new()
+                stroke.display_mode = '3DSPACE'
+                stroke.line_width = 100
+                stroke.material_index = gp.active_material_index
                 laPoints = laStroke.points
                 stroke.points.add(len(laPoints)) # add 4 points
                 for l, laPoint in enumerate(laPoints):
@@ -2707,7 +2716,7 @@ def readBrushStrokesAlt(filepath=None, resizeTimeline=True, useScaleAndOffset=Fa
     #~
     longestFrameNum = 1
     for layerJson in data["grease_pencil"][0]["layers"]:
-        layer = gp.layers.new(layerJson["name"], set_active=True)
+        layer = gp.data.layers.new(layerJson["name"], set_active=True)
         palette = getActivePalette()    
         #~
         for i, frameJson in enumerate(layerJson["frames"]):
@@ -2778,7 +2787,7 @@ def writeBrushStrokesAlt(filepath=None, bake=True, roundValues=True, numPlaces=7
     sg.append("\t\t\t\"layers\": [")
     #~
     sl = []
-    for f, layer in enumerate(gp.layers):
+    for f, layer in enumerate(gp.data.layers):
         sb = []
         for h, frame in enumerate(layer.frames):
             currentFrame = h
@@ -2854,7 +2863,7 @@ def writeBrushStrokesAlt(filepath=None, bake=True, roundValues=True, numPlaces=7
         sf.append("\t\t\t\t\t\"frames\": [")
         sf.append("\n".join(sb))
         sf.append("\t\t\t\t\t]")
-        if (f == len(gp.layers)-1):
+        if (f == len(gp.data.layers)-1):
             sf.append("\t\t\t\t}")
         else:
             sf.append("\t\t\t\t},")
@@ -2888,7 +2897,7 @@ def writeBrushStrokesAlt(filepath=None, bake=True, roundValues=True, numPlaces=7
 def doResizeTimeline():
     longestFrameNum = 1
     gp = getActiveGp()
-    for layer in gp.layers:
+    for layer in gp.data.layers:
         if (len(layer.frames) > longestFrameNum):
             longestFrameNum = len(layer.frames)
     setStartEnd(0, longestFrameNum, pad=False)
@@ -3054,7 +3063,7 @@ def writeSvg(filepath=None):
     svg.append("\t" + "width=\"" + str(sW) + "px\" height=\"" + str(sH) + "px\" viewBox=\"0 0 " + str(sW) + " " + str(sH) + "\" enable-background=\"new 0 0 " + str(sW) + " " + str(sH) +"\" xml:space=\"preserve\">\r")
     #~
     # BODY
-    for layer in gp.layers:
+    for layer in gp.data.layers:
         layerInfo = layer.info.replace(" ", "_").replace(".", "_")
         svg.append("\t" + "<g id=\"" + layerInfo + "\">\r")
         for i, frame in enumerate(layer.frames):
@@ -3119,8 +3128,8 @@ def writeAeJsx(filepath=None, useNulls=False):
     body.append("var nullCounter = 1;")
     lastFrameNumber = bpy.context.scene.frame_end
 
-    for h in reversed(range(0, len(gp.layers))):
-        layer = gp.layers[h]
+    for h in reversed(range(0, len(gp.data.layers))):
+        layer = gp.data.layers[h]
         for i, frame in enumerate(layer.frames):
             goToFrame(frame.frame_number)
             frameLines = None
@@ -3289,7 +3298,7 @@ def writePainter(filepath=None):
     strokes = []
     gp = getActiveGp()
     palette = getActivePalette()
-    for layer in gp.layers:
+    for layer in gp.data.layers:
         if (layer.lock == False):
             for stroke in layer.active_frame.strokes:
                 strokes.append(stroke)
@@ -3388,7 +3397,7 @@ def importVRDoodler(filepath=None):
             vrd_points.append(vrd_point)
 
     gp = getActiveGp()
-    layer = gp.layers.new("VRDoodler_layer", set_active=True)
+    layer = gp.data.layers.new("VRDoodler_layer", set_active=True)
     start, end = getStartEnd()
     frame = layer.frames.new(start)
     for vrd_stroke in vrd_strokes:
@@ -3418,7 +3427,7 @@ def importPainter(filepath=None):
     #roundValues = True
 
     gp = getActiveGp()
-    layer = gp.layers.new("Painter_layer", set_active=True)
+    layer = gp.data.layers.new("Painter_layer", set_active=True)
     start, end = getStartEnd()
     frame = getActiveFrame()
     if not frame:
@@ -3510,7 +3519,7 @@ def importNorman(filepath=None):
         frames.append(strokes)
     #~
     gp = getActiveGp()
-    layer = gp.layers.new("Norman_layer", set_active=True)
+    layer = gp.data.layers.new("Norman_layer", set_active=True)
     for i in range(0, len(frames)):
         frame = layer.frames.new(i)
         for j in range(0, len(frames[i])):
@@ -3661,7 +3670,7 @@ def gmlParser(filepath=None, splitStrokes=False, sequenceAnim=False):
                 deleteLayer(layer.info)
         cleanCounter = 1
         for layer in masterLayerList:
-            for gpLayer in gp.layers:
+            for gpLayer in gp.data.layers:
                 if (layer.info==gpLayer.info):
                     gpLayer.info = origLayerName + "_" + str(cleanCounter)
                     cleanCounter += 1
@@ -3869,7 +3878,7 @@ def importAsc(filepath=None, strokeLength=1, importAsGP=False):
 
     if (importAsGP==True):
         gp = getActiveGp()
-        layer = gp.layers.new("ASC_layer", set_active=True)
+        layer = gp.data.layers.new("ASC_layer", set_active=True)
         start, end = getStartEnd()
         frame = getActiveFrame()
         if not frame:
@@ -3910,7 +3919,7 @@ def exportAsc(filepath=None):
     ascData = []
     gp = getActiveGp()
     palette = getActivePalette()
-    for layer in gp.layers:
+    for layer in gp.data.layers:
         for frame in layer.frames:
             for stroke in frame.strokes:
                 color = palette.colors[stroke.colorname].color
@@ -4010,7 +4019,7 @@ def importSculptrVr(filepath=None, strokeLength=1, scale=0.01, startLine=1):
         colors.append(color)
 
     gp = getActiveGp()
-    layer = gp.layers.new("ASC_layer", set_active=True)
+    layer = gp.data.layers.new("ASC_layer", set_active=True)
     start, end = getStartEnd()
     frame = getActiveFrame()
     if not frame:
@@ -4208,7 +4217,7 @@ def importTiltBrush(filepath=None, vertSkip=1):
     if (filetype == "tilt" or filetype == "zip"): # Tilt Brush binary file with original stroke data
         t = Tilt(filepath)
         #~
-        layer = gp.layers.new("TiltBrush", set_active=True)
+        layer = gp.data.layers.new("TiltBrush", set_active=True)
         frame = layer.frames.new(1)
         #~
         for tstroke in t.sketch.strokes:
@@ -4246,9 +4255,11 @@ def importTiltBrush(filepath=None, vertSkip=1):
                     pointGroup.append((x, y, z, pressure, strength))
                     #~
             createColor(strokeColor)
-            stroke = frame.strokes.new(getActiveColor().name)
+            stroke = frame.strokes.new()
+            stroke.display_mode = '3DSPACE'
+            stroke.line_width = 100
+            stroke.material_index = gp.active_material_index
             stroke.points.add(len(pointGroup)) # add 4 points
-            stroke.draw_mode = "3DSPACE" # either of ("SCREEN", "3DSPACE", "2DSPACE", "2DIMAGE")  
             for l, point in enumerate(pointGroup):
                 createPoint(stroke, l, (point[0], point[1], point[2]), point[3], point[4])
         # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
@@ -4282,7 +4293,7 @@ def importTiltBrush(filepath=None, vertSkip=1):
         with open(filepath) as data_file: 
             data = json.load(data_file)
         #~
-        layer = gp.layers.new("TiltBrush", set_active=True)
+        layer = gp.data.layers.new("TiltBrush", set_active=True)
         frame = layer.frames.new(1)
         #~
         for strokeJson in data["strokes"]:
@@ -4451,7 +4462,7 @@ def colorVertices(obj, color=(1,0,0), makeMaterial=False, colorName="rgba"):
     mesh = obj.data
     #~
     if not mesh.vertex_colors:
-        mesh.vertex_colors.new(colorName) 
+        mesh.vertex_colors.new(name=colorName) 
     #~
     color_layer = mesh.vertex_colors.active  
     #~
@@ -4941,7 +4952,7 @@ def bmeshOp(op="hull", target=None):
 
 def getVerts(target=None, useWorldSpace=True, useColors=True, useBmesh=False, useModifiers=True):
     if not target:
-        target = bpy.context.scene.objects.active
+        target = bpy.context.view_layer.objects.active 
     mesh = None
     if (useModifiers==True):
         mesh = target.to_mesh(scene=bpy.context.scene, apply_modifiers=True, settings='PREVIEW')
@@ -4981,7 +4992,7 @@ def getVerts(target=None, useWorldSpace=True, useColors=True, useBmesh=False, us
 
 def countVerts(target=None):
     if not target:
-        target = bpy.context.scene.objects.active
+        target = bpy.context.view_layer.objects.active 
     return len(getVerts(target)[0])
 
 # TODO decimate does not work, context error
@@ -4996,11 +5007,11 @@ def joinObjects(target=None, center=False):
         target = s()
     #~
     bpy.ops.object.select_all(action='DESELECT') 
-    target[0].select = True
-    bpy.context.scene.objects.active = target[0]
+    target[0].select_set(True)
+    bpy.context.view_layer.objects.active  = target[0]
     for i in range(1, len(target)):
         try:
-            target[i].select = True
+            target[i].select_set(True)
         except:
             pass
     #~
@@ -5039,7 +5050,7 @@ def assembleMesh(export=False, createPalette=True):
     gp = getActiveGp()
     palette = getActivePalette()
     #~
-    for b, layer in enumerate(gp.layers):
+    for b, layer in enumerate(gp.data.layers):
         url = origFileName + "_layer_" + layer.info
         masterGroupList.append(getLayerInfo(layer))
         masterUrlList.append(url)
@@ -5108,7 +5119,7 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
         capsObj.name = "caps_ob"
         capsObj.data.resolution_u = _bevelResolution
     #~
-    for b, layer in enumerate(gp.layers):
+    for b, layer in enumerate(gp.data.layers):
         url = origFileName + "_layer_" + layer.info
         if (layer.lock==False):
             rangeStart = 0
@@ -5118,7 +5129,7 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
                 rangeEnd = rangeStart + 1
             for c in range(rangeStart, rangeEnd):
                 frame = layer.frames[c]
-                print("\n" + "*** gp layer " + layer.info + "(" + str(b+1) + " of " + str(len(gp.layers)) + ") | gp frame " + str(c+1) + " of " + str(rangeEnd) + " ***")
+                print("\n" + "*** gp layer " + layer.info + "(" + str(b+1) + " of " + str(len(gp.data.layers)) + ") | gp frame " + str(c+1) + " of " + str(rangeEnd) + " ***")
                 frameList = []
                 for d, stroke in enumerate(frame.strokes):
                     origParent = None
@@ -5160,7 +5171,7 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
                     latk_ob.data.materials.append(mat)
                     # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ 
                     #~   
-                    bpy.context.scene.objects.active = latk_ob
+                    bpy.context.view_layer.objects.active = latk_ob
                     #~
                     if (_bakeMesh == True):
                         if (thisIsAFill == False and _remesh != "hull" and _remesh != "plane"):
@@ -5210,7 +5221,7 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
                         if (i == layer.frames[c].frame_number):
                             goToFrame(i)
                             for j in range(0, len(target)):
-                                if (target[j].hide==False):
+                                if (target[j].hide_get()==False):
                                     strokesToJoin.append(target[j])
                         if (len(strokesToJoin) > 1):
                             print("~ ~ ~ ~ ~ ~ ~ ~ ~")
@@ -5300,7 +5311,7 @@ def decimateAndBake(target=None, _decimate=0.1):
             meshObj = applyModifiers(obj)
 
 def remesher(obj, bake=True, mode="blocks", octree=6, threshold=0.0001, smoothShade=False, removeDisconnected=False):
-        bpy.context.scene.objects.active = obj
+        bpy.context.view_layer.objects.active  = obj
         bpy.ops.object.modifier_add(type="REMESH")
         bpy.context.object.modifiers["Remesh"].mode = mode.upper() #sharp, smooth, blocks
         bpy.context.object.modifiers["Remesh"].octree_depth = octree
@@ -5316,7 +5327,7 @@ def remesher(obj, bake=True, mode="blocks", octree=6, threshold=0.0001, smoothSh
 def decimator(target=None, ratio=0.1, bake=True):
     if not target:
         target = ss()
-    bpy.context.scene.objects.active = target
+    bpy.context.view_layer.objects.active  = target
     bpy.ops.object.modifier_add(type='DECIMATE')
     bpy.context.object.modifiers["Decimate"].ratio = ratio     
     if (bake == True):
@@ -5329,7 +5340,7 @@ def booleanMod(target=None, op="union"):
     if not target:
         target=s()
     for i in range(1, len(target)):
-            bpy.context.scene.objects.active = target[i]
+            bpy.context.view_layer.objects.active  = target[i]
             bpy.ops.object.modifier_add(type="BOOLEAN")
             bpy.context.object.modifiers["Boolean"].operation = op.upper()
             bpy.context.object.modifiers["Boolean"].object = target[i-1]
@@ -5344,7 +5355,7 @@ def subsurfMod(target=None):
         target=s()
     returns = []
     for obj in target:
-        bpy.context.scene.objects.active = obj
+        bpy.context.view_layer.objects.active  = obj
         bpy.ops.object.modifier_add(type="SUBSURF")
         bpy.ops.object.modifier_apply(apply_as='DATA', modifier="Subsurf")
         returns.append(obj)
@@ -5355,7 +5366,7 @@ def smoothMod(target=None):
         target=s()
     returns = []
     for obj in target:
-        bpy.context.scene.objects.active = obj
+        bpy.context.view_layer.objects.active  = obj
         bpy.ops.object.modifier_add(type="SMOOTH")
         bpy.ops.object.modifier_apply(apply_as='DATA', modifier="Smooth")
         returns.append(obj)
@@ -5366,7 +5377,7 @@ def decimateMod(target=None, _decimate=0.1):
         target = s()
     returns = []
     for obj in target:
-        bpy.context.scene.objects.active = obj
+        bpy.context.view_layer.objects.active  = obj
         bpy.ops.object.modifier_add(type='DECIMATE')
         bpy.context.object.modifiers["Decimate"].ratio = _decimate     
         bpy.ops.object.modifier_apply(apply_as='DATA', modifier="Decimate")
@@ -5382,13 +5393,12 @@ def polyCube(pos=(0,0,0), scale=(1,1,1), rot=(0,0,0)):
     return cube
 
 def applyModifiers(obj):
-    mesh = obj.to_mesh(scene = bpy.context.scene, apply_modifiers=True, settings = 'PREVIEW')
-    meshObj = bpy.data.objects.new(obj.name + "_mesh", mesh)
-    bpy.context.scene.objects.link(meshObj)
-    bpy.context.scene.objects.active = meshObj
-    meshObj.matrix_world = obj.matrix_world
-    delete(obj)
-    return meshObj
+    bpy.ops.object.select_all(action='DESELECT')
+    #bpy.data.objects[obj.name].hide_set(False)
+    bpy.data.objects[obj.name].select_set(True)
+    bpy.context.view_layer.objects.active = obj
+    bpy.ops.object.convert(target='MESH')
+    return obj
 
 def getGeometryCenter(obj):
     sumWCoord = [0,0,0]
@@ -5449,7 +5459,7 @@ def centerOrigin(target=None):
     deselect()
 
 def setOrigin(target, point):
-    bpy.context.scene.objects.active = target
+    bpy.context.view_layer.objects.active  = target
     bpy.context.scene.cursor_location = point
     bpy.ops.object.origin_set(type='ORIGIN_CURSOR')
     #bpy.context.scene.update()
@@ -5474,7 +5484,7 @@ def meshToGp(obj=None, strokeLength=1, strokeGaps=10.0, shuffleOdds=1.0, spreadP
     gp = getActiveGp()
     layer = getActiveLayer()
     if not layer:
-        layer = gp.layers.new(name="meshToGp")
+        layer = gp.data.layers.new(name="meshToGp")
     frame = getActiveFrame()
     if not frame or frame.frame_number != currentFrame():
         frame = layer.frames.new(currentFrame())
@@ -5581,12 +5591,14 @@ def makeCurve(coords, pressures=None, resolution=2, thickness=0.1, bevelResoluti
     latk_ob = bpy.data.objects.new(name, curveData)
     #~
     # attach to scene and validate context
-    scn = bpy.context.scene
-    scn.objects.link(latk_ob)
-    scn.objects.active = latk_ob
-    latk_ob.select = True
+    bpy.context.collection.objects.link(latk_ob)
+    bpy.context.view_layer.objects.active = latk_ob
+    latk_ob.select_set(True)
     if (useUvs==True):
-        latk_ob.data.use_uv_as_generated = True
+        try: # 2.83 beta bug
+            latk_ob.data.use_uv_as_generated = True
+        except:
+            pass
     if (bake==True):
         bpy.ops.object.convert(target="MESH")
     return latk_ob
@@ -5658,7 +5670,7 @@ def createFill(inputVerts, useUvs=False, useHull=False, name="myObject"):
     me = bpy.data.meshes.new("myMesh") 
     ob = bpy.data.objects.new(name, me) 
     ob.show_name = True
-    bpy.context.scene.objects.link(ob)
+    bpy.context.collection.objects.link(ob)
     bm = bmesh.new() # create an empty BMesh
     bm.from_mesh(me) # fill it in from a Mesh
     #~
@@ -5677,8 +5689,8 @@ def createFill(inputVerts, useUvs=False, useHull=False, name="myObject"):
     bm.to_mesh(me)
     #~
     if (useUvs==True):
-        ob.select = True
-        bpy.context.scene.objects.active = ob
+        ob.select_set(True)
+        bpy.context.view_layer.objects.active = ob
         planarUvProject()
     #~
     return ob
@@ -6116,183 +6128,6 @@ def refine(stroke=None, splitReps=2, smoothReps=10):
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
 
-# 8 of 12. FREESTYLE
-
-# based on freestyle_to_gpencil by Folkert de Vries
-# https://github.com/folkertdev/freestyle-gpencil-exporter
-
-# a tuple containing all strokes from the current render. should get replaced by freestyle.context at some point
-def get_strokes():
-    return tuple(map(Operators().get_stroke_from_index, range(Operators().get_strokes_size())))
-
-# get the exact scene dimensions
-def render_height(scene):
-    return int(scene.render.resolution_y * scene.render.resolution_percentage / 100)
-
-def render_width(scene):
-    return int(scene.render.resolution_x * scene.render.resolution_percentage / 100)
-
-def render_dimensions(scene):
-    return render_width(scene), render_height(scene)
-
-def render_visible_strokes():
-    """Renders the scene, selects visible strokes and returns them as a tuple"""
-    if (bpy.context.scene.freestyle_gpencil_export.visible_only == True):
-        upred = QuantitativeInvisibilityUP1D(0) # visible lines only
-    else:
-        upred = TrueUP1D() # all lines
-    Operators.select(upred)
-    Operators.bidirectional_chain(ChainSilhouetteIterator(), NotUP1D(upred))
-    Operators.create(TrueUP1D(), [])
-    return get_strokes()
-
-def render_external_contour():
-    """Renders the scene, selects visible strokes of the Contour nature and returns them as a tuple"""
-    upred = AndUP1D(QuantitativeInvisibilityUP1D(0), ContourUP1D())
-    Operators.select(upred)
-    # chain when the same shape and visible
-    bpred = SameShapeIdBP1D()
-    Operators.bidirectional_chain(ChainPredicateIterator(upred, bpred), NotUP1D(upred))
-    Operators.create(TrueUP1D(), [])
-    return get_strokes()
-
-
-def create_gpencil_layer(scene, name, color, alpha, fill_color, fill_alpha):
-    """Creates a new GPencil layer (if needed) to store the Freestyle result"""
-    gp = bpy.data.grease_pencil.get("FreestyleGPencil", False) or bpy.data.grease_pencil.new(name="FreestyleGPencil")
-    scene.grease_pencil = gp
-    layer = gp.layers.get(name, False)
-    if not layer:
-        print("making new GPencil layer")
-        layer = gp.layers.new(name=name, set_active=True)
-    elif scene.freestyle_gpencil_export.use_overwrite:
-        # empty the current strokes from the gp layer
-        layer.clear()
-
-    # can this be done more neatly? layer.frames.get(..., ...) doesn't seem to work
-    frame = frame_from_frame_number(layer, scene.frame_current) or layer.frames.new(scene.frame_current)
-    return layer, frame 
-
-def frame_from_frame_number(layer, current_frame):
-    """Get a reference to the current frame if it exists, else False"""
-    return next((frame for frame in layer.frames if frame.frame_number == current_frame), False)
-
-def freestyle_to_gpencil_strokes(strokes, frame, pressure=1, draw_mode="3DSPACE", blenderRender=False):
-    scene = bpy.context.scene
-    if (scene.freestyle_gpencil_export.doClearPalette == True):
-        clearPalette()
-    """Actually creates the GPencil structure from a collection of strokes"""
-    mat = scene.camera.matrix_local.copy()
-    #~ 
-    obj = scene.objects.active #bpy.context.edit_object
-    me = obj.data
-    bm = bmesh.new()
-    bm.from_mesh(me) #from_edit_mesh(me)
-    #~
-    # this speeds things up considerably
-    images = getUvImages()
-    #~
-    uv_layer = bm.loops.layers.uv.active
-    #~
-    strokeCounter = 0;
-    
-    firstRun = True
-    allPoints = []
-    strokesToRemove = []
-    allPointsCounter = 1
-    lastActiveColor = None
-
-    for fstroke in strokes:
-        # *** fstroke contains coordinates of original vertices ***
-        sampleVertRaw = (0,0,0)
-        sampleVert = (0,0,0)
-        #~
-        fstrokeCounter = 0
-        for svert in fstroke:
-            fstrokeCounter += 1
-        for i, svert in enumerate(fstroke):
-            if (i == int(fstrokeCounter/2)):
-                sampleVertRaw = mat * svert.point_3d
-                break
-        sampleVert = (sampleVertRaw[0], sampleVertRaw[1], sampleVertRaw[2])
-        #~
-        pixel = (1,0,1)
-        lastPixel = getActiveColor().color
-        distances = []
-        sortedVerts = bm.verts
-        for v in bm.verts:
-            distances.append(getDistance(obj.matrix_world * v.co, sampleVert))
-        sortedVerts.sort(key=dict(zip(sortedVerts, distances)).get)
-
-        targetVert = None
-        for v in sortedVerts:
-            targetVert = v
-            break
-        #~
-        try:
-            uv_first = uv_from_vert_first(uv_layer, targetVert)
-            #uv_average = uv_from_vert_average(uv_layer, v)
-            #~
-            pixelRaw = None
-            if (blenderRender == True):
-                pixelRaw = getPixelFromUvArray(images[obj.active_material.texture_slots[0].texture.image.name], uv_first[0], uv_first[1])
-            else:
-                pixelRaw = getPixelFromUvArray(images[obj.active_material.node_tree.nodes["Image Texture"].image.name], uv_first[0], uv_first[1])                
-            pixel = (pixelRaw[0], pixelRaw[1], pixelRaw[2])
-        except:
-            pixel = lastPixel   
-        #~ 
-        lastActiveColor = createAndMatchColorPalette(pixel, scene.freestyle_gpencil_export.numMaxColors, scene.freestyle_gpencil_export.numColPlaces)
-        #~
-        if (scene.freestyle_gpencil_export.use_fill):
-            lastActiveColor.fill_color = lastActiveColor.color
-            lastActiveColor.fill_alpha = 0.9
-        gpstroke = frame.strokes.new(lastActiveColor.name)
-        gpstroke.draw_mode = "3DSPACE"
-        gpstroke.points.add(count=len(fstroke))
-
-        for svert, point in zip(fstroke, gpstroke.points):
-            point.co = mat * svert.point_3d
-            point.select = True
-            point.strength = 1
-            point.pressure = pressure
-
-def freestyle_to_fill(scene):
-    default = dict(color=(0, 0, 0), alpha=1, fill_color=(0, 1, 0), fill_alpha=1)
-    layer, frame = create_gpencil_layer(scene, "freestyle fill", **default)
-    # render the external contour 
-    strokes = render_external_contour()
-    freestyle_to_gpencil_strokes(strokes, frame, draw_mode="3DSPACE")#scene.freestyle_gpencil_export.draw_mode)
-
-def freestyle_to_strokes(scene):
-    default = dict(color=(0, 0, 0), alpha=1, fill_color=(0, 1, 0), fill_alpha=0)
-    layer, frame = create_gpencil_layer(scene, "freestyle stroke", **default)
-    # render the normal strokes 
-    #strokes = render_visible_strokes()
-    strokes = get_strokes()
-    freestyle_to_gpencil_strokes(strokes, frame, draw_mode="3DSPACE")#scene.freestyle_gpencil_export.draw_mode)
-
-def export_stroke(scene, _, x):
-    # create stroke layer
-    freestyle_to_strokes(scene)
-
-def export_fill(scene, layer, lineset):
-    # Doesn't work for 3D due to concave edges
-    return
-
-    #if not scene.freestyle_gpencil_export.use_freestyle_gpencil_export:
-    #    return 
-
-    #if scene.freestyle_gpencil_export.use_fill:
-    #    # create the fill layer
-    #    freestyle_to_fill(scene)
-    #    # delete these strokes
-    #    Operators.reset(delete_strokes=True)
-
-# * * * * * * * * * * * * * * * * * * * * * * * * * *
-# * * * * * * * * * * * * * * * * * * * * * * * * * *
-# * * * * * * * * * * * * * * * * * * * * * * * * * *
-
 # 9 of 12. SHORTCUTS
 
 def up():
@@ -6339,11 +6174,13 @@ gotoFrame = goToFrame
 class LightningArtistToolkitPreferences(bpy.types.AddonPreferences):
     bl_idname = __name__
     
+    '''
     extraFormats_TiltBrush = bpy.props.BoolProperty(
         name = 'Tilt Brush',
         description = "Tilt Brush import",
         default = True
     )
+    '''
 
     extraFormats_GML = bpy.props.BoolProperty(
         name = 'GML',
@@ -6408,7 +6245,7 @@ class LightningArtistToolkitPreferences(bpy.types.AddonPreferences):
     def draw(self, context):
         layout = self.layout
         layout.label("Add menu items to import:")
-        layout.prop(self, "extraFormats_TiltBrush")
+        #layout.prop(self, "extraFormats_TiltBrush")
         layout.prop(self, "extraFormats_SculptrVR")
         layout.prop(self, "extraFormats_ASC")
         layout.prop(self, "extraFormats_GML")
@@ -6956,117 +6793,6 @@ class ExportPainter(bpy.types.Operator, ExportHelper):
 
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
-
-
-class FreestyleGPencil(bpy.types.PropertyGroup):
-    """Properties for the Freestyle to Grease Pencil exporter"""
-    bl_idname = "RENDER_PT_gpencil_export"
-
-    use_freestyle_gpencil_export = BoolProperty(
-        name="Grease Pencil Export",
-        description="Export Freestyle edges to Grease Pencil"
-    )
-
-    use_fill = BoolProperty(
-        name="Fill Strokes",
-        description="Fill the contour with the object's material color",
-        default=False
-    )
-
-    '''
-    use_connecting = BoolProperty(
-        name="Connecting Strokes",
-        description="Connect all vertices with strokes",
-        default=False
-    )
-    '''
-
-    visible_only = BoolProperty(
-        name="Visible Only",
-        description="Only render visible lines",
-        default=False
-    )
-
-    use_overwrite = BoolProperty(
-        name="Overwrite",
-        description="Remove the GPencil strokes from previous renders before a new render",
-        default=False
-    )
-
-    '''
-    vertexHitbox = FloatProperty(
-        name="Vertex Hitbox",
-        description="How close a GP stroke needs to be to a vertex",
-        default=1.5
-    )
-    '''
-
-    numColPlaces = IntProperty(
-        name="Color Places",
-        description="How many decimal places used to find matching colors",
-        default=5,
-    )
-
-    numMaxColors = IntProperty(
-        name="Max Colors",
-        description="How many colors are in the Grease Pencil palette",
-        default=16
-    )
-
-    doClearPalette = BoolProperty(
-        name="Clear Palette",
-        description="Delete palette before beginning a new render",
-        default=False
-    )
-
-    '''
-    useVCols = BoolProperty(
-        name="Use VCols",
-        description="Use vertex colors instead of UV maps",
-        default=False
-    )
-    '''
-
-class FreestyleGPencil_Panel(bpy.types.Panel):
-    """Creates a Panel in the render context of the properties editor"""
-    bl_idname = "RENDER_PT_FreestyleGPencilPanel"
-    bl_space_type = 'PROPERTIES'
-    bl_label = "Latk Freestyle"
-    bl_region_type = 'WINDOW'
-    bl_context = "render"
-
-    def draw_header(self, context):
-        self.layout.prop(context.scene.freestyle_gpencil_export, "use_freestyle_gpencil_export", text="")
-
-    def draw(self, context):
-        layout = self.layout
-
-        scene = context.scene
-        gp = scene.freestyle_gpencil_export
-        freestyle = scene.render.layers.active.freestyle_settings
-
-        layout.active = (gp.use_freestyle_gpencil_export and freestyle.mode != 'SCRIPT')
-
-        row = layout.row()
-        row.prop(gp, "numColPlaces")
-        row.prop(gp, "numMaxColors")
-        row.prop(gp, "doClearPalette")
-
-        row = layout.row()
-        row.prop(gp, "use_overwrite")
-        row.prop(gp, "use_fill")
-        row.prop(gp, "visible_only")
-
-        #row = layout.row()
-        #row.prop(gp, "useVCols")
-        #row.prop(svg, "split_at_invisible")
-        #row.prop(gp, "use_connecting")
-        #row.prop(gp, "vertexHitbox")
-
-
-# ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
-# ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
-
 
 class LatkProperties(bpy.types.PropertyGroup):
     """Properties for Latk"""
@@ -7675,9 +7401,10 @@ class Latk_Button_MtlShader(bpy.types.Operator):
 
 def menu_func_import(self, context):
     self.layout.operator(ImportLatk.bl_idname, text="Latk Animation (.latk, .json)")
+    #if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_TiltBrush == True):
+    self.layout.operator(ImportTiltBrush.bl_idname, text="Latk - Tilt Brush (.tilt, .json)")
     #~
-    if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_TiltBrush == True):
-        self.layout.operator(ImportTiltBrush.bl_idname, text="Latk - Tilt Brush (.tilt, .json)")
+    '''
     if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_SculptrVR == True):
         self.layout.operator(ImportSculptrVR.bl_idname, text="Latk - SculptrVR (.csv)")
     if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_ASC == True):
@@ -7692,11 +7419,13 @@ def menu_func_import(self, context):
         self.layout.operator(ImportNorman.bl_idname, text="Latk - NormanVR (.json)")
     if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_VRDoodler == True):
         self.layout.operator(ImportVRDoodler.bl_idname, text="Latk - VRDoodler (.obj)")
+    '''
 
 def menu_func_export(self, context):
     self.layout.operator(ExportLatk.bl_idname, text="Latk Animation (.latk)")
     self.layout.operator(ExportLatkJson.bl_idname, text="Latk Animation (.json)")
     #~
+    '''
     if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_SculptrVR == True):
         self.layout.operator(ExportSculptrVR.bl_idname, text="Latk - SculptrVR (.csv)")
     if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_ASC == True):
@@ -7713,30 +7442,76 @@ def menu_func_export(self, context):
         self.layout.operator(ExportFbxSequence.bl_idname, text="Latk - Sketchfab FBX Sequence (.fbx)")
     if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_UnrealXYZ == True):
         self.layout.operator(ExportUnrealXYZ.bl_idname, text="Latk - Unreal Point Cloud (.xyz)")
+    '''
+
+classes = (
+    ImportLatk,
+    ImportTiltBrush,
+    ExportLatkJson,
+    ExportLatk
+)
+
+'''
+LightningArtistToolkitPreferences,
+ImportNorman,
+ImportVRDoodler,
+ImportSvg,
+ImportASC,
+ImportSculptrVR,
+ImportPainter,
+ImportGml,
+ExportGml,
+ExportFbxSequence,
+ExportSculptrVR,
+ExportASC,
+ExportUnrealXYZ,
+ExportSvg,
+ExportAfterEffects,
+ExportPainter,
+LatkProperties,
+LatkProperties_Panel,
+Latk_Button_SimpleClean,
+Latk_Button_ScopeTimeline,
+Latk_Button_MakeLoop,
+Latk_Button_MakeRoot,
+Latk_Button_MatchFills,
+Latk_Button_HideScale,
+Latk_Button_BooleanMod,
+Latk_Button_BooleanModMinus,
+Latk_Button_SubsurfMod,
+Latk_Button_SmoothMod,
+Latk_Button_DecimateMod,
+Latk_Button_HideTrue,
+Latk_Button_Refine,
+Latk_Button_Gpmesh,
+Latk_Button_RemapPressure,
+Latk_Button_WriteOnStrokes,
+Latk_Button_StrokesFromMesh,
+Latk_Button_PointsToggle,
+Latk_Button_BakeAllCurves,
+Latk_Button_BakeAnim,
+Latk_Button_Gpmesh_SingleFrame,
+Latk_Button_Dn,
+Latk_Button_Splf,
+Latk_Button_BigClean,
+Latk_Button_MtlShader
+'''
 
 def register():
-    bpy.utils.register_module(__name__)
+    for cls in classes:
+        bpy.utils.register_class(cls)   
 
-    bpy.types.Scene.latk_settings = PointerProperty(type=LatkProperties)
-    bpy.types.INFO_MT_file_import.append(menu_func_import)
-    bpy.types.INFO_MT_file_export.append(menu_func_export)
-
-    bpy.types.Scene.freestyle_gpencil_export = PointerProperty(type=FreestyleGPencil)
-    
-    parameter_editor.callbacks_lineset_pre.append(export_fill)
-    parameter_editor.callbacks_lineset_post.append(export_stroke)
+    #bpy.types.Scene.latk_settings = PointerProperty(type=LatkProperties)
+    bpy.types.TOPBAR_MT_file_import.append(menu_func_import)
+    bpy.types.TOPBAR_MT_file_export.append(menu_func_export)
 
 def unregister():
-    bpy.utils.unregister_module(__name__)
+    for cls in reversed(classes):
+        bpy.utils.unregister_class(cls)
 
-    del bpy.types.Scene.latk_settings
-    bpy.types.INFO_MT_file_import.remove(menu_func_import)
-    bpy.types.INFO_MT_file_export.remove(menu_func_export)
-
-    del bpy.types.Scene.freestyle_gpencil_export
-    
-    parameter_editor.callbacks_lineset_pre.remove(export_fill)
-    parameter_editor.callbacks_lineset_post.remove(export_stroke)
+    #del bpy.types.Scene.latk_settings
+    bpy.types.TOPBAR_MT_file_import.remove(menu_func_import)
+    bpy.types.TOPBAR_MT_file_export.remove(menu_func_export)
 
 if __name__ == "__main__":
     register()

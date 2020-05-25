@@ -32,17 +32,15 @@ def scatterObjects(target=None, val=10):
 
 def matchFills(alpha=None):
     palette = getActivePalette()
-    for color in palette.colors:
-        color.fill_color = color.color
-        if (alpha != None):
-            color.fill_alpha = alpha
+    for mat in palette:
+        palette.grease_pencil.fill_color = palette.grease_pencil.color
 
 def resizeToFitGp():
     least = 1
     most = 1
     #~
     gp = getActiveGp()
-    for layer in gp.layers:
+    for layer in gp.data.layers:
         if (layer.lock == False):
             for frame in layer.frames:
                 if frame.frame_number < least:
@@ -77,7 +75,7 @@ def makeLoop():
 def breakUpStrokes():
     gp = getActiveGp()
     palette = getActivePalette()
-    for layer in gp.layers:
+    for layer in gp.data.layers:
         for frame in layer.frames:
             tempPoints = []
             tempColorNames = []
@@ -91,7 +89,7 @@ def breakUpStrokes():
             #~  
             for i, point in enumerate(tempPoints):
                 stroke = frame.strokes.new(tempColorNames[i])
-                stroke.draw_mode = "3DSPACE"
+                #stroke.draw_mode = "3DSPACE"
                 stroke.points.add(1)
                 coord = point.co
                 createPoint(stroke, 0, (coord[0], coord[1], coord[2]), point.pressure, point.strength)
@@ -101,7 +99,7 @@ def normalizePoints(minVal=0.0, maxVal=1.0):
     allX = []
     allY = []
     allZ = []
-    for layer in gp.layers:
+    for layer in gp.data.layers:
         for frame in layer.frames:
             for stroke in frame.strokes:
                 for point in stroke.points:
@@ -132,7 +130,7 @@ def normalizePoints(minVal=0.0, maxVal=1.0):
     maxValY = maxVal * yRange
     maxValZ = maxVal * zRange
     #~
-    for layer in gp.layers:
+    for layer in gp.data.layers:
         for frame in layer.frames:
             for stroke in frame.strokes:
                 for point in stroke.points:  
@@ -163,7 +161,7 @@ def gpWorldRoot(name="Empty"):
 def pressureRange(_min=0.1, _max=1.0, _mode="clamp_p"):
     gp = getActiveGp()
     if (_mode == "clamp_p"):
-        for layer in gp.layers:
+        for layer in gp.data.layers:
             for frame in layer.frames:
                 for stroke in frame.strokes:
                     for point in stroke.points:
@@ -172,13 +170,13 @@ def pressureRange(_min=0.1, _max=1.0, _mode="clamp_p"):
                         elif (point.pressure > _max):
                             point.pressure = _max
     elif (_mode == "remap_p"):
-        for layer in gp.layers:
+        for layer in gp.data.layers:
             for frame in layer.frames:
                 for stroke in frame.strokes:
                     for point in stroke.points:
                         point.pressure = remap(point.pressure, 0.0, 1.0, _min, _max)
     elif (_mode == "clamp_s"):
-        for layer in gp.layers:
+        for layer in gp.data.layers:
             for frame in layer.frames:
                 for stroke in frame.strokes:
                     for point in stroke.points:
@@ -187,7 +185,7 @@ def pressureRange(_min=0.1, _max=1.0, _mode="clamp_p"):
                         elif (point.strength > _max):
                             point.strength = _max
     elif (_mode == "remap_s"):
-        for layer in gp.layers:
+        for layer in gp.data.layers:
             for frame in layer.frames:
                 for stroke in frame.strokes:
                     for point in stroke.points:
@@ -687,7 +685,7 @@ def delete(_obj=None):
     gc.collect()
 
 def refresh():
-    bpy.context.scene.update()
+    bpy.context.view_layer.update()
 
 def remap(value, min1, max1, min2, max2):
     range1 = max1 - min1
@@ -745,7 +743,7 @@ def bakeFrames():
     end = bpy.context.scene.frame_end + 1
     scene = bpy.context.scene
     gp = getActiveGp()
-    for layer in gp.layers:   
+    for layer in gp.data.layers:   
         for i in range(start, end):
             try:
                 layer.frames.new(i)
@@ -857,9 +855,9 @@ def goToFrame(_index):
     return bpy.context.scene.frame_current
 
 def hideFrame(_obj, _frame, _hide):
-    _obj.hide = _hide
+    _obj.hide_set(_hide)
     _obj.hide_render = _hide
-    _obj.keyframe_insert(data_path="hide", frame=_frame) 
+    _obj.keyframe_insert(data_path="hide_viewport", frame=_frame) 
     _obj.keyframe_insert(data_path="hide_render", frame=_frame) 
 
 def hideFrameByScale(_obj, _frame, _hide):
@@ -956,8 +954,8 @@ def moveShot(start, end, x, y, z):
     gp = bpy.context.scene.grease_pencil
     target = (start, end)
     for g in range(target[0], target[1]+1):
-        for f in range(0, len(gp.layers)):
-            layer = gp.layers[f]
+        for f in range(0, len(gp.data.layers)):
+            layer = gp.data.layers[f]
             currentFrame = g
             for i in range(0, len(layer.frames[currentFrame].strokes)):
                 for j in range(0, len(layer.frames[currentFrame].strokes[i].points)):
@@ -984,17 +982,29 @@ def alignCamera():
     bpy.context.area.type = original_type
 
 # ~ ~ ~ ~ ~ ~ grease pencil ~ ~ ~ ~ ~ ~
-def getActiveGp(_name="GPencil"):
-    try:
-        pencil = bpy.context.scene.grease_pencil
-    except:
-        pencil = None
-    try:
-        gp = bpy.data.grease_pencil[pencil.name]
-    except:
-        gp = bpy.data.grease_pencil.new(_name)
-        bpy.context.scene.grease_pencil = gp
-    #print("Active GP block is: " + gp.name)
+def getActiveGp(_name=None):
+    if not _name:
+        try:
+            gp = ss()
+            if (gp.type == "GPENCIL"):
+                return gp
+        except:
+            pass
+    else:
+        for obj in bpy.data.objects:
+            if (obj.name == _name and obj.type == "GPENCIL"):
+                return obj
+    for obj in bpy.data.objects:
+        if (obj.type == "GPENCIL"):
+            return obj
+    return createGp()
+
+def createGp(_name=None):
+    bpy.ops.object.gpencil_add(type="EMPTY")
+    bpy.data.grease_pencils[len(bpy.data.grease_pencils)-1].stroke_depth_order = "3D"  
+    createGpMaterial()
+    #newLayer()
+    gp = ss()
     return gp
 
 def forceDrawMode():
@@ -1023,35 +1033,30 @@ def initGp():
 
 def getActivePalette():
     gp = getActiveGp()
-    palette = gp.palettes.active
-    if (palette == None):
-        palette = gp.palettes.new(gp.name + "_Palette", set_active = True)
-    if (len(palette.colors) < 1):
-        color = palette.colors.new()
-        color.color = (0,0,0)
-    #print("Active palette is: " + gp.palettes.active.name)
-    return palette
+    return gp.data.materials
 
 def getActiveColor():
+    gp = getActiveGp()
     palette = getActivePalette()
-    #print("Active color is: " + "\"" + palette.colors.active.name + "\" " + str(palette.colors.active.color))
-    return palette.colors.active
+    return palette[gp.active_material_index].grease_pencil.color
 
 def getActiveLayer():
     gp = getActiveGp()
-    layer = gp.layers.active
+    if (len(gp.data.layers) < 1):
+        bpy.ops.gpencil.layer_add()
+    layer = gp.data.layers.active
     return layer
 
 def setActiveLayer(name="Layer"):
     gp = getActiveGp()
-    gp.layers.active = gp.layers[name]
-    return gp.layers.active
+    gp.data.layers.active = gp.data.layers[name]
+    return gp.data.layers.active
 
 def deleteLayer(name=None):
     gp = getActiveGp()
     if not name:
-        name = gp.layers.active.info
-    gp.layers.remove(gp.layers[name])
+        name = gp.data.layers.active.info
+    gp.data.layers.remove(gp.data.layers[name])
 
 def duplicateLayer():
     ctx = fixContext()
@@ -1115,7 +1120,7 @@ def checkLayersAboveFrameLimit(limit=20):
     gp = getActiveGp()
     returns = []
     print("~ ~ ~ ~")
-    for layer in gp.layers:
+    for layer in gp.data.layers:
         if (len(layer.frames) > limit + 1): # accounting for extra end cap frame
             returns.append(layer)
             print("layer " + layer.info + " is over limit " + str(limit) + " with " + str(len(layer.frames)) + " frames.")
@@ -1150,14 +1155,14 @@ def getLayerLength(name=None):
 
 def cleanEmptyLayers():
     gp = getActiveGp()
-    for layer in gp.layers:
+    for layer in gp.data.layers:
         if (len(layer.frames) == 0):
-            gp.layers.remove(layer)
+            gp.data.layers.remove(layer)
 
 def clearLayers():
     gp = getActiveGp()
-    for layer in gp.layers:
-        gp.layers.remove(layer)
+    for layer in gp.data.layers:
+        gp.data.layers.remove(layer)
 
 def clearPalette():
     palette = getActivePalette()
@@ -1168,71 +1173,85 @@ def clearAll():
     clearLayers()
     clearPalette()
 
-def createColor(_color):
-    frame = getActiveFrame()
+def createColor(_color=(0,0,0)):
+    if (len(_color) == 3):
+        _color = (_color[0], _color[1], _color[2], 1)
+    gp = getActiveGp()
     palette = getActivePalette()
-    matchingColorIndex = -1
     places = 7
-    for i in range(0, len(palette.colors)):
-        if (roundVal(_color[0], places) == roundVal(palette.colors[i].color.r, places) and roundVal(_color[1], places) == roundVal(palette.colors[i].color.g, places) and roundVal(_color[2], places) == roundVal(palette.colors[i].color.b, places)):
-            matchingColorIndex = i
     #~
-    if (matchingColorIndex == -1):
-        color = palette.colors.new()
-        color.color = _color
-    else:
-        palette.colors.active = palette.colors[matchingColorIndex]
-        color = palette.colors[matchingColorIndex]
-    #~        
-    #print("Active color is: " + "\"" + palette.colors.active.name + "\" " + str(palette.colors.active.color))
-    return color
+    for i in range(0, len(palette)):
+        color = palette[i].grease_pencil.color
+        if (roundVal(_color[0], places) == roundVal(color[0], places) and roundVal(_color[1], places) == roundVal(color[1], places) and roundVal(_color[2], places) == roundVal(color[2], places)):
+            gp.active_material_index = i
+            return color
+    mat = createGpMaterial(_color)
+    return mat.grease_pencil.color
+
+def createGpMaterial(_color=(0,0,0)):
+    gp = getActiveGp()
+    palette = getActivePalette()
+    if (len(_color) == 3):
+        _color = (_color[0], _color[1], _color[2], 1)
+    mat = bpy.data.materials.new(name="Material")
+    bpy.data.materials.create_gpencil_data(mat)
+    mat.grease_pencil.color = _color
+    mat.grease_pencil.fill_color = (_color[0], _color[1], _color[2], 0)
+    palette.append(mat)
+    gp.active_material_index = len(palette)-1
+    return mat
 
 # ~ ~ ~ 
 def createColorWithPalette(_color, numPlaces=7, maxColors=0):
+    if (len(_color) == 3):
+        _color = (_color[0], _color[1], _color[2], 1)
     palette = getActivePalette()
+    gp = getActiveGp()
     matchingColorIndex = -1
     places = numPlaces
-    for i in range(0, len(palette.colors)):
-        if (roundVal(_color[0], places) == roundVal(palette.colors[i].color.r, places) and roundVal(_color[1], places) == roundVal(palette.colors[i].color.g, places) and roundVal(_color[2], places) == roundVal(palette.colors[i].color.b, places)):
+    for i in range(0, len(palette)):
+        color = palette[i].grease_pencil.color
+        if (roundVal(_color[0], places) == roundVal(color[0], places) and roundVal(_color[1], places) == roundVal(color[1], places) and roundVal(_color[2], places) == roundVal(color[2], places)):
             matchingColorIndex = i
     #~
     if (matchingColorIndex == -1):
-        if (maxColors<1 or len(palette.colors)<maxColors):
-            color = palette.colors.new()
-            color.color = _color
+        if (maxColors<1 or len(palette)<maxColors):
+            color = createColor(_color)
         else:
             distances = []
             sortedColors = []
-            for color in palette.colors:
-                sortedColors.append(color)
+            for mat in palette:
+                sortedColors.append(mat.grease_pencil.color)
             for color in sortedColors:
-                distances.append(getDistance(_color, color.color))
+                distances.append(getDistance(_color, (color[0], color[1], color[2], color[3])))
             sortedColors.sort(key=dict(zip(sortedColors, distances)).get)
-            palette.colors.active = palette.colors[sortedColors[0].name]
+            createColor(sortedColors[0])
     else:
-        palette.colors.active = palette.colors[matchingColorIndex]
-        color = palette.colors[matchingColorIndex]
+        gp.active_material_index = matchingColorIndex
+        color = palette[matchingColorIndex].grease_pencil.color
     #~        
-    #print("Active color is: " + "\"" + palette.colors.active.name + "\" " + str(palette.colors.active.color))
     return color
 # ~ ~ ~
 
 def matchColorToPalette(_color):
+    if (len(_color) == 3):
+        _color = (_color[0], _color[1], _color[2], 1)
     palette = getActivePalette()
+    gp = getActiveGp()
     distances = []
     sortedColors = []
-    for color in palette.colors:
-        sortedColors.append(color)
+    for mat in palette:
+        sortedColors.append(mat.grease_pencil.color)
     for color in sortedColors:
-        distances.append(getDistance(_color, color.color))
+        distances.append(getDistance(_color, (color[0], color[1], color[2], color[3])))
     sortedColors.sort(key=dict(zip(sortedColors, distances)).get)
-    returns = palette.colors[sortedColors[0].name]
-    palette.colors.active = returns
-    return returns
+    return createColor(sortedColors[0])
 
 def createAndMatchColorPalette(color, numMaxColors=16, numColPlaces=5):
+    if (len(color) == 3):
+        color = (color[0], color[1], color[2], 1)
     palette = getActivePalette()
-    if (len(palette.colors) < numMaxColors):
+    if (len(palette) < numMaxColors):
         createColorWithPalette(color, numColPlaces, numMaxColors)
     else:
         matchColorToPalette(color)
@@ -1258,14 +1277,14 @@ def changeColor():
         newStroke.points.add(len(points))
         for j in range(0, len(points)):
             createPoint(newStroke, j, points[j].co)
-    print(str(len(strokes)) + " changed to " + palette.colors.active.name)
+    #print(str(len(strokes)) + " changed to " + palette.colors.active.name)
 
 def newLayer(name="NewLayer", setActive=True):
     gp = getActiveGp()
-    gp.layers.new(name)
+    gp.data.layers.new(name)
     if (setActive==True):
-        gp.layers.active = gp.layers[len(gp.layers)-1]
-    return gp.layers[len(gp.layers)-1]
+        gp.data.layers.active = gp.data.layers[len(gp.data.layers)-1]
+    return gp.data.layers[len(gp.data.layers)-1]
 
 def getStrokeCoords(target=None):
     returns = []
@@ -1295,21 +1314,19 @@ def lookUpStrokeColor(target=None):
     palette = getActivePalette()
     if not target:
         target = getSelectedStroke()
-    return palette.colors[target.colorname]
+    return palette[target.material_index]
 
 def getStrokeColor(target=None):
-    color = lookUpStrokeColor(target).color
-    return (color[0], color[1], color[2])
+    return lookUpStrokeColor(target).grease_pencil.color
 
 def getStrokeAlpha(target=None):
-    return lookUpStrokeColor(target).alpha
+    return lookUpStrokeColor(target).grease_pencil.color[3]
 
 def getStrokeFillColor(target=None):
-    color = lookUpStrokeColor(target).fill_color
-    return (color[0], color[1], color[2])
+    return lookUpStrokeColor(target).grease_pencil.fill_color
 
 def getStrokeFillAlpha(target=None):
-    return lookUpStrokeColor(target).fill_alpha
+    return lookUpStrokeColor(target).grease_pencil.fill_color[3]
 
 def getStrokeCoordsPlus(target=None):
     returns = []
@@ -1386,8 +1403,8 @@ def deleteFromAllFrames():
 
 def getAllLayers():
     gp = getActiveGp()
-    print("Got " + str(len(gp.layers)) + " layers.")
-    return gp.layers
+    print("Got " + str(len(gp.data.layers)) + " layers.")
+    return gp.data.layers
 
 def getAllFrames(active=False):
     returns = []
@@ -1403,7 +1420,7 @@ def getAllFrames(active=False):
 
 def getActiveFrame():
     gp = getActiveGp()
-    layer = gp.layers.active
+    layer = gp.data.layers.active
     frame = layer.active_frame
     return frame
 
@@ -1430,8 +1447,8 @@ def getAllStrokes(active=False):
 def getLayerStrokes(name=None):
     gp = getActiveGp()
     if not name:
-        name = gp.layers.active.info
-    layer = gp.layers[name]
+        name = gp.data.layers.active.info
+    layer = gp.data.layers[name]
     strokes = []
     for frame in layer.frames:
         for stroke in frame.strokes:
@@ -1441,8 +1458,8 @@ def getLayerStrokes(name=None):
 def getFrameStrokes(num=None, name=None):
     gp = getActiveGp()
     if not name:
-        name = gp.layers.active.info
-    layer = gp.layers[name]
+        name = gp.data.layers.active.info
+    layer = gp.data.layers[name]
     if not num:
         num = layer.active_frame.frame_number
     strokes = []
@@ -1455,19 +1472,19 @@ def getFrameStrokes(num=None, name=None):
 def getLayerStrokesAvg(name=None):
     gp = getActiveGp()
     if not name:
-        name = gp.layers.active.info
-    layer = gp.layers[name]
+        name = gp.data.layers.active.info
+    layer = gp.data.layers[name]
     return float(roundVal(len(getLayerStrokes(name)) / len(layer.frames), 2))
 
 def getAllStrokesAvg(locked=True):
     gp = getActiveGp()
     avg = 0
-    for layer in gp.layers:
+    for layer in gp.data.layers:
         if (layer.lock == False or locked == True):
             avg += getLayerStrokesAvg(layer.info)
-    return float(roundVal(avg / len(gp.layers), 2))
+    return float(roundVal(avg / len(gp.data.layers), 2))
 
-def getSelectedStrokes(active=True):
+def getSelectedStrokes(active=False):
     returns = []
     strokes = getAllStrokes(active)
     for stroke in strokes:
