@@ -5077,7 +5077,7 @@ def assembleMesh(export=False, createPalette=True):
             saveFile(origFileName + "_ASSEMBLY")
             print(origFileName + "_ASSEMBLY.blend" + " was saved but some groups were missing.")
 
-def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _decimate = 0.1, _curveType="nurbs", _useColors=True, _saveLayers=False, _singleFrame=False, _vertexColors=True, _vertexColorName="rgba", _animateFrames=True, _remesh="none", _consolidateMtl=True, _caps=True, _joinMesh=True, _uvStroke=True, _uvFill=True, _usePressure=True, _useHull=True):
+def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _decimate = 0.1, _curveType="nurbs", _useColors=True, _saveLayers=False, _singleFrame=False, _vertexColors=True, _vertexColorName="rgba", _animateFrames=True, _remesh="none", _consolidateMtl=True, _caps=False, _joinMesh=True, _uvStroke=True, _uvFill=False, _usePressure=True, _useHull=True, _solidify=True):
     _remesh = _remesh.lower()
     _curveType = _curveType.lower()
     #~
@@ -5158,27 +5158,39 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
                         if (mat == None):
                             mat = bpy.data.materials.new("share_mtl")
                             mat.diffuse_color = strokeColor  
-                    latk_ob.data.materials.append(mat)
+                    try:
+                        latk_ob.data.materials.append(mat)
+                    except:
+                        pass
                     # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ 
                     #~   
                     bpy.context.scene.objects.active = latk_ob
                     #~
                     if (_bakeMesh == True):
+                        modifiersUsed = False
+                        if (capsObj == None and _solidify == True):
+                            bpy.ops.object.modifier_add(type='SOLIDIFY')
+                            modifiersUsed = True
                         if (thisIsAFill == False and _remesh != "hull" and _remesh != "plane"):
                             if (_decimate < 0.999):
                                 bpy.ops.object.modifier_add(type='DECIMATE')
-                                bpy.context.object.modifiers["Decimate"].ratio = _decimate     
-                                latk_ob = applyModifiers(latk_ob)
-                            #~
-                            if (_remesh != "none"):
-                                latk_ob = remesher(latk_ob, mode=_remesh)
+                                bpy.context.object.modifiers["Decimate"].ratio = _decimate   
+                                modifiersUsed = True 
+                        if (modifiersUsed == True):
+                            latk_ob = applyModifiers(latk_ob)
+                        #~
+                        if (_remesh != "none"):
+                            latk_ob = remesher(latk_ob, mode=_remesh)
                             #~
                             #if (getStrokeFillAlpha(stroke) > 0.001):
                                 #fill_ob = createFill(stroke.points, useUvs=_uvFill, useHull=_useHull)
                                 #joinObjects([latk_ob, fill_ob])
                         #~
                         if (_vertexColors == True):
-                            colorVertices(latk_ob, strokeColor, colorName=_vertexColorName) 
+                            try:
+                                colorVertices(latk_ob, strokeColor, colorName=_vertexColorName) 
+                            except:
+                                pass
                         #~ 
                     frameList.append(latk_ob) 
                     #~
@@ -5191,7 +5203,10 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
                 #~
                 for i in range(0, len(frameList)):
                     totalCounter += 1
-                    print(frameList[i].name + " | " + str(totalCounter) + " of " + totalStrokes + " total")
+                    try:
+                        print(frameList[i].name + " | " + str(totalCounter) + " of " + totalStrokes + " total")
+                    except:
+                        pass
                     if (_animateFrames==True):
                         hideFrame(frameList[i], start, True)
                         #~
@@ -5548,15 +5563,18 @@ def makeCurve(coords, pressures=None, resolution=2, thickness=0.1, bevelResoluti
     curveData.dimensions = '3D'
     curveData.fill_mode = 'FULL'
     curveData.resolution_u = resolution
-    curveData.bevel_depth = thickness
-    curveData.bevel_resolution = bevelResolution
-    #~
-    try:
-        if (capsObj != None):
+    if (capsObj == None):
+        curveData.extrude = thickness
+        curveData.use_fill_caps = False
+    else:
+        curveData.bevel_depth = thickness
+        curveData.bevel_resolution = bevelResolution
+        #~
+        try:
             curveData.bevel_object = capsObj
             curveData.use_fill_caps = True
-    except:
-        curveData.use_fill_caps = False
+        except:
+            curveData.use_fill_caps = False
     #~
     # map coords to spline
     curveType=curveType.upper()
@@ -7085,6 +7103,18 @@ class LatkProperties(bpy.types.PropertyGroup):
         default=True
     )
 
+    uvStroke = BoolProperty(
+        name="UV Stroke",
+        description="Generate UVs for strokes",
+        default=True
+    )
+
+    uvFill = BoolProperty(
+        name="UV Fill",
+        description="Generate UVs for fills",
+        default=False
+    )
+
     minRemapPressure = FloatProperty(
         name="Min",
         description="Minimum Remap Pressure",
@@ -7165,8 +7195,8 @@ class LatkProperties(bpy.types.PropertyGroup):
     numSplitFrames = IntProperty(
         name="Split Frames",
         description="Split layers if they have more than this many frames",
-        default=3,
-        soft_min=2
+        default=1,
+        soft_min=1
     )
 
     cleanFactor = FloatProperty(
@@ -7199,6 +7229,16 @@ class LatkProperties(bpy.types.PropertyGroup):
         name="VCol",
         description="Vertex color name for export",
         default="rgba"
+    )
+
+    main_mesh_mode = EnumProperty(
+        name="Main Mesh Mode",
+        items=(
+            ("EXTRUDE", "Extrude", "Mesh as flat strips", 0),
+            ("SOLIDIFY", "Solidify", "Mesh as solid strips", 1),
+            ("BEVEL", "Bevel", "Mesh as capped tubes", 2),
+        ),
+        default="SOLIDIFY"
     )
 
     remesh_mode = EnumProperty(
@@ -7264,6 +7304,10 @@ class LatkProperties_Panel(bpy.types.Panel):
         row.prop(latk, "decimate")
 
         row = layout.row()
+        row.prop(latk, "paletteLimit")
+        row.prop(latk, "vertexColorName")
+
+        row = layout.row()
         row.operator("latk_button.gpmesh")
         row.operator("latk_button.dn")
 
@@ -7271,8 +7315,8 @@ class LatkProperties_Panel(bpy.types.Panel):
         row.prop(latk, "bakeMesh")
         row.prop(latk, "joinMesh")
         row.prop(latk, "saveLayers")
-        row.prop(latk, "paletteLimit")
-        row.prop(latk, "vertexColorName")
+        row.prop(latk, "uvStroke")
+        row.prop(latk, "uvFill")
         
         row = layout.row()
         row.prop(latk, "remesh_mode", expand=True)
@@ -7281,19 +7325,22 @@ class LatkProperties_Panel(bpy.types.Panel):
 
         row = layout.row()
         row.prop(latk, "mesh_fill_mode")
+        row.prop(latk, "main_mesh_mode")
+
+        row = layout.row()
         row.prop(latk, "material_shader_mode")
         row.operator("latk_button.mtlshader")
-        
+
         row = layout.row()
         row.operator("latk_button.booleanmod") 
         row.operator("latk_button.booleanmodminus") 
-        row.operator("latk_button.simpleclean")
+        row.operator("latk_button.subsurfmod") 
 
         row = layout.row()
         row.operator("latk_button.smoothmod") 
-        row.operator("latk_button.subsurfmod") 
+        row.operator("latk_button.simpleclean")
         row.operator("latk_button.decimatemod") 
-
+        
         row = layout.row()
         row.operator("latk_button.bakeall")
         row.operator("latk_button.bakeanim")
@@ -7502,13 +7549,30 @@ class Latk_Button_Gpmesh(bpy.types.Operator):
         latk_settings = bpy.context.scene.latk_settings
         #~
         doJoinMesh=False
+        doHull=False
+        doUvStroke=False
+        doUvFill=False
+        doCaps=False
+        doSolidify=False
+        #~       
         if (latk_settings.bakeMesh==True and latk_settings.joinMesh==True):
             doJoinMesh = True
-        doHull=False
         if (latk_settings.mesh_fill_mode.lower() == "hull"):
             doHull = True
+        if (latk_settings.uvStroke == True):
+            doUvStroke=True
+        if (latk_settings.uvFill == True):
+            doUvFill=True
+        if (latk_settings.main_mesh_mode.lower() == "extrude"):
+            pass
+        elif (latk_settings.main_mesh_mode.lower() == "solidify"):
+            doSolidify=True
+            doCaps=False
+        else:
+            doSolidify=False
+            doCaps=True
         #~
-        gpMesh(_thickness=latk_settings.thickness, _remesh=latk_settings.remesh_mode.lower(), _resolution=latk_settings.resolution, _bevelResolution=latk_settings.bevelResolution, _decimate=latk_settings.decimate, _bakeMesh=latk_settings.bakeMesh, _joinMesh=doJoinMesh, _saveLayers=False, _vertexColorName=latk_settings.vertexColorName, _useHull=doHull)
+        gpMesh(_thickness=latk_settings.thickness, _remesh=latk_settings.remesh_mode.lower(), _resolution=latk_settings.resolution, _bevelResolution=latk_settings.bevelResolution, _decimate=latk_settings.decimate, _bakeMesh=latk_settings.bakeMesh, _joinMesh=doJoinMesh, _saveLayers=False, _vertexColorName=latk_settings.vertexColorName, _useHull=doHull, _uvStroke=doUvStroke, _uvFill=doUvFill, _caps=doCaps, _solidify=doSolidify)
         return {'FINISHED'}
 
 class Latk_Button_RemapPressure(bpy.types.Operator):
@@ -7611,13 +7675,30 @@ class Latk_Button_Gpmesh_SingleFrame(bpy.types.Operator):
         latk_settings = bpy.context.scene.latk_settings
         #~
         doJoinMesh=False
+        doHull=False
+        doUvStroke=False
+        doUvFill=False
+        doCaps=False
+        doSolidify=False
+        #~       
         if (latk_settings.bakeMesh==True and latk_settings.joinMesh==True):
             doJoinMesh = True
-        doHull=False
         if (latk_settings.mesh_fill_mode.lower() == "hull"):
             doHull = True
+        if (latk_settings.uvStroke == True):
+            doUvStroke=True
+        if (latk_settings.uvFill == True):
+            doUvFill=True
+        if (latk_settings.main_mesh_mode.lower() == "extrude"):
+            pass
+        elif (latk_settings.main_mesh_mode.lower() == "solidify"):
+            doSolidify=True
+            doCaps=False
+        else:
+            doSolidify=False
+            doCaps=True
         #~
-        gpMesh(_singleFrame=True, _animateFrames=False, _thickness=latk_settings.thickness, _remesh=latk_settings.remesh_mode.lower(), _resolution=latk_settings.resolution, _bevelResolution=latk_settings.bevelResolution, _decimate=latk_settings.decimate, _bakeMesh=latk_settings.bakeMesh, _joinMesh=doJoinMesh, _saveLayers=False, _vertexColorName=latk_settings.vertexColorName, _useHull=doHull)
+        gpMesh(_singleFrame=True, _animateFrames=False, _thickness=latk_settings.thickness, _remesh=latk_settings.remesh_mode.lower(), _resolution=latk_settings.resolution, _bevelResolution=latk_settings.bevelResolution, _decimate=latk_settings.decimate, _bakeMesh=latk_settings.bakeMesh, _joinMesh=doJoinMesh, _saveLayers=False, _vertexColorName=latk_settings.vertexColorName, _useHull=doHull, _uvStroke=doUvStroke, _uvFill=doUvFill, _caps=doCaps, _solidify=doSolidify)
         return {'FINISHED'}
 
 class Latk_Button_Dn(bpy.types.Operator):

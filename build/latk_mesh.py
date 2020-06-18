@@ -203,7 +203,7 @@ def assembleMesh(export=False, createPalette=True):
             saveFile(origFileName + "_ASSEMBLY")
             print(origFileName + "_ASSEMBLY.blend" + " was saved but some groups were missing.")
 
-def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _decimate = 0.1, _curveType="nurbs", _useColors=True, _saveLayers=False, _singleFrame=False, _vertexColors=True, _vertexColorName="rgba", _animateFrames=True, _remesh="none", _consolidateMtl=True, _caps=True, _joinMesh=True, _uvStroke=True, _uvFill=True, _usePressure=True, _useHull=True):
+def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _decimate = 0.1, _curveType="nurbs", _useColors=True, _saveLayers=False, _singleFrame=False, _vertexColors=True, _vertexColorName="rgba", _animateFrames=True, _remesh="none", _consolidateMtl=True, _caps=False, _joinMesh=True, _uvStroke=True, _uvFill=False, _usePressure=True, _useHull=True, _solidify=True):
     _remesh = _remesh.lower()
     _curveType = _curveType.lower()
     #~
@@ -284,27 +284,39 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
                         if (mat == None):
                             mat = bpy.data.materials.new("share_mtl")
                             mat.diffuse_color = strokeColor  
-                    latk_ob.data.materials.append(mat)
+                    try:
+                        latk_ob.data.materials.append(mat)
+                    except:
+                        pass
                     # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ 
                     #~   
                     bpy.context.scene.objects.active = latk_ob
                     #~
                     if (_bakeMesh == True):
+                        modifiersUsed = False
+                        if (capsObj == None and _solidify == True):
+                            bpy.ops.object.modifier_add(type='SOLIDIFY')
+                            modifiersUsed = True
                         if (thisIsAFill == False and _remesh != "hull" and _remesh != "plane"):
                             if (_decimate < 0.999):
                                 bpy.ops.object.modifier_add(type='DECIMATE')
-                                bpy.context.object.modifiers["Decimate"].ratio = _decimate     
-                                latk_ob = applyModifiers(latk_ob)
-                            #~
-                            if (_remesh != "none"):
-                                latk_ob = remesher(latk_ob, mode=_remesh)
+                                bpy.context.object.modifiers["Decimate"].ratio = _decimate   
+                                modifiersUsed = True 
+                        if (modifiersUsed == True):
+                            latk_ob = applyModifiers(latk_ob)
+                        #~
+                        if (_remesh != "none"):
+                            latk_ob = remesher(latk_ob, mode=_remesh)
                             #~
                             #if (getStrokeFillAlpha(stroke) > 0.001):
                                 #fill_ob = createFill(stroke.points, useUvs=_uvFill, useHull=_useHull)
                                 #joinObjects([latk_ob, fill_ob])
                         #~
                         if (_vertexColors == True):
-                            colorVertices(latk_ob, strokeColor, colorName=_vertexColorName) 
+                            try:
+                                colorVertices(latk_ob, strokeColor, colorName=_vertexColorName) 
+                            except:
+                                pass
                         #~ 
                     frameList.append(latk_ob) 
                     #~
@@ -317,7 +329,10 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
                 #~
                 for i in range(0, len(frameList)):
                     totalCounter += 1
-                    print(frameList[i].name + " | " + str(totalCounter) + " of " + totalStrokes + " total")
+                    try:
+                        print(frameList[i].name + " | " + str(totalCounter) + " of " + totalStrokes + " total")
+                    except:
+                        pass
                     if (_animateFrames==True):
                         hideFrame(frameList[i], start, True)
                         #~
@@ -674,15 +689,18 @@ def makeCurve(coords, pressures=None, resolution=2, thickness=0.1, bevelResoluti
     curveData.dimensions = '3D'
     curveData.fill_mode = 'FULL'
     curveData.resolution_u = resolution
-    curveData.bevel_depth = thickness
-    curveData.bevel_resolution = bevelResolution
-    #~
-    try:
-        if (capsObj != None):
+    if (capsObj == None):
+        curveData.extrude = thickness
+        curveData.use_fill_caps = False
+    else:
+        curveData.bevel_depth = thickness
+        curveData.bevel_resolution = bevelResolution
+        #~
+        try:
             curveData.bevel_object = capsObj
             curveData.use_fill_caps = True
-    except:
-        curveData.use_fill_caps = False
+        except:
+            curveData.use_fill_caps = False
     #~
     # map coords to spline
     curveType=curveType.upper()
