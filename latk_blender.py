@@ -7106,7 +7106,7 @@ class LatkProperties(bpy.types.PropertyGroup):
     uvStroke = BoolProperty(
         name="UV Stroke",
         description="Generate UVs for strokes",
-        default=True
+        default=False
     )
 
     uvFill = BoolProperty(
@@ -7238,7 +7238,7 @@ class LatkProperties(bpy.types.PropertyGroup):
             ("SOLIDIFY", "Solidify", "Mesh as solid strips", 1),
             ("BEVEL", "Bevel", "Mesh as capped tubes", 2),
         ),
-        default="SOLIDIFY"
+        default="EXTRUDE"
     )
 
     remesh_mode = EnumProperty(
