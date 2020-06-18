@@ -879,8 +879,8 @@ class LatkProperties(bpy.types.PropertyGroup):
     main_mesh_mode = EnumProperty(
         name="Main Mesh Mode",
         items=(
-            ("EXTRUDE", "Extrude", "Mesh as flat strips", 0),
-            ("SOLIDIFY", "Solidify", "Mesh as solid strips", 1),
+            ("EXTRUDE", "Extrude", "Mesh as one-sided strips", 0),
+            ("SOLIDIFY", "Solidify", "Mesh as two-sided strips", 1),
             ("BEVEL", "Bevel", "Mesh as capped tubes", 2),
         ),
         default="EXTRUDE"
@@ -1209,11 +1209,12 @@ class Latk_Button_Gpmesh(bpy.types.Operator):
         if (latk_settings.uvFill == True):
             doUvFill=True
         if (latk_settings.main_mesh_mode.lower() == "extrude"):
-            pass
+            doSolidify=False
+            doCaps=False
         elif (latk_settings.main_mesh_mode.lower() == "solidify"):
             doSolidify=True
             doCaps=False
-        else:
+        elif (latk_settings.main_mesh_mode.lower() == "bevel"):
             doSolidify=False
             doCaps=True
         #~
@@ -1335,11 +1336,12 @@ class Latk_Button_Gpmesh_SingleFrame(bpy.types.Operator):
         if (latk_settings.uvFill == True):
             doUvFill=True
         if (latk_settings.main_mesh_mode.lower() == "extrude"):
-            pass
+            doSolidify=False
+            doCaps=False
         elif (latk_settings.main_mesh_mode.lower() == "solidify"):
             doSolidify=True
             doCaps=False
-        else:
+        elif (latk_settings.main_mesh_mode.lower() == "bevel"):
             doSolidify=False
             doCaps=True
         #~

@@ -5077,7 +5077,7 @@ def assembleMesh(export=False, createPalette=True):
             saveFile(origFileName + "_ASSEMBLY")
             print(origFileName + "_ASSEMBLY.blend" + " was saved but some groups were missing.")
 
-def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _decimate = 0.1, _curveType="nurbs", _useColors=True, _saveLayers=False, _singleFrame=False, _vertexColors=True, _vertexColorName="rgba", _animateFrames=True, _remesh="none", _consolidateMtl=True, _caps=False, _joinMesh=True, _uvStroke=True, _uvFill=False, _usePressure=True, _useHull=True, _solidify=True):
+def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _decimate = 0.1, _curveType="nurbs", _useColors=True, _saveLayers=False, _singleFrame=False, _vertexColors=True, _vertexColorName="rgba", _animateFrames=True, _remesh="none", _consolidateMtl=True, _caps=False, _joinMesh=True, _uvStroke=True, _uvFill=False, _usePressure=True, _useHull=True, _solidify=False):
     _remesh = _remesh.lower()
     _curveType = _curveType.lower()
     #~
@@ -5168,7 +5168,7 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
                     #~
                     if (_bakeMesh == True):
                         modifiersUsed = False
-                        if (capsObj == None and _solidify == True):
+                        if (_caps == False and _solidify == True):
                             bpy.ops.object.modifier_add(type='SOLIDIFY')
                             modifiersUsed = True
                         if (thisIsAFill == False and _remesh != "hull" and _remesh != "plane"):
@@ -7234,8 +7234,8 @@ class LatkProperties(bpy.types.PropertyGroup):
     main_mesh_mode = EnumProperty(
         name="Main Mesh Mode",
         items=(
-            ("EXTRUDE", "Extrude", "Mesh as flat strips", 0),
-            ("SOLIDIFY", "Solidify", "Mesh as solid strips", 1),
+            ("EXTRUDE", "Extrude", "Mesh as one-sided strips", 0),
+            ("SOLIDIFY", "Solidify", "Mesh as two-sided strips", 1),
             ("BEVEL", "Bevel", "Mesh as capped tubes", 2),
         ),
         default="EXTRUDE"
@@ -7564,11 +7564,12 @@ class Latk_Button_Gpmesh(bpy.types.Operator):
         if (latk_settings.uvFill == True):
             doUvFill=True
         if (latk_settings.main_mesh_mode.lower() == "extrude"):
-            pass
+            doSolidify=False
+            doCaps=False
         elif (latk_settings.main_mesh_mode.lower() == "solidify"):
             doSolidify=True
             doCaps=False
-        else:
+        elif (latk_settings.main_mesh_mode.lower() == "bevel"):
             doSolidify=False
             doCaps=True
         #~
@@ -7690,11 +7691,12 @@ class Latk_Button_Gpmesh_SingleFrame(bpy.types.Operator):
         if (latk_settings.uvFill == True):
             doUvFill=True
         if (latk_settings.main_mesh_mode.lower() == "extrude"):
-            pass
+            doSolidify=False
+            doCaps=False
         elif (latk_settings.main_mesh_mode.lower() == "solidify"):
             doSolidify=True
             doCaps=False
-        else:
+        elif (latk_settings.main_mesh_mode.lower() == "bevel"):
             doSolidify=False
             doCaps=True
         #~

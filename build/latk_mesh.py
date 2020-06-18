@@ -203,7 +203,7 @@ def assembleMesh(export=False, createPalette=True):
             saveFile(origFileName + "_ASSEMBLY")
             print(origFileName + "_ASSEMBLY.blend" + " was saved but some groups were missing.")
 
-def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _decimate = 0.1, _curveType="nurbs", _useColors=True, _saveLayers=False, _singleFrame=False, _vertexColors=True, _vertexColorName="rgba", _animateFrames=True, _remesh="none", _consolidateMtl=True, _caps=False, _joinMesh=True, _uvStroke=True, _uvFill=False, _usePressure=True, _useHull=True, _solidify=True):
+def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _decimate = 0.1, _curveType="nurbs", _useColors=True, _saveLayers=False, _singleFrame=False, _vertexColors=True, _vertexColorName="rgba", _animateFrames=True, _remesh="none", _consolidateMtl=True, _caps=False, _joinMesh=True, _uvStroke=True, _uvFill=False, _usePressure=True, _useHull=True, _solidify=False):
     _remesh = _remesh.lower()
     _curveType = _curveType.lower()
     #~
@@ -294,7 +294,7 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
                     #~
                     if (_bakeMesh == True):
                         modifiersUsed = False
-                        if (capsObj == None and _solidify == True):
+                        if (_caps == False and _solidify == True):
                             bpy.ops.object.modifier_add(type='SOLIDIFY')
                             modifiersUsed = True
                         if (thisIsAFill == False and _remesh != "hull" and _remesh != "plane"):
