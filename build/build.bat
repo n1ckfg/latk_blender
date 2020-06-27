@@ -12,7 +12,8 @@ rem copy %BUILD_TARGET% "%homepath%\AppData\Roaming\Blender Foundation\Blender\2
 rem copy %BUILD_TARGET% "%homepath%\AppData\Roaming\Blender Foundation\Blender\2.79\scripts\addons"
 rem copy %BUILD_TARGET% "%homepath%\AppData\Roaming\Blender Foundation\Blender\2.80\scripts\addons"
 rem copy %BUILD_TARGET% "%homepath%\AppData\Roaming\Blender Foundation\Blender\2.81\scripts\addons"
-copy %BUILD_TARGET% "%homepath%\AppData\Roaming\Blender Foundation\Blender\2.82\scripts\addons"
+rem copy %BUILD_TARGET% "%homepath%\AppData\Roaming\Blender Foundation\Blender\2.82\scripts\addons"
 copy %BUILD_TARGET% "%homepath%\AppData\Roaming\Blender Foundation\Blender\2.83\scripts\addons"
+copy %BUILD_TARGET% "%homepath%\AppData\Roaming\Blender Foundation\Blender\2.90\scripts\addons"
 
 @pause
