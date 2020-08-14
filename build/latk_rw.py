@@ -1351,7 +1351,7 @@ def importAsc(filepath=None, strokeLength=1, importAsGP=False, vertexColor=True)
         me = bpy.data.meshes.new("myMesh") 
         ob = bpy.data.objects.new("myObject", me) 
         ob.show_name = True
-        bpy.context.scene.objects.link(ob)
+        bpy.context.collection.objects.link(ob)
         bm = bmesh.new() # create an empty BMesh
         bm.from_mesh(me) # fill it in from a Mesh
         for pt in allPoints:

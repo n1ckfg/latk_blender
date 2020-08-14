@@ -313,6 +313,7 @@ class ImportASC(bpy.types.Operator, ImportHelper):
             )
 
     importAsGP = BoolProperty(name="Import as GP", description="Create Grease Pencil strokes instead of vertices", default=True)
+    vertexColor = BoolProperty(name="Vertex Colors", description="Use vertex colors per point, instead of stroke colors", default=True)
     strokeLength = IntProperty(name="Points per Stroke", description="Group every n points into strokes", default=1)
 
     def execute(self, context):
@@ -323,6 +324,7 @@ class ImportASC(bpy.types.Operator, ImportHelper):
         #~
         keywords["importAsGP"] = self.importAsGP
         keywords["strokeLength"] = self.strokeLength
+        keywords["vertexColor"] = self.vertexColor
         la.importAsc(**keywords)
         return {'FINISHED'} 
 
@@ -516,12 +518,15 @@ class ExportASC(bpy.types.Operator, ExportHelper):
             options={'HIDDEN'},
             )
 
+    vertexColor = BoolProperty(name="Vertex Colors", description="Use vertex colors per point, instead of stroke colors", default=True)
+
     def execute(self, context):
         import latk_blender as la
         keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "check_existing"))
         if bpy.data.is_saved:
             import os
         #~
+        keywords["vertexColor"] = self.vertexColor
         la.exportAsc(**keywords)
         return {'FINISHED'} 
 
