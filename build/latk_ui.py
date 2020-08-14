@@ -314,7 +314,7 @@ class ImportASC(bpy.types.Operator, ImportHelper):
 
     importAsGP = BoolProperty(name="Import as GP", description="Create Grease Pencil strokes instead of vertices", default=True)
     vertexColor = BoolProperty(name="Vertex Colors", description="Use vertex colors per point, instead of stroke colors", default=True)
-    strokeLength = IntProperty(name="Points per Stroke", description="Group every n points into strokes", default=1)
+    strokeLength = IntProperty(name="Points per Stroke", description="Group every n points into strokes", default=10)
 
     def execute(self, context):
         import latk_blender as la

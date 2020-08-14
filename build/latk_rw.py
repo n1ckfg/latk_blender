@@ -111,7 +111,7 @@ def fromLatkToGp(la=None, resizeTimeline=True, useScaleAndOffset=False, limitPal
                 stroke.line_width = 100
                 stroke.material_index = gp.active_material_index
                 laPoints = laStroke.points
-                stroke.points.add(len(laPoints)) # add 4 points
+                stroke.points.add(len(laPoints)) 
                 for l, laPoint in enumerate(laPoints):
                     co = laPoint.co 
                     x = co[0]
@@ -1321,32 +1321,48 @@ def importAsc(filepath=None, strokeLength=1, importAsGP=False, vertexColor=True)
         if not frame:
             frame = layer.frames.new(start)
 
-        for i in range(0, len(allPoints)-(strokeLength-1), strokeLength):
+        pointsCounter = 0
+        pointsTotal = 0
+        for i in range(0, len(allPoints)-1):
             color = colors[i]
-            if (vertexColor == False and color != None):
-                createColor(color)
-            stroke = frame.strokes.new()
-            stroke.display_mode = '3DSPACE'
-            stroke.line_width = 100
-            stroke.material_index = gp.active_material_index
-            stroke.points.add(strokeLength)
+            
+            if (pointsCounter == 0):
+                if (vertexColor == False and color != None):
+                    createColor(color)
+                stroke = frame.strokes.new()
+                stroke.display_mode = '3DSPACE'
+                stroke.line_width = 100
+                stroke.material_index = gp.active_material_index
+            
+                if (pointsTotal < len(allPoints) - strokeLength):
+                    stroke.points.add(strokeLength)
+                else:
+                    stroke.points.add(len(allPoints) - pointsTotal)
 
-            for j in range(0, strokeLength):
-                x = allPoints[i+j][0]
-                y = allPoints[i+j][2]
-                z = allPoints[i+j][1]
-                pressure = allPressures[i+j]
-                strength = 1.0
-                if useScaleAndOffset == True:
-                    x = (x * globalScale.x) + globalOffset.x
-                    y = (y * globalScale.y) + globalOffset.y
-                    z = (z * globalScale.z) + globalOffset.z
-                point = createPoint(stroke, j, (x, y, z), pressure, strength)
-               	color = colors[i+j]
-                if (vertexColor == True and color != None):
-                	if (len(color) < 4):
-                		color = (color[0], color[1], color[2], 1)
-                	point.vertex_color = color
+            x = allPoints[i][0]
+            y = allPoints[i][2]
+            z = allPoints[i][1]
+            pressure = allPressures[i]
+            strength = 1.0
+            if useScaleAndOffset == True:
+                x = (x * globalScale.x) + globalOffset.x
+                y = (y * globalScale.y) + globalOffset.y
+                z = (z * globalScale.z) + globalOffset.z
+            point = createPoint(stroke, pointsCounter, (x, y, z), pressure, strength)
+            color = colors[i]
+            if (vertexColor == True and color != None):
+                if (len(color) < 4):
+                    color = (color[0], color[1], color[2], 1)
+                point.vertex_color = color
+
+            pointsCounter += 1
+            pointsTotal += 1
+            if (pointsCounter > strokeLength-1):
+                pointsCounter = 0
+            if (pointsTotal > len(allPoints)-1):
+                break
+        getActiveGpMtl().mode="DOTS"
+
     else:
         me = bpy.data.meshes.new("myMesh") 
         ob = bpy.data.objects.new("myObject", me) 
@@ -1368,7 +1384,7 @@ def exportAsc(filepath=None, vertexColor=True):
             for stroke in frame.strokes:
                 color = None
                 if (vertexColor == False):
-                	color = palette[stroke.material_index].grease_pencil.color
+                    color = palette[stroke.material_index].grease_pencil.color
                 for point in stroke.points:
                     coord = point.co
                     x = coord[0]
@@ -1376,7 +1392,7 @@ def exportAsc(filepath=None, vertexColor=True):
                     z = coord[1]
                     pressure = point.pressure
                     if (vertexColor == True):
-                    	color = point.vertex_color
+                        color = point.vertex_color
                     r = color[0]
                     g = color[1]
                     b = color[2]
