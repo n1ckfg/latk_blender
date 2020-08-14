@@ -3838,7 +3838,7 @@ def writePointCloud(filepath=None, strokes=None):
     writeTextFile(name=name, lines=lines)
 '''
 
-def importAsc(filepath=None, strokeLength=100, importAsGP=False, vertexColor=True):
+def importAsc(filepath=None, strokeLength=1, importAsGP=False, vertexColor=True):
     globalScale = Vector((1, 1, 1))
     globalOffset = Vector((0, 0, 0))
     useScaleAndOffset = True
@@ -6496,7 +6496,7 @@ class ImportASC(bpy.types.Operator, ImportHelper):
             )
 
     importAsGP = BoolProperty(name="Import as GP", description="Create Grease Pencil strokes instead of vertices", default=True)
-    strokeLength = IntProperty(name="Points per Stroke", description="Group every n points into strokes", default=100)
+    strokeLength = IntProperty(name="Points per Stroke", description="Group every n points into strokes", default=1)
 
     def execute(self, context):
         import latk_blender as la
