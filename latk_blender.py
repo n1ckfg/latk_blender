@@ -3914,6 +3914,8 @@ def importAsc(filepath=None, strokeLength=1, importAsGP=False, vertexColor=True)
     colorIs255 = False
     for line in data:
         pointRaw = line.split(",")
+        if (len(pointRaw) < 3):
+            pointRaw = line.split(" ")
         point = (float(pointRaw[0]), float(pointRaw[1]), float(pointRaw[2]))
         allPoints.append(point)
         
