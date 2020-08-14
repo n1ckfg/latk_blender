@@ -51,10 +51,8 @@ def fromGpToLatk(bake=False, skipLocked=False, useScaleAndOffset=False, globalSc
                         fill_color = palette[stroke.material_index].grease_pencil.fill_color
                     except:
                         pass
-                    laStroke.color = (color[0], color[1], color[2])
-                    laStroke.alpha = color[3]
-                    laStroke.fill_color = (fill_color[0], fill_color[1], fill_color[2])
-                    laStroke.fill_alpha = fill_color[3]
+                    laStroke.color = color
+                    laStroke.fill_color = fill_color
                     for point in stroke.points:
                         x = point.co[0]
                         y = point.co[1]
@@ -63,13 +61,15 @@ def fromGpToLatk(bake=False, skipLocked=False, useScaleAndOffset=False, globalSc
                         pressure = point.pressure
                         strength = 1.0
                         strength = point.strength
+                        vertex_color = (0.0,0.0,0.0,0.0)
+                        vertex_color = point.vertex_color
                         #~
                         if (useScaleAndOffset == True):
                             x = (x * globalScale[0]) + globalOffset[0]
                             y = (y * globalScale[1]) + globalOffset[1]
                             z = (z * globalScale[2]) + globalOffset[2]
                         #~
-                        laPoint = LatkPoint((x, y, z), pressure, strength)
+                        laPoint = LatkPoint((x, y, z), pressure, strength, vertex_color)
                         laStroke.points.append(laPoint)
                     laFrame.strokes.append(laStroke)
                 laLayer.frames.append(laFrame)
@@ -119,6 +119,7 @@ def fromLatkToGp(la=None, resizeTimeline=True, useScaleAndOffset=False, limitPal
                     z = co[2]
                     pressure = 1.0
                     strength = 1.0
+                    vertex_color = (0.0,0.0,0.0,0.0)
                     if (useScaleAndOffset == True):
                         x = (x * globalScale[0]) + globalOffset[0]
                         y = (y * globalScale[1]) + globalOffset[1]
@@ -128,7 +129,9 @@ def fromLatkToGp(la=None, resizeTimeline=True, useScaleAndOffset=False, limitPal
                         pressure = laPoint.pressure
                     if (laPoint.strength != None):
                         strength = laPoint.strength
-                    createPoint(stroke, l, (x, y, z), pressure, strength)
+                    if (laPoint.vertex_color != None):
+                        vertex_color = laPoint.vertex_color
+                    createPoint(stroke, l, (x, y, z), pressure, strength, vertex_color)
     #~  
     if (resizeTimeline == True):
         setStartEnd(0, longestFrameNum, pad=False)  
