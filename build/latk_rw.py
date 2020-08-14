@@ -1275,7 +1275,7 @@ def writePointCloud(filepath=None, strokes=None):
     writeTextFile(name=name, lines=lines)
 '''
 
-def importAsc(filepath=None, strokeLength=1, importAsGP=False):
+def importAsc(filepath=None, strokeLength=100, importAsGP=False, vertexColor=True):
     globalScale = Vector((1, 1, 1))
     globalOffset = Vector((0, 0, 0))
     useScaleAndOffset = True
@@ -1323,10 +1323,12 @@ def importAsc(filepath=None, strokeLength=1, importAsGP=False):
 
         for i in range(0, len(allPoints)-(strokeLength-1), strokeLength):
             color = colors[i]
-            if (color != None):
+            if (vertexColor == False and color != None):
                 createColor(color)
-            stroke = frame.strokes.new(getActiveColor().name)
-            stroke.draw_mode = "3DSPACE"
+            stroke = frame.strokes.new()
+            stroke.display_mode = '3DSPACE'
+            stroke.line_width = 100
+            stroke.material_index = gp.active_material_index
             stroke.points.add(strokeLength)
 
             for j in range(0, strokeLength):
@@ -1339,7 +1341,12 @@ def importAsc(filepath=None, strokeLength=1, importAsGP=False):
                     x = (x * globalScale.x) + globalOffset.x
                     y = (y * globalScale.y) + globalOffset.y
                     z = (z * globalScale.z) + globalOffset.z
-                createPoint(stroke, j, (x, y, z), pressure, strength)
+                point = createPoint(stroke, j, (x, y, z), pressure, strength)
+               	color = colors[i+j]
+                if (vertexColor == True and color != None):
+                	if (len(color) < 4):
+                		color = (color[0], color[1], color[2], 1)
+                	point.vertex_color = color
     else:
         me = bpy.data.meshes.new("myMesh") 
         ob = bpy.data.objects.new("myObject", me) 
@@ -1352,20 +1359,24 @@ def importAsc(filepath=None, strokeLength=1, importAsGP=False):
         bm.verts.index_update()
         bm.to_mesh(me)
 
-def exportAsc(filepath=None):
+def exportAsc(filepath=None, vertexColor=True):
     ascData = []
     gp = getActiveGp()
     palette = getActivePalette()
     for layer in gp.data.layers:
         for frame in layer.frames:
             for stroke in frame.strokes:
-                color = palette.colors[stroke.colorname].color
+                color = None
+                if (vertexColor == False):
+                	color = palette[stroke.material_index].grease_pencil.color
                 for point in stroke.points:
                     coord = point.co
                     x = coord[0]
                     y = coord[2]
                     z = coord[1]
                     pressure = point.pressure
+                    if (vertexColor == True):
+                    	color = point.vertex_color
                     r = color[0]
                     g = color[1]
                     b = color[2]

@@ -17,11 +17,13 @@ class LightningArtistToolkitPreferences(bpy.types.AddonPreferences):
         default = False
     )
 
+    '''
     extraFormats_ASC = bpy.props.BoolProperty(
         name = 'ASC Point Cloud',
         description = "ASC point cloud import/export",
         default = True
     )
+    '''
 
     extraFormats_Painter = bpy.props.BoolProperty(
         name = 'Corel Painter',
@@ -76,7 +78,7 @@ class LightningArtistToolkitPreferences(bpy.types.AddonPreferences):
         layout.label("Add menu items to import:")
         #layout.prop(self, "extraFormats_TiltBrush")
         layout.prop(self, "extraFormats_SculptrVR")
-        layout.prop(self, "extraFormats_ASC")
+        #layout.prop(self, "extraFormats_ASC")
         layout.prop(self, "extraFormats_GML")
         layout.prop(self, "extraFormats_Painter")
         layout.prop(self, "extraFormats_SVG")
@@ -85,7 +87,7 @@ class LightningArtistToolkitPreferences(bpy.types.AddonPreferences):
         #~
         layout.label("Add menu items to export:")
         layout.prop(self, "extraFormats_SculptrVR")
-        layout.prop(self, "extraFormats_ASC")
+        #layout.prop(self, "extraFormats_ASC")
         layout.prop(self, "extraFormats_GML")
         layout.prop(self, "extraFormats_Painter")
         layout.prop(self, "extraFormats_SVG")
@@ -311,7 +313,7 @@ class ImportASC(bpy.types.Operator, ImportHelper):
             )
 
     importAsGP = BoolProperty(name="Import as GP", description="Create Grease Pencil strokes instead of vertices", default=True)
-    strokeLength = IntProperty(name="Points per Stroke", description="Group every n points into strokes", default=1)
+    strokeLength = IntProperty(name="Points per Stroke", description="Group every n points into strokes", default=100)
 
     def execute(self, context):
         import latk_blender as la
@@ -1232,12 +1234,12 @@ def menu_func_import(self, context):
     self.layout.operator(ImportLatk.bl_idname, text="Latk Animation (.latk, .json)")
     #if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_TiltBrush == True):
     self.layout.operator(ImportTiltBrush.bl_idname, text="Latk - Tilt Brush (.tilt, .json)")
+    #if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_ASC == True):
+    self.layout.operator(ImportASC.bl_idname, text="Latk - ASC (.asc, .xyz)")
     #~
     '''
     if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_SculptrVR == True):
         self.layout.operator(ImportSculptrVR.bl_idname, text="Latk - SculptrVR (.csv)")
-    if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_ASC == True):
-        self.layout.operator(ImportASC.bl_idname, text="Latk - ASC (.asc, .xyz)")
     if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_GML == True):
         self.layout.operator(ImportGml.bl_idname, text="Latk - GML (.gml)")
     if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_Painter == True):
@@ -1253,12 +1255,12 @@ def menu_func_import(self, context):
 def menu_func_export(self, context):
     self.layout.operator(ExportLatk.bl_idname, text="Latk Animation (.latk)")
     self.layout.operator(ExportLatkJson.bl_idname, text="Latk Animation (.json)")
+    #if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_ASC == True):
+    self.layout.operator(ExportASC.bl_idname, text="Latk - ASC (.asc)")
     #~
     '''
     if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_SculptrVR == True):
         self.layout.operator(ExportSculptrVR.bl_idname, text="Latk - SculptrVR (.csv)")
-    if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_ASC == True):
-        self.layout.operator(ExportASC.bl_idname, text="Latk - ASC (.asc)")
     if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_GML == True):
         self.layout.operator(ExportGml.bl_idname, text="Latk - GML (.gml)")
     if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_Painter == True):
@@ -1276,8 +1278,10 @@ def menu_func_export(self, context):
 classes = (
     ImportLatk,
     ImportTiltBrush,
+	ImportASC,
     ExportLatkJson,
-    ExportLatk
+    ExportLatk,
+	ExportASC
 )
 
 '''
@@ -1285,14 +1289,12 @@ LightningArtistToolkitPreferences,
 ImportNorman,
 ImportVRDoodler,
 ImportSvg,
-ImportASC,
 ImportSculptrVR,
 ImportPainter,
 ImportGml,
 ExportGml,
 ExportFbxSequence,
 ExportSculptrVR,
-ExportASC,
 ExportUnrealXYZ,
 ExportSvg,
 ExportAfterEffects,

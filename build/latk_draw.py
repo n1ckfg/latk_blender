@@ -40,6 +40,7 @@ def createPoint(_stroke, _index, _point, pressure=1, strength=1):
     _stroke.points[_index].select = True
     _stroke.points[_index].pressure = pressure
     _stroke.points[_index].strength = strength
+    return _stroke.points[_index]
 
 def addPoint(_stroke, _point, pressure=1, strength=1):
     _stroke.points.add(1)
