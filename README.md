@@ -1,4 +1,5 @@
 # latk_blender
+<img src="./example/logo.png"><br>
 Read and write Latk files in Blender Grease Pencil. Last tested in Blender 2.83 LTS.
 
 To install, copy latk_blender.py to:
