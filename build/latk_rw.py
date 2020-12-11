@@ -1624,56 +1624,6 @@ def getSculptrVrVolRes(val):
 
 # ~ ~ ~
 
-def tiltBrushJson_Grouper(n, iterable, fillvalue=None):
-  """grouper(3, 'ABCDEFG', 'x') --> ABC DEF Gxx"""
-  args = [iter(iterable)] * n
-  return zip_longest(fillvalue=fillvalue, *args)
-
-def tiltBrushJson_DecodeData(obj, dataType="v"):
-    '''    
-    VERTEX_ATTRIBUTES = [
-        # Attribute name, type code
-        ('v',  'f', None),
-        ('n',  'f', 3),
-        ('uv0','f', None),
-        ('uv1','f', None),
-        ('c',  'I', 1),
-        ('t',  'f', 4),
-    ]
-    '''
-    if (dataType=="v" or dataType=="n" or dataType=="t"):
-        typeChar = "f"
-    elif (dataType=="c"):
-        typeChar = "I"
-
-    num_verts = 1
-    empty = None
-    data_grouped = []
-    
-    data_bytes = base64.b64decode(obj)
-    fmt = "<%d%c" % (len(data_bytes) / 4, typeChar)
-    data_words = struct.unpack(fmt, data_bytes)
-    
-    if (dataType=="v" or dataType=="n"):
-        num_verts = len(data_words) / 3
-    elif (dataType=="t"):
-        num_verts = len(data_words) / 4
-
-    if (len(data_words) % num_verts != 0):
-        return None
-    else: 
-        stride_words = int(len(data_words) / num_verts)
-        if stride_words > 1:
-            data_grouped = list(tiltBrushJson_Grouper(stride_words, data_words))
-        else:
-            data_grouped = list(data_words)
-
-        if (dataType == "c"):
-            for i in range(0, len(data_grouped)):
-                data_grouped[i] = rgbIntToTuple(data_grouped[i][0], normalized=True)
-
-        return(data_grouped)
-
 def importTiltBrush(filepath=None, vertSkip=1):
     globalScale = Vector((1, 1, 1))
     globalOffset = Vector((0, 0, 0))
