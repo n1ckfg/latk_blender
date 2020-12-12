@@ -765,6 +765,114 @@ class Latk(object):
             layer.frames.append(frame)
             self.layers.append(layer)
 
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    def readAsc(self, filepath=None, strokeLength=1, vertexColor=True):
+        globalScale = (1, 1, 1)
+        globalOffset = (0, 0, 0)
+        useScaleAndOffset = True
+        #numPlaces = 7
+        #roundValues = True
+
+        with open(filepath) as data_file: 
+            data = data_file.readlines()
+
+        allPoints = []
+        allPressures = []
+        colors = []
+        colorIs255 = False
+        for line in data:
+            pointRaw = line.split(",")
+            if (len(pointRaw) < 3):
+                pointRaw = line.split(" ")
+            point = (float(pointRaw[0]), float(pointRaw[1]), float(pointRaw[2]))
+            allPoints.append(point)
+            
+            color = None
+            pressure = 1.0
+            
+            if (len(pointRaw) == 4):
+                pressure = float(pointRaw[3])
+            elif (len(pointRaw) == 6):
+                color = (float(pointRaw[3]), float(pointRaw[4]), float(pointRaw[5]))
+            elif(len(pointRaw) > 6):
+                pressure = float(pointRaw[3])
+                color = (float(pointRaw[4]), float(pointRaw[5]), float(pointRaw[6]))
+
+            if (colorIs255 == False and color != None and color[0] + color[1] + color[2] > 3.1):
+                    colorIs255 = True
+            elif (colorIs255 == True):
+                color = (color[0] / 255.0, color[1] / 255.0, color[2] / 255.0)
+
+            allPressures.append(pressure)
+            colors.append(color)
+
+        layer = LatkLayer("ASC_layer")
+        frame = LatkFrame()
+        stroke = None
+        pointsCounter = 0
+        pointsTotal = 0
+
+        for i in range(0, len(allPoints)-1):
+            color = colors[i]
+            
+            if (pointsCounter == 0):
+                stroke = LatkStroke()
+                if (vertexColor == False and color != None):
+                    stroke.color = color
+            
+            x = allPoints[i][0]
+            y = allPoints[i][2]
+            z = allPoints[i][1]
+            pressure = allPressures[i]
+            strength = 1.0
+            if useScaleAndOffset == True:
+                x = (x * globalScale[0]) + globalOffset[0]
+                y = (y * globalScale[1]) + globalOffset[1]
+                z = (z * globalScale[2]) + globalOffset[2]
+            point = LatkPoint((x, y, z), pressure, strength)
+            color = colors[i]
+            if (vertexColor == True and color != None):
+                if (len(color) < 4):
+                    color = (color[0], color[1], color[2], 1)
+                point.vertex_color = color
+            stroke.points.append(point)
+
+            pointsCounter += 1
+            pointsTotal += 1
+            if (pointsCounter > strokeLength-1):
+                frame.strokes.append(stroke)
+                pointsCounter = 0
+            if (pointsTotal > len(allPoints)-1):
+                break
+
+        layer.frames.append(frame)
+        self.layers.append(layer)
+
+    def writeAsc(self, filepath=None, vertexColor=True):
+        ascData = []
+
+        for layer in self.layers:
+            for frame in layer.frames:
+                for stroke in frame.strokes:
+                    color = None
+                    if (vertexColor == False):
+                        color = stroke.color
+                    for point in stroke.points:
+                        coord = point.co
+                        x = coord[0]
+                        y = coord[2]
+                        z = coord[1]
+                        pressure = point.pressure
+                        if (vertexColor == True):
+                            color = point.vertex_color
+                        r = color[0]
+                        g = color[1]
+                        b = color[2]
+                        ascData.append(str(x) + "," + str(y) + "," + str(z) + "," + str(pressure) + "," + str(r) + "," + str(g) + "," + str(b)) 
+
+        self.writeTextFile(filepath, "\n".join(ascData))
+
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 
@@ -1075,8 +1183,6 @@ def rdp(M, epsilon=0, dist=pldist, algo="iter", return_mask=False):
         return algo(M, epsilon, dist)
 
     return algo(np.array(M), epsilon, dist).tolist()
-
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
