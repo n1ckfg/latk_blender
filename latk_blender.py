@@ -629,7 +629,7 @@ class Latk(object):
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 
     def readTiltBrush(self, filepath=None, vertSkip=1):
-        globalScale = (1, 1, 1)
+        globalScale = (0.1, 0.1, 0.1)
         globalOffset = (0, 0, 0)
         useScaleAndOffset = True
 
@@ -675,11 +675,12 @@ class Latk(object):
                             z = (z * globalScale[2]) + globalOffset[2]
                         pointGroup.append((x, y, z, pressure, strength))
                         #~
-                stroke = LatkStroke(color=strokeColor)
+                points = []
                 for l, point in enumerate(pointGroup):
                     point = LatkPoint(co=(point[0], point[1], point[2]), pressure=point[3], strength=point[4])
-                    stroke.points.append(point)
+                    points.append(point)
                 
+                stroke = LatkStroke(points, strokeColor)
                 frame.strokes.append(stroke)
             
             layer.frames.append(frame)
