@@ -6087,7 +6087,7 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
                                 bpy.context.object.modifiers["Decimate"].ratio = _decimate     
                                 latk_ob = applyModifiers(latk_ob)
                             #~
-                            if (_remesh != "none"):
+                            if (_remesh != "none" and _remesh != "hull" and _remesh != "plane"):
                                 latk_ob = remesher(latk_ob, mode=_remesh)
                             #~
                             #if (getStrokeFillAlpha(stroke) > 0.001):
