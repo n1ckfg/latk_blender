@@ -5116,7 +5116,7 @@ def importTiltBrush(filepath=None, vertSkip=1):
     globalScale = Vector((1, 1, 1))
     globalOffset = Vector((0, 0, 0))
     useScaleAndOffset = True
-    gp = getActiveGp()
+    gp = createGp() #getActiveGp()
     palette = getActivePalette()    
 
     filename = os.path.split(filepath)[1].split(".")
