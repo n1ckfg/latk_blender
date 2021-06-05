@@ -126,7 +126,7 @@ class ImportLatk(bpy.types.Operator, ImportHelper):
         keywords["resizeTimeline"] = self.resizeTimeline
         keywords["useScaleAndOffset"] = self.useScaleAndOffset
         keywords["doPreclean"] = self.doPreclean
-        keywords["limitPalette"] = self.limitPalette
+        #keywords["limitPalette"] = self.limitPalette # temporarily disabled for 2.93
         keywords["clearExisting"] = self.clearExisting
         keywords["cleanFactor"] = self.cleanFactor
         la.readBrushStrokes(**keywords)
@@ -224,7 +224,7 @@ class ImportTiltBrush(bpy.types.Operator, ImportHelper):
         if bpy.data.is_saved:
             import os
         #~
-        keywords["vertSkip"] = self.vertSkip
+        #keywords["vertSkip"] = self.vertSkip  # temporarily disabled for 2.93
         la.importTiltBrush(**keywords)
         return {'FINISHED'} 
 
