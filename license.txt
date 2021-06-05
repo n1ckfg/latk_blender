@@ -4,7 +4,7 @@ The Lightning Artist Toolkit (Blender) was developed with support from:
    Ontario Arts Council
    Toronto Arts Council
    
-Copyright (c) 2020 Nick Fox-Gieg
+Copyright (c) 2021 Nick Fox-Gieg
 http://fox-gieg.com
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
