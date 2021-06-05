@@ -17,11 +17,13 @@ class LightningArtistToolkitPreferences(bpy.types.AddonPreferences):
         default = False
     )
 
+    '''
     extraFormats_ASC = bpy.props.BoolProperty(
         name = 'ASC Point Cloud',
         description = "ASC point cloud import/export",
         default = True
     )
+    '''
 
     extraFormats_Painter = bpy.props.BoolProperty(
         name = 'Corel Painter',
@@ -76,7 +78,7 @@ class LightningArtistToolkitPreferences(bpy.types.AddonPreferences):
         layout.label("Add menu items to import:")
         #layout.prop(self, "extraFormats_TiltBrush")
         layout.prop(self, "extraFormats_SculptrVR")
-        layout.prop(self, "extraFormats_ASC")
+        #layout.prop(self, "extraFormats_ASC")
         layout.prop(self, "extraFormats_GML")
         layout.prop(self, "extraFormats_Painter")
         layout.prop(self, "extraFormats_SVG")
@@ -85,7 +87,7 @@ class LightningArtistToolkitPreferences(bpy.types.AddonPreferences):
         #~
         layout.label("Add menu items to export:")
         layout.prop(self, "extraFormats_SculptrVR")
-        layout.prop(self, "extraFormats_ASC")
+        #layout.prop(self, "extraFormats_ASC")
         layout.prop(self, "extraFormats_GML")
         layout.prop(self, "extraFormats_Painter")
         layout.prop(self, "extraFormats_SVG")
@@ -118,7 +120,7 @@ class ImportLatk(bpy.types.Operator, ImportHelper):
     def execute(self, context):
         import latk_blender as la
         keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "resizeTimeline", "doPreclean", "limitPalette", "useScaleAndOffset", "clearExisting", "cleanFactor")) 
-        if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
+        if bpy.data.is_saved:
             import os
         #~
         keywords["resizeTimeline"] = self.resizeTimeline
@@ -155,7 +157,7 @@ class ExportLatkJson(bpy.types.Operator, ExportHelper): # TODO combine into one 
     def execute(self, context):
         import latk_blender as la
         keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "check_existing", "bake", "useScaleAndOffset")) #, "roundValues", "numPlaces"))
-        if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
+        if bpy.data.is_saved:
             import os
         #~
         keywords["bake"] = self.bake
@@ -188,7 +190,7 @@ class ExportLatk(bpy.types.Operator, ExportHelper):  # TODO combine into one cla
     def execute(self, context):
         import latk_blender as la
         keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "check_existing", "bake", "useScaleAndOffset")) #, "roundValues", "numPlaces"))
-        if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
+        if bpy.data.is_saved:
             import os
         #~
         keywords["bake"] = self.bake
@@ -219,7 +221,7 @@ class ImportTiltBrush(bpy.types.Operator, ImportHelper):
     def execute(self, context):
         import latk_blender as la
         keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode"))
-        if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
+        if bpy.data.is_saved:
             import os
         #~
         keywords["vertSkip"] = self.vertSkip
@@ -242,7 +244,7 @@ class ImportNorman(bpy.types.Operator, ImportHelper):
     def execute(self, context):
         import latk_blender as la
         keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode"))
-        if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
+        if bpy.data.is_saved:
             import os
         #~
         la.importNorman(**keywords)
@@ -264,7 +266,7 @@ class ImportVRDoodler(bpy.types.Operator, ImportHelper):
     def execute(self, context):
         import latk_blender as la
         keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode"))
-        if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
+        if bpy.data.is_saved:
             import os
         #~
         la.importVRDoodler(**keywords)
@@ -289,7 +291,7 @@ class ImportSvg(bpy.types.Operator, ImportHelper):
     def execute(self, context):
         import latk_blender as la
         keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "useScaleAndOffset", "doPreclean", "cleanFactor"))
-        if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
+        if bpy.data.is_saved:
             import os
         keywords["useScaleAndOffset"] = self.useScaleAndOffset
         keywords["doPreclean"] = self.doPreclean
@@ -311,16 +313,18 @@ class ImportASC(bpy.types.Operator, ImportHelper):
             )
 
     importAsGP = BoolProperty(name="Import as GP", description="Create Grease Pencil strokes instead of vertices", default=True)
-    strokeLength = IntProperty(name="Points per Stroke", description="Group every n points into strokes", default=1)
+    vertexColor = BoolProperty(name="Vertex Colors", description="Use vertex colors per point, instead of stroke colors", default=True)
+    strokeLength = IntProperty(name="Points per Stroke", description="Group every n points into strokes", default=10)
 
     def execute(self, context):
         import latk_blender as la
         keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode"))
-        if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
+        if bpy.data.is_saved:
             import os
         #~
         keywords["importAsGP"] = self.importAsGP
         keywords["strokeLength"] = self.strokeLength
+        keywords["vertexColor"] = self.vertexColor
         la.importAsc(**keywords)
         return {'FINISHED'} 
 
@@ -342,7 +346,7 @@ class ImportSculptrVR(bpy.types.Operator, ImportHelper):
     def execute(self, context):
         import latk_blender as la
         keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode"))
-        if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
+        if bpy.data.is_saved:
             import os
         #~
         keywords["strokeLength"] = self.strokeLength
@@ -365,7 +369,7 @@ class ImportPainter(bpy.types.Operator, ImportHelper):
     def execute(self, context):
         import latk_blender as la
         keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode"))
-        if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
+        if bpy.data.is_saved:
             import os
         #~
         la.importPainter(**keywords)
@@ -390,7 +394,7 @@ class ImportGml(bpy.types.Operator, ImportHelper):
     def execute(self, context):
         import latk_blender as la
         keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "splitStrokes", "sequenceAnim"))
-        if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
+        if bpy.data.is_saved:
             import os
         #~
         keywords["splitStrokes"] = self.splitStrokes
@@ -421,7 +425,7 @@ class ExportGml(bpy.types.Operator, ExportHelper):
     def execute(self, context):
         import latk_blender as la
         keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "check_existing"))
-        if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
+        if bpy.data.is_saved:
             import os
         #~
         keywords["make2d"] = self.make2d
@@ -448,7 +452,7 @@ class ExportFbxSequence(bpy.types.Operator, ExportHelper):
     def execute(self, context):
         import latk_blender as la
         keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "check_existing"))
-        if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
+        if bpy.data.is_saved:
             import os
         #~
         keywords["sketchFab"] = self.sketchFab
@@ -488,7 +492,7 @@ class ExportSculptrVR(bpy.types.Operator, ExportHelper):
     def execute(self, context):
         import latk_blender as la
         keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "check_existing"))
-        if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
+        if bpy.data.is_saved:
             import os
         #~
         keywords["sphereRadius"] = self.sphereRadius
@@ -514,12 +518,15 @@ class ExportASC(bpy.types.Operator, ExportHelper):
             options={'HIDDEN'},
             )
 
+    vertexColor = BoolProperty(name="Vertex Colors", description="Use vertex colors per point, instead of stroke colors", default=True)
+
     def execute(self, context):
         import latk_blender as la
         keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "check_existing"))
-        if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
+        if bpy.data.is_saved:
             import os
         #~
+        keywords["vertexColor"] = self.vertexColor
         la.exportAsc(**keywords)
         return {'FINISHED'} 
 
@@ -539,7 +546,7 @@ class ExportUnrealXYZ(bpy.types.Operator, ExportHelper):
     def execute(self, context):
         import latk_blender as la
         keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "check_existing"))
-        if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
+        if bpy.data.is_saved:
             import os
         #~
         la.exportXyz(**keywords)
@@ -562,7 +569,7 @@ class ExportSvg(bpy.types.Operator, ExportHelper):
         import latk_blender as la
         #keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "check_existing", "bake"))
         keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "check_existing"))
-        if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
+        if bpy.data.is_saved:
             import os
         #~
         la.writeSvg(**keywords)
@@ -588,7 +595,7 @@ class ExportAfterEffects(bpy.types.Operator, ExportHelper):
         import latk_blender as la
         #keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "check_existing", "bake"))
         keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "check_existing"))
-        if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
+        if bpy.data.is_saved:
             import os
         #~
         keywords["useNulls"] = self.useNulls
@@ -613,7 +620,7 @@ class ExportPainter(bpy.types.Operator, ExportHelper):
         import latk_blender as la
         #keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "check_existing", "bake"))
         keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "check_existing"))
-        if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
+        if bpy.data.is_saved:
             import os
         #~
         la.writePainter(**keywords)
@@ -1232,12 +1239,12 @@ def menu_func_import(self, context):
     self.layout.operator(ImportLatk.bl_idname, text="Latk Animation (.latk, .json)")
     #if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_TiltBrush == True):
     self.layout.operator(ImportTiltBrush.bl_idname, text="Latk - Tilt Brush (.tilt, .json)")
+    #if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_ASC == True):
+    self.layout.operator(ImportASC.bl_idname, text="Latk - ASC (.asc, .xyz)")
     #~
     '''
     if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_SculptrVR == True):
         self.layout.operator(ImportSculptrVR.bl_idname, text="Latk - SculptrVR (.csv)")
-    if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_ASC == True):
-        self.layout.operator(ImportASC.bl_idname, text="Latk - ASC (.asc, .xyz)")
     if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_GML == True):
         self.layout.operator(ImportGml.bl_idname, text="Latk - GML (.gml)")
     if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_Painter == True):
@@ -1253,12 +1260,12 @@ def menu_func_import(self, context):
 def menu_func_export(self, context):
     self.layout.operator(ExportLatk.bl_idname, text="Latk Animation (.latk)")
     self.layout.operator(ExportLatkJson.bl_idname, text="Latk Animation (.json)")
+    #if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_ASC == True):
+    self.layout.operator(ExportASC.bl_idname, text="Latk - ASC (.asc)")
     #~
     '''
     if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_SculptrVR == True):
         self.layout.operator(ExportSculptrVR.bl_idname, text="Latk - SculptrVR (.csv)")
-    if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_ASC == True):
-        self.layout.operator(ExportASC.bl_idname, text="Latk - ASC (.asc)")
     if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_GML == True):
         self.layout.operator(ExportGml.bl_idname, text="Latk - GML (.gml)")
     if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_Painter == True):
@@ -1276,8 +1283,10 @@ def menu_func_export(self, context):
 classes = (
     ImportLatk,
     ImportTiltBrush,
+	ImportASC,
     ExportLatkJson,
-    ExportLatk
+    ExportLatk,
+	ExportASC
 )
 
 '''
@@ -1285,14 +1294,12 @@ LightningArtistToolkitPreferences,
 ImportNorman,
 ImportVRDoodler,
 ImportSvg,
-ImportASC,
 ImportSculptrVR,
 ImportPainter,
 ImportGml,
 ExportGml,
 ExportFbxSequence,
 ExportSculptrVR,
-ExportASC,
 ExportUnrealXYZ,
 ExportSvg,
 ExportAfterEffects,

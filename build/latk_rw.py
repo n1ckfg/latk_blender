@@ -51,10 +51,8 @@ def fromGpToLatk(bake=False, skipLocked=False, useScaleAndOffset=False, globalSc
                         fill_color = palette[stroke.material_index].grease_pencil.fill_color
                     except:
                         pass
-                    laStroke.color = (color[0], color[1], color[2])
-                    laStroke.alpha = color[3]
-                    laStroke.fill_color = (fill_color[0], fill_color[1], fill_color[2])
-                    laStroke.fill_alpha = fill_color[3]
+                    laStroke.color = color
+                    laStroke.fill_color = fill_color
                     for point in stroke.points:
                         x = point.co[0]
                         y = point.co[1]
@@ -63,13 +61,15 @@ def fromGpToLatk(bake=False, skipLocked=False, useScaleAndOffset=False, globalSc
                         pressure = point.pressure
                         strength = 1.0
                         strength = point.strength
+                        vertex_color = (0.0,0.0,0.0,0.0)
+                        vertex_color = point.vertex_color
                         #~
                         if (useScaleAndOffset == True):
                             x = (x * globalScale[0]) + globalOffset[0]
                             y = (y * globalScale[1]) + globalOffset[1]
                             z = (z * globalScale[2]) + globalOffset[2]
                         #~
-                        laPoint = LatkPoint((x, y, z), pressure, strength)
+                        laPoint = LatkPoint((x, y, z), pressure, strength, vertex_color)
                         laStroke.points.append(laPoint)
                     laFrame.strokes.append(laStroke)
                 laLayer.frames.append(laFrame)
@@ -111,7 +111,7 @@ def fromLatkToGp(la=None, resizeTimeline=True, useScaleAndOffset=False, limitPal
                 stroke.line_width = 100
                 stroke.material_index = gp.active_material_index
                 laPoints = laStroke.points
-                stroke.points.add(len(laPoints)) # add 4 points
+                stroke.points.add(len(laPoints)) 
                 for l, laPoint in enumerate(laPoints):
                     co = laPoint.co 
                     x = co[0]
@@ -119,6 +119,7 @@ def fromLatkToGp(la=None, resizeTimeline=True, useScaleAndOffset=False, limitPal
                     z = co[2]
                     pressure = 1.0
                     strength = 1.0
+                    vertex_color = (0.0,0.0,0.0,0.0)
                     if (useScaleAndOffset == True):
                         x = (x * globalScale[0]) + globalOffset[0]
                         y = (y * globalScale[1]) + globalOffset[1]
@@ -128,7 +129,9 @@ def fromLatkToGp(la=None, resizeTimeline=True, useScaleAndOffset=False, limitPal
                         pressure = laPoint.pressure
                     if (laPoint.strength != None):
                         strength = laPoint.strength
-                    createPoint(stroke, l, (x, y, z), pressure, strength)
+                    if (laPoint.vertex_color != None):
+                        vertex_color = laPoint.vertex_color
+                    createPoint(stroke, l, (x, y, z), pressure, strength, vertex_color)
     #~  
     if (resizeTimeline == True):
         setStartEnd(0, longestFrameNum, pad=False)  
@@ -1275,7 +1278,7 @@ def writePointCloud(filepath=None, strokes=None):
     writeTextFile(name=name, lines=lines)
 '''
 
-def importAsc(filepath=None, strokeLength=1, importAsGP=False):
+def importAsc(filepath=None, strokeLength=1, importAsGP=False, vertexColor=True):
     globalScale = Vector((1, 1, 1))
     globalOffset = Vector((0, 0, 0))
     useScaleAndOffset = True
@@ -1291,6 +1294,8 @@ def importAsc(filepath=None, strokeLength=1, importAsGP=False):
     colorIs255 = False
     for line in data:
         pointRaw = line.split(",")
+        if (len(pointRaw) < 3):
+            pointRaw = line.split(" ")
         point = (float(pointRaw[0]), float(pointRaw[1]), float(pointRaw[2]))
         allPoints.append(point)
         
@@ -1321,30 +1326,53 @@ def importAsc(filepath=None, strokeLength=1, importAsGP=False):
         if not frame:
             frame = layer.frames.new(start)
 
-        for i in range(0, len(allPoints)-(strokeLength-1), strokeLength):
+        pointsCounter = 0
+        pointsTotal = 0
+        for i in range(0, len(allPoints)-1):
             color = colors[i]
-            if (color != None):
-                createColor(color)
-            stroke = frame.strokes.new(getActiveColor().name)
-            stroke.draw_mode = "3DSPACE"
-            stroke.points.add(strokeLength)
+            
+            if (pointsCounter == 0):
+                if (vertexColor == False and color != None):
+                    createColor(color)
+                stroke = frame.strokes.new()
+                stroke.display_mode = '3DSPACE'
+                stroke.line_width = 100
+                stroke.material_index = gp.active_material_index
+            
+                if (pointsTotal < len(allPoints) - strokeLength):
+                    stroke.points.add(strokeLength)
+                else:
+                    stroke.points.add(len(allPoints) - pointsTotal)
 
-            for j in range(0, strokeLength):
-                x = allPoints[i+j][0]
-                y = allPoints[i+j][2]
-                z = allPoints[i+j][1]
-                pressure = allPressures[i+j]
-                strength = 1.0
-                if useScaleAndOffset == True:
-                    x = (x * globalScale.x) + globalOffset.x
-                    y = (y * globalScale.y) + globalOffset.y
-                    z = (z * globalScale.z) + globalOffset.z
-                createPoint(stroke, j, (x, y, z), pressure, strength)
+            x = allPoints[i][0]
+            y = allPoints[i][2]
+            z = allPoints[i][1]
+            pressure = allPressures[i]
+            strength = 1.0
+            if useScaleAndOffset == True:
+                x = (x * globalScale.x) + globalOffset.x
+                y = (y * globalScale.y) + globalOffset.y
+                z = (z * globalScale.z) + globalOffset.z
+            point = createPoint(stroke, pointsCounter, (x, y, z), pressure, strength)
+            color = colors[i]
+            if (vertexColor == True and color != None):
+                if (len(color) < 4):
+                    color = (color[0], color[1], color[2], 1)
+                point.vertex_color = color
+
+            pointsCounter += 1
+            pointsTotal += 1
+            if (pointsCounter > strokeLength-1):
+                pointsCounter = 0
+            if (pointsTotal > len(allPoints)-1):
+                break
+        getActiveGpMtl().mode="DOTS"
+
     else:
         me = bpy.data.meshes.new("myMesh") 
         ob = bpy.data.objects.new("myObject", me) 
         ob.show_name = True
-        bpy.context.scene.objects.link(ob)
+        bpy.context.collection.objects.link(ob)
         bm = bmesh.new() # create an empty BMesh
         bm.from_mesh(me) # fill it in from a Mesh
         for pt in allPoints:
@@ -1352,20 +1380,24 @@ def importAsc(filepath=None, strokeLength=1, importAsGP=False):
         bm.verts.index_update()
         bm.to_mesh(me)
 
-def exportAsc(filepath=None):
+def exportAsc(filepath=None, vertexColor=True):
     ascData = []
     gp = getActiveGp()
     palette = getActivePalette()
     for layer in gp.data.layers:
         for frame in layer.frames:
             for stroke in frame.strokes:
-                color = palette.colors[stroke.colorname].color
+                color = None
+                if (vertexColor == False):
+                    color = palette[stroke.material_index].grease_pencil.color
                 for point in stroke.points:
                     coord = point.co
                     x = coord[0]
                     y = coord[2]
                     z = coord[1]
                     pressure = point.pressure
+                    if (vertexColor == True):
+                        color = point.vertex_color
                     r = color[0]
                     g = color[1]
                     b = color[2]
@@ -1592,61 +1624,11 @@ def getSculptrVrVolRes(val):
 
 # ~ ~ ~
 
-def tiltBrushJson_Grouper(n, iterable, fillvalue=None):
-  """grouper(3, 'ABCDEFG', 'x') --> ABC DEF Gxx"""
-  args = [iter(iterable)] * n
-  return zip_longest(fillvalue=fillvalue, *args)
-
-def tiltBrushJson_DecodeData(obj, dataType="v"):
-    '''    
-    VERTEX_ATTRIBUTES = [
-        # Attribute name, type code
-        ('v',  'f', None),
-        ('n',  'f', 3),
-        ('uv0','f', None),
-        ('uv1','f', None),
-        ('c',  'I', 1),
-        ('t',  'f', 4),
-    ]
-    '''
-    if (dataType=="v" or dataType=="n" or dataType=="t"):
-        typeChar = "f"
-    elif (dataType=="c"):
-        typeChar = "I"
-
-    num_verts = 1
-    empty = None
-    data_grouped = []
-    
-    data_bytes = base64.b64decode(obj)
-    fmt = "<%d%c" % (len(data_bytes) / 4, typeChar)
-    data_words = struct.unpack(fmt, data_bytes)
-    
-    if (dataType=="v" or dataType=="n"):
-        num_verts = len(data_words) / 3
-    elif (dataType=="t"):
-        num_verts = len(data_words) / 4
-
-    if (len(data_words) % num_verts != 0):
-        return None
-    else: 
-        stride_words = int(len(data_words) / num_verts)
-        if stride_words > 1:
-            data_grouped = list(tiltBrushJson_Grouper(stride_words, data_words))
-        else:
-            data_grouped = list(data_words)
-
-        if (dataType == "c"):
-            for i in range(0, len(data_grouped)):
-                data_grouped[i] = rgbIntToTuple(data_grouped[i][0], normalized=True)
-
-        return(data_grouped)
-
 def importTiltBrush(filepath=None, vertSkip=1):
     globalScale = Vector((1, 1, 1))
     globalOffset = Vector((0, 0, 0))
     useScaleAndOffset = True
-    gp = getActiveGp()
+    gp = createGp() #getActiveGp()
     palette = getActivePalette()    
 
     filename = os.path.split(filepath)[1].split(".")

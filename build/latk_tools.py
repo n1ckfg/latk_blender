@@ -1035,10 +1035,18 @@ def getActivePalette():
     gp = getActiveGp()
     return gp.data.materials
 
-def getActiveColor():
+def getActiveGpMtl():
     gp = getActiveGp()
     palette = getActivePalette()
-    return palette[gp.active_material_index].grease_pencil.color
+    return palette[gp.active_material_index].grease_pencil
+
+def getActiveColor():
+    mtl = getActiveGpMtl()
+    return mtl.color
+
+def getActiveFillColor():
+    mtl = getActiveGpMtl()
+    return mtl.fill_color
 
 def getActiveLayer():
     gp = getActiveGp()
