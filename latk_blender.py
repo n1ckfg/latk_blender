@@ -24,8 +24,6 @@ http://fox-gieg.com
 '''
 
 import json
-import zipfile
-from io import BytesIO
 from math import sqrt
 from numpy import float32
 from numpy import isnan
@@ -938,6 +936,11 @@ class LatkPoint(object):
         self.vertex_color = vertex_color
     
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
+# * * * * * * * * * * * * * * * * * * * * * * * * * *
+# * * * * * * * * * * * * * * * * * * * * * * * * * *
+
+import zipfile
+from io import BytesIO
 
 class InMemoryZip(object):
 
@@ -978,7 +981,8 @@ class InMemoryZip(object):
         f.write(self.readFromMemory())
         f.close()
 
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# * * * * * * * * * * * * * * * * * * * * * * * * * *
+
 
 """
 rdp
@@ -1184,8 +1188,6 @@ def rdp(M, epsilon=0, dist=pldist, algo="iter", return_mask=False):
 
     return algo(np.array(M), epsilon, dist).tolist()
 
-# * * * * * * * * * * * * * * * * * * * * * * * * * *
-# * * * * * * * * * * * * * * * * * * * * * * * * * *
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 # TILT BRUSH binary reader
