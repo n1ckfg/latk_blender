@@ -5,7 +5,7 @@ cd /D %~dp0
 
 del %BUILD_TARGET%
 
-copy /b latk.py\latk.py+latk_main.py+latk_tools.py+latk_rw.py+latk_mtl.py+latk_mesh.py+latk_draw.py+latk_shortcuts.py+latk_ui.py+latk_svg.py %BUILD_TARGET%
+copy /b latkpy\latk.py+latk_main.py+latk_tools.py+latk_rw.py+latk_mtl.py+latk_mesh.py+latk_draw.py+latk_shortcuts.py+latk_ui.py+latk_svg.py %BUILD_TARGET%
 
 rem copy %BUILD_TARGET% "%homepath%\AppData\Roaming\Blender Foundation\Blender\2.77\scripts\addons"
 rem copy %BUILD_TARGET% "%homepath%\AppData\Roaming\Blender Foundation\Blender\2.78\scripts\addons"

@@ -1,0 +1,3 @@
+[submodule "build/latkpy"]
+	path = build/latkpy
+	url = https://github.com/LightningArtist/latkpy
