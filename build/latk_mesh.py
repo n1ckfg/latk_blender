@@ -460,7 +460,7 @@ def booleanMod(target=None, op="union"):
             bpy.ops.object.modifier_add(type="BOOLEAN")
             bpy.context.object.modifiers["Boolean"].operation = op.upper()
             bpy.context.object.modifiers["Boolean"].object = target[i-1]
-            bpy.ops.object.modifier_apply(apply_as='DATA', modifier="Boolean")
+            bpy.ops.object.modifier_apply(modifier="Boolean") #apply_as='DATA', modifier="Boolean")
             delete(target[i-1])
     lastObj = target[len(target)-1]
     lastObj.select = True
@@ -473,7 +473,7 @@ def subsurfMod(target=None):
     for obj in target:
         bpy.context.view_layer.objects.active  = obj
         bpy.ops.object.modifier_add(type="SUBSURF")
-        bpy.ops.object.modifier_apply(apply_as='DATA', modifier="Subsurf")
+        bpy.ops.object.modifier_apply(modifier="Subsurf") #apply_as='DATA', modifier="Subsurf")
         returns.append(obj)
     return returns
 
@@ -484,7 +484,7 @@ def smoothMod(target=None):
     for obj in target:
         bpy.context.view_layer.objects.active  = obj
         bpy.ops.object.modifier_add(type="SMOOTH")
-        bpy.ops.object.modifier_apply(apply_as='DATA', modifier="Smooth")
+        bpy.ops.object.modifier_apply(modifier="Smooth") #apply_as='DATA', modifier="Smooth")
         returns.append(obj)
     return returns
 
@@ -496,7 +496,7 @@ def decimateMod(target=None, _decimate=0.1):
         bpy.context.view_layer.objects.active  = obj
         bpy.ops.object.modifier_add(type='DECIMATE')
         bpy.context.object.modifiers["Decimate"].ratio = _decimate     
-        bpy.ops.object.modifier_apply(apply_as='DATA', modifier="Decimate")
+        bpy.ops.object.modifier_apply(modifier="Decimate") #apply_as='DATA', modifier="Decimate")
         returns.append(obj)
     return returns
 
