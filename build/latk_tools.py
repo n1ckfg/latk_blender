@@ -900,9 +900,9 @@ def hideFramesByNumber(target=None):
             if (currentFrame() == index):
                 hideFrame(target[j], i, False)
 
-def getFrameNumFromName(target=None):
+def getFrameNumFromName(target=None, separator="."):
     try:
-        temp1 = target.split("_")
+        temp1 = target.split(separator)
         temp2 = "";
         last = len(temp1)-1
         for i in range(0, last):
@@ -919,13 +919,13 @@ def hideFramesByScale(target=None):
     for i in range(start, end):
         goToFrame(i)
         for j in range(0, len(target)):
-            if (target[j].hide == False):
+            if (target[j].hide_viewport == False):
                 hideFrameByScale(target[j], i, False)
     #turn off all hide keyframes
     for i in range(start, end):
         goToFrame(i)
         for j in range(0, len(target)):
-            if (target[j].hide == True):
+            if (target[j].hide_viewport == True):
                 hideFrameByScale(target[j], i, True)
                 hideFrame(target[j], i, False) 
     
