@@ -2931,14 +2931,14 @@ def goToFrame(_index):
     return bpy.context.scene.frame_current
 
 def hideFrame(_obj, _frame, _hide):
-    _obj.hide_set(_hide)
+    _obj.hide_viewport = _hide
     _obj.hide_render = _hide
     _obj.keyframe_insert(data_path="hide_viewport", frame=_frame) 
     _obj.keyframe_insert(data_path="hide_render", frame=_frame) 
 
-def hideFrameByScale(_obj, _frame, _hide):
-    showScaleVal = 1
-    hideScaleVal = 0.001
+def hideFrameByScale(_obj, _frame, _hide, showScaleVal=1, hideScaleVal=0.0001):
+    #showScaleVal = 1
+    #hideScaleVal = 0.001
     if (_hide == True):
         _obj.scale = [hideScaleVal, hideScaleVal, hideScaleVal]
     else:
@@ -2959,8 +2959,38 @@ def hideFrameByScale(_obj, _frame, _hide):
         _obj.keyframe_insert(data_path="hide_render", frame=_frame)
     '''
 
-def hideFramesByScale():
-    target = matchName("latk_")
+def hideFramesByNumber(target=None):
+    if not target:
+        target = matchName("latk_")
+    start, end = getStartEnd()
+    for i in range(start, end):
+        goToFrame(i)
+        for j in range(0, len(target)):
+            hideFrame(target[j], i, True)    
+    #~
+    for i in range(start, end):
+        goToFrame(i)
+        for j in range(0, len(target)):
+            index = getFrameNumFromName(target[j].name)
+            print(index)
+            if (currentFrame() == index):
+                hideFrame(target[j], i, False)
+
+def getFrameNumFromName(target=None):
+    try:
+        temp1 = target.split("_")
+        temp2 = "";
+        last = len(temp1)-1
+        for i in range(0, last):
+            temp2 += temp1[i]
+        index = int(temp1[last])
+        return index
+    except:
+        return None
+
+def hideFramesByScale(target=None):
+    if not target:
+        target = matchName("latk_")
     start, end = getStartEnd()
     for i in range(start, end):
         goToFrame(i)
