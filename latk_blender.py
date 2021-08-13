@@ -3437,13 +3437,21 @@ def getStrokeColor(target=None):
     return lookUpStrokeColor(target).grease_pencil.color
 
 def getStrokeAlpha(target=None):
-    return lookUpStrokeColor(target).grease_pencil.color[3]
+    mtl = lookUpStrokeColor(target).grease_pencil
+    if (mtl.show_stroke == False):
+        return 0
+    else:
+        return mtl.color[3]
 
 def getStrokeFillColor(target=None):
     return lookUpStrokeColor(target).grease_pencil.fill_color
 
 def getStrokeFillAlpha(target=None):
-    return lookUpStrokeColor(target).grease_pencil.fill_color[3]
+    mtl = lookUpStrokeColor(target).grease_pencil
+    if (mtl.show_fill == False):
+        return 0
+    else:
+        return mtl.fill_color[3]
 
 def getStrokeCoordsPlus(target=None):
     returns = []
