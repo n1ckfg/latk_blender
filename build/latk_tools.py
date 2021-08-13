@@ -1350,6 +1350,9 @@ def getStrokeStrengths(target=None):
 
 def lookUpStrokeColor(target=None):
     palette = getActivePalette()
+    if (len(palette) < 1):
+        palette = createMtlPalette()
+        return palette[0]
     if not target:
         target = getSelectedStroke()
     return palette[target.material_index]

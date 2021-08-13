@@ -3426,6 +3426,9 @@ def getStrokeStrengths(target=None):
 
 def lookUpStrokeColor(target=None):
     palette = getActivePalette()
+    if (len(palette) < 1):
+        palette = createMtlPalette()
+        return palette[0]
     if not target:
         target = getSelectedStroke()
     return palette[target.material_index]
@@ -5511,13 +5514,20 @@ def deleteMaterial(target=None):
 
 # http://blender.stackexchange.com/questions/17738/how-to-uv-unwrap-object-with-python
 def planarUvProject():
+    '''
     for area in bpy.context.screen.areas:
         if area.type == 'VIEW_3D':
             for region in area.regions:
                 if region.type == 'WINDOW':
                     override = {'area': area, 'region': region, 'edit_object': bpy.context.edit_object}
                     bpy.ops.uv.smart_project(override)
-                    
+    '''
+    # https://blender.stackexchange.com/questions/103195/smart-uv-unwrap-multiple-objects
+    bpy.ops.object.editmode_toggle() #entering edit mode
+    bpy.ops.mesh.select_all(action='SELECT') #select all objects elements
+    bpy.ops.uv.smart_project() #the actual unwrapping operation
+    bpy.ops.object.editmode_toggle() #exiting edit mode
+
 def colorVertexCyclesMat(obj, vertName="Cd"):
     # http://blender.stackexchange.com/questions/6084/use-python-to-add-multiple-colors-to-a-nurbs-curve
     # http://blender.stackexchange.com/questions/5668/add-nodes-to-material-with-python
