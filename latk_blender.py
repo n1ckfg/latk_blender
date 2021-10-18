@@ -3105,11 +3105,16 @@ def getActiveGp(_name=None):
             return obj
     return createGp()
 
-def createGp(_name=None):
+def createGp(_name=None, _newMaterial=True, _newLayer=False):
     bpy.ops.object.gpencil_add(type="EMPTY")
     bpy.data.grease_pencils[len(bpy.data.grease_pencils)-1].stroke_depth_order = "3D"  
-    createGpMaterial()
-    #newLayer()
+    
+    if (_newMaterial == True):
+        createGpMaterial()
+    
+    if (_newLayer == True):
+        newLayer()
+    
     gp = ss()
     return gp
 
@@ -3800,8 +3805,9 @@ def fromLatkToGp(la=None, resizeTimeline=True, useScaleAndOffset=False, limitPal
     print("Begin building Grease Pencil from Latk object...")
     if (clearExisting == True):
         clearAll()
-    gp = getActiveGp()
-    
+    #gp = getActiveGp()
+    gp = createGp(_newMaterial=False, _newLayer=False)
+
     longestFrameNum = 1
     #~
     for laLayer in la.layers:
@@ -3827,7 +3833,7 @@ def fromLatkToGp(la=None, resizeTimeline=True, useScaleAndOffset=False, limitPal
                     createAndMatchColorPalette(strokeColor, limitPalette, 5) # num places
                 stroke = frame.strokes.new()
                 stroke.display_mode = '3DSPACE'
-                stroke.line_width = 100 # adjusted from 100 for 2.93
+                stroke.line_width = 10 # adjusted from 100 for 2.93
                 stroke.material_index = gp.active_material_index
                 laPoints = laStroke.points
                 stroke.points.add(len(laPoints)) 
