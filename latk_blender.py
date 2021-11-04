@@ -28,8 +28,6 @@ from math import sqrt
 from numpy import float32
 from numpy import isnan
 
-# * * * * * * * * * * * * * * * * * * * * * * * * * *
-
 class Latk(object):     
     def __init__(self, filepath=None, init=False, coords=None, color=None): # args string, Latk array, float tuple array, float tuple           
         self.layers = [] # LatkLayer
@@ -1015,14 +1013,11 @@ TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 """
+
 from math import sqrt
 from functools import partial
 import numpy as np
 import sys
-
-if sys.version_info[0] >= 3:
-    xrange = range
-
 
 def pldist(point, start, end):
     """
@@ -1060,7 +1055,7 @@ def rdp_rec(M, epsilon, dist=pldist):
     dmax = 0.0
     index = -1
 
-    for i in xrange(1, M.shape[0]):
+    for i in range(1, M.shape[0]):
         d = dist(M[i], M[0], M[-1])
 
         if d > dmax:
@@ -1088,7 +1083,7 @@ def _rdp_iter(M, start_index, last_index, epsilon, dist=pldist):
         dmax = 0.0
         index = start_index
 
-        for i in xrange(index + 1, last_index):
+        for i in range(index + 1, last_index):
             if indices[i - global_start_index]:
                 d = dist(M[i], M[start_index], M[last_index])
                 if d > dmax:
@@ -1099,7 +1094,7 @@ def _rdp_iter(M, start_index, last_index, epsilon, dist=pldist):
             stk.append([start_index, index])
             stk.append([index, last_index])
         else:
-            for i in xrange(start_index + 1, last_index):
+            for i in range(start_index + 1, last_index):
                 indices[i - global_start_index] = False
 
     return indices
@@ -1199,7 +1194,7 @@ def kdist(p1, p2):
     [x2,y2,z2] = p2    
     return (((x2-x1)**2)+((y2-y1)**2)+((z2-z1)**2))**(1/2)     
 
-class Kmeans(object):
+class KMeans(object):
     def __init__(self, _points, _numCentroids): # ArrayList<PVector>, int
         self.particles = [] # ArrayList<KParticle>
         self.centroids = [] # ArrayList<KCentroid>
@@ -1396,15 +1391,6 @@ class KCluster(object):
 
 """Reads and writes .tilt files. The main export is 'class Tilt'."""
 
-import os
-import math
-import json
-import uuid
-import struct
-import contextlib
-from collections import defaultdict
-import io
-
 #__all__ = ('Tilt', 'Sketch', 'Stroke', 'ControlPoint', 'BadTilt', 'BadMetadata', 'MissingKey')
 
 # Format characters are as for struct.pack/unpack, with the addition of
@@ -1534,6 +1520,14 @@ def validate_metadata(dct):
 # External
 #
 
+import os
+import math
+import json
+import uuid
+import struct
+import contextlib
+from collections import defaultdict
+import io
 
 class Tilt(object):
     """Class representing a .tilt file. Attributes:
@@ -1667,7 +1661,7 @@ def _make_ext_reader(ext_bits, ext_mask):
     names = [info[0] for info in infos]
     if '@' in fmt:
         # struct.unpack isn't general enough to do the job
-        print(fmt, names, infos)
+        #print(fmt, names, infos)
         fmts = ['<'+info[1] for info in infos]
         def reader(f, fmts=fmts):
             values = [None] * len(fmts)
