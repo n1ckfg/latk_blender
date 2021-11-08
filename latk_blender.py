@@ -7528,9 +7528,11 @@ class ImportTiltBrush(bpy.types.Operator, ImportHelper):
     bl_label = "Import Tilt Brush"
     bl_options = {'PRESET', 'UNDO'}
 
-    filename_ext = ".json"
+    #filename_ext = ".json"
+    filename_ext = ".tilt"
     filter_glob = StringProperty(
-            default="*.tilt;*.json",
+            #default="*.tilt;*.json",
+            default="*.tilt",
             options={'HIDDEN'},
             )
 
@@ -8556,7 +8558,7 @@ class Latk_Button_MtlShader(bpy.types.Operator):
 def menu_func_import(self, context):
     self.layout.operator(ImportLatk.bl_idname, text="Latk Animation (.latk, .json)")
     #if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_TiltBrush == True):
-    self.layout.operator(ImportTiltBrush.bl_idname, text="Latk - Tilt Brush (.tilt, .json)")
+    self.layout.operator(ImportTiltBrush.bl_idname, text="Latk - Tilt Brush (.tilt)")
     #if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_ASC == True):
     self.layout.operator(ImportASC.bl_idname, text="Latk - ASC (.asc, .xyz)")
     #~
