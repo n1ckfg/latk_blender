@@ -29,9 +29,12 @@ from numpy import float32
 from numpy import isnan
 
 class Latk(object):     
-    def __init__(self, filepath=None, init=False, coords=None, color=None): # args string, Latk array, float tuple array, float tuple           
-        self.layers = [] # LatkLayer
-        self.frame_rate = 12
+    def __init__(self, filepath=None, layers=None, init=False, coords=None, color=None, frame_rate=12): # args string, Latk array, float tuple array, float tuple           
+        if not layers:
+        	self.layers = [] # LatkLayer
+        else:
+        	self.layers = layers
+        self.frame_rate = frame_rate
 
         if (filepath != None):
             self.read(filepath, True)
@@ -143,7 +146,7 @@ class Latk(object):
             else: # latk format v2.7, Blender 2.7 Grease Pencil
                 for jsonGp in data["grease_pencil"]:          
                     for jsonLayer in jsonGp["layers"]:
-                        layer = LatkLayer(jsonLayer["name"])
+                        layer = LatkLayer(name=jsonLayer["name"])
                         
                         for jsonFrame in jsonLayer["frames"]:
                             frame = LatkFrame()
@@ -198,7 +201,7 @@ class Latk(object):
             if (float(data["version"]) >= 2.8): # latk format v2.8, Blender 2.8 Grease Pencil
                 for jsonGp in data["grease_pencil"]:          
                     for jsonLayer in jsonGp["layers"]:
-                        layer = LatkLayer(jsonLayer["name"])
+                        layer = LatkLayer(name=jsonLayer["name"])
                         
                         for jsonFrame in jsonLayer["frames"]:
                             frame = LatkFrame()
@@ -634,7 +637,7 @@ class Latk(object):
         if (filetype == "tilt" or filetype == "zip"): # Tilt Brush binary file with original stroke data
             t = Tilt(filepath)
             #~
-            layer = LatkLayer("TiltBrush")
+            layer = LatkLayer(name="TiltBrush")
             frame = LatkFrame()
             #~
             for tstroke in t.sketch.strokes:
@@ -681,30 +684,6 @@ class Latk(object):
             
             layer.frames.append(frame)
             self.layers.append(layer)
-            # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
-            """Prints out some rough information about the strokes.
-            Pass a tiltbrush.tilt.Sketch instance."""
-            '''
-            cooky, version, unused = sketch.header[0:3]
-            '''
-            #output += 'Cooky:0x%08x    Version:%s    Unused:%s    Extra:(%d bytes)' % (
-                #cooky, version, unused, len(sketch.additional_header))
-            '''
-            if len(sketch.strokes):
-                stroke = sketch.strokes[0]    # choose one representative one
-                def extension_names(lookup):
-                    # lookup is a dict mapping name -> idx
-                    extensions = sorted(lookup.items(), key=lambda (n,i): i)
-                    return ', '.join(name for (name, idx) in extensions)
-                #output += "Stroke Ext: %s" % extension_names(stroke.stroke_ext_lookup)
-                #if len(stroke.controlpoints):
-                    #output += "CPoint Ext: %s" % extension_names(stroke.cp_ext_lookup)
-            '''
-            '''
-            for (i, stroke) in enumerate(sketch.strokes):
-                #output += "%3d: " % i,
-                output += dump_stroke(stroke)
-            '''
         else: # Tilt Brush JSON export file, not original stroke data
             pressure = 1.0
             strength = 1.0
@@ -712,7 +691,7 @@ class Latk(object):
             with open(filepath) as data_file: 
                 data = json.load(data_file)
             #~
-            layer = LatkLayer("TiltBrush")
+            layer = LatkLayer(name="TiltBrush")
             frame = LatkFrame()
             #~
             for strokeJson in data["strokes"]:
@@ -803,7 +782,7 @@ class Latk(object):
             allPressures.append(pressure)
             colors.append(color)
 
-        layer = LatkLayer("ASC_layer")
+        layer = LatkLayer(name="ASC_layer")
         frame = LatkFrame()
         stroke = None
         pointsCounter = 0
@@ -873,8 +852,11 @@ class Latk(object):
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 
 class LatkLayer(object):    
-    def __init__(self, name="layer"): 
-        self.frames = [] # LatkFrame
+    def __init__(self, frames=None, name="layer"): 
+        if not frames:
+        	self.frames = [] # LatkFrame
+        else:
+        	self.frames = frames
         self.name = name
         self.parent = None
 
@@ -884,8 +866,11 @@ class LatkLayer(object):
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 
 class LatkFrame(object):   
-    def __init__(self, frame_number=0): 
-        self.strokes = [] # LatkStroke
+    def __init__(self, strokes=None, frame_number=0): 
+        if not strokes:
+        	self.strokes = [] # LatkStroke
+        else:
+        	self.strokes = strokes
         self.frame_number = frame_number
         self.parent_location = (0.0,0.0,0.0)
         
@@ -893,8 +878,9 @@ class LatkFrame(object):
 
 class LatkStroke(object):       
     def __init__(self, points=None, color=(0.0, 0.0, 0.0, 1.0), fill_color=(0.0, 0.0, 0.0, 0.0)): 
-        self.points = []
-        if (points != None):
+        if not points:
+        	self.points = []
+        else:
             self.points = points
         self.color = color
         #self.alpha = 1.0
@@ -3752,11 +3738,11 @@ def fromGpToLatk(bake=False, skipLocked=False, useScaleAndOffset=False, globalSc
     #~
     for layer in gp.data.layers:
         if (skipLocked == False or layer.lock == False):
-            laLayer = LatkLayer(layer.info)
+            laLayer = LatkLayer(name=layer.info)
             if (layer.parent == True):
                 laLayer.parent = layer.parent.name
             for frame in layer.frames:
-                laFrame = LatkFrame(frame.frame_number)
+                laFrame = LatkFrame(frame_number=frame.frame_number)
                 if (layer.parent == True):
                     laFrame.parent_location = layer.parent.location
                 for stroke in frame.strokes:

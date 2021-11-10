@@ -34,11 +34,11 @@ def fromGpToLatk(bake=False, skipLocked=False, useScaleAndOffset=False, globalSc
     #~
     for layer in gp.data.layers:
         if (skipLocked == False or layer.lock == False):
-            laLayer = LatkLayer(layer.info)
+            laLayer = LatkLayer(name=layer.info)
             if (layer.parent == True):
                 laLayer.parent = layer.parent.name
             for frame in layer.frames:
-                laFrame = LatkFrame(frame.frame_number)
+                laFrame = LatkFrame(frame_number=frame.frame_number)
                 if (layer.parent == True):
                     laFrame.parent_location = layer.parent.location
                 for stroke in frame.strokes:
