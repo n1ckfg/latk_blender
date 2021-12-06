@@ -918,6 +918,8 @@ class LatkPoint(object):
         self.pressure = pressure
         self.strength = strength
         self.vertex_color = vertex_color
+        self.distance = -1
+        self.index = -1
     
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
