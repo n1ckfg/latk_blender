@@ -1,6 +1,6 @@
 # latk_blender
 <img src="./example/logo.png"><br>
-Read and write Latk files in Blender Grease Pencil. Last tested in Blender 3.1.
+Read and write Latk files, and read Tilt Brush files, in Blender Grease Pencil. Last tested in Blender 3.1.
 
 To install, copy latk_blender.py to:
 
