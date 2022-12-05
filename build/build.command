@@ -30,3 +30,5 @@ cp $BUILD_TARGET "${HOME}/Library/Application Support/Blender/2.92/scripts/addon
 cp $BUILD_TARGET "${HOME}/Library/Application Support/Blender/2.93/scripts/addons/"
 cp $BUILD_TARGET "${HOME}/Library/Application Support/Blender/3.0/scripts/addons/"
 cp $BUILD_TARGET "${HOME}/Library/Application Support/Blender/3.1/scripts/addons/"
+cp $BUILD_TARGET "${HOME}/Library/Application Support/Blender/3.2/scripts/addons/"
+cp $BUILD_TARGET "${HOME}/Library/Application Support/Blender/3.3/scripts/addons/"

@@ -1264,6 +1264,8 @@ def menu_func_export(self, context):
     self.layout.operator(ExportLatkJson.bl_idname, text="Latk Animation (.json)")
     #if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_ASC == True):
     self.layout.operator(ExportASC.bl_idname, text="Latk - ASC (.asc)")
+    #if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_AfterEffects == True):
+    self.layout.operator(ExportAfterEffects.bl_idname, text="Latk - After Effects (.jsx)")        
     #~
     '''
     if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_SculptrVR == True):
@@ -1274,8 +1276,6 @@ def menu_func_export(self, context):
         self.layout.operator(ExportPainter.bl_idname, text="Latk - Corel Painter (.txt)")
     if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_SVG == True):
         self.layout.operator(ExportSvg.bl_idname, text="Latk - SVG SMIL (.svg)")
-    if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_AfterEffects == True):
-        self.layout.operator(ExportAfterEffects.bl_idname, text="Latk - After Effects (.jsx)")        
     if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_FBXSequence == True):
         self.layout.operator(ExportFbxSequence.bl_idname, text="Latk - Sketchfab FBX Sequence (.fbx)")
     if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_UnrealXYZ == True):
@@ -1288,7 +1288,8 @@ classes = (
 	ImportASC,
     ExportLatkJson,
     ExportLatk,
-	ExportASC
+	ExportASC,
+	ExportAfterEffects
 )
 
 '''

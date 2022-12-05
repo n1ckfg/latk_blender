@@ -585,10 +585,16 @@ def writeAeJsx(filepath=None, useNulls=False):
             for line in frameLines:
                 body.append(line)
             for stroke in frame.strokes:
-                color = palette.colors[stroke.colorname]
+                # 2.7 color handling
+                #color = palette.colors[stroke.colorname]
+                color = palette[stroke.material_index].grease_pencil
+                
                 strokeColor = (color.color[0], color.color[1], color.color[2])
                 fillColor = (color.fill_color[0], color.fill_color[1], color.fill_color[2])
-                fillAlpha = color.fill_alpha
+                
+                # 2.7 color handling
+                #fillAlpha = color.fill_alpha
+                fillAlpha = color.fill_color[3]
 
                 strokeLines = aeStroke(stroke, camera, strokeColor, fillColor, fillAlpha, useNulls)
                 for line in strokeLines:
