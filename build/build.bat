@@ -22,5 +22,6 @@ copy %BUILD_TARGET% "%homepath%\AppData\Roaming\Blender Foundation\Blender\3.0\s
 copy %BUILD_TARGET% "%homepath%\AppData\Roaming\Blender Foundation\Blender\3.1\scripts\addons"
 copy %BUILD_TARGET% "%homepath%\AppData\Roaming\Blender Foundation\Blender\3.2\scripts\addons"
 copy %BUILD_TARGET% "%homepath%\AppData\Roaming\Blender Foundation\Blender\3.3\scripts\addons"
+copy %BUILD_TARGET% "%homepath%\AppData\Roaming\Blender Foundation\Blender\3.4\scripts\addons"
 
 @pause
