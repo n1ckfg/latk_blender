@@ -1,6 +1,6 @@
 #!/bin/bash
 
-BUILD_TARGET="../latk_blender.py"
+BUILD_TARGET="../__init__.py"
 
 SOURCE="${BASH_SOURCE[0]}"
 while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symlink
@@ -15,21 +15,4 @@ cd $DIR
 rm $BUILD_TARGET
 touch $BUILD_TARGET
 
-cat "latkpy/latk/latk.py" "latk_main.py" "latk_tools.py" "latk_rw.py" "latk_mtl.py" "latk_mesh.py" "latk_draw.py" "latk_shortcuts.py" "latk_ui.py" "latk_svg.py" > $BUILD_TARGET
-
-#cp $BUILD_TARGET "${HOME}/Applications/blender/2.77/scripts/addons/"
-#cp $BUILD_TARGET "${HOME}/Applications/blender/2.78/scripts/addons/"
-#cp $BUILD_TARGET "${HOME}/Applications/blender/2.79/scripts/addons/"
-#cp $BUILD_TARGET "${HOME}/Applications/blender/2.80/scripts/addons/"
-#cp $BUILD_TARGET "${HOME}/Applications/blender/2.81/scripts/addons/"
-#cp $BUILD_TARGET "${HOME}/Applications/blender/2.82/scripts/addons/"
-cp $BUILD_TARGET "${HOME}/Applications/blender/2.83/scripts/addons/"
-cp $BUILD_TARGET "${HOME}/Applications/blender/2.90/scripts/addons/"
-cp $BUILD_TARGET "${HOME}/Applications/blender/2.91/scripts/addons/"
-cp $BUILD_TARGET "${HOME}/Applications/blender/2.92/scripts/addons/"
-cp $BUILD_TARGET "${HOME}/Applications/blender/2.93/scripts/addons/"
-cp $BUILD_TARGET "${HOME}/Applications/blender/3.0/scripts/addons/"
-cp $BUILD_TARGET "${HOME}/Applications/blender/3.1/scripts/addons/"
-cp $BUILD_TARGET "${HOME}/Applications/blender/3.2/scripts/addons/"
-cp $BUILD_TARGET "${HOME}/Applications/blender/3.3/scripts/addons/"
-cp $BUILD_TARGET "${HOME}/Applications/blender/3.4/scripts/addons/"
+cat "latk_main.py" "latk.py" "latk_tools.py" "latk_rw.py" "latk_mtl.py" "latk_mesh.py" "latk_draw.py" "latk_shortcuts.py" "latk_ui.py" "latk_svg.py" > $BUILD_TARGET
