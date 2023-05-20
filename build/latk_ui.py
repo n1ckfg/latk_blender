@@ -9,9 +9,20 @@ class LightningArtistToolkitPreferences(bpy.types.AddonPreferences):
         default = False
     )
 
+    extraFormats_SculptrVR: bpy.props.BoolProperty(
+        name = 'SculptrVR CSV',
+        description = "SculptrVR CSV import/export",
+        default = False
+    )
+
     def draw(self, context):
         layout = self.layout
-        layout.label(text="Add menu items to export:")
+
+        layout.label(text="Extra formats to import:")
+        layout.prop(self, "extraFormats_SculptrVR")
+
+        layout.label(text="Extra formats to export:")
+        layout.prop(self, "extraFormats_SculptrVR")
         layout.prop(self, "extraFormats_AfterEffects")
 
 # This is needed to display the preferences menu
@@ -27,7 +38,6 @@ class OBJECT_OT_latk_prefs(Operator):
         addon_prefs = preferences.addons[__name__].preferences
 
         #info = ((addon_prefs.extraFormats_AfterEffects))
-
         #self.report({'INFO'}, info)
         #print(info)
 
@@ -879,10 +889,80 @@ class ExportAfterEffects(bpy.types.Operator, ExportHelper):
         return {'FINISHED'} 
 
 
+class ImportSculptrVR(bpy.types.Operator, ImportHelper):
+    """Load an ASC point cloud"""
+    bl_idname = "import_scene.sculptrvr"
+    bl_label = "Import SculptrVR CSV"
+    bl_options = {'PRESET', 'UNDO'}
+
+    filename_ext = ".csv"
+    filter_glob = StringProperty(
+            default="*.csv",
+            options={'HIDDEN'},
+            )
+
+    strokeLength = IntProperty(name="Points per Stroke", description="Group every n points into strokes", default=1)
+
+    def execute(self, context):
+        import latk_blender as la
+        keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode"))
+        if bpy.data.is_saved:
+            import os
+        #~
+        keywords["strokeLength"] = self.strokeLength
+        la.importSculptrVr(**keywords)
+        return {'FINISHED'} 
+
+
+class ExportSculptrVR(bpy.types.Operator, ExportHelper):
+    """Save a SculptrVR CSV"""
+
+    bl_idname = "export_scene.sculptrvr"
+    bl_label = 'Export SculptrVR CSV'
+    bl_options = {'PRESET'}
+
+    filename_ext = ".csv"
+    filter_glob = StringProperty(
+            default="*.csv",
+            options={'HIDDEN'},
+            )
+
+    sphereRadius = FloatProperty(name="Sphere Radius", description="Sphere Radius (min 0.01)", default=10)
+    octreeSize = IntProperty(name="Octree Size", description="Octree Size (0-19)", default=7)
+    vol_scale = FloatProperty(name="Volume Scale", description="Volume Scale (0-1)", default=0.33)
+    mtl_val = IntProperty(name="Material", description="Material Value (127, 254, or 255)", default=255)
+    file_format = EnumProperty(
+        name="File Format",
+        items=(
+            ("SPHERE", "Sphere per Voxel", "Recommended", 0),
+            ("SINGLE", "Single Voxel", "Single voxel at octree size", 1),
+            ("LEGACY", "Legacy Format", "Probably too small to see", 2),
+        ),
+        default="SPHERE"
+    )
+
+    def execute(self, context):
+        import latk_blender as la
+        keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "check_existing"))
+        if bpy.data.is_saved:
+            import os
+        #~
+        keywords["sphereRadius"] = self.sphereRadius
+        keywords["octreeSize"] = self.octreeSize
+        keywords["vol_scale"] = self.vol_scale
+        keywords["mtl_val"] = self.mtl_val
+        keywords["file_format"] = self.file_format
+        #~
+        la.exportSculptrVrCsv(**keywords)
+        return {'FINISHED'} 
+
+
 def menu_func_import(self, context):
     self.layout.operator(ImportLatk.bl_idname, text="Latk Animation (.latk, .json)")
     self.layout.operator(ImportTiltBrush.bl_idname, text="Latk - Tilt Brush (.tilt)")
     self.layout.operator(ImportASC.bl_idname, text="Latk - ASC (.asc, .xyz)")
+    if (bpy.context.preferences.addons[__name__].preferences.extraFormats_SculptrVR == True):
+        self.layout.operator(ImportSculptrVR.bl_idname, text="Latk - SculptrVR (.csv)")
 
 def menu_func_export(self, context):
     self.layout.operator(ExportLatk.bl_idname, text="Latk Animation (.latk)")
@@ -890,6 +970,8 @@ def menu_func_export(self, context):
     self.layout.operator(ExportASC.bl_idname, text="Latk - ASC (.asc)")
     if (bpy.context.preferences.addons[__name__].preferences.extraFormats_AfterEffects == True):
         self.layout.operator(ExportAfterEffects.bl_idname, text="Latk - After Effects (.jsx)")        
+    if (bpy.context.preferences.addons[__name__].preferences.extraFormats_SculptrVR == True):
+        self.layout.operator(ExportSculptrVR.bl_idname, text="Latk - SculptrVR (.csv)")
 
 classes = (
     ImportLatk,
@@ -899,6 +981,8 @@ classes = (
     ExportLatk,
 	ExportASC,
 	ExportAfterEffects,
+    ImportSculptrVR,
+    ExportSculptrVR,
     OBJECT_OT_latk_prefs,
     LightningArtistToolkitPreferences,
     LatkProperties,
