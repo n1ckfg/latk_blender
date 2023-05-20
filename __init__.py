@@ -6227,7 +6227,7 @@ def assembleMesh(export=False, createPalette=True):
             saveFile(origFileName + "_ASSEMBLY")
             print(origFileName + "_ASSEMBLY.blend" + " was saved but some groups were missing.")
 
-def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _decimate = 0.1, _curveType="nurbs", _useColors=True, _saveLayers=False, _singleFrame=False, _vertexColors=True, _vertexColorName="rgba", _animateFrames=True, _remesh="none", _consolidateMtl=True, _caps=True, _joinMesh=True, _uvStroke=True, _uvFill=True, _usePressure=True, _useHull=True):
+def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _decimate = 0.1, _curveType="nurbs", _useColors=True, _saveLayers=False, _singleFrame=False, _vertexColors=True, _vertexColorName="rgba", _animateFrames=True, _remesh="none", _consolidateMtl=True, _caps=True, _joinMesh=True, _uvStroke=True, _uvFill=True, _usePressure=True, _useHull=True, _solidify=False):
     _remesh = _remesh.lower()
     _curveType = _curveType.lower()
     #~
@@ -6314,6 +6314,9 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
                     bpy.context.view_layer.objects.active = latk_ob
                     #~
                     if (_bakeMesh == True):
+                        if (_caps == False and _solidify == True):
+                            bpy.ops.object.modifier_add(type='SOLIDIFY')
+                            latk_ob = applyModifiers(latk_ob)
                         if (thisIsAFill == False and _remesh != "hull" and _remesh != "plane"):
                             if (_decimate < 0.999):
                                 bpy.ops.object.modifier_add(type='DECIMATE')
@@ -6700,12 +6703,18 @@ def makeCurve(coords, pressures=None, resolution=2, thickness=0.1, bevelResoluti
     curveData.bevel_depth = thickness
     curveData.bevel_resolution = bevelResolution
     #~
-    try:
-        if (capsObj != None):
+    if (capsObj == None):
+        curveData.extrude = thickness
+        curveData.use_fill_caps = False
+    else:
+        curveData.bevel_depth = thickness
+        curveData.bevel_resolution = bevelResolution
+        #~
+        try:
             curveData.bevel_object = capsObj
             curveData.use_fill_caps = True
-    except:
-        curveData.use_fill_caps = False
+        except:
+            curveData.use_fill_caps = False
     #~
     # map coords to spline
     curveType=curveType.upper()
@@ -7774,13 +7783,31 @@ class Latk_Button_Gpmesh(bpy.types.Operator):
         latk_settings = bpy.context.scene.latk_settings
         #~
         doJoinMesh=False
+        doHull=False
+        doUvStroke=False
+        doUvFill=False
+        doCaps=False
+        doSolidify=False
+        #~       
         if (latk_settings.bakeMesh==True and latk_settings.joinMesh==True):
             doJoinMesh = True
-        doHull=False
         if (latk_settings.mesh_fill_mode.lower() == "hull"):
             doHull = True
+        if (latk_settings.uvStroke == True):
+            doUvStroke=True
+        if (latk_settings.uvFill == True):
+            doUvFill=True
+        if (latk_settings.main_mesh_mode.lower() == "extrude"):
+            doSolidify=False
+            doCaps=False
+        elif (latk_settings.main_mesh_mode.lower() == "solidify"):
+            doSolidify=True
+            doCaps=False
+        elif (latk_settings.main_mesh_mode.lower() == "bevel"):
+            doSolidify=False
+            doCaps=True
         #~
-        gpMesh(_thickness=latk_settings.thickness, _remesh=latk_settings.remesh_mode.lower(), _resolution=latk_settings.resolution, _bevelResolution=latk_settings.bevelResolution, _decimate=latk_settings.decimate, _bakeMesh=latk_settings.bakeMesh, _joinMesh=doJoinMesh, _saveLayers=False, _vertexColorName=latk_settings.vertexColorName, _useHull=doHull)
+        gpMesh(_thickness=latk_settings.thickness, _remesh=latk_settings.remesh_mode.lower(), _resolution=latk_settings.resolution, _bevelResolution=latk_settings.bevelResolution, _decimate=latk_settings.decimate, _bakeMesh=latk_settings.bakeMesh, _joinMesh=doJoinMesh, _saveLayers=False, _vertexColorName=latk_settings.vertexColorName, _useHull=doHull, _uvStroke=doUvStroke, _uvFill=doUvFill, _caps=doCaps, _solidify=doSolidify)
         return {'FINISHED'}
 
 
@@ -7891,13 +7918,31 @@ class Latk_Button_Gpmesh_SingleFrame(bpy.types.Operator):
         latk_settings = bpy.context.scene.latk_settings
         #~
         doJoinMesh=False
+        doHull=False
+        doUvStroke=False
+        doUvFill=False
+        doCaps=False
+        doSolidify=False
+        #~       
         if (latk_settings.bakeMesh==True and latk_settings.joinMesh==True):
             doJoinMesh = True
-        doHull=False
         if (latk_settings.mesh_fill_mode.lower() == "hull"):
             doHull = True
+        if (latk_settings.uvStroke == True):
+            doUvStroke=True
+        if (latk_settings.uvFill == True):
+            doUvFill=True
+        if (latk_settings.main_mesh_mode.lower() == "extrude"):
+            doSolidify=False
+            doCaps=False
+        elif (latk_settings.main_mesh_mode.lower() == "solidify"):
+            doSolidify=True
+            doCaps=False
+        elif (latk_settings.main_mesh_mode.lower() == "bevel"):
+            doSolidify=False
+            doCaps=True
         #~
-        gpMesh(_singleFrame=True, _animateFrames=False, _thickness=latk_settings.thickness, _remesh=latk_settings.remesh_mode.lower(), _resolution=latk_settings.resolution, _bevelResolution=latk_settings.bevelResolution, _decimate=latk_settings.decimate, _bakeMesh=latk_settings.bakeMesh, _joinMesh=doJoinMesh, _saveLayers=False, _vertexColorName=latk_settings.vertexColorName, _useHull=doHull)
+        gpMesh(_singleFrame=True, _animateFrames=False, _thickness=latk_settings.thickness, _remesh=latk_settings.remesh_mode.lower(), _resolution=latk_settings.resolution, _bevelResolution=latk_settings.bevelResolution, _decimate=latk_settings.decimate, _bakeMesh=latk_settings.bakeMesh, _joinMesh=doJoinMesh, _saveLayers=False, _vertexColorName=latk_settings.vertexColorName, _useHull=doHull, _uvStroke=doUvStroke, _uvFill=doUvFill, _caps=doCaps, _solidify=doSolidify)
         return {'FINISHED'}
 
 

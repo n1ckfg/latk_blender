@@ -203,7 +203,7 @@ def assembleMesh(export=False, createPalette=True):
             saveFile(origFileName + "_ASSEMBLY")
             print(origFileName + "_ASSEMBLY.blend" + " was saved but some groups were missing.")
 
-def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _decimate = 0.1, _curveType="nurbs", _useColors=True, _saveLayers=False, _singleFrame=False, _vertexColors=True, _vertexColorName="rgba", _animateFrames=True, _remesh="none", _consolidateMtl=True, _caps=True, _joinMesh=True, _uvStroke=True, _uvFill=True, _usePressure=True, _useHull=True):
+def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _decimate = 0.1, _curveType="nurbs", _useColors=True, _saveLayers=False, _singleFrame=False, _vertexColors=True, _vertexColorName="rgba", _animateFrames=True, _remesh="none", _consolidateMtl=True, _caps=True, _joinMesh=True, _uvStroke=True, _uvFill=True, _usePressure=True, _useHull=True, _solidify=False):
     _remesh = _remesh.lower()
     _curveType = _curveType.lower()
     #~
@@ -290,6 +290,9 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
                     bpy.context.view_layer.objects.active = latk_ob
                     #~
                     if (_bakeMesh == True):
+                        if (_caps == False and _solidify == True):
+                            bpy.ops.object.modifier_add(type='SOLIDIFY')
+                            latk_ob = applyModifiers(latk_ob)
                         if (thisIsAFill == False and _remesh != "hull" and _remesh != "plane"):
                             if (_decimate < 0.999):
                                 bpy.ops.object.modifier_add(type='DECIMATE')
@@ -676,12 +679,18 @@ def makeCurve(coords, pressures=None, resolution=2, thickness=0.1, bevelResoluti
     curveData.bevel_depth = thickness
     curveData.bevel_resolution = bevelResolution
     #~
-    try:
-        if (capsObj != None):
+    if (capsObj == None):
+        curveData.extrude = thickness
+        curveData.use_fill_caps = False
+    else:
+        curveData.bevel_depth = thickness
+        curveData.bevel_resolution = bevelResolution
+        #~
+        try:
             curveData.bevel_object = capsObj
             curveData.use_fill_caps = True
-    except:
-        curveData.use_fill_caps = False
+        except:
+            curveData.use_fill_caps = False
     #~
     # map coords to spline
     curveType=curveType.upper()
