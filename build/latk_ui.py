@@ -116,6 +116,18 @@ class LatkProperties(bpy.types.PropertyGroup):
         default=True
     )
 
+    uvStroke: BoolProperty(
+        name="UV Stroke",
+        description="Generate UVs for strokes",
+        default=False
+    )
+
+    uvFill: BoolProperty(
+        name="UV Fill",
+        description="Generate UVs for fills",
+        default=False
+    )
+
     minRemapPressure: FloatProperty(
         name="Min",
         description="Minimum Remap Pressure",
@@ -230,6 +242,16 @@ class LatkProperties(bpy.types.PropertyGroup):
         name="VCol",
         description="Vertex color name for export",
         default="rgba"
+    )
+
+    main_mesh_mode: EnumProperty(
+        name="Main Mesh Mode",
+        items=(
+            ("EXTRUDE", "Extrude", "Mesh as one-sided strips", 0),
+            ("SOLIDIFY", "Solidify", "Mesh as two-sided strips", 1),
+            ("BEVEL", "Bevel", "Mesh as capped tubes", 2)
+        ),
+        default="EXTRUDE"
     )
 
     remesh_mode: EnumProperty(
@@ -653,6 +675,10 @@ class LatkProperties_Panel(bpy.types.Panel):
         row.prop(latk, "decimate")
 
         row = layout.row()
+        row.prop(latk, "paletteLimit")
+        row.prop(latk, "vertexColorName")
+
+        row = layout.row()
         row.operator("latk_button.gpmesh")
         row.operator("latk_button.dn")
 
@@ -660,8 +686,8 @@ class LatkProperties_Panel(bpy.types.Panel):
         row.prop(latk, "bakeMesh")
         row.prop(latk, "joinMesh")
         row.prop(latk, "saveLayers")
-        row.prop(latk, "paletteLimit")
-        row.prop(latk, "vertexColorName")
+        row.prop(latk, "uvStroke")
+        row.prop(latk, "uvFill")
         
         row = layout.row()
         row.prop(latk, "remesh_mode", expand=True)
@@ -670,17 +696,20 @@ class LatkProperties_Panel(bpy.types.Panel):
 
         row = layout.row()
         row.prop(latk, "mesh_fill_mode")
+        row.prop(latk, "main_mesh_mode")
+
+        row = layout.row()
         row.prop(latk, "material_shader_mode")
         row.operator("latk_button.mtlshader")
         
         row = layout.row()
         row.operator("latk_button.booleanmod") 
         row.operator("latk_button.booleanmodminus") 
-        row.operator("latk_button.simpleclean")
+        row.operator("latk_button.subsurfmod") 
 
         row = layout.row()
         row.operator("latk_button.smoothmod") 
-        row.operator("latk_button.subsurfmod") 
+        row.operator("latk_button.simpleclean")
         row.operator("latk_button.decimatemod") 
 
         row = layout.row()

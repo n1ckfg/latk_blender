@@ -3,13 +3,11 @@
 class LightningArtistToolkitPreferences(bpy.types.AddonPreferences):
     bl_idname = __name__
     
-    '''
     extraFormats_TiltBrush = bpy.props.BoolProperty(
         name = 'Tilt Brush',
         description = "Tilt Brush import",
         default = True
     )
-    '''
 
     extraFormats_GML = bpy.props.BoolProperty(
         name = 'GML',
@@ -17,13 +15,11 @@ class LightningArtistToolkitPreferences(bpy.types.AddonPreferences):
         default = False
     )
 
-    '''
     extraFormats_ASC = bpy.props.BoolProperty(
         name = 'ASC Point Cloud',
         description = "ASC point cloud import/export",
         default = True
     )
-    '''
 
     extraFormats_Painter = bpy.props.BoolProperty(
         name = 'Corel Painter',
@@ -76,9 +72,9 @@ class LightningArtistToolkitPreferences(bpy.types.AddonPreferences):
     def draw(self, context):
         layout = self.layout
         layout.label("Add menu items to import:")
-        #layout.prop(self, "extraFormats_TiltBrush")
+        layout.prop(self, "extraFormats_TiltBrush")
         layout.prop(self, "extraFormats_SculptrVR")
-        #layout.prop(self, "extraFormats_ASC")
+        layout.prop(self, "extraFormats_ASC")
         layout.prop(self, "extraFormats_GML")
         layout.prop(self, "extraFormats_Painter")
         layout.prop(self, "extraFormats_SVG")
@@ -87,7 +83,7 @@ class LightningArtistToolkitPreferences(bpy.types.AddonPreferences):
         #~
         layout.label("Add menu items to export:")
         layout.prop(self, "extraFormats_SculptrVR")
-        #layout.prop(self, "extraFormats_ASC")
+        layout.prop(self, "extraFormats_ASC")
         layout.prop(self, "extraFormats_GML")
         layout.prop(self, "extraFormats_Painter")
         layout.prop(self, "extraFormats_SVG")
@@ -120,13 +116,13 @@ class ImportLatk(bpy.types.Operator, ImportHelper):
     def execute(self, context):
         import latk_blender as la
         keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "resizeTimeline", "doPreclean", "limitPalette", "useScaleAndOffset", "clearExisting", "cleanFactor")) 
-        if bpy.data.is_saved:
+        if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
             import os
         #~
         keywords["resizeTimeline"] = self.resizeTimeline
         keywords["useScaleAndOffset"] = self.useScaleAndOffset
         keywords["doPreclean"] = self.doPreclean
-        #keywords["limitPalette"] = self.limitPalette # temporarily disabled for 2.93
+        keywords["limitPalette"] = self.limitPalette
         keywords["clearExisting"] = self.clearExisting
         keywords["cleanFactor"] = self.cleanFactor
         la.readBrushStrokes(**keywords)
@@ -157,7 +153,7 @@ class ExportLatkJson(bpy.types.Operator, ExportHelper): # TODO combine into one 
     def execute(self, context):
         import latk_blender as la
         keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "check_existing", "bake", "useScaleAndOffset")) #, "roundValues", "numPlaces"))
-        if bpy.data.is_saved:
+        if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
             import os
         #~
         keywords["bake"] = self.bake
@@ -190,7 +186,7 @@ class ExportLatk(bpy.types.Operator, ExportHelper):  # TODO combine into one cla
     def execute(self, context):
         import latk_blender as la
         keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "check_existing", "bake", "useScaleAndOffset")) #, "roundValues", "numPlaces"))
-        if bpy.data.is_saved:
+        if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
             import os
         #~
         keywords["bake"] = self.bake
@@ -210,11 +206,9 @@ class ImportTiltBrush(bpy.types.Operator, ImportHelper):
     bl_label = "Import Tilt Brush"
     bl_options = {'PRESET', 'UNDO'}
 
-    #filename_ext = ".json"
-    filename_ext = ".tilt"
+    filename_ext = ".json"
     filter_glob = StringProperty(
-            #default="*.tilt;*.json",
-            default="*.tilt",
+            default="*.tilt;*.json",
             options={'HIDDEN'},
             )
 
@@ -223,10 +217,10 @@ class ImportTiltBrush(bpy.types.Operator, ImportHelper):
     def execute(self, context):
         import latk_blender as la
         keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode"))
-        if bpy.data.is_saved:
+        if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
             import os
         #~
-        #keywords["vertSkip"] = self.vertSkip  # temporarily disabled for 2.93
+        keywords["vertSkip"] = self.vertSkip
         la.importTiltBrush(**keywords)
         return {'FINISHED'} 
 
@@ -246,7 +240,7 @@ class ImportNorman(bpy.types.Operator, ImportHelper):
     def execute(self, context):
         import latk_blender as la
         keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode"))
-        if bpy.data.is_saved:
+        if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
             import os
         #~
         la.importNorman(**keywords)
@@ -268,7 +262,7 @@ class ImportVRDoodler(bpy.types.Operator, ImportHelper):
     def execute(self, context):
         import latk_blender as la
         keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode"))
-        if bpy.data.is_saved:
+        if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
             import os
         #~
         la.importVRDoodler(**keywords)
@@ -293,7 +287,7 @@ class ImportSvg(bpy.types.Operator, ImportHelper):
     def execute(self, context):
         import latk_blender as la
         keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "useScaleAndOffset", "doPreclean", "cleanFactor"))
-        if bpy.data.is_saved:
+        if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
             import os
         keywords["useScaleAndOffset"] = self.useScaleAndOffset
         keywords["doPreclean"] = self.doPreclean
@@ -315,18 +309,16 @@ class ImportASC(bpy.types.Operator, ImportHelper):
             )
 
     importAsGP = BoolProperty(name="Import as GP", description="Create Grease Pencil strokes instead of vertices", default=True)
-    vertexColor = BoolProperty(name="Vertex Colors", description="Use vertex colors per point, instead of stroke colors", default=True)
-    strokeLength = IntProperty(name="Points per Stroke", description="Group every n points into strokes", default=10)
+    strokeLength = IntProperty(name="Points per Stroke", description="Group every n points into strokes", default=1)
 
     def execute(self, context):
         import latk_blender as la
         keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode"))
-        if bpy.data.is_saved:
+        if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
             import os
         #~
         keywords["importAsGP"] = self.importAsGP
         keywords["strokeLength"] = self.strokeLength
-        keywords["vertexColor"] = self.vertexColor
         la.importAsc(**keywords)
         return {'FINISHED'} 
 
@@ -348,7 +340,7 @@ class ImportSculptrVR(bpy.types.Operator, ImportHelper):
     def execute(self, context):
         import latk_blender as la
         keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode"))
-        if bpy.data.is_saved:
+        if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
             import os
         #~
         keywords["strokeLength"] = self.strokeLength
@@ -371,7 +363,7 @@ class ImportPainter(bpy.types.Operator, ImportHelper):
     def execute(self, context):
         import latk_blender as la
         keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode"))
-        if bpy.data.is_saved:
+        if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
             import os
         #~
         la.importPainter(**keywords)
@@ -396,7 +388,7 @@ class ImportGml(bpy.types.Operator, ImportHelper):
     def execute(self, context):
         import latk_blender as la
         keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "splitStrokes", "sequenceAnim"))
-        if bpy.data.is_saved:
+        if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
             import os
         #~
         keywords["splitStrokes"] = self.splitStrokes
@@ -427,7 +419,7 @@ class ExportGml(bpy.types.Operator, ExportHelper):
     def execute(self, context):
         import latk_blender as la
         keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "check_existing"))
-        if bpy.data.is_saved:
+        if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
             import os
         #~
         keywords["make2d"] = self.make2d
@@ -454,7 +446,7 @@ class ExportFbxSequence(bpy.types.Operator, ExportHelper):
     def execute(self, context):
         import latk_blender as la
         keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "check_existing"))
-        if bpy.data.is_saved:
+        if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
             import os
         #~
         keywords["sketchFab"] = self.sketchFab
@@ -494,7 +486,7 @@ class ExportSculptrVR(bpy.types.Operator, ExportHelper):
     def execute(self, context):
         import latk_blender as la
         keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "check_existing"))
-        if bpy.data.is_saved:
+        if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
             import os
         #~
         keywords["sphereRadius"] = self.sphereRadius
@@ -520,15 +512,12 @@ class ExportASC(bpy.types.Operator, ExportHelper):
             options={'HIDDEN'},
             )
 
-    vertexColor = BoolProperty(name="Vertex Colors", description="Use vertex colors per point, instead of stroke colors", default=True)
-
     def execute(self, context):
         import latk_blender as la
         keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "check_existing"))
-        if bpy.data.is_saved:
+        if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
             import os
         #~
-        keywords["vertexColor"] = self.vertexColor
         la.exportAsc(**keywords)
         return {'FINISHED'} 
 
@@ -548,7 +537,7 @@ class ExportUnrealXYZ(bpy.types.Operator, ExportHelper):
     def execute(self, context):
         import latk_blender as la
         keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "check_existing"))
-        if bpy.data.is_saved:
+        if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
             import os
         #~
         la.exportXyz(**keywords)
@@ -571,7 +560,7 @@ class ExportSvg(bpy.types.Operator, ExportHelper):
         import latk_blender as la
         #keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "check_existing", "bake"))
         keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "check_existing"))
-        if bpy.data.is_saved:
+        if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
             import os
         #~
         la.writeSvg(**keywords)
@@ -597,7 +586,7 @@ class ExportAfterEffects(bpy.types.Operator, ExportHelper):
         import latk_blender as la
         #keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "check_existing", "bake"))
         keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "check_existing"))
-        if bpy.data.is_saved:
+        if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
             import os
         #~
         keywords["useNulls"] = self.useNulls
@@ -622,7 +611,7 @@ class ExportPainter(bpy.types.Operator, ExportHelper):
         import latk_blender as la
         #keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "check_existing", "bake"))
         keywords = self.as_keywords(ignore=("axis_forward", "axis_up", "filter_glob", "split_mode", "check_existing"))
-        if bpy.data.is_saved:
+        if bpy.data.is_saved and context.user_preferences.filepaths.use_relative_paths:
             import os
         #~
         la.writePainter(**keywords)
@@ -631,6 +620,117 @@ class ExportPainter(bpy.types.Operator, ExportHelper):
 
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
+
+
+class FreestyleGPencil(bpy.types.PropertyGroup):
+    """Properties for the Freestyle to Grease Pencil exporter"""
+    bl_idname = "RENDER_PT_gpencil_export"
+
+    use_freestyle_gpencil_export = BoolProperty(
+        name="Grease Pencil Export",
+        description="Export Freestyle edges to Grease Pencil"
+    )
+
+    use_fill = BoolProperty(
+        name="Fill Strokes",
+        description="Fill the contour with the object's material color",
+        default=False
+    )
+
+    '''
+    use_connecting = BoolProperty(
+        name="Connecting Strokes",
+        description="Connect all vertices with strokes",
+        default=False
+    )
+    '''
+
+    visible_only = BoolProperty(
+        name="Visible Only",
+        description="Only render visible lines",
+        default=False
+    )
+
+    use_overwrite = BoolProperty(
+        name="Overwrite",
+        description="Remove the GPencil strokes from previous renders before a new render",
+        default=False
+    )
+
+    '''
+    vertexHitbox = FloatProperty(
+        name="Vertex Hitbox",
+        description="How close a GP stroke needs to be to a vertex",
+        default=1.5
+    )
+    '''
+
+    numColPlaces = IntProperty(
+        name="Color Places",
+        description="How many decimal places used to find matching colors",
+        default=5,
+    )
+
+    numMaxColors = IntProperty(
+        name="Max Colors",
+        description="How many colors are in the Grease Pencil palette",
+        default=16
+    )
+
+    doClearPalette = BoolProperty(
+        name="Clear Palette",
+        description="Delete palette before beginning a new render",
+        default=False
+    )
+
+    '''
+    useVCols = BoolProperty(
+        name="Use VCols",
+        description="Use vertex colors instead of UV maps",
+        default=False
+    )
+    '''
+
+class FreestyleGPencil_Panel(bpy.types.Panel):
+    """Creates a Panel in the render context of the properties editor"""
+    bl_idname = "RENDER_PT_FreestyleGPencilPanel"
+    bl_space_type = 'PROPERTIES'
+    bl_label = "Latk Freestyle"
+    bl_region_type = 'WINDOW'
+    bl_context = "render"
+
+    def draw_header(self, context):
+        self.layout.prop(context.scene.freestyle_gpencil_export, "use_freestyle_gpencil_export", text="")
+
+    def draw(self, context):
+        layout = self.layout
+
+        scene = context.scene
+        gp = scene.freestyle_gpencil_export
+        freestyle = scene.render.layers.active.freestyle_settings
+
+        layout.active = (gp.use_freestyle_gpencil_export and freestyle.mode != 'SCRIPT')
+
+        row = layout.row()
+        row.prop(gp, "numColPlaces")
+        row.prop(gp, "numMaxColors")
+        row.prop(gp, "doClearPalette")
+
+        row = layout.row()
+        row.prop(gp, "use_overwrite")
+        row.prop(gp, "use_fill")
+        row.prop(gp, "visible_only")
+
+        #row = layout.row()
+        #row.prop(gp, "useVCols")
+        #row.prop(svg, "split_at_invisible")
+        #row.prop(gp, "use_connecting")
+        #row.prop(gp, "vertexHitbox")
+
+
+# ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
+# ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
+
 
 class LatkProperties(bpy.types.PropertyGroup):
     """Properties for Latk"""
@@ -646,6 +746,18 @@ class LatkProperties(bpy.types.PropertyGroup):
         name="Join",
         description="Join baked meshes",
         default=True
+    )
+
+    uvStroke = BoolProperty(
+        name="UV Stroke",
+        description="Generate UVs for strokes",
+        default=False
+    )
+
+    uvFill = BoolProperty(
+        name="UV Fill",
+        description="Generate UVs for fills",
+        default=False
     )
 
     minRemapPressure = FloatProperty(
@@ -728,8 +840,8 @@ class LatkProperties(bpy.types.PropertyGroup):
     numSplitFrames = IntProperty(
         name="Split Frames",
         description="Split layers if they have more than this many frames",
-        default=3,
-        soft_min=2
+        default=1,
+        soft_min=1
     )
 
     cleanFactor = FloatProperty(
@@ -762,6 +874,16 @@ class LatkProperties(bpy.types.PropertyGroup):
         name="VCol",
         description="Vertex color name for export",
         default="rgba"
+    )
+
+    main_mesh_mode = EnumProperty(
+        name="Main Mesh Mode",
+        items=(
+            ("EXTRUDE", "Extrude", "Mesh as one-sided strips", 0),
+            ("SOLIDIFY", "Solidify", "Mesh as two-sided strips", 1),
+            ("BEVEL", "Bevel", "Mesh as capped tubes", 2),
+        ),
+        default="EXTRUDE"
     )
 
     remesh_mode = EnumProperty(
@@ -827,6 +949,10 @@ class LatkProperties_Panel(bpy.types.Panel):
         row.prop(latk, "decimate")
 
         row = layout.row()
+        row.prop(latk, "paletteLimit")
+        row.prop(latk, "vertexColorName")
+
+        row = layout.row()
         row.operator("latk_button.gpmesh")
         row.operator("latk_button.dn")
 
@@ -834,8 +960,8 @@ class LatkProperties_Panel(bpy.types.Panel):
         row.prop(latk, "bakeMesh")
         row.prop(latk, "joinMesh")
         row.prop(latk, "saveLayers")
-        row.prop(latk, "paletteLimit")
-        row.prop(latk, "vertexColorName")
+        row.prop(latk, "uvStroke")
+        row.prop(latk, "uvFill")
         
         row = layout.row()
         row.prop(latk, "remesh_mode", expand=True)
@@ -844,19 +970,22 @@ class LatkProperties_Panel(bpy.types.Panel):
 
         row = layout.row()
         row.prop(latk, "mesh_fill_mode")
+        row.prop(latk, "main_mesh_mode")
+
+        row = layout.row()
         row.prop(latk, "material_shader_mode")
         row.operator("latk_button.mtlshader")
-        
+
         row = layout.row()
         row.operator("latk_button.booleanmod") 
         row.operator("latk_button.booleanmodminus") 
-        row.operator("latk_button.simpleclean")
+        row.operator("latk_button.subsurfmod") 
 
         row = layout.row()
         row.operator("latk_button.smoothmod") 
-        row.operator("latk_button.subsurfmod") 
+        row.operator("latk_button.simpleclean")
         row.operator("latk_button.decimatemod") 
-
+        
         row = layout.row()
         row.operator("latk_button.bakeall")
         row.operator("latk_button.bakeanim")
@@ -901,8 +1030,8 @@ class LatkProperties_Panel(bpy.types.Panel):
         row.prop(latk, "writeStrokeSteps")
         row.prop(latk, "writeStrokePoints")
         row.operator("latk_button.writeonstrokes")
-		'''
-		
+        '''
+        
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 
@@ -1065,13 +1194,31 @@ class Latk_Button_Gpmesh(bpy.types.Operator):
         latk_settings = bpy.context.scene.latk_settings
         #~
         doJoinMesh=False
+        doHull=False
+        doUvStroke=False
+        doUvFill=False
+        doCaps=False
+        doSolidify=False
+        #~       
         if (latk_settings.bakeMesh==True and latk_settings.joinMesh==True):
             doJoinMesh = True
-        doHull=False
         if (latk_settings.mesh_fill_mode.lower() == "hull"):
             doHull = True
+        if (latk_settings.uvStroke == True):
+            doUvStroke=True
+        if (latk_settings.uvFill == True):
+            doUvFill=True
+        if (latk_settings.main_mesh_mode.lower() == "extrude"):
+            doSolidify=False
+            doCaps=False
+        elif (latk_settings.main_mesh_mode.lower() == "solidify"):
+            doSolidify=True
+            doCaps=False
+        elif (latk_settings.main_mesh_mode.lower() == "bevel"):
+            doSolidify=False
+            doCaps=True
         #~
-        gpMesh(_thickness=latk_settings.thickness, _remesh=latk_settings.remesh_mode.lower(), _resolution=latk_settings.resolution, _bevelResolution=latk_settings.bevelResolution, _decimate=latk_settings.decimate, _bakeMesh=latk_settings.bakeMesh, _joinMesh=doJoinMesh, _saveLayers=False, _vertexColorName=latk_settings.vertexColorName, _useHull=doHull)
+        gpMesh(_thickness=latk_settings.thickness, _remesh=latk_settings.remesh_mode.lower(), _resolution=latk_settings.resolution, _bevelResolution=latk_settings.bevelResolution, _decimate=latk_settings.decimate, _bakeMesh=latk_settings.bakeMesh, _joinMesh=doJoinMesh, _saveLayers=False, _vertexColorName=latk_settings.vertexColorName, _useHull=doHull, _uvStroke=doUvStroke, _uvFill=doUvFill, _caps=doCaps, _solidify=doSolidify)
         return {'FINISHED'}
 
 class Latk_Button_RemapPressure(bpy.types.Operator):
@@ -1174,13 +1321,31 @@ class Latk_Button_Gpmesh_SingleFrame(bpy.types.Operator):
         latk_settings = bpy.context.scene.latk_settings
         #~
         doJoinMesh=False
+        doHull=False
+        doUvStroke=False
+        doUvFill=False
+        doCaps=False
+        doSolidify=False
+        #~       
         if (latk_settings.bakeMesh==True and latk_settings.joinMesh==True):
             doJoinMesh = True
-        doHull=False
         if (latk_settings.mesh_fill_mode.lower() == "hull"):
             doHull = True
+        if (latk_settings.uvStroke == True):
+            doUvStroke=True
+        if (latk_settings.uvFill == True):
+            doUvFill=True
+        if (latk_settings.main_mesh_mode.lower() == "extrude"):
+            doSolidify=False
+            doCaps=False
+        elif (latk_settings.main_mesh_mode.lower() == "solidify"):
+            doSolidify=True
+            doCaps=False
+        elif (latk_settings.main_mesh_mode.lower() == "bevel"):
+            doSolidify=False
+            doCaps=True
         #~
-        gpMesh(_singleFrame=True, _animateFrames=False, _thickness=latk_settings.thickness, _remesh=latk_settings.remesh_mode.lower(), _resolution=latk_settings.resolution, _bevelResolution=latk_settings.bevelResolution, _decimate=latk_settings.decimate, _bakeMesh=latk_settings.bakeMesh, _joinMesh=doJoinMesh, _saveLayers=False, _vertexColorName=latk_settings.vertexColorName, _useHull=doHull)
+        gpMesh(_singleFrame=True, _animateFrames=False, _thickness=latk_settings.thickness, _remesh=latk_settings.remesh_mode.lower(), _resolution=latk_settings.resolution, _bevelResolution=latk_settings.bevelResolution, _decimate=latk_settings.decimate, _bakeMesh=latk_settings.bakeMesh, _joinMesh=doJoinMesh, _saveLayers=False, _vertexColorName=latk_settings.vertexColorName, _useHull=doHull, _uvStroke=doUvStroke, _uvFill=doUvFill, _caps=doCaps, _solidify=doSolidify)
         return {'FINISHED'}
 
 class Latk_Button_Dn(bpy.types.Operator):
@@ -1239,14 +1404,13 @@ class Latk_Button_MtlShader(bpy.types.Operator):
 
 def menu_func_import(self, context):
     self.layout.operator(ImportLatk.bl_idname, text="Latk Animation (.latk, .json)")
-    #if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_TiltBrush == True):
-    self.layout.operator(ImportTiltBrush.bl_idname, text="Latk - Tilt Brush (.tilt)")
-    #if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_ASC == True):
-    self.layout.operator(ImportASC.bl_idname, text="Latk - ASC (.asc, .xyz)")
     #~
-    '''
+    if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_TiltBrush == True):
+        self.layout.operator(ImportTiltBrush.bl_idname, text="Latk - Tilt Brush (.tilt, .json)")
     if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_SculptrVR == True):
         self.layout.operator(ImportSculptrVR.bl_idname, text="Latk - SculptrVR (.csv)")
+    if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_ASC == True):
+        self.layout.operator(ImportASC.bl_idname, text="Latk - ASC (.asc, .xyz)")
     if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_GML == True):
         self.layout.operator(ImportGml.bl_idname, text="Latk - GML (.gml)")
     if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_Painter == True):
@@ -1257,100 +1421,51 @@ def menu_func_import(self, context):
         self.layout.operator(ImportNorman.bl_idname, text="Latk - NormanVR (.json)")
     if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_VRDoodler == True):
         self.layout.operator(ImportVRDoodler.bl_idname, text="Latk - VRDoodler (.obj)")
-    '''
 
 def menu_func_export(self, context):
     self.layout.operator(ExportLatk.bl_idname, text="Latk Animation (.latk)")
     self.layout.operator(ExportLatkJson.bl_idname, text="Latk Animation (.json)")
-    #if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_ASC == True):
-    self.layout.operator(ExportASC.bl_idname, text="Latk - ASC (.asc)")
-    #if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_AfterEffects == True):
-    self.layout.operator(ExportAfterEffects.bl_idname, text="Latk - After Effects (.jsx)")        
     #~
-    '''
     if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_SculptrVR == True):
         self.layout.operator(ExportSculptrVR.bl_idname, text="Latk - SculptrVR (.csv)")
+    if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_ASC == True):
+        self.layout.operator(ExportASC.bl_idname, text="Latk - ASC (.asc)")
     if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_GML == True):
         self.layout.operator(ExportGml.bl_idname, text="Latk - GML (.gml)")
     if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_Painter == True):
         self.layout.operator(ExportPainter.bl_idname, text="Latk - Corel Painter (.txt)")
     if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_SVG == True):
         self.layout.operator(ExportSvg.bl_idname, text="Latk - SVG SMIL (.svg)")
+    if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_AfterEffects == True):
+        self.layout.operator(ExportAfterEffects.bl_idname, text="Latk - After Effects (.jsx)")        
     if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_FBXSequence == True):
         self.layout.operator(ExportFbxSequence.bl_idname, text="Latk - Sketchfab FBX Sequence (.fbx)")
     if (bpy.context.user_preferences.addons[__name__].preferences.extraFormats_UnrealXYZ == True):
         self.layout.operator(ExportUnrealXYZ.bl_idname, text="Latk - Unreal Point Cloud (.xyz)")
-    '''
-
-classes = (
-    ImportLatk,
-    ImportTiltBrush,
-	ImportASC,
-    ExportLatkJson,
-    ExportLatk,
-	ExportASC,
-	ExportAfterEffects
-)
-
-'''
-LightningArtistToolkitPreferences,
-ImportNorman,
-ImportVRDoodler,
-ImportSvg,
-ImportSculptrVR,
-ImportPainter,
-ImportGml,
-ExportGml,
-ExportFbxSequence,
-ExportSculptrVR,
-ExportUnrealXYZ,
-ExportSvg,
-ExportAfterEffects,
-ExportPainter,
-LatkProperties,
-LatkProperties_Panel,
-Latk_Button_SimpleClean,
-Latk_Button_ScopeTimeline,
-Latk_Button_MakeLoop,
-Latk_Button_MakeRoot,
-Latk_Button_MatchFills,
-Latk_Button_HideScale,
-Latk_Button_BooleanMod,
-Latk_Button_BooleanModMinus,
-Latk_Button_SubsurfMod,
-Latk_Button_SmoothMod,
-Latk_Button_DecimateMod,
-Latk_Button_HideTrue,
-Latk_Button_Refine,
-Latk_Button_Gpmesh,
-Latk_Button_RemapPressure,
-Latk_Button_WriteOnStrokes,
-Latk_Button_StrokesFromMesh,
-Latk_Button_PointsToggle,
-Latk_Button_BakeAllCurves,
-Latk_Button_BakeAnim,
-Latk_Button_Gpmesh_SingleFrame,
-Latk_Button_Dn,
-Latk_Button_Splf,
-Latk_Button_BigClean,
-Latk_Button_MtlShader
-'''
 
 def register():
-    for cls in classes:
-        bpy.utils.register_class(cls)   
+    bpy.utils.register_module(__name__)
 
-    #bpy.types.Scene.latk_settings = PointerProperty(type=LatkProperties)
-    bpy.types.TOPBAR_MT_file_import.append(menu_func_import)
-    bpy.types.TOPBAR_MT_file_export.append(menu_func_export)
+    bpy.types.Scene.latk_settings = PointerProperty(type=LatkProperties)
+    bpy.types.INFO_MT_file_import.append(menu_func_import)
+    bpy.types.INFO_MT_file_export.append(menu_func_export)
+
+    bpy.types.Scene.freestyle_gpencil_export = PointerProperty(type=FreestyleGPencil)
+    
+    parameter_editor.callbacks_lineset_pre.append(export_fill)
+    parameter_editor.callbacks_lineset_post.append(export_stroke)
 
 def unregister():
-    for cls in reversed(classes):
-        bpy.utils.unregister_class(cls)
+    bpy.utils.unregister_module(__name__)
 
-    #del bpy.types.Scene.latk_settings
-    bpy.types.TOPBAR_MT_file_import.remove(menu_func_import)
-    bpy.types.TOPBAR_MT_file_export.remove(menu_func_export)
+    del bpy.types.Scene.latk_settings
+    bpy.types.INFO_MT_file_import.remove(menu_func_import)
+    bpy.types.INFO_MT_file_export.remove(menu_func_export)
+
+    del bpy.types.Scene.freestyle_gpencil_export
+    
+    parameter_editor.callbacks_lineset_pre.remove(export_fill)
+    parameter_editor.callbacks_lineset_post.remove(export_stroke)
 
 if __name__ == "__main__":
     register()
@@ -1358,4 +1473,3 @@ if __name__ == "__main__":
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
 # * * * * * * * * * * * * * * * * * * * * * * * * * *
-
