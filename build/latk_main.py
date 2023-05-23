@@ -7,8 +7,8 @@ The Lightning Artist Toolkit was developed with support from:
    Ontario Arts Council
    Toronto Arts Council
    
-Copyright (c) 2020 Nick Fox-Gieg
-http://fox-gieg.com
+Copyright (c) 2023 Nick Fox-Gieg
+https://fox-gieg.com
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -32,7 +32,7 @@ along with the Lightning Artist Toolkit (Blender).  If not, see
 bl_info = {
     "name": "Lightning Artist Toolkit (Latk)", 
     "author": "Nick Fox-Gieg",
-	"version": (0, 0, 2),
+	"version": (0, 0, 3),
 	"blender": (3, 0, 0),
     "description": "Import and export Latk format, import Tilt format",
     "category": "Animation"

@@ -160,7 +160,7 @@ class LatkProperties(bpy.types.PropertyGroup):
     thickness: FloatProperty(
         name="Thickness",
         description="Tube mesh thickness",
-        default=0.1
+        default=0.02
     )
 
     resolution: IntProperty(
@@ -178,7 +178,7 @@ class LatkProperties(bpy.types.PropertyGroup):
     decimate: FloatProperty(
         name="Decimate",
         description="Decimate mesh",
-        default=0.1
+        default=0.2
     )
 
     strokeLength: IntProperty(
@@ -688,7 +688,7 @@ class LatkProperties_Panel(bpy.types.Panel):
     bl_label = "Lightning Artist Toolkit"
     bl_category = "Latk"
     bl_region_type = 'UI'
-    bl_context = "objectmode" # "mesh_edit"
+    #bl_context = "objectmode" # "mesh_edit"
 
     #def draw_header(self, context):
         #self.layout.prop(context.scene.freestyle_gpencil_export, "enable_latk", text="")
