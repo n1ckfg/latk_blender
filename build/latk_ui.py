@@ -1425,13 +1425,13 @@ def register():
     bpy.types.TOPBAR_MT_file_export.append(menu_func_export)
 
 def unregister():
-    bpy.types.TOPBAR_MT_file_import.remove(menu_func_import)
     bpy.types.TOPBAR_MT_file_export.remove(menu_func_export)
+    bpy.types.TOPBAR_MT_file_import.remove(menu_func_import)
+
+    del bpy.types.Scene.latk_settings
 
     for cls in reversed(classes):
         bpy.utils.unregister_class(cls)
-
-    del bpy.types.Scene.latk_settings
 
 if __name__ == "__main__":
     register()
