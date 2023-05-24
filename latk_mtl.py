@@ -144,6 +144,11 @@ def colorVertices(obj, color=(1,0,0), makeMaterial=False, colorName="rgba"):
         colorVertexCyclesMat(obj)
 
 def togglePoints(strokes=None):
+    palette = getActivePalette()
+    for mtl in palette:
+        bpy.data.materials[mtl.name].grease_pencil.show_fill = False
+        bpy.data.materials[mtl.name].grease_pencil.mode = "DOTS"
+    '''
     layer = getActiveLayer()
     if not strokes:
         strokes = getSelectedStrokes()
@@ -153,6 +158,7 @@ def togglePoints(strokes=None):
     for stroke in strokes:
         stroke.color.use_volumetric_strokes = True
     layer.line_change = 1
+    '''
 
 def createMtlPalette(numPlaces=5, numReps = 1):
     palette = None
