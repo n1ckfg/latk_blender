@@ -243,6 +243,7 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
     gp = getActiveGp()
     palette = getActivePalette()
     #~
+    '''
     capsObj = None
     if (_caps==True):
         if (_curveType == "nurbs"):
@@ -252,6 +253,7 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
         capsObj = ss()
         capsObj.name = "caps_ob"
         capsObj.data.resolution_u = _bevelResolution
+    '''
     #~
     for b, layer in enumerate(gp.data.layers):
         url = origFileName + "_layer_" + layer.info
@@ -284,7 +286,7 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
                     else:
                         coords = getStrokeCoords(stroke)
                         pressures = getStrokePressures(stroke)
-                        latk_ob = makeCurve(bake=_bakeMesh, name="latk_" + getLayerInfo(layer) + "_" + str(layer.frames[c].frame_number), coords=coords, pressures=pressures, curveType=_curveType, resolution=_resolution, thickness=_thickness, bevelResolution=_bevelResolution, capsObj=capsObj, useUvs=_uvStroke, usePressure=_usePressure)
+                        latk_ob = makeCurve(bake=_bakeMesh, name="latk_" + getLayerInfo(layer) + "_" + str(layer.frames[c].frame_number), coords=coords, pressures=pressures, curveType=_curveType, resolution=_resolution, thickness=_thickness, bevelResolution=_bevelResolution, caps=_caps, useUvs=_uvStroke, usePressure=_usePressure)
                     #centerOrigin(latk_ob)
                     strokeColor = (0.5,0.5,0.5)
                     if (_useColors==True):
@@ -450,7 +452,7 @@ def decimateAndBake(target=None, _decimate=0.1):
 def remesher(obj, bake=True, mode="blocks", octree=6, threshold=0.0001, smoothShade=False, removeDisconnected=False):
         bpy.context.view_layer.objects.active  = obj
         bpy.ops.object.modifier_add(type="REMESH")
-        bpy.context.object.modifiers["Remesh"].mode = mode.upper() #sharp, smooth, blocks
+        bpy.context.object.modifiers["Remesh"].mode = mode.upper() #sharp, smooth, blocks, voxel
         bpy.context.object.modifiers["Remesh"].octree_depth = octree
         bpy.context.object.modifiers["Remesh"].use_smooth_shade = int(smoothShade)
         bpy.context.object.modifiers["Remesh"].use_remove_disconnected = int(removeDisconnected)
@@ -692,7 +694,7 @@ def meshToGp(obj=None, strokeLength=1, strokeGaps=10.0, shuffleOdds=1.0, spreadP
             strength = 1.0
             createPoint(stroke, j, (x, y, z), pressure, strength)
 
-def makeCurve(coords, pressures=None, resolution=2, thickness=0.1, bevelResolution=1, curveType="bezier", capsObj=None, name="latk_ob", useUvs=True, usePressure=True, bake=False):
+def makeCurve(coords, pressures=None, resolution=2, thickness=0.1, bevelResolution=1, curveType="bezier", caps=False, name="latk_ob", useUvs=True, usePressure=True, bake=False):
     try:
         coords.insert(0, coords[0])
         pressures.insert(0, pressures[0])
@@ -706,18 +708,13 @@ def makeCurve(coords, pressures=None, resolution=2, thickness=0.1, bevelResoluti
     curveData.bevel_depth = thickness
     curveData.bevel_resolution = bevelResolution
     #~
-    if (capsObj == None):
+    if (caps == False):
         curveData.extrude = thickness
         curveData.use_fill_caps = False
     else:
         curveData.bevel_depth = thickness
         curveData.bevel_resolution = bevelResolution
-        #~
-        try:
-            curveData.bevel_object = capsObj
-            curveData.use_fill_caps = True
-        except:
-            curveData.use_fill_caps = False
+        curveData.use_fill_caps = True
     #~
     # map coords to spline
     curveType=curveType.upper()

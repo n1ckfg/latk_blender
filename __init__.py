@@ -302,7 +302,7 @@ class LatkProperties(bpy.types.PropertyGroup):
             ("SOLIDIFY", "Solidify", "Mesh as two-sided strips", 1),
             ("BEVEL", "Bevel", "Mesh as capped tubes", 2)
         ),
-        default="EXTRUDE"
+        default="BEVEL"
     )
 
     remesh_mode: EnumProperty(
@@ -313,7 +313,8 @@ class LatkProperties(bpy.types.PropertyGroup):
             ("PLANE", "Plane", "Plane remesh", 2),
             ("SHARP", "Sharp", "Sharp remesh", 3),
             ("SMOOTH", "Smooth", "Smooth remesh", 4),
-            ("BLOCKS", "Blocks", "Blocks remesh", 5)
+            ("BLOCKS", "Blocks", "Blocks remesh", 5),
+            ("VOXEL", "Voxel", "Voxel remesh", 6)
         ),
         default="NONE"
     )
