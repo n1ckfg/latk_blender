@@ -14,6 +14,7 @@ from itertools import zip_longest
 from operator import itemgetter
 
 from . latk import *
+from . latk_rw import *
 
 def showAlert(message="alert", title="Message Box", icon='INFO'):
     def draw(self, context):
@@ -655,6 +656,9 @@ def makeParent(target=None, unParent=False, fixTransforms=True):
         else:   
             bpy.ops.object.parent_set(type='OBJECT', xmirror=False, keep_transform=True) 
 
+def up():
+    makeParent(unParent=True)
+
 def makeRoot():
     root = addLocator()
     target = matchName("latk")
@@ -681,6 +685,11 @@ def keyTransform(_obj, _frame):
     _obj.keyframe_insert(data_path="rotation_euler", frame=_frame) 
     _obj.keyframe_insert(data_path="scale", frame=_frame)
 
+def k():
+    target = ss()
+    for obj in target:
+        keyTransform(obj, currentFrame())
+
 def keyMatrix(_obj, _frame):
     _obj.keyframe_insert(data_path="matrix_world", frame=_frame) 
 
@@ -689,6 +698,15 @@ def select(target=None):
         target=bpy.context.selected_objects;
     print("selected " + str(target))
     return target
+
+s = select
+
+def ss():
+    returns = select()
+    if (len(returns) > 0):
+        return returns[0]
+    else:
+        return None
 
 def delete(_obj=None):
     if not _obj:
@@ -699,6 +717,8 @@ def delete(_obj=None):
     bpy.data.objects[_obj.name].select_set(True)
     bpy.ops.object.delete()
     gc.collect()
+
+d = delete
 
 def refresh():
     bpy.context.view_layer.update()
@@ -733,6 +753,10 @@ def deleteName(_name="latk"):
             delete(obj)
         except:
             print("error deleting " + obj.name)
+
+def dn():
+    deleteName(_name="latk_ob")
+    deleteName(_name="caps_ob")
 
 def getKeyByIndex(data, index=0):
     for i, key in enumerate(data.keys()):
@@ -869,6 +893,8 @@ def goToFrame(_index):
     refresh()
     print("Moved from timeline frame " + str(origFrame) + " to " + str(_index))
     return bpy.context.scene.frame_current
+
+gotoFrame = goToFrame
 
 def hideFrame(_obj, _frame, _hide):
     _obj.hide_viewport = _hide
@@ -1027,6 +1053,8 @@ def alignCamera():
     #~
     bpy.context.area.type = original_type
 
+a = alignCamera
+
 # ~ ~ ~ ~ ~ ~ grease pencil ~ ~ ~ ~ ~ ~
 def getActiveGp(_name=None):
     if not _name:
@@ -1146,6 +1174,8 @@ def splitLayer(splitNum=None):
         cleanEmptyLayers()
         return None
 
+spl = splitLayer
+
 def blankFrame(layer=None, frame=None):
     if not layer:
         layer = getActiveLayer()
@@ -1187,6 +1217,8 @@ def checkLayersAboveFrameLimit(limit=20):
     print("~ ~ ~ ~")
     return returns
 
+cplf = checkLayersAboveFrameLimit
+
 def splitLayersAboveFrameLimit(limit=20):
     layers = checkLayersAboveFrameLimit(limit)
     #~
@@ -1203,6 +1235,8 @@ def splitLayersAboveFrameLimit(limit=20):
             setActiveFrame(currentLayer.frames[limit].frame_number)
             splitLayer(currentLayer.frames[limit].frame_number)
             print("Split layer " + currentLayer.info + " with " + str(len(currentLayer.frames)) + " frames.")
+
+splf = splitLayersAboveFrameLimit
 
 def getLayerLength(name=None):
     layer = None
@@ -1338,6 +1372,8 @@ def changeColor():
             createPoint(newStroke, j, points[j].co)
     #print(str(len(strokes)) + " changed to " + palette.colors.active.name)
 
+c = changeColor
+
 def newLayer(name="NewLayer", setActive=True):
     gp = getActiveGp()
     gp.data.layers.new(name)
@@ -1472,6 +1508,8 @@ def deleteFromAllFrames():
         for j in range(0, len(layer.frames)):
             setActiveFrame(j)
             deleteSelected()
+
+df = deleteFromAllFrames
 
 def getAllLayers():
     gp = getActiveGp()
@@ -1660,7 +1698,14 @@ def addVec3(p1, p2):
 def multVec3(p1, p2):
     return(p1[0]*p2[0], p1[1]*p2[1], p1[2]*p2[2])
 
-# * * * * * * * * * * * * * * * * * * * * * * * * * *
-# * * * * * * * * * * * * * * * * * * * * * * * * * *
-# * * * * * * * * * * * * * * * * * * * * * * * * * *
+
+
+
+
+
+
+
+
+
+
 

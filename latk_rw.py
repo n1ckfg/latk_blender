@@ -32,6 +32,9 @@ def readBrushStrokes(filepath=None, resizeTimeline=True, useScaleAndOffset=True,
     #~
     return {'FINISHED'}
 
+rb = readBrushStrokes
+wb = writeBrushStrokes
+
 def fromGpToLatk(bake=False, skipLocked=False, useScaleAndOffset=False, globalScale=(1.0, 1.0, 1.0), globalOffset=(0.0, 0.0, 0.0)):
     print("Begin building Latk object from Grease Pencil...")
     if(bake == True):
@@ -1776,8 +1779,3 @@ def importTiltBrush(filepath=None, vertSkip=1):
                     createPoint(stroke, l, (point[0], point[1], point[2]), point[3], point[4])
            
     return {'FINISHED'}
-
-# * * * * * * * * * * * * * * * * * * * * * * * * * *
-# * * * * * * * * * * * * * * * * * * * * * * * * * *
-# * * * * * * * * * * * * * * * * * * * * * * * * * *
-

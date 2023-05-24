@@ -113,6 +113,8 @@ def getVerts(target=None, useWorldSpace=True, useColors=True, useBmesh=False, us
         else:
             return verts
 
+getVertices = getVerts
+
 def countVerts(target=None):
     if not target:
         target = bpy.context.view_layer.objects.active 
@@ -151,6 +153,8 @@ def joinObjects(target=None, center=False):
     if (center==True):
         centerOrigin(target[0])
     return target[0]
+
+j = joinObjects
 
 '''
 161013
@@ -843,8 +847,3 @@ def getAlembicCurves(obj=None):
             for point in spline.points:
                 points.append(point.co)
             drawCoords(points)
-
-# * * * * * * * * * * * * * * * * * * * * * * * * * *
-# * * * * * * * * * * * * * * * * * * * * * * * * * *
-# * * * * * * * * * * * * * * * * * * * * * * * * * *
-
