@@ -128,6 +128,7 @@ def joinObjects(target=None, center=False):
     for i in range(1, len(target)):
         try:
             target[i].select_set(True)
+            bpy.context.view_layer.objects.active = target[i]
         except:
             pass
     #~

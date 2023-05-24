@@ -62,10 +62,10 @@ def makeLoop():
         fixContext("VIEW_3D")
         for i in range(start, end):
             goToFrame(i)
-            if (obj.hide == False):
+            if (obj.hide_get() == False):
                 bpy.ops.object.select_all(action='DESELECT')
-                obj.select = True
-                bpy.context.scene.objects.active = obj # last object will be the parent
+                obj.select_get() == True
+                bpy.context.view_layer.objects.active = obj # last object will be the parent
                 fixContext("GRAPH_EDITOR")
                 bpy.ops.graph.extrapolation_type(type='MAKE_CYCLIC')
     #~
@@ -223,11 +223,11 @@ def cameraArray(target=None, hideTarget=True, removeCameras=True, removeLayers=T
         cam.name = "Camera_" + str(i)
         renView = render.views.new(cam.name)
         renView.camera_suffix = "_" + cam.name.split("_")[1]
-        scene.objects.active = cam
+        bpy.context.view_layer.objects.active = cam
     parentMultiple(cams, target)
     #~
     if (hideTarget==True):
-        target.hide = True
+        target.hide_set(True)
         target.hide_select = False
         target.hide_render = True
 
@@ -280,7 +280,7 @@ def clearState():
             ob.selected=False
         except:
             pass
-    bpy.context.scene.objects.active = None
+    bpy.context.view_layer.objects.active = None
 
 def onionSkin(layers=None, onion=False):
     if not layers:
@@ -298,7 +298,7 @@ def bakeParentToChildByName(name="latk"):
     start, end = getStartEnd()
     target = matchName(name)
     for obj in target:
-        bpy.context.scene.objects.active = obj
+        bpy.context.view_layer.objects.active = obj
         bakeParentToChild(start, end)
 
 def getWorldCoords(co=None, camera=None, usePixelCoords=True, useRenderScale=True, flipV=True):
@@ -384,7 +384,7 @@ def selectAll():
 
 # TODO fix so you can find selected group regardless of active object
 def getActiveGroup():
-    obj = bpy.context.scene.objects.active
+    obj = bpy.context.view_layer.objects.active
     for group in bpy.data.groups:
         for groupObj in group.objects:
             if(obj.name == groupObj.name):
@@ -609,7 +609,7 @@ def hitDetect3D(p1, p2, hitbox=0.01):
         return False
 
 def parentMultiple(target, root, fixTransforms=True):
-    bpy.context.scene.objects.active = root # last object will be the parent
+    bpy.context.view_layer.objects.active = root # last object will be the parent
     bpy.ops.object.select_all(action='DESELECT')
     for i in range(0, len(target)):
         target[i].select = True
@@ -624,7 +624,7 @@ def makeParent(target=None, unParent=False, fixTransforms=True):
     if (unParent==True):
         for obj in target:
             if (obj.parent != None):
-                bpy.context.scene.objects.active=obj
+                bpy.context.view_layer.objects.active=obj
                 if (fixTransforms==True):
                     bpy.ops.object.parent_clear(type='CLEAR_KEEP_TRANSFORM')
                 else:
@@ -633,7 +633,7 @@ def makeParent(target=None, unParent=False, fixTransforms=True):
         # http://blender.stackexchange.com/questions/9200/make-object-a-a-parent-of-object-b-via-python
         for i in range(0, len(target)-1):
             target[i].select=True
-        bpy.context.scene.objects.active = target[len(target)-1] # last object will be the parent
+        bpy.context.view_layer.objects.active = target[len(target)-1] # last object will be the parent
         #~
         if (fixTransforms==True):
             bpy.ops.object.parent_set(type='OBJECT', xmirror=False, keep_transform=False) 
@@ -679,8 +679,9 @@ def delete(_obj=None):
     if not _obj:
         _obj = ss()
     bpy.ops.object.select_all(action='DESELECT')
-    bpy.data.objects[_obj.name].hide = False
-    bpy.data.objects[_obj.name].select = True
+    # https://blender.stackexchange.com/questions/140481/blender-2-8-object-object-has-no-attribute-hide
+    bpy.data.objects[_obj.name].hide_set(False)
+    bpy.data.objects[_obj.name].select_set(True)
     bpy.ops.object.delete()
     gc.collect()
 
@@ -943,7 +944,7 @@ def deleteAnimationPath(target=None, paths=["hide", "hide_render"]):
 
 
 def showHide(obj, hide, keyframe=False, frame=None):
-    obj.hide = hide
+    obj.hide_set(hide)
     obj.hide_render = hide
 
 def showHideChildren(hide):
@@ -1409,11 +1410,13 @@ def compareTuple(t1, t2, numPlaces=5):
 def setActiveObject(target=None):
     if not target:
         target = ss()
-    bpy.context.scene.objects.active = target
+    #bpy.context.scene.objects.active = target
+    # https://blender.stackexchange.com/questions/126577/blender-2-8-api-python-set-active-object
+    bpy.context.view_layer.objects.active = target
     return target
 
 def getActiveObject():
-    return bpy.context.scene.objects.active
+    return bpy.context.view_layer.objects.active
 
 def deleteFromAllFrames():
     origStrokes = []
