@@ -59,8 +59,8 @@ def scatterObjects(target=None, val=10):
 
 def matchFills(alpha=None):
     palette = getActivePalette()
-    for mat in palette:
-        palette.grease_pencil.fill_color = palette.grease_pencil.color
+    for mtl in palette:
+        bpy.data.materials[mtl.name].grease_pencil.fill_color = bpy.data.materials[mtl.name].grease_pencil.color
 
 def resizeToFitGp():
     least = 1
