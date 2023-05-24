@@ -1,4 +1,4 @@
-# 6 of 12. MESHES / GEOMETRY
+# MESHES / GEOMETRY
 
 def simpleClean(target=None):
     if not target:
