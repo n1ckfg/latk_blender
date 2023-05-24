@@ -232,25 +232,25 @@ class LatkProperties(bpy.types.PropertyGroup):
         default=0.2
     )
 
-    strokeLength: IntProperty(
+    strokegen1_strokeLength: IntProperty(
         name="Length",
         description="Group every n points into strokes",
         default=2
     )
 
-    strokeGaps: FloatProperty(
+    strokegen1_strokeGaps: FloatProperty(
         name="Gaps",
         description="Skip points greater than this distance away",
         default=10.0
     )
 
-    shuffleOdds: FloatProperty(
+    strokegen1_shuffleOdds: FloatProperty(
         name="Odds",
         description="Odds of shuffling the points in a stroke",
         default=1.0
     )
 
-    spreadPoints: FloatProperty(
+    strokegen1_spreadPoints: FloatProperty(
         name="Spread",
         description="Distance to randomize points",
         default=0.1
@@ -565,15 +565,15 @@ class Latk_Button_WriteOnStrokes(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class Latk_Button_StrokesFromMesh(bpy.types.Operator):
+class Latk_Button_StrokeGen1(bpy.types.Operator):
     """Generate GP strokes from a mesh"""
-    bl_idname = "latk_button.strokesfrommesh"
-    bl_label = "Strokes from Mesh"
+    bl_idname = "latk_button.strokegen1"
+    bl_label = "StrokeGen1"
     bl_options = {'UNDO'}
     
     def execute(self, context):
         latk_settings = bpy.context.scene.latk_settings
-        meshToGp(strokeLength=latk_settings.strokeLength, strokeGaps=latk_settings.strokeGaps, shuffleOdds=latk_settings.shuffleOdds, spreadPoints=latk_settings.spreadPoints, limitPalette=latk_settings.paletteLimit)
+        strokeGen1(strokeLength=latk_settings.strokegen1_strokeLength, strokeGaps=latk_settings.strokegen1_strokeGaps, shuffleOdds=latk_settings.strokegen1_shuffleOdds, spreadPoints=latk_settings.strokegen1_spreadPoints, limitPalette=latk_settings.paletteLimit)
         return {'FINISHED'}
 
 
@@ -780,16 +780,12 @@ class LatkProperties_Panel(bpy.types.Panel):
         row = layout.row()
         row.prop(latk, "remesh_mode", expand=True)
 
-        # ~ ~ ~ 
-
         row = layout.row()
         row.prop(latk, "mesh_fill_mode")
         row.prop(latk, "main_mesh_mode")
-
-        row = layout.row()
-        row.prop(latk, "material_shader_mode")
-        row.operator("latk_button.mtlshader")
         
+        #~ ~ ~
+
         row = layout.row()
         row.operator("latk_button.booleanmod") 
         row.operator("latk_button.booleanmodminus") 
@@ -815,29 +811,35 @@ class LatkProperties_Panel(bpy.types.Panel):
         row.operator("latk_button.matchfills") 
         row.operator("latk_button.makeroot") 
 
-        row = layout.row()
-        #row.operator("latk_button.refine")
-        row.prop(latk, "cleanFactor")
-        row.operator("latk_button.bigclean")
+        #~ ~ ~
 
         row = layout.row()
-        row.prop(latk, "numSplitFrames")
+        row.operator("latk_button.mtlshader")
+        row.prop(latk, "material_shader_mode")
+
+        row = layout.row()
+        #row.operator("latk_button.refine")
+        row.operator("latk_button.bigclean")
+        row.prop(latk, "cleanFactor")
+
+        row = layout.row()
         row.operator("latk_button.splf")
+        row.prop(latk, "numSplitFrames")
         
         # ~ ~ ~ 
 
         row = layout.row()
+        row.operator("latk_button.remappressure")
         row.prop(latk, "minRemapPressure")
         row.prop(latk, "maxRemapPressure")
         row.prop(latk, "remapPressureMode")
-        row.operator("latk_button.remappressure")
 
         row = layout.row()
-        row.prop(latk, "strokeLength")
-        row.prop(latk, "strokeGaps")
-        row.prop(latk, "shuffleOdds")
-        row.prop(latk, "spreadPoints")
-        row.operator("latk_button.strokesfrommesh")
+        row.operator("latk_button.strokegen1")
+        row.prop(latk, "strokegen1_strokeLength")
+        row.prop(latk, "strokegen1_strokeGaps")
+        row.prop(latk, "strokegen1_shuffleOdds")
+        row.prop(latk, "strokegen1_spreadPoints")
 
         '''
         row = layout.row()
@@ -1456,7 +1458,7 @@ classes = (
     Latk_Button_Gpmesh,
     Latk_Button_RemapPressure,
     Latk_Button_WriteOnStrokes,
-    Latk_Button_StrokesFromMesh,
+    Latk_Button_StrokeGen1,
     Latk_Button_PointsToggle,
     Latk_Button_BakeAllCurves,
     Latk_Button_BakeAnim,
