@@ -267,7 +267,7 @@ def consolidateMtlAlt(name="latk"):
             curves[i].data.materials[0] = curves[0].data.materials[0]
 
 def getActiveMtl():
-    return bpy.context.scene.objects.active.data.materials[bpy.context.scene.objects.active.active_material_index]
+    return bpy.context.view_layer.objects.active.data.materials[bpy.context.view_layer.objects.active.active_material_index]
 
 def getMtlColor(node="diffuse", mtl=None):
     if not mtl:

@@ -1,6 +1,7 @@
 # MESHES / GEOMETRY
 
 import bpy
+import bmesh
 
 from . latk import *
 from . latk_tools import *
@@ -483,7 +484,7 @@ def booleanMod(target=None, op="union"):
             bpy.ops.object.modifier_apply(modifier="Boolean") #apply_as='DATA', modifier="Boolean")
             delete(target[i-1])
     lastObj = target[len(target)-1]
-    lastObj.select = True
+    lastObj.select_set(True)
     return lastObj
 
 def subsurfMod(target=None):
@@ -491,9 +492,13 @@ def subsurfMod(target=None):
         target=s()
     returns = []
     for obj in target:
-        bpy.context.view_layer.objects.active  = obj
-        bpy.ops.object.modifier_add(type="SUBSURF")
-        bpy.ops.object.modifier_apply(modifier="Subsurf") #apply_as='DATA', modifier="Subsurf")
+        bpy.context.view_layer.objects.active = obj
+        #bpy.ops.object.modifier_add(type="SUBSURF")
+        #bpy.ops.object.modifier_apply(modifier="Subsurf") #apply_as='DATA', modifier="Subsurf")
+
+        # Note that for some reason the subdivision modifier needs this different method to successfully apply
+        obj.modifiers.new(name="mysubsurf", type="SUBSURF")
+        bpy.ops.object.modifier_apply(modifier="mysubsurf")
         returns.append(obj)
     return returns
 
@@ -795,12 +800,12 @@ def cubesToVerts(target=None, cubeScale=0.25, posScale=0.01):
 
 def randomMetaballs():
     # http://blenderscripting.blogspot.com/2012/09/tripping-metaballs-python.html
-    scene = bpy.context.scene
+    #scene = bpy.context.scene
     #~
     # add metaball object
     mball = bpy.data.metaballs.new("MetaBall")
     obj = bpy.data.objects.new("MetaBallObject", mball)
-    scene.objects.link(obj)
+    bpy.context.collection.objects.link(obj)
     #~
     mball.resolution = 0.2   # View resolution
     mball.render_resolution = 0.02
@@ -850,7 +855,7 @@ def getAlembicCurves(obj=None):
     for i in range(start, end):
         goToFrame(i)
         blankFrame()
-        obj = bpy.context.scene.objects[obj.name] # make sure obj is still accessible
+        obj = bpy.context.view_layer.objects[obj.name] # make sure obj is still accessible
         splines = obj.data.splines
         for spline in splines:
             points = []
