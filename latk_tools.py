@@ -14,8 +14,19 @@ from itertools import zip_longest
 from operator import itemgetter
 
 from . latk import *
-from . latk_rw import *
 
+def getFilePath(stripFileName=True):
+    name = bpy.context.blend_data.filepath
+    if (stripFileName==True):
+        name = name[:-len(getFileName(stripExtension=False))]
+    return name
+
+def getFileName(stripExtension=True):
+    name = bpy.path.basename(bpy.context.blend_data.filepath)
+    if (stripExtension==True):
+        name = name[:-6]
+    return name
+    
 def showAlert(message="alert", title="Message Box", icon='INFO'):
     def draw(self, context):
         self.layout.label(message)

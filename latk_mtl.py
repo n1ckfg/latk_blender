@@ -542,8 +542,3 @@ def getPixelFromUvArray(img, u, v):
     pixel_x = int(u * imgWidth)
     pixel_y = int(v * imgHeight)
     return getPixelFromImageArray(img, pixel_x, pixel_y)
-
-# * * * * * * * * * * * * * * * * * * * * * * * * * *
-# * * * * * * * * * * * * * * * * * * * * * * * * * *
-# * * * * * * * * * * * * * * * * * * * * * * * * * *
-

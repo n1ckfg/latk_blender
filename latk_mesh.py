@@ -6,6 +6,7 @@ from . latk import *
 from . latk_tools import *
 from . latk_rw import *
 from . latk_mtl import *
+from . latk_draw import *
 
 def simpleClean(target=None):
     if not target:
@@ -78,7 +79,9 @@ def getVerts(target=None, useWorldSpace=True, useColors=True, useBmesh=False, us
         target = bpy.context.view_layer.objects.active 
     mesh = None
     if (useModifiers==True):
-        mesh = target.to_mesh(scene=bpy.context.scene, apply_modifiers=True, settings='PREVIEW')
+        #mesh = target.to_mesh(scene=bpy.context.scene, apply_modifiers=True, settings='PREVIEW')
+        # https://devtalk.blender.org/t/obj-to-mesh-error-add-corrective-shape-key-py/4020/4
+        mesh = target.to_mesh(preserve_all_data_layers=False, depsgraph=None)
     else:
         mesh = target.data
     mat = target.matrix_world
@@ -99,7 +102,9 @@ def getVerts(target=None, useWorldSpace=True, useColors=True, useBmesh=False, us
                 point += vert
             point /= len(pointsFace)
             if (useWorldSpace == True):
-                point = mat * point
+                # https://blender.stackexchange.com/questions/129473/typeerror-element-wise-multiplication-not-supported-between-matrix-and-vect
+                #point = mat * point
+                point = mat @ point
             verts.append((point.x, point.z, point.y))
         #~
         if (useColors==True):
@@ -662,8 +667,13 @@ def meshToGp(obj=None, strokeLength=1, strokeGaps=10.0, shuffleOdds=1.0, spreadP
             createColor(color)
         else:
             createAndMatchColorPalette(color, limitPalette, 5) # num places
-        stroke = frame.strokes.new(getActiveColor().name)
-        stroke.draw_mode = "3DSPACE"
+        #stroke = frame.strokes.new(getActiveColor().name)
+        #stroke.draw_mode = "3DSPACE"
+        stroke = frame.strokes.new()
+        stroke.display_mode = '3DSPACE'
+        stroke.line_width = 10 # adjusted from 100 for 2.93
+        stroke.material_index = gp.active_material_index
+
         stroke.points.add(len(pointSeq))
 
         if (random.random() < shuffleOdds):

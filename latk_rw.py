@@ -151,6 +151,7 @@ def fromLatkToGp(la=None, resizeTimeline=True, useScaleAndOffset=False, limitPal
         setStartEnd(0, longestFrameNum, pad=False)  
     print("...end building Grease Pencil from Latk object.")           
 
+'''
 def readBrushStrokesAlt(filepath=None, resizeTimeline=True, useScaleAndOffset=False, doPreclean=False, limitPalette=0, globalScale=Vector((10, 10, 10)), globalOffset=Vector((0, 0, 0))):
     url = filepath # compatibility with gui keywords
     #~
@@ -344,9 +345,7 @@ def writeBrushStrokesAlt(filepath=None, bake=True, roundValues=True, numPlaces=7
     print("Wrote " + url)
     #~                
     return {'FINISHED'}
-
-# ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
-# ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
+'''
 
 def doResizeTimeline():
     longestFrameNum = 1
@@ -480,18 +479,6 @@ def openFile(name, format=True):
     if (format==True):
         name = getFilePath() + name + ".blend"
     bpy.ops.wm.open_mainfile(filepath=name)
-
-def getFilePath(stripFileName=True):
-    name = bpy.context.blend_data.filepath
-    if (stripFileName==True):
-        name = name[:-len(getFileName(stripExtension=False))]
-    return name
-
-def getFileName(stripExtension=True):
-    name = bpy.path.basename(bpy.context.blend_data.filepath)
-    if (stripExtension==True):
-        name = name[:-6]
-    return name
 
 def writeSvg(filepath=None):
     # Note: keep fps at 12 or below to prevent timing artifacts. 

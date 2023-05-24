@@ -2139,10 +2139,3 @@ def load(operator, context, filepath=""):
         return {'CANCELLED'}
 
     return {'FINISHED'}
-
-# * * * * * * * * * * * * * * * * * * * * * * * * * *
-# * * * * * * * * * * * * * * * * * * * * * * * * * *
-# * * * * * * * * * * * * * * * * * * * * * * * * * *
-
-# END
-

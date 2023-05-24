@@ -412,9 +412,3 @@ def refine(stroke=None, splitReps=2, smoothReps=10):
     #~
     for i in range(0, smoothReps - splitReps):
         smoothStroke(stroke)    
-
-
-# * * * * * * * * * * * * * * * * * * * * * * * * * *
-# * * * * * * * * * * * * * * * * * * * * * * * * * *
-# * * * * * * * * * * * * * * * * * * * * * * * * * *
-
