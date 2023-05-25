@@ -694,6 +694,100 @@ def strokeGen1(obj=None, strokeLength=1, strokeGaps=10.0, shuffleOdds=1.0, sprea
             strength = 1.0
             createPoint(stroke, j, (x, y, z), pressure, strength)
 
+def group_points_into_strokes(points, radius, minPointsCount):
+    strokes = []
+    unassigned_points = set(range(len(points)))
+
+    while len(unassigned_points) > 0:
+        stroke = [next(iter(unassigned_points))]
+        unassigned_points.remove(stroke[0])
+
+        for i in range(len(points)):
+            if i in unassigned_points and cdist([points[i]], [points[stroke[-1]]])[0][0] < radius:
+                stroke.append(i)
+                unassigned_points.remove(i)
+
+        if (len(stroke) >= minPointsCount):
+            strokes.append(stroke)
+        print("Found " + str(len(strokes)) + " strokes, " + str(len(unassigned_points)) + " points remaining.")
+    return strokes
+    
+def strokeGen2(obj=None, radius=0.2, minPointsCount=10):
+    if not obj:
+        obj = ss()
+    mesh = obj.data
+    mat = obj.matrix_world
+    #~
+    gp = getActiveGp()
+    layer = getActiveLayer()
+    if not layer:
+        layer = gp.data.layers.new(name="meshToGp")
+    frame = getActiveFrame()
+    if not frame or frame.frame_number != currentFrame():
+        frame = layer.frames.new(currentFrame())
+    #~
+    images = None
+    try:
+        images = getUvImages()
+    except:
+        pass
+    #~
+    allPoints, allColors = getVerts(target=obj, useWorldSpace=True, useColors=True, useBmesh=False)
+    #~
+    pointSeqsToAdd = []
+    colorsToAdd = []
+    for i in range(0, len(allPoints), strokeLength):
+        color = None
+        if not images:
+            try:
+                color = allColors[i]
+            except:
+                color = getColorExplorer(obj, i)
+        else:
+            try:
+                color = getColorExplorer(obj, i, images)
+            except:
+                color = getColorExplorer(obj, i)
+        colorsToAdd.append(color)
+        #~
+        pointSeq = []
+        for j in range(0, strokeLength):
+            #point = allPoints[i]
+            try:
+                point = allPoints[i+j]
+                if (len(pointSeq) == 0 or getDistance(pointSeq[len(pointSeq)-1], point) < strokeGaps):
+                    pointSeq.append(point)
+            except:
+                break
+        if (len(pointSeq) > 0): 
+            pointSeqsToAdd.append(pointSeq)
+    for i, pointSeq in enumerate(pointSeqsToAdd):
+        color = colorsToAdd[i]
+        #createColor(color)
+        if (limitPalette == 0):
+            createColor(color)
+        else:
+            createAndMatchColorPalette(color, limitPalette, 5) # num places
+        #stroke = frame.strokes.new(getActiveColor().name)
+        #stroke.draw_mode = "3DSPACE"
+        stroke = frame.strokes.new()
+        stroke.display_mode = '3DSPACE'
+        stroke.line_width = 10 # adjusted from 100 for 2.93
+        stroke.material_index = gp.active_material_index
+
+        stroke.points.add(len(pointSeq))
+
+        if (random.random() < shuffleOdds):
+            random.shuffle(pointSeq)
+
+        for j, point in enumerate(pointSeq):    
+            x = point[0] + (random.random() * 2.0 * spreadPoints) - spreadPoints
+            y = point[2] + (random.random() * 2.0 * spreadPoints) - spreadPoints
+            z = point[1] + (random.random() * 2.0 * spreadPoints) - spreadPoints
+            pressure = 1.0
+            strength = 1.0
+            createPoint(stroke, j, (x, y, z), pressure, strength)
+
 def makeCurve(coords, pressures=None, resolution=2, thickness=0.1, bevelResolution=1, curveType="bezier", caps=False, name="latk_ob", useUvs=True, usePressure=True, bake=False):
     try:
         coords.insert(0, coords[0])

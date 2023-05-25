@@ -256,6 +256,18 @@ class LatkProperties(bpy.types.PropertyGroup):
         default=0.1
     )
 
+    strokegen2_radius: FloatProperty(
+        name="Radius",
+        description="Base search distance for points",
+        default=0.1
+    )
+
+    strokegen2_minPointsCount: IntProperty(
+        name="Min Points Count",
+        description="Minimum number of points to make a stroke",
+        default=10
+    )
+
     numSplitFrames: IntProperty(
         name="Split Frames",
         description="Split layers if they have more than this many frames",
@@ -576,6 +588,16 @@ class Latk_Button_StrokeGen1(bpy.types.Operator):
         strokeGen1(strokeLength=latk_settings.strokegen1_strokeLength, strokeGaps=latk_settings.strokegen1_strokeGaps, shuffleOdds=latk_settings.strokegen1_shuffleOdds, spreadPoints=latk_settings.strokegen1_spreadPoints, limitPalette=latk_settings.paletteLimit)
         return {'FINISHED'}
 
+class Latk_Button_StrokeGen2(bpy.types.Operator):
+    """Generate GP strokes from a mesh"""
+    bl_idname = "latk_button.strokegen2"
+    bl_label = "StrokeGen2"
+    bl_options = {'UNDO'}
+    
+    def execute(self, context):
+        latk_settings = bpy.context.scene.latk_settings
+        strokeGen2(radius=latk_settings.strokegen2_radius, minPointsCount=latk_settings.strokegen2_minPointsCount)
+        return {'FINISHED'}
 
 class Latk_Button_PointsToggle(bpy.types.Operator):
     """Toggle points mode on"""
@@ -840,6 +862,11 @@ class LatkProperties_Panel(bpy.types.Panel):
         row.prop(latk, "strokegen1_strokeGaps")
         row.prop(latk, "strokegen1_shuffleOdds")
         row.prop(latk, "strokegen1_spreadPoints")
+
+        row = layout.row()
+        row.operator("latk_button.strokegen2")
+        row.prop(latk, "strokegen2_radius")
+        row.prop(latk, "strokegen2_minPointsCount")
 
         '''
         row = layout.row()
@@ -1459,6 +1486,7 @@ classes = (
     Latk_Button_RemapPressure,
     Latk_Button_WriteOnStrokes,
     Latk_Button_StrokeGen1,
+    Latk_Button_StrokeGen2,
     Latk_Button_PointsToggle,
     Latk_Button_BakeAllCurves,
     Latk_Button_BakeAnim,
