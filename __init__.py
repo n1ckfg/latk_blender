@@ -259,7 +259,7 @@ class LatkProperties(bpy.types.PropertyGroup):
     strokegen2_radius: FloatProperty(
         name="Radius",
         description="Base search distance for points",
-        default=0.1
+        default=2
     )
 
     strokegen2_minPointsCount: IntProperty(
