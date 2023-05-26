@@ -478,11 +478,12 @@ def testUvs():
 '''
 
 def getUvImages():
-    obj = bpy.context.scene.objects.active
+    obj = bpy.context.view_layer.objects.active
     uv_images = {}
     #~
     #for uv_tex in obdata.uv_textures.active.data:
-    for tex in obj.active_material.texture_slots:
+    #for tex in obj.active_material.texture_slots:
+    for tex in bpy.context.active_object.material_slots:
         try:
             uv_tex = tex.texture
             if (uv_tex.image and

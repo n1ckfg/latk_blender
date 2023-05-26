@@ -696,24 +696,25 @@ def strokeGen1(obj=None, strokeLength=1, strokeGaps=10.0, shuffleOdds=1.0, sprea
             createPoint(stroke, j, (x, y, z), pressure, strength)
 
 def group_points_into_strokes(points, radius, minPointsCount):
-    strokes = []
+    strokeGroups = []
     unassigned_points = set(range(len(points)))
 
     while len(unassigned_points) > 0:
-        stroke = [next(iter(unassigned_points))]
-        unassigned_points.remove(stroke[0])
+        strokeGroup = [next(iter(unassigned_points))]
+        unassigned_points.remove(strokeGroup[0])
 
         for i in range(len(points)):
-            if i in unassigned_points and cdist([points[i]], [points[stroke[-1]]])[0][0] < radius:
-                stroke.append(i)
+            if i in unassigned_points and cdist([points[i]], [points[strokeGroup[-1]]])[0][0] < radius:
+                strokeGroup.append(i)
                 unassigned_points.remove(i)
 
-        if (len(stroke) >= minPointsCount):
-            strokes.append(stroke)
-        print("Found " + str(len(strokes)) + " strokes, " + str(len(unassigned_points)) + " points remaining.")
-    return strokes
+        if (len(strokeGroup) >= minPointsCount):
+            strokeGroups.append(strokeGroup)
+
+        print("Found " + str(len(strokeGroups)) + " strokeGroups, " + str(len(unassigned_points)) + " points remaining.")
+    return strokeGroups
     
-def strokeGen2(obj=None, radius=2, minPointsCount=10):
+def strokeGen2(obj=None, radius=2, minPointsCount=10, limitPalette=32):
     if not obj:
         obj = ss()
     mesh = obj.data
@@ -727,19 +728,36 @@ def strokeGen2(obj=None, radius=2, minPointsCount=10):
     if not frame or frame.frame_number != currentFrame():
         frame = layer.frames.new(currentFrame())
     #~
-    '''
     images = None
     try:
         images = getUvImages()
     except:
         pass
-    '''
     #~
     allPoints, allColors = getVerts(target=obj, useWorldSpace=True, useColors=True, useBmesh=False)
     #~
     strokeGroups = group_points_into_strokes(allPoints, radius, minPointsCount)
 
     for i, strokeGroup in enumerate(strokeGroups):
+        colorIndex = strokeGroup[0]
+
+        if not images:
+            try:
+                color = allColors[colorIndex]
+            except:
+                color = getColorExplorer(obj, colorIndex)
+        else:
+            try:
+                color = getColorExplorer(obj, colorIndex, images)
+            except:
+                color = getColorExplorer(obj, colorIndex)
+        color = (color[0], color[1], color[2])
+
+        if (limitPalette == 0):
+            createColor(color)
+        else:
+            createAndMatchColorPalette(color, limitPalette, 5) # num places
+        
         stroke = frame.strokes.new()
         stroke.display_mode = '3DSPACE'
         stroke.line_width = 10 # adjusted from 100 for 2.93

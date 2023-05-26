@@ -235,7 +235,7 @@ class LatkProperties(bpy.types.PropertyGroup):
     strokegen1_strokeLength: IntProperty(
         name="Length",
         description="Group every n points into strokes",
-        default=2
+        default=10
     )
 
     strokegen1_strokeGaps: FloatProperty(
