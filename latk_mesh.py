@@ -235,7 +235,7 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
     origFileName = getFileName()
     masterUrlList = []
     masterGroupList = []
-    masterParentList = []
+    #masterParentList = []
     #~
     totalStrokes = str(len(getAllStrokes()))
     totalCounter = 0
@@ -269,6 +269,7 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
                 print("\n" + "*** gp layer " + layer.info + "(" + str(b+1) + " of " + str(len(gp.data.layers)) + ") | gp frame " + str(c+1) + " of " + str(rangeEnd) + " ***")
                 frameList = []
                 for d, stroke in enumerate(frame.strokes):
+                    '''
                     origParent = None
                     if (layer.parent):
                         origParent = layer.parent
@@ -276,6 +277,7 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
                         masterParentList.append(origParent.name)
                     else:
                         masterParentList.append(None)
+                    '''
                     #~
                     latk_ob = None
                     thisIsAFill = getStrokeFillAlpha(stroke) > 0.001 or _remesh == "hull" or _remesh == "plane"
@@ -332,9 +334,12 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
                         #~ 
                     frameList.append(latk_ob) 
                     #~
-                    if (origParent != None):
-                        makeParent([frameList[len(frameList)-1], origParent])
-                        layer.parent = origParent
+                    if (layer.parent != None):
+                        #makeParent([frameList[len(frameList)-1], origParent])
+                        makeParent([frameList[len(frameList)-1], layer.parent])
+                        #layer.parent = origParent
+                    else:
+                        makeParent([frameList[len(frameList)-1], gp])
                     # * * * * * * * * * * * * * *
                     bpy.ops.object.select_all(action='DESELECT')
 

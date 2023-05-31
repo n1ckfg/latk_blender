@@ -328,6 +328,11 @@ def bakeParentToChildByName(name="latk"):
         bpy.context.view_layer.objects.active = obj
         bakeParentToChild(start, end)
 
+def copyTransform(source, dest):
+    dest.location = source.location
+    dest.rotation_euler = source.rotation_euler
+    dest.scale = source.scale
+
 def getWorldCoords(co=None, camera=None, usePixelCoords=True, useRenderScale=True, flipV=True):
     # https://blender.stackexchange.com/questions/882/how-to-find-image-coordinates-of-the-rendered-vertex
     # Test the function using the active object (which must be a camera)
@@ -639,7 +644,7 @@ def parentMultiple(target, root, fixTransforms=True):
     bpy.context.view_layer.objects.active = root # last object will be the parent
     bpy.ops.object.select_all(action='DESELECT')
     for i in range(0, len(target)):
-        target[i].select = True
+        target[i].select_set(True)
     if (fixTransforms==True):
         bpy.ops.object.parent_set(type='OBJECT', xmirror=False, keep_transform=False) 
     else:
@@ -659,7 +664,9 @@ def makeParent(target=None, unParent=False, fixTransforms=True):
     else:
         # http://blender.stackexchange.com/questions/9200/make-object-a-a-parent-of-object-b-via-python
         for i in range(0, len(target)-1):
-            target[i].select=True
+            target[i].select_set(True)
+            if (fixTransforms==True):
+                copyTransform(target[len(target)-1], target[i])
         bpy.context.view_layer.objects.active = target[len(target)-1] # last object will be the parent
         #~
         if (fixTransforms==True):
