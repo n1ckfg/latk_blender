@@ -30,8 +30,8 @@ along with the Lightning Artist Toolkit (Blender).  If not, see
 bl_info = {
     "name": "Lightning Artist Toolkit (Latk)", 
     "author": "Nick Fox-Gieg",
-  "version": (0, 0, 3),
-  "blender": (3, 0, 0),
+    "version": (0, 0, 3),
+    "blender": (3, 0, 0),
     "description": "Import and export Latk format, import Tilt format",
     "category": "Animation"
 }
