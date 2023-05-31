@@ -9,6 +9,7 @@ from io import BytesIO
 
 from . latk import *
 from . latk_tools import *
+from . latk_draw import *
 
 def writeBrushStrokes(filepath=None, bake=True, roundValues=True, numPlaces=7, zipped=False, useScaleAndOffset=True, globalScale=Vector((0.1, 0.1, 0.1)), globalOffset=Vector((0.0, 0.0, 0.0))):
     if(bake == True):
