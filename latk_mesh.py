@@ -257,6 +257,9 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
     '''
     #~
     for b, layer in enumerate(gp.data.layers):
+        checkStrokes = getLayerStrokes(layer.info)
+        if (len(checkStrokes) < 1):
+            continue
         url = origFileName + "_layer_" + layer.info
         if (layer.lock==False):
             rangeStart = 0

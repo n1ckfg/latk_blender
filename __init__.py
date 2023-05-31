@@ -211,7 +211,7 @@ class LatkProperties(bpy.types.PropertyGroup):
     thickness: FloatProperty(
         name="Thickness",
         description="Tube mesh thickness",
-        default=0.02
+        default=0.0015
     )
 
     resolution: IntProperty(
@@ -343,9 +343,9 @@ class LatkProperties(bpy.types.PropertyGroup):
     material_shader_mode: EnumProperty(
         name="Type",
         items=(
-            ("DIFFUSE", "Diffuse", "Diffuse shader", 0),
-            ("PRINCIPLED", "Principled", "Principled shader", 1),
-            ("GLTF", "glTF", "glTF MR shader", 2),
+            ("PRINCIPLED", "Principled", "Principled shader", 0),
+            ("DIFFUSE", "Diffuse", "Diffuse shader", 1),
+            #("GLTF", "glTF", "glTF MR shader", 2),
             #("EMISSION", "Emission", "Emission shader", 3)
         ),
         default="PRINCIPLED"

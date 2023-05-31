@@ -123,7 +123,9 @@ def fromLatkToGp(la=None, resizeTimeline=True, useScaleAndOffset=False, limitPal
                     createAndMatchColorPalette(strokeColor, limitPalette, 5) # num places
                 stroke = frame.strokes.new()
                 stroke.display_mode = '3DSPACE'
-                stroke.line_width = 10 # adjusted from 100 for 2.93
+                #stroke.line_width = 100 # for 2.79
+                #stroke.line_width = 10 # for 2.93
+                stroke.line_width = 1 # for 3.5
                 stroke.material_index = gp.active_material_index
                 laPoints = laStroke.points
                 stroke.points.add(len(laPoints)) 
