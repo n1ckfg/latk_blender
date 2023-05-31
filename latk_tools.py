@@ -724,8 +724,9 @@ def delete(_obj=None):
         _obj = ss()
     bpy.ops.object.select_all(action='DESELECT')
     # https://blender.stackexchange.com/questions/140481/blender-2-8-object-object-has-no-attribute-hide
-    bpy.data.objects[_obj.name].hide_set(False)
-    bpy.data.objects[_obj.name].select_set(True)
+    _obj.hide_viewport = False
+    _obj.hide_set(False)
+    _obj.select_set(True)
     bpy.ops.object.delete()
     gc.collect()
 
