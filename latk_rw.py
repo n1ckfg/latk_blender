@@ -48,7 +48,7 @@ def fromGpToLatk(bake=False, skipLocked=False, useScaleAndOffset=False, globalSc
     #~
     for layer in gp.data.layers:
         if (skipLocked == False or layer.lock == False):
-            laLayer = LatkLayer(name=layer.info)
+            laLayer = LatkLayer(name=layer.info.replace(" ", "_"))
             if (layer.parent == True):
                 laLayer.parent = layer.parent.name
             for frame in layer.frames:
@@ -101,7 +101,7 @@ def fromLatkToGp(la=None, resizeTimeline=True, useScaleAndOffset=False, limitPal
     longestFrameNum = 1
     #~
     for laLayer in la.layers:
-        layer = gp.data.layers.new(laLayer.name, set_active=True)
+        layer = gp.data.layers.new(laLayer.name.replace(" ", "_"), set_active=True)
         #~
         for i, laFrame in enumerate(laLayer.frames):
             try:
