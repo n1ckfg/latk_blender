@@ -140,21 +140,14 @@ def joinObjects(target=None, center=False):
     #~
     bpy.ops.object.select_all(action='DESELECT') 
     target[0].select_set(True)
-    bpy.context.view_layer.objects.active  = target[0]
+    bpy.context.view_layer.objects.active = target[0]
     for i in range(1, len(target)):
-        try:
-            target[i].select_set(True)
-            bpy.context.view_layer.objects.active = target[i]
-        except:
-            pass
+        target[i].select_set(True)
     #~
     bpy.ops.object.join()
     #~
-    for i in range(1, len(target)):
-        try:
-            scn.objects.unlink(target[i])
-        except:
-            pass
+    #for i in range(1, len(target)):
+        #scn.objects.unlink(target[i])
     #~
     gc.collect()
     if (center==True):

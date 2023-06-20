@@ -1074,6 +1074,14 @@ def alignCamera():
 
 a = alignCamera
 
+def getChildren(myObject, name=None): 
+    children = [] 
+    for ob in bpy.data.objects: 
+        if ob.parent == myObject: 
+            if name == None or ob.name.startswith(name):
+                children.append(ob) 
+    return children 
+
 # ~ ~ ~ ~ ~ ~ grease pencil ~ ~ ~ ~ ~ ~
 def getActiveGp(_name=None):
     if not _name:
