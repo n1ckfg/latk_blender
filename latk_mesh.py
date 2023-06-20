@@ -134,24 +134,24 @@ def bakeAllCurvesToMesh(_decimate=0.1):
     for obj in target:
         applyModifiers(obj)   
 
+# https://blender.stackexchange.com/questions/128305/python-join-objects
 def joinObjects(target=None, center=False):
     if not target:
         target = s()
     #~
     bpy.ops.object.select_all(action='DESELECT') 
-    target[0].select_set(True)
-    bpy.context.view_layer.objects.active = target[0]
-    for i in range(1, len(target)):
-        target[i].select_set(True)
     #~
+    meshes = [mesh for mesh in target if mesh.type == 'MESH']
+    for mesh in meshes:
+        mesh.select_set(state=True)
+        bpy.context.view_layer.objects.active = mesh
     bpy.ops.object.join()
     #~
-    #for i in range(1, len(target)):
-        #scn.objects.unlink(target[i])
-    #~
     gc.collect()
+    #~
     if (center==True):
         centerOrigin(target[0])
+    #~
     return target[0]
 
 j = joinObjects
@@ -338,7 +338,6 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
                         makeParent([frameList[len(frameList)-1], gp])
                     # * * * * * * * * * * * * * *
                     bpy.ops.object.select_all(action='DESELECT')
-
                 #~
                 for i in range(0, len(frameList)):
                     totalCounter += 1
@@ -356,19 +355,19 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
                                 hideFrame(frameList[i], j, True)
                 #~
                 if (_joinMesh==True): 
-                    target = matchName("latk_" + getLayerInfo(layer))
                     for i in range(start, end):
-                        strokesToJoin = []
-                        if (i == layer.frames[c].frame_number):
-                            goToFrame(i)
-                            for j in range(0, len(target)):
-                                if (target[j].hide_get()==False):
-                                    strokesToJoin.append(target[j])
-                        if (len(strokesToJoin) > 1):
-                            print("~ ~ ~ ~ ~ ~ ~ ~ ~")
-                            print("* joining " + str(len(strokesToJoin))  + " strokes")
-                            joinObjects(strokesToJoin)
-                            print("~ ~ ~ ~ ~ ~ ~ ~ ~")
+	                    target = matchName("latk_" + getLayerInfo(layer))
+	                    strokesToJoin = []
+	                    if (i == layer.frames[c].frame_number):
+	                        goToFrame(i)
+	                        for j in range(0, len(target)):
+	                            if (target[j].hide_get()==False):
+	                                strokesToJoin.append(target[j])
+	                        if (len(strokesToJoin) > 1):
+	                            print("~ ~ ~ ~ ~ ~ ~ ~ ~")
+	                            print("* joining " + str(len(strokesToJoin))  + " strokes")
+	                            joinObjects(strokesToJoin)
+	                            print("~ ~ ~ ~ ~ ~ ~ ~ ~")
             #~
             if (_saveLayers==True):
                 deselect()
