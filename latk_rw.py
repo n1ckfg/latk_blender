@@ -1,6 +1,7 @@
 # READ / WRITE
 
 import bpy
+import bpy_extras
 from mathutils import Vector, Matrix
 import os
 import zipfile
@@ -10,6 +11,7 @@ from io import BytesIO
 from . latk import *
 from . latk_tools import *
 from . latk_draw import *
+from . latk_svg import *
 
 def writeBrushStrokes(filepath=None, bake=True, roundValues=True, numPlaces=7, zipped=False, useScaleAndOffset=True, globalScale=Vector((0.1, 0.1, 0.1)), globalOffset=Vector((0.0, 0.0, 0.0))):
     if(bake == True):
@@ -517,10 +519,11 @@ def writeSvg(filepath=None):
                 width = stroke.line_width
                 if (width == None or width < minLineWidth):
                     width = minLineWidth
-                color = palette.colors[stroke.colorname]
-                print("found color: " + color.name)
-                cStroke = (color.color[0], color.color[1], color.color[2], color.alpha)
-                cFill = (color.fill_color[0], color.fill_color[1], color.fill_color[2], color.fill_alpha)
+                #color = palette.colors[stroke.colorname]
+                color = palette[stroke.material_index].grease_pencil
+                #print("found color: " + color.name)
+                cStroke = (color.color[0], color.color[1], color.color[2], color.color[3])
+                cFill = (color.fill_color[0], color.fill_color[1], color.fill_color[2], color.fill_color[3])
                 svg.append("\t\t\t" + svgStroke(points=stroke.points, stroke=(cStroke[0], cStroke[1], cStroke[2]), fill=(cFill[0], cFill[1], cFill[2]), strokeWidth=minLineWidth, strokeOpacity=cStroke[3], fillOpacity=cFill[3], camera=camera) + "\r")
             #~
             svg.append("\t\t\t" + svgAnimate(frame=frame.frame_number, fps=fps, duration=duration) + "\r")

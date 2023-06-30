@@ -1,6 +1,7 @@
 # TOOLS
 
 import bpy
+import bpy_extras
 import re
 import parameter_editor
 import random
