@@ -743,11 +743,14 @@ d = delete
 def refresh():
     bpy.context.view_layer.update()
 
-def remap(value, min1, max1, min2, max2):
+def remapAlt(value, min1, max1, min2, max2):
     range1 = max1 - min1
     range2 = max2 - min2
     valueScaled = float(value - min1) / float(range1)
     return min2 + (valueScaled * range2)
+
+def remap(value, min1, max1, min2, max2):
+    return np.interp(value,[min1, max1],[min2, max2])
 
 def remapInt(value, min1, max1, min2, max2):
     return int(remap(value, min1, max1, min2, max2))
@@ -1726,7 +1729,39 @@ def addVec3(p1, p2):
 def multVec3(p1, p2):
     return(p1[0]*p2[0], p1[1]*p2[1], p1[2]*p2[2])
 
+def setThickness(thickness):
+    gp = getActiveGp()
+    bpy.ops.object.gpencil_modifier_add(type="GP_THICK")
+    gp.grease_pencil_modifiers["Thickness"].thickness_factor = thickness 
+    bpy.ops.object.gpencil_modifier_apply(apply_as="DATA", modifier="Thickness")
 
+def separatePointsByDistance(points, colors, threshold):
+    if (len(points) != len(colors)):
+        return None
+
+    separatedPoints = []
+    separatedColors = []
+    currentPoints = []
+    currentColors = []
+
+    for i in range(0, len(points) - 1):
+        currentPoints.append(points[i])
+        currentColors.append(colors[i])
+
+        distance = getDistance(points[i], points[i + 1])
+
+        if (distance > threshold):
+            separatedPoints.append(currentPoints)
+            separatedColors.append(currentColors)
+            currentPoints = []
+            currentColors = []
+
+    currentPoints.append(points[len(points) - 1])
+    currentColors.append(colors[len(colors) - 1])
+    separatedPoints.append(currentPoints)
+    separatedColors.append(currentColors)
+
+    return separatedPoints, separatedColors
 
 
 
