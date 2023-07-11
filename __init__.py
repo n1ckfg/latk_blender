@@ -211,7 +211,7 @@ class LatkProperties(bpy.types.PropertyGroup):
     thickness: FloatProperty(
         name="Thickness",
         description="Tube mesh thickness",
-        default=0.0015
+        default=0.02
     )
 
     resolution: IntProperty(
@@ -229,43 +229,7 @@ class LatkProperties(bpy.types.PropertyGroup):
     decimate: FloatProperty(
         name="Decimate",
         description="Decimate mesh",
-        default=0.2
-    )
-
-    strokegen1_strokeLength: IntProperty(
-        name="Length",
-        description="Group every n points into strokes",
-        default=10
-    )
-
-    strokegen1_strokeGaps: FloatProperty(
-        name="Gaps",
-        description="Skip points greater than this distance away",
-        default=10.0
-    )
-
-    strokegen1_shuffleOdds: FloatProperty(
-        name="Odds",
-        description="Odds of shuffling the points in a stroke",
         default=1.0
-    )
-
-    strokegen1_spreadPoints: FloatProperty(
-        name="Spread",
-        description="Distance to randomize points",
-        default=0.1
-    )
-
-    strokegen2_radius: FloatProperty(
-        name="Radius",
-        description="Base search distance for points",
-        default=2
-    )
-
-    strokegen2_minPointsCount: IntProperty(
-        name="Min Points Count",
-        description="Minimum number of points to make a stroke",
-        default=10
     )
 
     numSplitFrames: IntProperty(
@@ -577,28 +541,6 @@ class Latk_Button_WriteOnStrokes(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class Latk_Button_StrokeGen1(bpy.types.Operator):
-    """Generate GP strokes from a mesh"""
-    bl_idname = "latk_button.strokegen1"
-    bl_label = "StrokeGen1"
-    bl_options = {'UNDO'}
-    
-    def execute(self, context):
-        latk_settings = bpy.context.scene.latk_settings
-        strokeGen1(strokeLength=latk_settings.strokegen1_strokeLength, strokeGaps=latk_settings.strokegen1_strokeGaps, shuffleOdds=latk_settings.strokegen1_shuffleOdds, spreadPoints=latk_settings.strokegen1_spreadPoints, limitPalette=latk_settings.paletteLimit)
-        return {'FINISHED'}
-
-class Latk_Button_StrokeGen2(bpy.types.Operator):
-    """Generate GP strokes from a mesh"""
-    bl_idname = "latk_button.strokegen2"
-    bl_label = "StrokeGen2"
-    bl_options = {'UNDO'}
-    
-    def execute(self, context):
-        latk_settings = bpy.context.scene.latk_settings
-        strokeGen2(radius=latk_settings.strokegen2_radius, minPointsCount=latk_settings.strokegen2_minPointsCount)
-        return {'FINISHED'}
-
 class Latk_Button_PointsToggle(bpy.types.Operator):
     """Toggle points mode on"""
     bl_idname = "latk_button.pointstoggle"
@@ -855,18 +797,6 @@ class LatkProperties_Panel(bpy.types.Panel):
         row.prop(latk, "minRemapPressure")
         row.prop(latk, "maxRemapPressure")
         row.prop(latk, "remapPressureMode")
-
-        row = layout.row()
-        row.operator("latk_button.strokegen1")
-        row.prop(latk, "strokegen1_strokeLength")
-        row.prop(latk, "strokegen1_strokeGaps")
-        row.prop(latk, "strokegen1_shuffleOdds")
-        row.prop(latk, "strokegen1_spreadPoints")
-
-        row = layout.row()
-        row.operator("latk_button.strokegen2")
-        row.prop(latk, "strokegen2_radius")
-        row.prop(latk, "strokegen2_minPointsCount")
 
         '''
         row = layout.row()
@@ -1448,11 +1378,11 @@ def menu_func_export(self, context):
 classes = (
     ImportLatk,
     ImportTiltBrush,
-  ImportASC,
+    ImportASC,
     ExportLatkJson,
     ExportLatk,
-  ExportASC,
-  ExportAfterEffects,
+    ExportASC,
+    ExportAfterEffects,
     ImportSculptrVR,
     ExportSculptrVR,
     ImportNorman,
@@ -1485,8 +1415,6 @@ classes = (
     Latk_Button_Gpmesh,
     Latk_Button_RemapPressure,
     Latk_Button_WriteOnStrokes,
-    Latk_Button_StrokeGen1,
-    Latk_Button_StrokeGen2,
     Latk_Button_PointsToggle,
     Latk_Button_BakeAllCurves,
     Latk_Button_BakeAnim,
