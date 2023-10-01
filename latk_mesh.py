@@ -2,7 +2,7 @@
 
 import bpy
 import bmesh
-from scipy.spatial.distance import cdist
+#from scipy.spatial.distance import cdist
 
 from . latk import *
 from . latk_tools import *
@@ -621,6 +621,7 @@ def writeOnMesh(step=1, name="latk"):
             hideFrame(target[j], 0, True)
             hideFrame(target[j], len(target)-j, False)
 
+'''
 def group_points_into_strokes(points, radius, minPointsCount):
     strokeGroups = []
     unassigned_points = set(range(len(points)))
@@ -639,7 +640,8 @@ def group_points_into_strokes(points, radius, minPointsCount):
 
         print("Found " + str(len(strokeGroups)) + " strokeGroups, " + str(len(unassigned_points)) + " points remaining.")
     return strokeGroups
-    
+'''
+
 def makeCurve(coords, pressures=None, resolution=2, thickness=0.1, bevelResolution=1, curveType="bezier", caps=False, name="latk_ob", useUvs=True, usePressure=True, bake=False):
     try:
         coords.insert(0, coords[0])
