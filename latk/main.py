@@ -610,13 +610,24 @@ class Latk(object):
         return int(formatter.format(a))
 
     def remap(self, value, min1, max1, min2, max2):
+        '''
         range1 = max1 - min1
         range2 = max2 - min2
         valueScaled = float(value - min1) / float(range1)
         return min2 + (valueScaled * range2)
+        '''
+        return np.interp(value,[min1, max1],[min2, max2])
 
     def remapInt(self, value, min1, max1, min2, max2):
         return int(self.remap(value, min1, max1, min2, max2))
+
+    def scale_numpy_array(arr, min_v, max_v):
+        new_range = (min_v, max_v)
+        max_range = max(new_range)
+        min_range = min(new_range)
+
+        scaled_unit = (max_range - min_range) / (np.max(arr) - np.min(arr))
+        return arr * scaled_unit - np.min(arr) * scaled_unit + min_range
 
     def countAllFrames(self):
         returns = 0
@@ -631,6 +642,14 @@ class Latk(object):
                 returns += len(frame.strokes)
         return returns
 
+    def changeExtension(_url, _newExt):
+        returns = ""
+        returnsPathArray = _url.split(".")
+        for i in range(0, len(returnsPathArray)-1):
+            returns += returnsPathArray[i]
+        returns += _newExt
+        return returns
+    
     def writeTextFile(self, name="test.txt", lines=None):
         file = open(name,"w") 
         for line in lines:

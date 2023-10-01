@@ -48,6 +48,7 @@ from . latk_mesh import *
 from . latk_draw import *
 from . latk_rw import *
 from . latk_svg import *
+from . latk_binvox import *
 
 # UI
 
