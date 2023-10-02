@@ -25,8 +25,7 @@ https://fox-gieg.com
 
 import json
 from math import sqrt
-from numpy import float32
-from numpy import isnan
+import numpy as np
 from . zip import *
 from . tilt import *
 from . rdp import *
@@ -185,13 +184,13 @@ class Latk(object):
                                     strength = 1.0
                                     try:
                                         pressure = jsonPoint["pressure"]
-                                        if (isnan(pressure) == True):
+                                        if (np.isnan(pressure) == True):
                                             pressure = 1.0
                                     except:
                                         pass
                                     try:
                                         strength = jsonPoint["strength"]
-                                        if (isnan(strength) == True):
+                                        if (np.isnan(strength) == True):
                                             strength = 1.0
                                     except:
                                         pass
@@ -261,19 +260,19 @@ class Latk(object):
 
                                     try:
                                         pressure = jsonPoint["pressure"]
-                                        if (isnan(pressure) == True):
+                                        if (np.isnan(pressure) == True):
                                             pressure = 1.0
                                     except:
                                         pass
                                     try:
                                         strength = jsonPoint["strength"]
-                                        if (isnan(strength) == True):
+                                        if (np.isnan(strength) == True):
                                             strength = 1.0
                                     except:
                                         pass
                                     try:
                                         vertex_color = jsonPoint["vertex_color"]
-                                        if (isnan(vertex_color) == True):
+                                        if (np.isnan(vertex_color) == True):
                                             vertex_color = (0.0,0.0,0.0,1.0)
                                     except:
                                         pass  
@@ -318,8 +317,8 @@ class Latk(object):
                             fill_color = (fill_color[0], fill_color[1], fill_color[2], 0.0)
                     except:
                         pass
-                    sbb.append("\t\t\t\t\t\t\t\t\t\"color\": [" + str(float32(color[0])) + ", " + str(float32(color[1])) + ", " + str(float32(color[2])) + ", " + str(float32(color[3])) + "],")
-                    sbb.append("\t\t\t\t\t\t\t\t\t\"fill_color\": [" + str(float32(fill_color[0])) + ", " + str(float32(fill_color[1])) + ", " + str(float32(fill_color[2])) + ", " + str(float32(fill_color[3])) + "],")
+                    sbb.append("\t\t\t\t\t\t\t\t\t\"color\": [" + str(np.float32(color[0])) + ", " + str(np.float32(color[1])) + ", " + str(np.float32(color[2])) + ", " + str(np.float32(color[3])) + "],")
+                    sbb.append("\t\t\t\t\t\t\t\t\t\"fill_color\": [" + str(np.float32(fill_color[0])) + ", " + str(np.float32(fill_color[1])) + ", " + str(np.float32(fill_color[2])) + ", " + str(np.float32(fill_color[3])) + "],")
 
                     if (len(stroke.points) > 0): 
                         sbb.append("\t\t\t\t\t\t\t\t\t\"points\": [")
@@ -343,7 +342,7 @@ class Latk(object):
                                 y = (y * globalScale[1]) + globalOffset[1]
                                 z = (z * globalScale[2]) + globalOffset[2]
                              
-                            pointStr = "\t\t\t\t\t\t\t\t\t\t{\"co\": [" + str(float32(x)) + ", " + str(float32(y)) + ", " + str(float32(z)) + "], \"pressure\": " + str(float32(point.pressure)) + ", \"strength\": " + str(float32(point.strength)) + ", \"vertex_color\": [" + str(float32(r)) + ", " + str(float32(g)) + ", " + str(float32(b)) + ", " + str(float32(a)) + "]}"
+                            pointStr = "\t\t\t\t\t\t\t\t\t\t{\"co\": [" + str(np.float32(x)) + ", " + str(np.float32(y)) + ", " + str(np.float32(z)) + "], \"pressure\": " + str(np.float32(point.pressure)) + ", \"strength\": " + str(np.float32(point.strength)) + ", \"vertex_color\": [" + str(np.float32(r)) + ", " + str(np.float32(g)) + ", " + str(np.float32(b)) + ", " + str(np.float32(a)) + "]}"
                                           
                             if (j == len(stroke.points) - 1):
                                 sbb.append(pointStr)
@@ -641,6 +640,40 @@ class Latk(object):
             for frame in layer.frames:
                 returns += len(frame.strokes)
         return returns
+
+    def countAllPoints(self):
+        returns = 0
+        for layer in self.layers:
+            for frame in layer.frames:
+                for stroke in frame.strokes:
+                    returns += len(stroke.points)
+        return returns
+
+    def getAllPoints(self, vertsOnly=True):
+        returns = []
+        for layer in self.layers:
+            for frame in layer.frames:
+                for stroke in frame.strokes:
+                    for point in stroke.points:
+                        if (vertsOnly == True):
+                            returns.append(point.co)
+                        else:
+                            returns.append(point)
+        return np.array(returns)
+
+    def getBounds(self):
+        points = self.getAllPoints()
+        
+        minX = np.min(points[:, 0])
+        maxX = np.max(points[:, 0])
+
+        minY = np.min(points[:, 1])
+        maxY = np.max(points[:, 1])
+
+        minZ = np.min(points[:, 2])
+        maxZ = np.max(points[:, 2])
+
+        return minX, maxY, minY, maxY, minZ, maxZ
 
     def changeExtension(_url, _newExt):
         returns = ""
