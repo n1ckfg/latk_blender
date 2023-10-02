@@ -10,6 +10,7 @@ import gc
 import struct
 import uuid
 import contextlib
+import numpy as np
 from collections import defaultdict
 from itertools import zip_longest
 from operator import itemgetter
