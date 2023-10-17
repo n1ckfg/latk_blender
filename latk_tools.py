@@ -632,15 +632,28 @@ def currentFrame(target=None):
     else:
         goToFrame(target)
 
-def getDistance(v1, v2):
+def getDistanceAlt(v1, v2):
     return np.sqrt( (v1[0] - v2[0])**2 + (v1[1] - v2[1])**2 + (v1[2] - v2[2])**2)
-    
+
+def getDistance(point1, point2):
+    point1 = np.array(point1)
+    point2 = np.array(point2)
+    return np.linalg.norm(point1 - point2)
+
 def hitDetect3D(p1, p2, hitbox=0.01):
     #if (p1[0] + hitbox >= p2[0] - hitbox and p1[0] - hitbox <= p2[0] + hitbox and p1[1] + hitbox >= p2[1] - hitbox and p1[1] - hitbox <= p2[1] + hitbox and p1[2] + hitbox >= p2[2] - hitbox and p1[2] - hitbox <= p2[2] + hitbox):
     if (getDistance(p1, p2) <= hitbox):
         return True
     else:
         return False
+
+def getAvgSize(obj):
+    returns = (obj.dimensions.x + obj.dimensions.y + obj.dimensions.z) / 3.0
+    return returns
+
+def normalizeMesh(vertices):
+    magnitudes = np.linalg.norm(vertices, axis=1)
+    return vertices / magnitudes[:, np.newaxis]
 
 def parentMultiple(target, root, fixTransforms=True):
     bpy.context.view_layer.objects.active = root # last object will be the parent
