@@ -666,6 +666,9 @@ def getEdges(obj):
     edges.shape = shape  
     return edges
 
+def getFaces(obj):
+    return np.array([f.vertices for f in obj.data.polygons])
+
 def getAvgSize(obj):
     returns = (obj.dimensions.x + obj.dimensions.y + obj.dimensions.z) / 3.0
     return returns
