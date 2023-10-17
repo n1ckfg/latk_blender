@@ -658,6 +658,14 @@ def getVertices(obj):
 def getVerticesAlt(obj):
     return np.array([v.co for v in obj.data.vertices])  
 
+def getEdges(obj):
+    count = len(obj.data.edges)
+    shape = (count, 2)
+    edges = np.empty(count*2, dtype=int)  
+    obj.data.edges.foreach_get('vertices', edges)  
+    edges.shape = shape  
+    return edges
+
 def getAvgSize(obj):
     returns = (obj.dimensions.x + obj.dimensions.y + obj.dimensions.z) / 3.0
     return returns
