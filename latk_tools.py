@@ -647,6 +647,17 @@ def hitDetect3D(p1, p2, hitbox=0.01):
     else:
         return False
 
+def getVertices(obj):
+    count = len(obj.data.vertices)
+    shape = (count, 3)
+    verts = np.empty(count*3, dtype=np.float64)  
+    obj.data.vertices.foreach_get('co', verts)  
+    verts.shape = shape  
+    return verts
+
+def getVerticesAlt(obj):
+    return np.array([v.co for v in obj.data.vertices])  
+
 def getAvgSize(obj):
     returns = (obj.dimensions.x + obj.dimensions.y + obj.dimensions.z) / 3.0
     return returns
