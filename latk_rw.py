@@ -9,6 +9,8 @@ import io
 from io import BytesIO
 
 from . latk import *
+from . latk_mesh import *
+from . latk_mtl import *
 from . latk_tools import *
 from . latk_draw import *
 from . latk_svg import *
@@ -1433,7 +1435,7 @@ def exportXyz(filepath=None):
     except:
         pass
     #~
-    allPoints, allColors = getVerts(target=obj, useWorldSpace=True, useColors=True, useBmesh=False)
+    allPoints, allColors = getVertsAndColors(target=obj, useWorldSpace=True, useColors=True, useBmesh=False)
     #~
     for i in range(0, len(allPoints)):
         color = None

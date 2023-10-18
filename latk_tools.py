@@ -658,6 +658,57 @@ def getVertices(obj):
 def getVerticesAlt(obj):
     return np.array([v.co for v in obj.data.vertices])  
 
+def getVertsAndColors(target=None, useWorldSpace=True, useColors=True, useBmesh=False, useModifiers=True):
+    if not target:
+        target = bpy.context.view_layer.objects.active 
+    mesh = None
+    if (useModifiers==True):
+        #mesh = target.to_mesh(scene=bpy.context.scene, apply_modifiers=True, settings='PREVIEW')
+        # https://devtalk.blender.org/t/obj-to-mesh-error-add-corrective-shape-key-py/4020/4
+        mesh = target.to_mesh(preserve_all_data_layers=False, depsgraph=None)
+    else:
+        mesh = target.data
+    mat = target.matrix_world
+    #~
+    if (useBmesh==True):
+        bm = bmesh.new()
+        bm.from_mesh(mesh)
+        return bm.verts
+    else:
+        '''
+        verts = []
+        #~
+        for face in mesh.polygons:
+            for idx in face.vertices:
+                pointsFace = []
+                pointsFace.append(mesh.vertices[idx].co)
+            point = Vector((0,0,0))
+            for vert in pointsFace:
+                point += vert
+            point /= len(pointsFace)
+            if (useWorldSpace == True):
+                # https://blender.stackexchange.com/questions/129473/typeerror-element-wise-multiplication-not-supported-between-matrix-and-vect
+                #point = mat * point
+                point = mat @ point
+            verts.append(point)
+        '''
+        verts = None
+        if (useWorldSpace == True):
+            verts = np.array([mat @ v.co for v in mesh.vertices])  
+        else:
+            verts = np.array([v.co for v in mesh.vertices])  
+                #~
+        if (useColors==True):
+            colors = []
+            try:
+                for i in range(0, len(mesh.vertex_colors[0].data), int(len(mesh.vertex_colors[0].data) / len(verts))):
+                    colors.append(mesh.vertex_colors[0].data[i].color)
+                return verts, colors
+            except:
+                return verts, None
+        else:
+            return verts
+            
 def getEdges(obj):
     count = len(obj.data.edges)
     shape = (count, 2)
