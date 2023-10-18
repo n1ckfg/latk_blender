@@ -11,6 +11,7 @@ import struct
 import uuid
 import contextlib
 import numpy as np
+from mathutils import Vector
 from collections import defaultdict
 from itertools import zip_longest
 from operator import itemgetter
@@ -675,7 +676,6 @@ def getVertsAndColors(target=None, useWorldSpace=True, useColors=True, useBmesh=
         bm.from_mesh(mesh)
         return bm.verts
     else:
-        '''
         verts = []
         #~
         for face in mesh.polygons:
@@ -697,18 +697,20 @@ def getVertsAndColors(target=None, useWorldSpace=True, useColors=True, useBmesh=
             verts = np.array([mat @ v.co for v in mesh.vertices])  
         else:
             verts = np.array([v.co for v in mesh.vertices])  
-                #~
+        '''
+        #~
         if (useColors==True):
             colors = []
             try:
                 for i in range(0, len(mesh.vertex_colors[0].data), int(len(mesh.vertex_colors[0].data) / len(verts))):
+                #for i in range(0, len(mesh.vertex_colors[0].data)):
                     colors.append(mesh.vertex_colors[0].data[i].color)
                 return verts, colors
             except:
                 return verts, None
         else:
             return verts
-            
+
 def getEdges(obj):
     count = len(obj.data.edges)
     shape = (count, 2)
