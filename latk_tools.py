@@ -242,7 +242,7 @@ def cameraArray(target=None, hideTarget=True, removeCameras=True, removeLayers=T
     render.views["left"].use = False
     render.views["right"].use = False
     #~
-    coords = [(target.matrix_world * v.co) for v in target.data.vertices]
+    coords = [(target.matrix_world @ v.co) for v in target.data.vertices]
     cams = []
     for coord in coords:
         cam = createCamera()
@@ -648,16 +648,16 @@ def hitDetect3D(p1, p2, hitbox=0.01):
     else:
         return False
 
-def getVertices(obj):
-    count = len(obj.data.vertices)
-    shape = (count, 3)
-    verts = np.empty(count*3, dtype=np.float64)  
-    obj.data.vertices.foreach_get('co', verts)  
-    verts.shape = shape  
-    return verts
-
-def getVerticesAlt(obj):
-    return np.array([v.co for v in obj.data.vertices])  
+def getVertices(obj, fast=False):
+    if (fast == True):
+        count = len(obj.data.vertices)
+        shape = (count, 3)
+        verts = np.empty(count*3, dtype=np.float64)  
+        obj.data.vertices.foreach_get('co', verts)  
+        verts.shape = shape  
+        return verts
+    else:
+        return np.array([v.co for v in obj.data.vertices])  
 
 def getVertsAndColors(target=None, useWorldSpace=True, useColors=True, useBmesh=False, useModifiers=True):
     if not target:
@@ -976,7 +976,7 @@ def createCamera():
     # https://blenderartists.org/forum/showthread.php?312512-how-to-add-an-empty-and-a-camera-using-python-script
    cam = bpy.data.cameras.new("Camera")
    cam_ob = bpy.data.objects.new("Camera", cam)
-   bpy.context.scene.objects.link(cam_ob)
+   bpy.context.collection.objects.link(cam_ob)
    return cam_ob
 
 def getActiveCamera():
