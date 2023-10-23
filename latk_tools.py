@@ -170,6 +170,48 @@ def normalizePoints(minVal=0.0, maxVal=1.0):
                     z = remap(coord[2], allZ[0], allZ[len(allZ)-1], minValZ, maxValZ)
                     point.co = (x,y,z)
 
+def normalize(verts, minVal=0.0, maxVal=1.0):
+    newVerts = []
+    allX = []
+    allY = []
+    allZ = []
+
+    for vert in verts:   
+        allX.append(vert[0])
+        allY.append(vert[1])
+        allZ.append(vert[2])
+    
+    allX.sort()
+    allY.sort()
+    allZ.sort()
+    
+    leastValArray = [ allX[0], allY[0], allZ[0] ]
+    mostValArray = [ allX[len(allX)-1], allY[len(allY)-1], allZ[len(allZ)-1] ]
+    leastValArray.sort()
+    mostValArray.sort()
+    leastVal = leastValArray[0]
+    mostVal = mostValArray[2]
+    valRange = mostVal - leastVal
+    
+    xRange = (allX[len(allX)-1] - allX[0]) / valRange
+    yRange = (allY[len(allY)-1] - allY[0]) / valRange
+    zRange = (allZ[len(allZ)-1] - allZ[0]) / valRange
+    
+    minValX = minVal * xRange
+    minValY = minVal * yRange
+    minValZ = minVal * zRange
+    maxValX = maxVal * xRange
+    maxValY = maxVal * yRange
+    maxValZ = maxVal * zRange
+    
+    for vert in verts:
+        x = remap(vert[0], allX[0], allX[len(allX)-1], minValX, maxValX)
+        y = remap(vert[1], allY[0], allY[len(allY)-1], minValY, maxValY)
+        z = remap(vert[2], allZ[0], allZ[len(allZ)-1], minValZ, maxValZ)
+        newVerts.append((x,y,z))
+
+    return newVerts
+    
 def scalePoints(val=0.01):
     strokes = getAllStrokes()
     for stroke in strokes:
