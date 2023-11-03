@@ -272,8 +272,13 @@ def consolidateMtlAlt(name="latk"):
         for i in range(1, len(curves)):
             curves[i].data.materials[0] = curves[0].data.materials[0]
 
-def getActiveMtl():
-    return bpy.context.view_layer.objects.active.data.materials[bpy.context.view_layer.objects.active.active_material_index]
+def getActiveMtl(obj=None):
+    if not obj:
+        obj = ss()
+    if len(obj.data.materials > 0):
+        return obj.data.materials[obj.active_material_index]
+    else:
+        return None
 
 def getMtlColor(node="diffuse", mtl=None):
     if not mtl:
@@ -388,37 +393,30 @@ def getUnknownColor(mtl=None):
         col = getDiffuseColor(mtl)
     return col
 
-def getColorExplorer(target=None, vert=0, images=None):
-    if not target:
-        target = ss()
-    mesh = target.data
+def getColorExplorer(obj=None, vert=0, images=None):
+    if not obj:
+        obj = ss()
+    mesh = obj.data
     col = None
     
-    if (images != None):
-        #try:
+    if (len(images) > 0):
         uv_first = mesh.uv_layers.active.data[vert].uv
-        pixelRaw = getPixelFromUvArray(images[target.active_material.node_tree.nodes["Image Texture"].image.name], uv_first[0], uv_first[1])                
-        col = (pixelRaw[0], pixelRaw[1], pixelRaw[2])  
-        #except:
-            #pass
+        pixel = getPixelFromUvArray(images[obj.active_material.node_tree.nodes["Image Texture"].image.name], uv_first[0], uv_first[1])                
+        return (pixel[0], pixel[1], pixel[2])
+    else:
+        i=0
+        for poly in mesh.polygons:
+            for vert_side in poly.loop_indices:
+                if (vert == poly.vertices[vert_side-min(poly.loop_indices)]):
+                    return mesh.vertex_colors[0].data[i].color
+                i += 1   
 
-    if (col == None):
-        try:
-            col = getVertexColor(mesh, vert)
-        except:
-            pass
+        col = getMtlColor(mesh.materials[0])
 
-    if (col == None):
-        try:
-            col = getUnknownColor(mesh.materials[0])
-        except:
-            pass
-
-    if (col == None):
-        col = (1, 1, 1)  
-
-    return col
-
+        if not col:
+            return (1, 1, 1)
+        else:
+            return  col
 
 # is this obsolete now that all materials are linked by color value?
 def makeEmissionMtl():

@@ -31,23 +31,41 @@ def getVertices(obj, fast=False):
 def getVertsAndColors(obj=None):
     if not obj:
         obj = ss()
+
+    mesh = obj.data
     verts = getVertices(obj)
-
     images = getUvImages(obj)
-
     colors = []
-    for i, vert in enumerate(verts):
-        defaultColor = (1,1,1)
-        color = defaultColor
 
-        #try:
-        if len(images) < 1:
-            color = getColorExplorer(obj, i)
+    for i in range(0, len(verts)):
+        col = None
+        
+        if (len(images) > 0):
+            uv = mesh.uv_layers.active.data[i].uv
+            pixel = getPixelFromUvArray(images[obj.active_material.node_tree.nodes["Image Texture"].image.name], uv[0], uv[1])                
+            col = [pixel[0], pixel[1], pixel[2], pixel[3]] 
         else:
-            color = getColorExplorer(obj, i, images)
-        #except:
-            #color = defaultColor
-        colors.append(color)
+            j=0
+            foundCol = False
+            for poly in mesh.polygons:
+                if (foundCol == False):
+                    for vert_side in poly.loop_indices:
+                        if (i == poly.vertices[vert_side-min(poly.loop_indices)]):
+                            col = mesh.vertex_colors[0].data[j].color
+                            foundCol = True
+                            break
+                        j += 1
+                else:
+                    break   
+
+            if (foundCol == False):
+                col = getMtlColor(mesh.materials[0])
+
+                if not col:
+                    return [1.0, 1.0, 1.0, 1.0]
+
+        colors.append(col)           
+
     return verts, colors
 
 def getVertsAndColorsAlt(target=None, useWorldSpace=True, useColors=True, useBmesh=False, useModifiers=True):

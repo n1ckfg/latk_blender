@@ -1,35 +1,35 @@
-from . main import Latk
-from . main import LatkLayer
-from . main import LatkFrame
-from . main import LatkStroke
-from . main import LatkPoint
+from latk.latk_main import Latk
+from latk.latk_main import LatkLayer
+from latk.latk_main import LatkFrame
+from latk.latk_main import LatkStroke
+from latk.latk_main import LatkPoint
 
-from . tilt import memoized_property
-from . tilt import binfile
-from . tilt import BadTilt
-from . tilt import BadMetadata
-from . tilt import MissingKey
-from . tilt import validate_metadata
-from . tilt import Tilt
-from . tilt import _make_ext_reader
-from . tilt import _make_stroke_ext_reader
-from . tilt import _make_cp_ext_reader
-from . tilt import Sketch
-from . tilt import Stroke
-from . tilt import ControlPoint
-from . tilt import tiltBrushJson_Grouper
-from . tilt import tiltBrushJson_DecodeData
+from latk.latk_tilt import memoized_property
+from latk.latk_tilt import binfile
+from latk.latk_tilt import BadTilt
+from latk.latk_tilt import BadMetadata
+from latk.latk_tilt import MissingKey
+from latk.latk_tilt import validate_metadata
+from latk.latk_tilt import Tilt
+from latk.latk_tilt import _make_ext_reader
+from latk.latk_tilt import _make_stroke_ext_reader
+from latk.latk_tilt import _make_cp_ext_reader
+from latk.latk_tilt import Sketch
+from latk.latk_tilt import Stroke
+from latk.latk_tilt import ControlPoint
+from latk.latk_tilt import tiltBrushJson_Grouper
+from latk.latk_tilt import tiltBrushJson_DecodeData
 
-from . kmeans import kdist
-from . kmeans import KMeans
-from . kmeans import KCentroid
-from . kmeans import KParticle
-from . kmeans import KCluster
+from latk.latk_kmeans import kdist
+from latk.latk_kmeans import KMeans
+from latk.latk_kmeans import KCentroid
+from latk.latk_kmeans import KParticle
+from latk.latk_kmeans import KCluster
 
-from . rdp import pldist
-from . rdp import rdp_rec
-from . rdp import _rdp_iter
-from . rdp import rdp_iter
-from . rdp import rdp
+from latk.latk_rdp import pldist
+from latk.latk_rdp import rdp_rec
+from latk.latk_rdp import _rdp_iter
+from latk.latk_rdp import rdp_iter
+from latk.latk_rdp import rdp
 
-from . zip import InMemoryZip
+from latk.latk_zip import InMemoryZip

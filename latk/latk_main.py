@@ -26,10 +26,10 @@ https://fox-gieg.com
 import json
 from math import sqrt
 import numpy as np
-from . zip import *
-from . tilt import *
-from . rdp import *
-from . kmeans import *
+from . latk_zip import *
+from . latk_tilt import *
+from . latk_rdp import *
+from . latk_kmeans import *
 
 class Latk(object):     
     def __init__(self, filepath=None, layers=None, init=False, coords=None, color=None, frame_rate=12): # args string, Latk array, float tuple array, float tuple           
@@ -37,7 +37,9 @@ class Latk(object):
         	self.layers = [] # LatkLayer
         else:
         	self.layers = layers
+        
         self.frame_rate = frame_rate
+        self.version = 2.9
 
         if (filepath != None):
             self.read(filepath, True)
@@ -284,7 +286,7 @@ class Latk(object):
                             layer.frames.append(frame)
                         self.layers.append(layer)
 
-    def write(self, filepath, yUp=True, useScaleAndOffset=False, zipped=True, globalScale=(1.0, 1.0, 1.0), globalOffset=(0.0, 0.0, 0.0)): # defaults to Unity, Maya Y up
+    def write(self, filepath, yUp=True, useScaleAndOffset=False, zipped=True, globalScale=(1.0, 1.0, 1.0), globalOffset=(0.0, 0.0, 0.0), precision=32): # defaults to Unity, Maya Y up
         FINAL_LAYER_LIST = []
 
         for layer in self.layers:
@@ -317,8 +319,16 @@ class Latk(object):
                             fill_color = (fill_color[0], fill_color[1], fill_color[2], 0.0)
                     except:
                         pass
-                    sbb.append("\t\t\t\t\t\t\t\t\t\"color\": [" + str(np.float32(color[0])) + ", " + str(np.float32(color[1])) + ", " + str(np.float32(color[2])) + ", " + str(np.float32(color[3])) + "],")
-                    sbb.append("\t\t\t\t\t\t\t\t\t\"fill_color\": [" + str(np.float32(fill_color[0])) + ", " + str(np.float32(fill_color[1])) + ", " + str(np.float32(fill_color[2])) + ", " + str(np.float32(fill_color[3])) + "],")
+
+                    if (precision == 64):
+                        sbb.append("\t\t\t\t\t\t\t\t\t\"color\": [" + str(np.float64(color[0])) + ", " + str(np.float64(color[1])) + ", " + str(np.float64(color[2])) + ", " + str(np.float64(color[3])) + "],")
+                        sbb.append("\t\t\t\t\t\t\t\t\t\"fill_color\": [" + str(np.float64(fill_color[0])) + ", " + str(np.float64(fill_color[1])) + ", " + str(np.float64(fill_color[2])) + ", " + str(np.float64(fill_color[3])) + "],")
+                    elif (precision == 16):
+                        sbb.append("\t\t\t\t\t\t\t\t\t\"color\": [" + str(np.float16(color[0])) + ", " + str(np.float16(color[1])) + ", " + str(np.float16(color[2])) + ", " + str(np.float16(color[3])) + "],")
+                        sbb.append("\t\t\t\t\t\t\t\t\t\"fill_color\": [" + str(np.float16(fill_color[0])) + ", " + str(np.float16(fill_color[1])) + ", " + str(np.float16(fill_color[2])) + ", " + str(np.float16(fill_color[3])) + "],")
+                    else:
+                        sbb.append("\t\t\t\t\t\t\t\t\t\"color\": [" + str(np.float32(color[0])) + ", " + str(np.float32(color[1])) + ", " + str(np.float32(color[2])) + ", " + str(np.float32(color[3])) + "],")
+                        sbb.append("\t\t\t\t\t\t\t\t\t\"fill_color\": [" + str(np.float32(fill_color[0])) + ", " + str(np.float32(fill_color[1])) + ", " + str(np.float32(fill_color[2])) + ", " + str(np.float32(fill_color[3])) + "],")
 
                     if (len(stroke.points) > 0): 
                         sbb.append("\t\t\t\t\t\t\t\t\t\"points\": [")
@@ -342,7 +352,12 @@ class Latk(object):
                                 y = (y * globalScale[1]) + globalOffset[1]
                                 z = (z * globalScale[2]) + globalOffset[2]
                              
-                            pointStr = "\t\t\t\t\t\t\t\t\t\t{\"co\": [" + str(np.float32(x)) + ", " + str(np.float32(y)) + ", " + str(np.float32(z)) + "], \"pressure\": " + str(np.float32(point.pressure)) + ", \"strength\": " + str(np.float32(point.strength)) + ", \"vertex_color\": [" + str(np.float32(r)) + ", " + str(np.float32(g)) + ", " + str(np.float32(b)) + ", " + str(np.float32(a)) + "]}"
+                            if (precision == 64):
+                                pointStr = "\t\t\t\t\t\t\t\t\t\t{\"co\": [" + str(np.float64(x)) + ", " + str(np.float64(y)) + ", " + str(np.float64(z)) + "], \"pressure\": " + str(np.float64(point.pressure)) + ", \"strength\": " + str(np.float64(point.strength)) + ", \"vertex_color\": [" + str(np.float64(r)) + ", " + str(np.float64(g)) + ", " + str(np.float64(b)) + ", " + str(np.float64(a)) + "]}"
+                            elif (precision == 16):
+                                pointStr = "\t\t\t\t\t\t\t\t\t\t{\"co\": [" + str(np.float16(x)) + ", " + str(np.float16(y)) + ", " + str(np.float16(z)) + "], \"pressure\": " + str(np.float16(point.pressure)) + ", \"strength\": " + str(np.float16(point.strength)) + ", \"vertex_color\": [" + str(np.float16(r)) + ", " + str(np.float16(g)) + ", " + str(np.float16(b)) + ", " + str(np.float16(a)) + "]}"
+                            else:
+                                pointStr = "\t\t\t\t\t\t\t\t\t\t{\"co\": [" + str(np.float32(x)) + ", " + str(np.float32(y)) + ", " + str(np.float32(z)) + "], \"pressure\": " + str(np.float32(point.pressure)) + ", \"strength\": " + str(np.float32(point.strength)) + ", \"vertex_color\": [" + str(np.float32(r)) + ", " + str(np.float32(g)) + ", " + str(np.float32(b)) + ", " + str(np.float32(a)) + "]}"
                                           
                             if (j == len(stroke.points) - 1):
                                 sbb.append(pointStr)
@@ -374,7 +389,8 @@ class Latk(object):
         s = [] # string
         s.append("{")
         s.append("\t\"creator\": \"latk.py\",")
-        s.append("\t\"version\": 2.8,")
+        s.append("\t\"version\": " + str(self.version) + ",")
+        s.append("\t\"precision\": " + str(precision) + ",")
         s.append("\t\"grease_pencil\": [")
         s.append("\t\t{")
         s.append("\t\t\t\"layers\": [")
