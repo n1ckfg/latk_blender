@@ -393,21 +393,30 @@ def getColorExplorer(target=None, vert=0, images=None):
         target = ss()
     mesh = target.data
     col = None
-    try:
+    
+    if (images != None):
+        #try:
         uv_first = mesh.uv_layers.active.data[vert].uv
         pixelRaw = getPixelFromUvArray(images[target.active_material.node_tree.nodes["Image Texture"].image.name], uv_first[0], uv_first[1])                
         col = (pixelRaw[0], pixelRaw[1], pixelRaw[2])  
-    except:
-        pass
+        #except:
+            #pass
+
     if (col == None):
-        col = getVertexColor(mesh, vert)
+        try:
+            col = getVertexColor(mesh, vert)
+        except:
+            pass
+
     if (col == None):
         try:
             col = getUnknownColor(mesh.materials[0])
         except:
             pass
+
     if (col == None):
-        col = getActiveColor().color
+        col = (1, 1, 1)  
+
     return col
 
 
@@ -477,13 +486,14 @@ def testUvs():
         print("Pixel: " + str(pixel))
 '''
 
-def getUvImages():
-    obj = bpy.context.view_layer.objects.active
+def getUvImages(obj=None):
+    if not obj:
+        obj = ss()
     uv_images = {}
     #~
     #for uv_tex in obdata.uv_textures.active.data:
     #for tex in obj.active_material.texture_slots:
-    for tex in bpy.context.active_object.material_slots:
+    for tex in obj.material_slots:
         try:
             uv_tex = tex.texture
             if (uv_tex.image and

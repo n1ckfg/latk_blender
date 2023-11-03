@@ -707,11 +707,7 @@ def getVertsAndColors(obj=None):
         obj = ss()
     verts = getVertices(obj)
 
-    images = None
-    try:
-        images = getUvImages(obj)
-    except:
-        pass
+    images = getUvImages(obj)
 
     colors = []
     for i, vert in enumerate(verts):
@@ -719,7 +715,7 @@ def getVertsAndColors(obj=None):
         color = defaultColor
 
         #try:
-        if not images:
+        if len(images) < 1:
             color = getColorExplorer(obj, i)
         else:
             color = getColorExplorer(obj, i, images)
