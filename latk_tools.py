@@ -17,6 +17,7 @@ from itertools import zip_longest
 from operator import itemgetter
 
 from . latk import *
+from . latk_mtl import *
 
 def getFilePath(stripFileName=True):
     name = bpy.context.blend_data.filepath
@@ -701,7 +702,33 @@ def getVertices(obj, fast=False):
     else:
         return np.array([v.co for v in obj.data.vertices])  
 
-def getVertsAndColors(target=None, useWorldSpace=True, useColors=True, useBmesh=False, useModifiers=True):
+def getVertsAndColors(obj=None):
+    if not obj:
+        obj = ss()
+    verts = getVertices(obj)
+
+    images = None
+    try:
+        images = getUvImages(obj)
+    except:
+        pass
+
+    colors = []
+    for i, vert in enumerate(verts):
+        defaultColor = (1,1,1)
+        color = defaultColor
+
+        #try:
+        if not images:
+            color = getColorExplorer(obj, i)
+        else:
+            color = getColorExplorer(obj, i, images)
+        #except:
+            #color = defaultColor
+        colors.append(color)
+    return verts, colors
+
+def getVertsAndColorsAlt(target=None, useWorldSpace=True, useColors=True, useBmesh=False, useModifiers=True):
     if not target:
         target = bpy.context.view_layer.objects.active 
     mesh = None
