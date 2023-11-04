@@ -17,27 +17,37 @@ def binvoxToVerts(target=None):
 def vertsToBinvox(target=None):
     pass
 
-def getVertices(obj, fast=False, useBmesh=False):
+def getVertices(obj, fast=False, useBmesh=False, worldSpace=True):
+    mat = obj.matrix_world
     if fast == True:
         count = len(obj.data.vertices)
         shape = (count, 3)
         verts = np.empty(count*3, dtype=np.float64)  
         obj.data.vertices.foreach_get('co', verts)  
         verts.shape = shape  
-        return verts
+        if (worldSpace == True):
+            np.array([mat @ v for v in verts])  
+        else:
+            return verts
     elif useBmesh == True:
         bm = bmesh.new()
         bm.from_mesh(obj.data)
-        return np.array([v.co for v in bm.verts])  
+        if (worldSpace == True):
+            return np.array([mat @ v.co for v in bm.verts])  
+        else:
+            return np.array([v.co for v in bm.verts])  
     else:
-        return np.array([v.co for v in obj.data.vertices])  
+        if (worldSpace == True):
+            return np.array([v.co for v in obj.data.vertices])  
+        else:
+            return np.array([mat @ v.co for v in obj.data.vertices])  
 
-def getVertsAndColors(obj=None):
+def getVertsAndColors(obj=None, worldSpace=True):
     if not obj:
         obj = ss()
 
     mesh = obj.data
-    verts = getVertices(obj, useBmesh=True)
+    verts = getVertices(obj, useBmesh=True, worldSpace=worldSpace)
     images = getUvImages(obj)
     colors = []
 
