@@ -17,14 +17,18 @@ def binvoxToVerts(target=None):
 def vertsToBinvox(target=None):
     pass
 
-def getVertices(obj, fast=False):
-    if (fast == True):
+def getVertices(obj, fast=False, useBmesh=False):
+    if fast == True:
         count = len(obj.data.vertices)
         shape = (count, 3)
         verts = np.empty(count*3, dtype=np.float64)  
         obj.data.vertices.foreach_get('co', verts)  
         verts.shape = shape  
         return verts
+    elif useBmesh == True:
+        bm = bmesh.new()
+        bm.from_mesh(obj.data)
+        return np.array([v.co for v in bm.verts])  
     else:
         return np.array([v.co for v in obj.data.vertices])  
 
@@ -33,38 +37,44 @@ def getVertsAndColors(obj=None):
         obj = ss()
 
     mesh = obj.data
-    verts = getVertices(obj)
+    verts = getVertices(obj, useBmesh=True)
     images = getUvImages(obj)
     colors = []
 
-    for i in range(0, len(verts)):
-        col = None
-        
-        if (len(images) > 0):
+    if mesh.vertex_colors:
+        # Get the first vertex color layer (you can change this index if needed)
+        vertex_color_layer = mesh.vertex_colors[0].data
+
+        # Loop through the vertices and their corresponding vertex colors
+        for vertex, color_data in zip(verts, vertex_color_layer):
+            colors.append(color_data.color)
+    elif len(images) > 0:
+        for i in range(0, len(verts)):       
             uv = mesh.uv_layers.active.data[i].uv
             pixel = getPixelFromUvArray(images[obj.active_material.node_tree.nodes["Image Texture"].image.name], uv[0], uv[1])                
             col = [pixel[0], pixel[1], pixel[2], pixel[3]] 
-        else:
-            j=0
-            foundCol = False
-            for poly in mesh.polygons:
-                if (foundCol == False):
-                    for vert_side in poly.loop_indices:
-                        if (i == poly.vertices[vert_side-min(poly.loop_indices)]):
-                            col = mesh.vertex_colors[0].data[j].color
-                            foundCol = True
-                            break
-                        j += 1
-                else:
-                    break   
-
+            colors.append(col)      
+    elif len(mesh.materials) > 0:
+        '''
+        j=0
+        foundCol = False
+        for poly in mesh.polygons:
             if (foundCol == False):
-                col = getMtlColor(mesh.materials[0])
-
-                if not col:
-                    return [1.0, 1.0, 1.0, 1.0]
-
-        colors.append(col)           
+                for vert_side in poly.loop_indices:
+                    if (i == poly.vertices[vert_side-min(poly.loop_indices)]):
+                        col = mesh.vertex_colors[0].data[j].color
+                        foundCol = True
+                        break
+                    j += 1
+            else:
+                break   
+        '''
+        col = getMtlColor(mesh.materials[0])
+        for i in range(0, len(verts)):       
+            colors.append(col)    
+    else:       
+        for i in range(0, len(verts)):       
+            colors.append((1,1,1,1))    
 
     return verts, colors
 
