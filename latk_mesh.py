@@ -80,7 +80,8 @@ def getVertices(obj=None, fast=False, getColors=False, useBmesh=False, worldSpac
                             if (addNewVertex == True):     
                                 vertIndices.append(newIndex)   
                                 sortedVerts.append(verts[newIndex])
-                                colors.append(loop[cl][:]) 
+                                newcol = Vector(loop[cl][:])
+                                colors.append(newcol * newcol) 
             else: # There are no faces, so this is a point cloud.                
                 sortedVerts = verts
 
