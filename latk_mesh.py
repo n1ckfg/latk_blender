@@ -29,9 +29,9 @@ def getVertices(obj=None, fast=False, getColors=False, useBmesh=False, worldSpac
         obj.data.vertices.foreach_get('co', verts)  
         verts.shape = shape  
         if (worldSpace == True):
-            np.array([mat @ v for v in verts])  
+            return np.array([mat @ v for v in verts])  
         else:
-            return verts
+            return np.array(verts)
     elif useBmesh == True or getColors == True:
         bm = bmesh.new()
         bm.from_mesh(obj.data)
@@ -70,7 +70,7 @@ def getVertices(obj=None, fast=False, getColors=False, useBmesh=False, worldSpac
                                     newcol = Vector(loop[cl][:])                 
                                     colors.append(newcol * newcol) 
                 else: # Then look for textures.
-                    sortedVerts = np.array(verts).copy()
+                    sortedVerts = np.array(verts) #.copy()
                     images = getUvImages(obj)    
 
                     if (len(images) > 0):
@@ -91,10 +91,10 @@ def getVertices(obj=None, fast=False, getColors=False, useBmesh=False, worldSpac
                             newcol = Vector(getMtlColor(obj.data.materials[0]))
                         except:
                             newcol = Vector((1,1,1,1))                               
-                        colors = np.array([newcol * newcol for v in sortedVerts])
+                        colors = np.array([newcol for v in sortedVerts]) # material colors don't start out too bright
 
             else: # There are no faces, so this is a point cloud.                
-                sortedVerts = np.array(verts).copy()
+                sortedVerts = np.array(verts) #.copy()
 
                 # Check if the point cloud has color attributes with a known name.
                 attr = obj.data.attributes
@@ -120,14 +120,14 @@ def getVertices(obj=None, fast=False, getColors=False, useBmesh=False, worldSpac
                         newcol = getMtlColor(mesh.materials[0])
                     except:
                         newcol = Vector((1,1,1,1))
-                    colors = np.array([newcol * newcol for v in sortedVerts])
+                    colors = np.array([newcol for v in sortedVerts])  # material colors don't start out too bright
                 else:
                     for col in attr_col:
                         colvec = col.color
                         newcol = Vector((colvec[0], colvec[1], colvec[2], colvec[3]))
                         colors.append(newcol * newcol) # Quick fix because the colors are too light
 
-            return sortedVerts, colors  
+            return np.array(sortedVerts), np.array(colors) 
         else:
             if (worldSpace == True):
                 return np.array([mat @ v.co for v in bm.verts])  
