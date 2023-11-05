@@ -17,7 +17,10 @@ def binvoxToVerts(target=None):
 def vertsToBinvox(target=None):
     pass
 
-def getVertices(obj, fast=False, useBmesh=False, worldSpace=True):
+def getVertices(obj=None, fast=False, getColors=False, useBmesh=False, worldSpace=True):
+    if not obj:
+        obj = ss()
+
     mat = obj.matrix_world
     if fast == True:
         count = len(obj.data.vertices)
@@ -29,20 +32,56 @@ def getVertices(obj, fast=False, useBmesh=False, worldSpace=True):
             np.array([mat @ v for v in verts])  
         else:
             return verts
-    elif useBmesh == True:
+    elif useBmesh == True or getColors == True:
         bm = bmesh.new()
         bm.from_mesh(obj.data)
-        if (worldSpace == True):
-            return np.array([mat @ v.co for v in bm.verts])  
+
+        # https://blender.stackexchange.com/questions/211852/list-vertex-colors-from-a-bmesh
+        if (getColors == True):
+            colors = []
+            vertIndices = []
+            sortedVerts = []
+            verts = None
+
+            if (worldSpace == True):
+                verts = np.array([mat @ v.co for v in bm.verts])  
+            else:
+                verts = np.array([v.co for v in bm.verts])  
+
+            tris = bm.calc_loop_triangles()
+            if (len(tris) > 0):
+                for name, cl in bm.loops.layers.color.items():
+                    for tri in tris:
+                        for loop in tri:
+                            # loop.index, loop.face.index, loop.edge.index, loop.vert.index, loop[cl][:]
+                            addNewVertex = True
+                            newIndex = loop.vert.index
+                            for vertIndex in vertIndices:
+                                if (newIndex == vertIndex):
+                                    addNewVertex = False
+                                    break
+
+                            if (addNewVertex == True):     
+                                vertIndices.append(newIndex)   
+                                sortedVerts.append(verts[newIndex])
+                                colors.append(loop[cl][:]) 
+            else:
+                sortedVerts = verts
+                colors = np.array([(1,1,1,1) for v in sortedVerts])
+
+            return sortedVerts, colors  
         else:
-            return np.array([v.co for v in bm.verts])  
+            if (worldSpace == True):
+                return np.array([mat @ v.co for v in bm.verts])  
+            else:
+                return np.array([v.co for v in bm.verts])  
     else:
         if (worldSpace == True):
-            return np.array([v.co for v in obj.data.vertices])  
-        else:
             return np.array([mat @ v.co for v in obj.data.vertices])  
+        else:
+            return np.array([v.co for v in obj.data.vertices])  
 
-def getVertsAndColors(obj=None, worldSpace=True):
+def getVertsAndColorsAlt2(obj=None, worldSpace=True):
     if not obj:
         obj = ss()
 
