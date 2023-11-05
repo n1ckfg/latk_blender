@@ -49,26 +49,33 @@ def getVertices(obj=None, fast=False, getColors=False, useBmesh=False, worldSpac
                 verts = np.array([v.co for v in bm.verts])  
 
             tris = bm.calc_loop_triangles()
-            images = getUvImages(obj)
+            images = getUvImages(obj)    
+            foundImages = len(images) > 0 # Next, look for textures.
+            lastcol = (0,0,0,1)        
+                                     
+            if (len(tris) > 0): # First, look for faces.
+                if (len(bm.loops.layers.color.items()) > 0): # Next, look for vertex colors.
+                    for name, cl in bm.loops.layers.color.items():
+                        for tri in tris:
+                            for loop in tri:
+                                # You can get the following properties this way:
+                                # loop.index, loop.face.index, loop.edge.index, loop.vert.index, loop[cl][:]
+                                addNewVertex = True
+                                newIndex = loop.vert.index
+                                for vertIndex in vertIndices:
+                                    if (newIndex == vertIndex):
+                                        addNewVertex = False
+                                        break
 
-            if (len(images) > 0): # First, look for textures.
-                sortedVerts = verts
-                
-                lastcol = (0,0,0,1)
-                #TODO fix sort?
-                for i in range(0, len(verts)):       
-                    try:
-                        uv = obj.data.uv_layers.active.data[i].uv
-                        pixel = getPixelFromUvArray(images[obj.active_material.node_tree.nodes["Image Texture"].image.name], uv[0], uv[1])                
-                        newcol = Vector((pixel[0], pixel[1], pixel[2], pixel[3]))
-                        colors.append(newcol * newcol)                  
-                        lastcol = newcol
-                    except:
-                        colors.append(lastcol)                                          
-            elif (len(tris) > 0): # Next, look for vertex colors.
-                for name, cl in bm.loops.layers.color.items():
+                                if (addNewVertex == True):     
+                                    vertIndices.append(newIndex)   
+                                    sortedVerts.append(verts[newIndex])
+                                    newcol = Vector(loop[cl][:])                 
+                                    colors.append(newcol * newcol) 
+                else: # Then look for textures.
                     for tri in tris:
                         for loop in tri:
+                            # You can get the following properties this way:
                             # loop.index, loop.face.index, loop.edge.index, loop.vert.index, loop[cl][:]
                             addNewVertex = True
                             newIndex = loop.vert.index
@@ -80,10 +87,25 @@ def getVertices(obj=None, fast=False, getColors=False, useBmesh=False, worldSpac
                             if (addNewVertex == True):     
                                 vertIndices.append(newIndex)   
                                 sortedVerts.append(verts[newIndex])
-                                newcol = Vector(loop[cl][:])
-                                colors.append(newcol * newcol) 
+                                
+                                if (foundImages == True): # Try to get texture color
+                                    try:
+                                        uv = obj.data.uv_layers.active.data[newIndex].uv
+                                        pixel = getPixelFromUvArray(images[obj.active_material.node_tree.nodes["Image Texture"].image.name], uv[0], uv[1])                
+                                        newcol = Vector((pixel[0], pixel[1], pixel[2], pixel[3]))
+                                        colors.append(newcol * newcol)                  
+                                        lastcol = newcol
+                                    except:
+                                        colors.append(lastcol)     
+                                else: # As a backup, try to find a color in the material settings.
+                                    #newcol = None
+                                    #try: 
+                                    newcol = Vector(getMtlColor(obj.data.materials[0]))
+                                    #except:
+                                        #newcol = Vector((1,1,1,1))                               
+                                    colors.append(newcol * newcol) 
             else: # There are no faces, so this is a point cloud.                
-                sortedVerts = verts
+                sortedVerts = np.array(verts).copy()
 
                 # Check if the point cloud has color attributes with a known name.
                 attr = obj.data.attributes
@@ -103,13 +125,18 @@ def getVertices(obj=None, fast=False, getColors=False, useBmesh=False, worldSpac
                                 attr_col = None
 
                 if not attr_col:
-                    # TODO try to get material color here
-                    colors = np.array([(1,1,1,1) for v in sortedVerts])
+                    # As a backup, try to find a color in the material settings.
+                    newcol = None
+                    try:
+                        newcol = getMtlColor(mesh.materials[0])
+                    except:
+                        newcol = (1,1,1,1)
+                    colors = np.array([newcol for v in sortedVerts])
                 else:
                     for col in attr_col:
                         colvec = col.color
                         newcol = Vector((colvec[0], colvec[1], colvec[2], colvec[3]))
-                        colors.append(newcol * newcol) # Why are the colors too light?
+                        colors.append(newcol * newcol) # Quick fix because the colors are too light
 
             return sortedVerts, colors  
         else:

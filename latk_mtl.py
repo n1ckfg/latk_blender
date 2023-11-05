@@ -275,29 +275,28 @@ def consolidateMtlAlt(name="latk"):
 def getActiveMtl(obj=None):
     if not obj:
         obj = ss()
-    if len(obj.data.materials > 0):
+    if len(obj.data.materials) > 0:
         return obj.data.materials[obj.active_material_index]
     else:
         return None
 
-def getMtlColor(node="diffuse", mtl=None):
+def getMtlColor(mtl=None, node="principled"):
     if not mtl:
         mtl = getActiveMtl()
-    try:
-        if (node.lower() == "emission"):
-            color = mtl.node_tree.nodes["Emission"].inputs["Color"].default_value
-            return (color[0], color[1], color[2])
-        elif (node.lower() == "principled"):
-            color = mtl.node_tree.nodes["Principled BSDF"].inputs["Base Color"].default_value
-            return (color[0], color[1], color[2])
-        elif (node.lower() == "gltf"):
-            color = mtl.node_tree.nodes["Group"].inputs["BaseColor"].default_value
-            return (color[0], color[1], color[2])
-        else:
-            color = mtl.node_tree.nodes["Diffuse BSDF"].inputs["Color"].default_value
-            return (color[0], color[1], color[2])
-    except:
-        return None
+    
+    color = None
+    
+    if (node.lower() == "emission"):
+        color = mtl.node_tree.nodes["Emission"].inputs["Color"].default_value
+    elif (node.lower() == "diffuse"):
+        color = mtl.node_tree.nodes["Diffuse BSDF"].inputs["Color"].default_value
+    elif (node.lower() == "gltf"):
+        color = mtl.node_tree.nodes["Group"].inputs["BaseColor"].default_value
+    else:
+        color = mtl.node_tree.nodes["Principled BSDF"].inputs["Base Color"].default_value
+
+    return (color[0], color[1], color[2], color[3])
+
 
 # assumes that we're starting with diffuse shader, the default
 def setMtlShader(shader="diffuse", mtl=None):
