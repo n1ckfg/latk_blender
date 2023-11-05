@@ -86,11 +86,11 @@ def getVertices(obj=None, fast=False, getColors=False, useBmesh=False, worldSpac
                             #except:
                                 #colors.append(lastcol)     
                     else: # As a backup, try to find a color in the material settings.
-                        #newcol = None
-                        #try: 
-                        newcol = Vector(getMtlColor(obj.data.materials[0]))
-                        #except:
-                            #newcol = Vector((1,1,1,1))                               
+                        newcol = None
+                        try: 
+                            newcol = Vector(getMtlColor(obj.data.materials[0]))
+                        except:
+                            newcol = Vector((1,1,1,1))                               
                         colors = np.array([newcol * newcol for v in sortedVerts])
 
             else: # There are no faces, so this is a point cloud.                
