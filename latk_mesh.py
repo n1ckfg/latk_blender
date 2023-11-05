@@ -87,14 +87,19 @@ def getVertices(obj=None, fast=False, getColors=False, useBmesh=False, worldSpac
                 # Check if the point cloud has color attributes with a known name.
                 attr = obj.data.attributes
                 attr_col = None
-                if (len(attr["Col"].data) > 0):
+                try:
                     attr_col = attr["Col"].data
-                elif (len(attr["Cd"].data) > 0):
-                    attr_col = attr["Cd"].data
-                elif (len(attr["rgba"].data) > 0):
-                    attr_col = attr["rgba"].data
-                elif (len(attr["Attribute"].data) > 0):
-                    attr_col = attr["Attribute"].data
+                except:
+                    try:
+                        attr_col = attr["Cd"].data
+                    except:
+                        try:
+                            attr_col = attr["rgba"].data
+                        except:
+                            try:
+                                attr_col = attr["Attribute"].data
+                            except:
+                                attr_col = None
 
                 if not attr_col:
                     # TODO try to get material color here
