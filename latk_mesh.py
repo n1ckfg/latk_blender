@@ -66,8 +66,23 @@ def getVertices(obj=None, fast=False, getColors=False, useBmesh=False, worldSpac
                                 sortedVerts.append(verts[newIndex])
                                 colors.append(loop[cl][:]) 
             else:
+                attr = obj.data.attributes
+
                 sortedVerts = verts
-                colors = np.array([(1,1,1,1) for v in sortedVerts])
+
+                attr_col = None
+                if (len(attr["Col"].data) > 0):
+                    attr_col = attr["Col"].data
+                elif (len(attr["Attribute"].data) > 0):
+                    attr_col = attr["Attribute"].data
+
+                if not attr_col:
+                    colors = np.array([(1,1,1,1) for v in sortedVerts])
+                else:
+                    for col in attr_col:
+                        colvec = col.color
+                        newcol = Vector((colvec[0], colvec[1], colvec[2], colvec[3]))
+                        colors.append(newcol * newcol)
 
             return sortedVerts, colors  
         else:
