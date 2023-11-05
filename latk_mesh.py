@@ -49,7 +49,23 @@ def getVertices(obj=None, fast=False, getColors=False, useBmesh=False, worldSpac
                 verts = np.array([v.co for v in bm.verts])  
 
             tris = bm.calc_loop_triangles()
-            if (len(tris) > 0):
+            images = getUvImages(obj)
+
+            if (len(images) > 0): # First, look for textures.
+                sortedVerts = verts
+                
+                lastcol = (0,0,0,1)
+                #TODO fix sort?
+                for i in range(0, len(verts)):       
+                    try:
+                        uv = obj.data.uv_layers.active.data[i].uv
+                        pixel = getPixelFromUvArray(images[obj.active_material.node_tree.nodes["Image Texture"].image.name], uv[0], uv[1])                
+                        newcol = Vector((pixel[0], pixel[1], pixel[2], pixel[3]))
+                        colors.append(newcol * newcol)                  
+                        lastcol = newcol
+                    except:
+                        colors.append(lastcol)                                          
+            elif (len(tris) > 0): # Next, look for vertex colors.
                 for name, cl in bm.loops.layers.color.items():
                     for tri in tris:
                         for loop in tri:
@@ -65,24 +81,29 @@ def getVertices(obj=None, fast=False, getColors=False, useBmesh=False, worldSpac
                                 vertIndices.append(newIndex)   
                                 sortedVerts.append(verts[newIndex])
                                 colors.append(loop[cl][:]) 
-            else:
-                attr = obj.data.attributes
-
+            else: # There are no faces, so this is a point cloud.                
                 sortedVerts = verts
 
+                # Check if the point cloud has color attributes with a known name.
+                attr = obj.data.attributes
                 attr_col = None
                 if (len(attr["Col"].data) > 0):
                     attr_col = attr["Col"].data
+                elif (len(attr["Cd"].data) > 0):
+                    attr_col = attr["Cd"].data
+                elif (len(attr["rgba"].data) > 0):
+                    attr_col = attr["rgba"].data
                 elif (len(attr["Attribute"].data) > 0):
                     attr_col = attr["Attribute"].data
 
                 if not attr_col:
+                    # TODO try to get material color here
                     colors = np.array([(1,1,1,1) for v in sortedVerts])
                 else:
                     for col in attr_col:
                         colvec = col.color
                         newcol = Vector((colvec[0], colvec[1], colvec[2], colvec[3]))
-                        colors.append(newcol * newcol)
+                        colors.append(newcol * newcol) # Why are the colors too light?
 
             return sortedVerts, colors  
         else:
