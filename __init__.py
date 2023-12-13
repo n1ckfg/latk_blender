@@ -54,6 +54,12 @@ from . latk_binvox import *
 
 class LightningArtistToolkitPreferences(bpy.types.AddonPreferences):
     bl_idname = __name__
+
+    feature_ShortcutButtons: bpy.props.BoolProperty(
+        name = 'Shortcut Buttons',
+        description = "Enable shortcut buttons on the Latk panel",
+        default = False
+    )
     
     extraFormats_SculptrVR: bpy.props.BoolProperty(
         name = 'SculptrVR CSV',
@@ -111,6 +117,11 @@ class LightningArtistToolkitPreferences(bpy.types.AddonPreferences):
 
     def draw(self, context):
         layout = self.layout
+
+        box = layout.box()
+        box.label(text="Features")
+        row = box.row()
+        row.prop(self, "feature_ShortcutButtons")
 
         box = layout.box()
         box.label(text="Extra formats to import:")
@@ -754,61 +765,61 @@ class LatkProperties_Panel(bpy.types.Panel):
         row.prop(latk, "main_mesh_mode")
         
         #~ ~ ~
-        box = layout.box()
+        if (bpy.context.preferences.addons[__name__].preferences.feature_ShortcutButtons == True):
+            box = layout.box()
 
-        row = box.row()
-        row.operator("latk_button.booleanmod") 
-        row.operator("latk_button.booleanmodminus") 
-        row.operator("latk_button.subsurfmod") 
+            row = box.row()
+            row.operator("latk_button.booleanmod") 
+            row.operator("latk_button.booleanmodminus") 
+            row.operator("latk_button.subsurfmod") 
 
-        row = box.row()
-        row.operator("latk_button.smoothmod") 
-        row.operator("latk_button.simpleclean")
-        row.operator("latk_button.decimatemod") 
+            row = box.row()
+            row.operator("latk_button.smoothmod") 
+            row.operator("latk_button.simpleclean")
+            row.operator("latk_button.decimatemod") 
 
-        row = box.row()
-        row.operator("latk_button.bakeall")
-        row.operator("latk_button.bakeanim")
-        row.operator("latk_button.scopetimeline") 
+            row = box.row()
+            row.operator("latk_button.bakeall")
+            row.operator("latk_button.bakeanim")
+            row.operator("latk_button.scopetimeline") 
 
-        row = box.row()
-        row.operator("latk_button.hidetrue") 
-        row.operator("latk_button.hidescale")
-        row.operator("latk_button.makeloop") 
+            row = box.row()
+            row.operator("latk_button.hidetrue") 
+            row.operator("latk_button.hidescale")
+            row.operator("latk_button.makeloop") 
 
-        row = box.row()
-        row.operator("latk_button.pointstoggle")
-        row.operator("latk_button.matchfills") 
-        row.operator("latk_button.makeroot") 
+            row = box.row()
+            row.operator("latk_button.pointstoggle")
+            row.operator("latk_button.matchfills") 
+            row.operator("latk_button.makeroot") 
 
-        #~ ~ ~
-        box = layout.box()
+            #~ ~ ~
 
-        row = box.row()
-        row.operator("latk_button.mtlshader")
-        row.prop(latk, "material_shader_mode")
+            row = box.row()
+            row.operator("latk_button.mtlshader")
+            row.prop(latk, "material_shader_mode")
 
-        row = box.row()
-        #row.operator("latk_button.refine")
-        row.operator("latk_button.bigclean")
-        row.prop(latk, "cleanFactor")
+            row = box.row()
+            #row.operator("latk_button.refine")
+            row.operator("latk_button.bigclean")
+            row.prop(latk, "cleanFactor")
 
-        row = box.row()
-        row.operator("latk_button.splf")
-        row.prop(latk, "numSplitFrames")
-        
-        row = box.row()
-        row.operator("latk_button.remappressure")
-        row.prop(latk, "minRemapPressure")
-        row.prop(latk, "maxRemapPressure")
-        row.prop(latk, "remapPressureMode")
+            row = box.row()
+            row.operator("latk_button.splf")
+            row.prop(latk, "numSplitFrames")
+            
+            row = box.row()
+            row.operator("latk_button.remappressure")
+            row.prop(latk, "minRemapPressure")
+            row.prop(latk, "maxRemapPressure")
+            row.prop(latk, "remapPressureMode")
 
-        '''
-        row = box.row()
-        row.prop(latk, "writeStrokeSteps")
-        row.prop(latk, "writeStrokePoints")
-        row.operator("latk_button.writeonstrokes")
-        '''
+            '''
+            row = box.row()
+            row.prop(latk, "writeStrokeSteps")
+            row.prop(latk, "writeStrokePoints")
+            row.operator("latk_button.writeonstrokes")
+            '''
         
 
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
