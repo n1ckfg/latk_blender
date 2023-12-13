@@ -716,91 +716,93 @@ class LatkProperties_Panel(bpy.types.Panel):
         scene = context.scene
         latk = scene.latk_settings
 
-        row = layout.row()
+        box = layout.box()
+
+        row = box.row()
         row.operator("latk_button.gpmesh_singleframe")
      
-        row = layout.row()
+        row = box.row()
         row.prop(latk, "thickness")
         row.prop(latk, "resolution")
 
-        row = layout.row()
+        row = box.row()
         row.prop(latk, "bevelResolution")
         row.prop(latk, "decimate")
 
-        row = layout.row()
+        row = box.row()
         row.prop(latk, "paletteLimit")
         row.prop(latk, "vertexColorName")
 
-        row = layout.row()
+        row = box.row()
         row.operator("latk_button.gpmesh")
         row.operator("latk_button.dn")
 
-        row = layout.row()
+        row = box.row()
         row.prop(latk, "bakeMesh")
         row.prop(latk, "joinMesh")
         row.prop(latk, "saveLayers")
         row.prop(latk, "uvStroke")
         row.prop(latk, "uvFill")
         
-        row = layout.row()
+        row = box.row()
         row.prop(latk, "remesh_mode", expand=True)
 
-        row = layout.row()
+        row = box.row()
         row.prop(latk, "mesh_fill_mode")
         row.prop(latk, "main_mesh_mode")
         
         #~ ~ ~
+        box = layout.box()
 
-        row = layout.row()
+        row = box.row()
         row.operator("latk_button.booleanmod") 
         row.operator("latk_button.booleanmodminus") 
         row.operator("latk_button.subsurfmod") 
 
-        row = layout.row()
+        row = box.row()
         row.operator("latk_button.smoothmod") 
         row.operator("latk_button.simpleclean")
         row.operator("latk_button.decimatemod") 
 
-        row = layout.row()
+        row = box.row()
         row.operator("latk_button.bakeall")
         row.operator("latk_button.bakeanim")
         row.operator("latk_button.scopetimeline") 
 
-        row = layout.row()
+        row = box.row()
         row.operator("latk_button.hidetrue") 
         row.operator("latk_button.hidescale")
         row.operator("latk_button.makeloop") 
 
-        row = layout.row()
+        row = box.row()
         row.operator("latk_button.pointstoggle")
         row.operator("latk_button.matchfills") 
         row.operator("latk_button.makeroot") 
 
         #~ ~ ~
+        box = layout.box()
 
-        row = layout.row()
+        row = box.row()
         row.operator("latk_button.mtlshader")
         row.prop(latk, "material_shader_mode")
 
-        row = layout.row()
+        row = box.row()
         #row.operator("latk_button.refine")
         row.operator("latk_button.bigclean")
         row.prop(latk, "cleanFactor")
 
-        row = layout.row()
+        row = box.row()
         row.operator("latk_button.splf")
         row.prop(latk, "numSplitFrames")
         
-        # ~ ~ ~ 
-
-        row = layout.row()
+        row = box.row()
         row.operator("latk_button.remappressure")
         row.prop(latk, "minRemapPressure")
         row.prop(latk, "maxRemapPressure")
         row.prop(latk, "remapPressureMode")
 
         '''
-        row = layout.row()
+        row = box.row()
         row.prop(latk, "writeStrokeSteps")
         row.prop(latk, "writeStrokePoints")
         row.operator("latk_button.writeonstrokes")
