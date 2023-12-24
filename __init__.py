@@ -55,6 +55,12 @@ from . latk_binvox import *
 class LightningArtistToolkitPreferences(bpy.types.AddonPreferences):
     bl_idname = __name__
 
+    feature_Meshing: bpy.props.BoolProperty(
+        name = 'Meshing',
+        description = "Enable meshing features on the Latk panel",
+        default = True
+    )
+
     feature_ShortcutButtons: bpy.props.BoolProperty(
         name = 'Shortcut Buttons',
         description = "Enable shortcut buttons on the Latk panel",
@@ -121,6 +127,7 @@ class LightningArtistToolkitPreferences(bpy.types.AddonPreferences):
         box = layout.box()
         box.label(text="Features")
         row = box.row()
+        row.prop(self, "feature_Meshing")
         row.prop(self, "feature_ShortcutButtons")
 
         box = layout.box()
@@ -729,40 +736,41 @@ class LatkProperties_Panel(bpy.types.Panel):
         scene = context.scene
         latk = scene.latk_settings
 
-        box = layout.box()
+        if (bpy.context.preferences.addons[__name__].preferences.feature_Meshing == True):
+            box = layout.box()
 
-        row = box.row()
-        row.operator("latk_button.gpmesh_singleframe")
-     
-        row = box.row()
-        row.prop(latk, "thickness")
-        row.prop(latk, "resolution")
+            row = box.row()
+            row.operator("latk_button.gpmesh_singleframe")
+         
+            row = box.row()
+            row.prop(latk, "thickness")
+            row.prop(latk, "resolution")
 
-        row = box.row()
-        row.prop(latk, "bevelResolution")
-        row.prop(latk, "decimate")
+            row = box.row()
+            row.prop(latk, "bevelResolution")
+            row.prop(latk, "decimate")
 
-        row = box.row()
-        row.prop(latk, "paletteLimit")
-        row.prop(latk, "vertexColorName")
+            row = box.row()
+            row.prop(latk, "paletteLimit")
+            row.prop(latk, "vertexColorName")
 
-        row = box.row()
-        row.operator("latk_button.gpmesh")
-        row.operator("latk_button.dn")
+            row = box.row()
+            row.operator("latk_button.gpmesh")
+            row.operator("latk_button.dn")
 
-        row = box.row()
-        row.prop(latk, "bakeMesh")
-        row.prop(latk, "joinMesh")
-        row.prop(latk, "saveLayers")
-        row.prop(latk, "uvStroke")
-        row.prop(latk, "uvFill")
-        
-        row = box.row()
-        row.prop(latk, "remesh_mode", expand=True)
+            row = box.row()
+            row.prop(latk, "bakeMesh")
+            row.prop(latk, "joinMesh")
+            row.prop(latk, "saveLayers")
+            row.prop(latk, "uvStroke")
+            row.prop(latk, "uvFill")
+            
+            row = box.row()
+            row.prop(latk, "remesh_mode", expand=True)
 
-        row = box.row()
-        row.prop(latk, "mesh_fill_mode")
-        row.prop(latk, "main_mesh_mode")
+            row = box.row()
+            row.prop(latk, "mesh_fill_mode")
+            row.prop(latk, "main_mesh_mode")
         
         #~ ~ ~
         if (bpy.context.preferences.addons[__name__].preferences.feature_ShortcutButtons == True):
