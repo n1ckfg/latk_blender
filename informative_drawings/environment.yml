@@ -1,0 +1,24 @@
+name: drawings
+channels:
+  - pytorch
+  - defaults
+dependencies:
+  - python
+  - pytorch
+  - torchvision
+  - torchaudio
+  - numpy
+  - scipy
+  - pip
+  - tensorboard
+  - pillow
+  - opencv
+  - scikit-learn 
+  - open3d
+  - pip:
+     - oyaml
+     - dominate
+     - ninja
+     - ftfy
+     - tqdm
+     - regex

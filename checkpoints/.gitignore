@@ -1,0 +1,4 @@
+*.pth
+model.zip
+feats2Geom/*
+

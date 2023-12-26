@@ -1,0 +1,12 @@
+__pycache__/*
+*.pyc
+images/*
+input/*
+output/*
+*.latk
+*.pth
+*.obj
+*.ply
+*.svg
+.DS_Store
+

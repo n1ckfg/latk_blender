@@ -30,8 +30,8 @@ along with the Lightning Artist Toolkit (Blender). If not, see
 bl_info = {
     "name": "Lightning Artist Toolkit (Latk)", 
     "author": "Nick Fox-Gieg",
-    "version": (0, 0, 3),
-    "blender": (3, 0, 0),
+    "version": (0, 0, 4),
+    "blender": (4, 0, 0),
     "description": "Import and export Latk format, import Tilt format",
     "category": "Animation"
 }
@@ -40,6 +40,17 @@ import bpy
 from bpy.types import Operator, AddonPreferences
 from bpy.props import (BoolProperty, FloatProperty, StringProperty, IntProperty, PointerProperty, EnumProperty)
 from bpy_extras.io_utils import (ImportHelper, ExportHelper)
+#import gpu
+import addon_utils
+from mathutils import Vector, Matrix
+import bmesh
+
+import os
+import sys
+import subprocess
+import platform
+import argparse
+import numpy as np
 
 from . latk import *
 from . latk_tools import *
@@ -48,12 +59,53 @@ from . latk_mesh import *
 from . latk_draw import *
 from . latk_rw import *
 from . latk_svg import *
-from . latk_binvox import *
+#from . latk_binvox import *
+
+def runCmd(cmd, shell=False):
+    returns = ""
+    try:
+        returns = subprocess.check_output(cmd, text=True, shell=shell)
+    except subprocess.CalledProcessError as e:
+        returns = f"Command failed with return code {e.returncode}"
+    print(returns)
+    return returns  
+
+def getPythonExe():
+    returns = None
+    whichPlatform = platform.system().lower()
+    
+    if (whichPlatform == "darwin"):
+        returns = os.path.join(sys.prefix, "bin", "python3.10")
+    elif (whichPlatform == "windows"):
+        returns = os.path.join(sys.prefix, "bin", "python.exe")
+    else:
+        returns = os.path.join(sys.prefix, "bin", "python3.10")
+    
+    return returns
+
+def findAddonPath(name=None):
+    #if not name:
+        #name = __name__
+    for mod in addon_utils.modules():
+        if mod.bl_info["name"] == name:
+            url = mod.__file__
+            return os.path.dirname(url)
+    return None
 
 # UI
 
 class LightningArtistToolkitPreferences(bpy.types.AddonPreferences):
     bl_idname = __name__
+
+    Backend: EnumProperty(
+        name="Backend",
+        items=(
+            ("NONE", "None", "...", 0),
+            ("PYTORCH", "PyTorch", "...", 1),
+            ("ONNX", "ONNX", "...", 2)
+        ),
+        default="NONE"
+    )
 
     feature_Meshing: bpy.props.BoolProperty(
         name = 'Meshing',
@@ -129,6 +181,18 @@ class LightningArtistToolkitPreferences(bpy.types.AddonPreferences):
         row = box.row()
         row.prop(self, "feature_Meshing")
         row.prop(self, "feature_ShortcutButtons")
+        row.prop(self, "Backend")
+        
+        box = layout.box()
+        box.label(text="Dependencies")
+        row = box.row()
+        row.operator("latk_button.install_requirements")
+        row = box.row()
+        row.operator("latk_button.install_pytorch")
+        row.operator("latk_button.install_onnx_cpu")
+        row.operator("latk_button.install_onnx_gpu")
+
+        # ~ ~ ~ ~ ~ ~
 
         box = layout.box()
         box.label(text="Extra formats to import:")
@@ -335,6 +399,266 @@ class LatkProperties(bpy.types.PropertyGroup):
         ),
         default="PRINCIPLED"
     )
+
+    # ~ ~ ~ ~ ~ ~ ~ ~
+
+    SourceImage: EnumProperty(
+        name="Source Image",
+        items=(
+            ("RGB", "RGB", "...", 0),
+            ("Depth", "Depth", "...", 1)
+        ),
+        default="RGB"
+    )
+
+    ModelStyle1: EnumProperty(
+        name="Model1",
+        items=(
+            ("ANIME", "Anime", "...", 0),
+            ("CONTOUR", "Contour", "...", 1),
+            ("OPENSKETCH", "OpenSketch", "...", 2),
+            ("PXP_001", "PxP 001", "...", 3),
+            ("PXP_002", "PxP 002", "...", 4),
+            ("PXP_003", "PxP 003", "...", 5),
+            ("PXP_004", "PxP 004", "...", 6)
+        ),
+        default="ANIME"
+    )
+
+    ModelStyle2: EnumProperty(
+        name="Model2",
+        items=(
+            ("NONE", "None", "...", 0),
+            ("ANIME", "Anime", "...", 1),
+            ("CONTOUR", "Contour", "...", 2),
+            ("OPENSKETCH", "OpenSketch", "...", 3)
+        ),
+        default="NONE"
+    )    
+
+    lineThreshold: FloatProperty(
+        name="Line Threshold",
+        description="...",
+        default=32.0 #64.0
+    )
+
+    csize: IntProperty(
+        name="csize",
+        description="...",
+        default=10
+    )
+
+    maxIter: IntProperty(
+        name="iter",
+        description="...",
+        default=999
+    )
+
+    distThreshold: FloatProperty(
+        name="Dist Threshold",
+        description="...",
+        default=0.1 #0.5
+    )
+
+    thickness: FloatProperty(
+        name="Thickness %",
+        description="...",
+        default=10.0
+    )
+
+    Operation1: EnumProperty(
+        name="Operation 1",
+        items=(
+            ("NONE", "None", "...", 0),
+            ("64_VOXEL", "64^3 voxels", "...", 1),
+            ("128_VOXEL", "128^3 voxels", "...", 2),
+            ("256_VOXEL", "256^3 voxels", "...", 3)
+        ),
+        default="NONE"
+    )
+
+    Operation2: EnumProperty(
+        name="Operation 2",
+        items=(
+            ("NONE", "None", "...", 0),
+            ("GET_EDGES", "Get Edges", "...", 1)
+        ),
+        default="NONE"
+    )
+
+    Operation3: EnumProperty(
+        name="Operation 3",
+        items=(
+            ("STROKE_GEN", "Connect Strokes", "...", 0),
+            ("CONTOUR_GEN", "Connect Contours", "...", 1),
+            ("SKEL_GEN", "Connect Skeleton", "...", 2)
+        ),
+        default="STROKE_GEN"
+    )
+
+    do_filter: BoolProperty(
+        name="Prefilter",
+        description="...",
+        default=True
+    )
+
+    do_modifiers: BoolProperty(
+        name="Modifiers",
+        description="...",
+        default=True
+    )
+
+    do_recenter: BoolProperty(
+        name="Recenter",
+        description="...",
+        default=False
+    )
+
+    dims: IntProperty(
+        name="Dims",
+        description="Voxel Dimensions",
+        default=256
+    )
+
+    strokegen_radius: FloatProperty(
+        name="StrokeGen Radius",
+        description="Base search distance for points",
+        default=0.05
+    )
+
+    strokegen_minPointsCount: IntProperty(
+        name="StrokeGen Min Points",
+        description="Minimum number of points to make a stroke",
+        default=5
+    )
+
+
+class Latk_Button_InstallRequirements(bpy.types.Operator):
+    bl_idname = "latk_button.install_requirements"
+    bl_label = "Install Requirements"
+    
+    def execute(self, context):
+        python_exe = getPythonExe()        
+        whichPlatform = platform.system().lower()
+        root_url = findAddonPath(__name__)
+        runCmd([python_exe, "-m", "pip", "install", "-r", os.path.join(root_url, "requirements.txt")])
+
+        if (whichPlatform == "darwin"):
+            runCmd(["bash", os.path.join(root_url, "skeleton_tracing/swig/compile.command")])
+        elif (whichPlatform == "windows"):
+            runCmd([os.path.join(root_url, "skeleton_tracing/swig/compile.bat")])
+        else:
+            runCmd(["bash", os.path.join(root_url, "skeleton_tracing/swig/compile.sh")])
+
+        return {'FINISHED'}
+
+
+class Latk_Button_InstallOnnxCpu(bpy.types.Operator):
+    bl_idname = "latk_button.install_onnx_cpu"
+    bl_label = "Install ONNX CPU"
+    
+    def execute(self, context):
+        python_exe = getPythonExe()
+        runCmd([python_exe, "-m", "pip", "uninstall", "onnxruntime-gpu"])
+        runCmd([python_exe, "-m", "pip", "install", "onnxruntime"])
+        return {'FINISHED'}
+
+
+class Latk_Button_InstallOnnxGpu(bpy.types.Operator):
+    bl_idname = "latk_button.install_onnx_gpu"
+    bl_label = "Install ONNX GPU"
+    
+    def execute(self, context):
+        python_exe = getPythonExe()
+        runCmd([python_exe, "-m", "pip", "uninstall", "onnxruntime"])
+        runCmd([python_exe, "-m", "pip", "install", "onnxruntime-gpu"])
+        return {'FINISHED'}
+
+
+class Latk_Button_InstallPytorch(bpy.types.Operator):
+    bl_idname = "latk_button.install_pytorch"
+    bl_label = "Install Pytorch"
+    
+    def execute(self, context):       
+        python_exe = getPythonExe()
+        whichPlatform = platform.system().lower()
+        
+        if (whichPlatform == "darwin"):
+            runCmd([python_exe, '-m', 'pip', 'install', '--pre', 'torch', 'torchvision', 'torchaudio', '--index-url', 'https://download.pytorch.org/whl/nightly/cpu'])
+        else:
+            runCmd([python_exe, '-m', 'pip', 'install', '--upgrade', 'torch', 'torchvision', 'torchaudio', '-f', 'https://download.pytorch.org/whl/torch_stable.html'])
+
+        return {'FINISHED'}
+
+
+class Latk_Button_AllFrames_003(bpy.types.Operator):
+    from . import latk_ml
+    """Operate on all frames"""
+    bl_idname = "latk_button.allframes003"
+    bl_label = "003 All"
+    bl_options = {'UNDO'}
+    
+    def execute(self, context):
+        latk_ml.doVoxelOpCore(__name__, context, allFrames=True)
+        return {'FINISHED'}
+
+
+class Latk_Button_SingleFrame_003(bpy.types.Operator):
+    from . import latk_ml
+    """Operate on a single frame"""
+    bl_idname = "latk_button.singleframe003"
+    bl_label = "003 Frame"
+    bl_options = {'UNDO'}
+    
+    def execute(self, context):
+        latk_ml.doVoxelOpCore(__name__, context, allFrames=False)
+        return {'FINISHED'}
+
+
+class Latk_Button_AllFrames_004(bpy.types.Operator):
+    from . import latk_ml
+    """Operate on all frames"""
+    bl_idname = "latk_button.allframes004"
+    bl_label = "004 All"
+    bl_options = {'UNDO'}
+    
+    def execute(self, context):
+        latkml005 = context.scene.latk_settings
+        net1, net2 = latk_ml.loadModel004(__name__)
+
+        la = latk_ml.latk.Latk()
+        la.layers.append(latk_ml.latk.LatkLayer())
+
+        start, end = lb.getStartEnd()
+        for i in range(start, end):
+            lb.goToFrame(i)
+            laFrame = latk_ml.doInference004(net1, net2)
+            la.layers[0].frames.append(laFrame)
+
+        lb.fromLatkToGp(la, resizeTimeline=False)
+        lb.setThickness(latkml005.thickness)
+        return {'FINISHED'}
+
+
+class Latk_Button_SingleFrame_004(bpy.types.Operator):
+    from . import latk_ml
+    """Operate on a single frame"""
+    bl_idname = "latk_button.singleframe004"
+    bl_label = "004 Frame"
+    bl_options = {'UNDO'}
+    
+    def execute(self, context):
+        latkml005 = context.scene.latk_settings
+        net1, net2 = latk_ml.loadModel004(__name__)
+
+        la = latk_ml.latk.Latk()
+        la.layers.append(latk_ml.latk.LatkLayer())
+        laFrame = latk_ml.doInference004(net1, net2)
+        la.layers[0].frames.append(laFrame)
+        
+        lb.fromLatkToGp(la, resizeTimeline=False)
+        lb.setThickness(latkml005.thickness)
+        return {'FINISHED'}
 
 
 class Latk_Button_SimpleClean(bpy.types.Operator):
@@ -828,7 +1152,62 @@ class LatkProperties_Panel(bpy.types.Panel):
             row.prop(latk, "writeStrokePoints")
             row.operator("latk_button.writeonstrokes")
             '''
-        
+
+        if (bpy.context.preferences.addons[__name__].preferences.Backend.lower() == "pytorch" or bpy.context.preferences.addons[__name__].preferences.Backend.lower() == "onnx"):
+            box = layout.box()
+
+            row = box.row()
+            row.operator("latk_button.singleframe004")
+            row.operator("latk_button.allframes004")
+
+            row = box.row()
+            row.prop(latk, "ModelStyle1")
+
+            row = box.row()
+            row.prop(latk, "ModelStyle2")
+
+            row = box.row()
+            row.prop(latk, "lineThreshold")
+
+            row = box.row()
+            row.prop(latk, "distThreshold")
+
+            row = box.row()
+            row.prop(latk, "csize")
+            row.prop(latk, "maxIter")
+
+            row = box.row()
+            row.prop(latk, "thickness")
+
+            row = box.row()
+            row.prop(latk, "SourceImage")
+
+            # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
+            box = layout.box()
+
+            row = box.row()
+            row.operator("latk_button.singleframe003")
+            row.operator("latk_button.allframes003")
+
+            if (bpy.context.preferences.addons[__name__].preferences.Backend.lower() == "pytorch"):
+                row = box.row()
+                row.prop(latk, "Operation1")
+
+                row = box.row()
+                row.prop(latk, "do_filter")
+                row.prop(latk, "do_modifiers")
+                row.prop(latk, "do_recenter")
+
+            row = box.row()
+            row.prop(latk, "Operation2")
+
+            row = box.row()
+            row.prop(latk, "Operation3")
+            row = box.row()
+            row.prop(latk, "thickness")
+            row = box.row()
+            row.prop(latk, "strokegen_radius")
+            row.prop(latk, "strokegen_minPointsCount")
 
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 
@@ -1446,7 +1825,15 @@ classes = (
     Latk_Button_Dn,
     Latk_Button_Splf,
     Latk_Button_BigClean,
-    Latk_Button_MtlShader
+    Latk_Button_MtlShader,
+    Latk_Button_AllFrames_004,
+    Latk_Button_SingleFrame_004,
+    Latk_Button_AllFrames_003,
+    Latk_Button_SingleFrame_003,
+    Latk_Button_InstallRequirements,
+    Latk_Button_InstallOnnxCpu,
+    Latk_Button_InstallOnnxGpu,
+    Latk_Button_InstallPytorch
 )
 
 # * * * * * * * * * * * * * * * * * * * * * * * * * *

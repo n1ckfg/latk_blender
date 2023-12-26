@@ -1,0 +1,21 @@
+cmake_minimum_required(VERSION 3.18)
+project(trace_skeleton)
+FIND_PACKAGE(SWIG REQUIRED)
+INCLUDE(${SWIG_USE_FILE})
+
+FIND_PACKAGE(PythonLibs)
+INCLUDE_DIRECTORIES(${PYTHON_INCLUDE_PATH})
+INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
+
+#SET(CMAKE_SWIG_FLAGS "")
+set(PYs "example.py;")
+foreach(PY ${PYs})
+    message("PY=${PY}")
+    message("CMAKE_CURRENT_SOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}")
+    file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/${PY} DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+
+endforeach()
+#SET_SOURCE_FILES_PROPERTIES(trace_skeleton.i PROPERTIES) # CPLUSPLUS ON)
+#SET_SOURCE_FILES_PROPERTIES(trace_skeleton.i PROPERTIES SWIG_FLAGS "-includeall")
+SWIG_ADD_LIBRARY(trace_skeleton LANGUAGE python SOURCES trace_skeleton.i trace_skeleton.c)
+SWIG_LINK_LIBRARIES(trace_skeleton ${PYTHON_LIBRARIES})
