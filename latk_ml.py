@@ -12,6 +12,7 @@ import cv2
 import numpy as np
 #import latk
 
+from . import latk
 from . latk import *
 from . latk_tools import *
 from . latk_mtl import *
@@ -77,7 +78,7 @@ def group_points_into_strokes(points, radius, minPointsCount):
     return strokeGroups
 
 def strokeGen(verts, colors, matrix_world=None, radius=2, minPointsCount=5, origin=None): #limitPalette=32):
-    latkml005 = bpy.context.scene.latkml005_settings
+    latk_settings = bpy.context.scene.latk_settings
     origCursorLocation = bpy.context.scene.cursor.location
     bpy.context.scene.cursor.location = (0.0, 0.0, 0.0)
 
@@ -110,7 +111,7 @@ def strokeGen(verts, colors, matrix_world=None, radius=2, minPointsCount=5, orig
 
         stroke = frame.strokes.new()
         stroke.display_mode = '3DSPACE'
-        stroke.line_width = int(latkml005.thickness) #10 # adjusted from 100 for 2.93
+        stroke.line_width = int(latk_settings.thickness) #10 # adjusted from 100 for 2.93
         stroke.material_index = gp.active_material_index
 
         stroke.points.add(len(strokeGroup))
@@ -134,7 +135,7 @@ def strokeGen(verts, colors, matrix_world=None, radius=2, minPointsCount=5, orig
     return gp
 
 def contourGen(verts, faces, matrix_world):
-    latkml005 = bpy.context.scene.latkml005_settings
+    latk_settings = bpy.context.scene.latk_settings
     origCursorLocation = bpy.context.scene.cursor.location
     bpy.context.scene.cursor.location = (0.0, 0.0, 0.0)
 
@@ -180,7 +181,7 @@ def contourGen(verts, faces, matrix_world):
             for entity in slice_mesh.entities:
                 stroke = frame.strokes.new()
                 stroke.display_mode = '3DSPACE'
-                stroke.line_width = int(latkml005.thickness) #10 # adjusted from 100 for 2.93
+                stroke.line_width = int(latk_settings.thickness) #10 # adjusted from 100 for 2.93
                 stroke.material_index = gp.active_material_index
                 stroke.points.add(len(entity.points))
 
@@ -194,7 +195,7 @@ def contourGen(verts, faces, matrix_world):
                     createPoint(stroke, i, vert, 1.0, 1.0)
 
     #fromLatkToGp(la, resizeTimeline=False)
-    #setThickness(latkml005.thickness)
+    #setThickness(latk_settings.thickness)
 
     bpy.context.scene.cursor.location = origCursorLocation
 
@@ -203,7 +204,7 @@ def contourGen(verts, faces, matrix_world):
     return gp
 
 def skelGen(verts, faces, matrix_world):
-    latkml005 = bpy.context.scene.latkml005_settings
+    latk_settings = bpy.context.scene.latk_settings
     origCursorLocation = bpy.context.scene.cursor.location
     bpy.context.scene.cursor.location = (0.0, 0.0, 0.0)
 
@@ -231,7 +232,7 @@ def skelGen(verts, faces, matrix_world):
     for entity in skel.skeleton.entities:
         stroke = frame.strokes.new()
         stroke.display_mode = '3DSPACE'
-        stroke.line_width = int(latkml005.thickness) #10 # adjusted from 100 for 2.93
+        stroke.line_width = int(latk_settings.thickness) #10 # adjusted from 100 for 2.93
         stroke.material_index = gp.active_material_index
         stroke.points.add(len(entity.points))
 
@@ -244,7 +245,7 @@ def skelGen(verts, faces, matrix_world):
             createPoint(stroke, i, vert, 1.0, 1.0)
 
     #fromLatkToGp(la, resizeTimeline=False)
-    #setThickness(latkml005.thickness)
+    #setThickness(latk_settings.thickness)
 
     bpy.context.scene.cursor.location = origCursorLocation
 
@@ -646,20 +647,20 @@ def renderToNp(depthPass=False):
 
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 def loadModel003(name):
-    latkml005 = bpy.context.scene.latkml005_settings
-    returns = modelSelector003(name, latkml005.Operation1)
+    latk_settings = bpy.context.scene.latk_settings
+    returns = modelSelector003(name, latk_settings.Operation1)
     return returns
 
 def loadModel004(name):
-    latkml005 = bpy.context.scene.latkml005_settings
+    latk_settings = bpy.context.scene.latk_settings
    
-    returns1 = modelSelector004(name, latkml005.ModelStyle1)
-    returns2 = modelSelector004(name, latkml005.ModelStyle2)
+    returns1 = modelSelector004(name, latk_settings.ModelStyle1)
+    returns2 = modelSelector004(name, latk_settings.ModelStyle2)
 
     return returns1, returns2
 
 def modelSelector003(name, modelName):
-    latkml003 = bpy.context.scene.latkml005_settings
+    latkml003 = bpy.context.scene.latk_settings
 
     modelName = modelName.lower()
     latkml003.dims = int(modelName.split("_")[0])
@@ -667,7 +668,7 @@ def modelSelector003(name, modelName):
 
 def modelSelector004(name, modelName):
     modelName = modelName.lower()
-    latkml005 = bpy.context.scene.latkml005_settings
+    latk_settings = bpy.context.scene.latk_settings
 
     if (bpy.context.preferences.addons[name].preferences.Backend.lower() == "pytorch"):
         if (modelName == "anime"):
@@ -705,9 +706,9 @@ def modelSelector004(name, modelName):
             return None
 
 def doInference003(net, verts, dims=256, seqMin=0.0, seqMax=1.0):
-    latkml005 = bpy.context.scene.latkml005_settings
+    latk_settings = bpy.context.scene.latk_settings
     
-    bv = vertsToBinvox(verts, dims, doFilter=latkml005.do_filter)
+    bv = vertsToBinvox(verts, dims, doFilter=latk_settings.do_filter)
     h5 = binvoxToH5(bv, dims=dims)
     writeTempH5(h5)
 
@@ -728,11 +729,11 @@ def doInference003(net, verts, dims=256, seqMin=0.0, seqMax=1.0):
 # https://blender.stackexchange.com/questions/262742/python-bpy-2-8-render-directly-to-matrix-array
 # https://blender.stackexchange.com/questions/2170/how-to-access-render-result-pixels-from-python-script/3054#3054
 def doInference004(net1, net2=None):
-    latkml005 = bpy.context.scene.latkml005_settings
+    latk_settings = bpy.context.scene.latk_settings
 
     img_np = None
     img_cv = None
-    if (latkml005.SourceImage.lower() == "depth"):
+    if (latk_settings.SourceImage.lower() == "depth"):
         img_np = renderToNp(depthPass=True) # inference expects np array
         img_temp = renderToNp()
         img_cv = npToCv(img_temp) # cv converted image used for color pixels later
@@ -752,9 +753,9 @@ def doInference004(net1, net2=None):
     im0 = cv2.bitwise_not(im0) # invert
     imWidth = len(im0[0])
     imHeight = len(im0)
-    im = (im0[:,:,0] > latkml005.lineThreshold).astype(np.uint8)
+    im = (im0[:,:,0] > latk_settings.lineThreshold).astype(np.uint8)
     im = skeletonize(im).astype(np.uint8)
-    polys = from_numpy(im, latkml005.csize, latkml005.maxIter)
+    polys = from_numpy(im, latk_settings.csize, latk_settings.maxIter)
 
     laFrame = latk.LatkFrame(frame_number=bpy.context.scene.frame_current)
 
@@ -814,7 +815,7 @@ def doInference004(net1, net2=None):
                     originalStrokeColors.append(newStrokeColor)
 
         for i in range(0, len(originalStrokes)):
-            separatedTempStrokes, separatedTempStrokeColors = separatePointsByDistance(originalStrokes[i], originalStrokeColors[i], latkml005.distThreshold)
+            separatedTempStrokes, separatedTempStrokeColors = separatePointsByDistance(originalStrokes[i], originalStrokeColors[i], latk_settings.distThreshold)
 
             for j in range(0, len(separatedTempStrokes)):
                 separatedStrokes.append(separatedTempStrokes[j])
@@ -837,13 +838,13 @@ def doInference004(net1, net2=None):
 
 
 def doVoxelOpCore(name, context, allFrames=False):
-    latkml005 = context.scene.latkml005_settings
+    latk_settings = context.scene.latk_settings
 
     dims = None
     
-    op1 = latkml005.Operation1.lower() 
-    op2 = latkml005.Operation2.lower() 
-    op3 = latkml005.Operation3.lower() 
+    op1 = latk_settings.Operation1.lower() 
+    op2 = latk_settings.Operation2.lower() 
+    op3 = latk_settings.Operation3.lower() 
 
     net1 = None
     obj = ss()
@@ -902,16 +903,16 @@ def doVoxelOpCore(name, context, allFrames=False):
         if (op1 != "none"):
             if not net1:
                 net1 = loadModel003(name)    
-                dims = latkml005.dims   
+                dims = latk_settings.dims   
 
             avgPosOrig = None
-            if (latkml005.do_recenter == True):
+            if (latk_settings.do_recenter == True):
                 avgPosOrig = getAveragePosition(verts)
 
             vertsOrig = np.array(verts) #.copy()
             verts = doInference003(net1, verts, dims, seqMin, seqMax)
 
-            if (latkml005.do_recenter == True):
+            if (latk_settings.do_recenter == True):
                 avgPosNew = getAveragePosition(verts)
                 diffPos = avgPosOrig - avgPosNew
                 for i in range(0, len(verts)):
@@ -933,14 +934,14 @@ def doVoxelOpCore(name, context, allFrames=False):
         elif (op3 == "contour_gen" and op1 == "none"):
             contourGen(verts, faces, matrix_world=matrix_world)
         else:
-            strokeGen(verts, colors, matrix_world=matrix_world, radius=seqAbs * latkml005.strokegen_radius, minPointsCount=latkml005.strokegen_minPointsCount, origin=obj.location) #limitPalette=context.scene.latk_settings.paletteLimit)
+            strokeGen(verts, colors, matrix_world=matrix_world, radius=seqAbs * latk_settings.strokegen_radius, minPointsCount=latk_settings.strokegen_minPointsCount, origin=obj.location) #limitPalette=context.scene.latk_settings.paletteLimit)
 
-    if (latkml005.do_modifiers == True):
+    if (latk_settings.do_modifiers == True):
         gp = getActiveGp()
         
         bpy.ops.object.gpencil_modifier_add(type="GP_SIMPLIFY")
         gp.grease_pencil_modifiers["Simplify"].mode = "MERGE"
-        gp.grease_pencil_modifiers["Simplify"].distance = latkml005.strokegen_radius
+        gp.grease_pencil_modifiers["Simplify"].distance = latk_settings.strokegen_radius
 
         bpy.ops.object.gpencil_modifier_add(type="GP_SUBDIV")
 
