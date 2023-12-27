@@ -7,6 +7,7 @@ import torchvision.transforms as transforms
 from torch.utils.data import DataLoader
 from torchvision import datasets
 import itertools
+from collections import namedtuple
 
 import bpy
 

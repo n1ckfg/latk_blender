@@ -664,7 +664,7 @@ def modelSelector003(name, modelName):
 
     modelName = modelName.lower()
     latk_settings.dims = int(modelName.split("_")[0])
-    return Vox2Vox_PyTorch(name, "model/" + modelName + ".pth")
+    return Vox2Vox_PyTorch(name, os.path.join("model", modelName + ".pth"))
 
 def modelSelector004(name, modelName):
     modelName = modelName.lower()
@@ -672,36 +672,36 @@ def modelSelector004(name, modelName):
 
     if (bpy.context.preferences.addons[name].preferences.Backend.lower() == "pytorch"):
         if (modelName == "anime"):
-            return Informative_Drawings_PyTorch(name, "checkpoints/anime_style_netG_A_latest.pth")
+            return Informative_Drawings_PyTorch(name, os.path.join("checkpoints", "anime_style_netG_A_latest.pth"))
         elif (modelName == "contour"):
-            return Informative_Drawings_PyTorch(name, "checkpoints/contour_style_netG_A_latest.pth")
+            return Informative_Drawings_PyTorch(name, os.path.join("checkpoints", "contour_style_netG_A_latest.pth"))
         elif (modelName == "opensketch"):
-            return Informative_Drawings_PyTorch(name, "checkpoints/opensketch_style_netG_A_latest.pth")
+            return Informative_Drawings_PyTorch(name, os.path.join("checkpoints", "opensketch_style_netG_A_latest.pth"))
         elif (modelName == "pxp_001"):
-            return Pix2Pix_PyTorch(name, "checkpoints/pix2pix002-001_60_net_G.pth")
+            return Pix2Pix_PyTorch(name, os.path.join("checkpoints", "pix2pix002-001_60_net_G.pth"))
         elif (modelName == "pxp_002"):
-            return Pix2Pix_PyTorch(name, "checkpoints/pix2pix002-002_60_net_G.pth")
+            return Pix2Pix_PyTorch(name, os.path.join("checkpoints", "pix2pix002-002_60_net_G.pth"))
         elif (modelName == "pxp_003"):
-            return Pix2Pix_PyTorch(name, "checkpoints/pix2pix002-003_60_net_G.pth")
+            return Pix2Pix_PyTorch(name, os.path.join("checkpoints", "pix2pix002-003_60_net_G.pth"))
         elif (modelName == "pxp_004"):
-            return Pix2Pix_PyTorch(name, "checkpoints/pix2pix002-004_60_net_G.pth")
+            return Pix2Pix_PyTorch(name, os.path.join("checkpoints", "pix2pix002-004_60_net_G.pth"))
         else:
             return None
-    else:
+    elif (bpy.context.preferences.addons[name].preferences.Backend.lower() == "onnx"):
         if (modelName == "anime"):
-            return Informative_Drawings_Onnx(name, "onnx/anime_style_512x512_simplified.onnx")
+            return Informative_Drawings_Onnx(name, os.path.join("onnx", "anime_style_512x512_simplified.onnx"))
         elif (modelName == "contour"):
-            return Informative_Drawings_Onnx(name, "onnx/contour_style_512x512_simplified.onnx")
+            return Informative_Drawings_Onnx(name, os.path.join("onnx", "contour_style_512x512_simplified.onnx"))
         elif (modelName == "opensketch"):
-            return Informative_Drawings_Onnx(name, "onnx/opensketch_style_512x512_simplified.onnx")
+            return Informative_Drawings_Onnx(name, os.path.join("onnx", "opensketch_style_512x512_simplified.onnx"))
         elif (modelName == "pxp_001"):
-            return Pix2Pix_Onnx(name, "onnx/pix2pix004-002_140_net_G_simplified.onnx")
+            return Pix2Pix_Onnx(name, os.path.join("onnx", "pix2pix004-002_140_net_G_simplified.onnx"))
         elif (modelName == "pxp_002"):
-            return Pix2Pix_Onnx(name, "onnx/pix2pix003-002_140_net_G_simplified.onnx")
+            return Pix2Pix_Onnx(name, os.path.join("onnx", "pix2pix003-002_140_net_G_simplified.onnx"))
         elif (modelName == "pxp_003"):
-            return Pix2Pix_Onnx(name, "onnx/neuralcontours_140_net_G_simplified.onnx")
+            return Pix2Pix_Onnx(name, os.path.join("onnx", "neuralcontours_140_net_G_simplified.onnx"))
         elif (modelName == "pxp_004"):
-            return Pix2Pix_Onnx(name, "onnx/neuralcontours_140_net_G_simplified.onnx")
+            return Pix2Pix_Onnx(name, os.path.join("onnx", "neuralcontours_140_net_G_simplified.onnx"))
         else:
             return None
 
