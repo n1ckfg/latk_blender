@@ -98,7 +98,7 @@ class LightningArtistToolkitPreferences(bpy.types.AddonPreferences):
     bl_idname = __name__
 
     Backend: EnumProperty(
-        name="Backend",
+        name="ML Backend",
         items=(
             ("NONE", "None", "...", 0),
             ("PYTORCH", "PyTorch", "...", 1),
@@ -191,7 +191,9 @@ class LightningArtistToolkitPreferences(bpy.types.AddonPreferences):
         row.operator("latk_button.install_pytorch")
         row.operator("latk_button.install_onnx_cpu")
         row.operator("latk_button.install_onnx_gpu")
-
+        row = box.row()
+        row.operator("latk_button.download_pytorch_models")
+        row.operator("latk_button.download_onnx_models")
         # ~ ~ ~ ~ ~ ~
 
         box = layout.box()
@@ -531,6 +533,46 @@ class LatkProperties(bpy.types.PropertyGroup):
         description="Minimum number of points to make a stroke",
         default=5
     )
+
+
+class Latk_Button_DownloadPytorchModels(bpy.types.Operator):
+    bl_idname = "latk_button.download_pytorch_models"
+    bl_label = "Download Pytorch Models"
+    
+    def execute(self, context):
+        python_exe = getPythonExe()        
+        whichPlatform = platform.system().lower()
+        root_url = findAddonPath(__name__)
+        runCmd([python_exe, "-m", "pip", "install", "-r", os.path.join(root_url, "requirements.txt")])
+
+        if (whichPlatform == "darwin"):
+            runCmd(["bash", os.path.join(root_url, "skeleton_tracing/swig/compile.command")])
+        elif (whichPlatform == "windows"):
+            runCmd([os.path.join(root_url, "skeleton_tracing/swig/compile.bat")])
+        else:
+            runCmd(["bash", os.path.join(root_url, "skeleton_tracing/swig/compile.sh")])
+
+        return {'FINISHED'}
+
+
+class Latk_Button_DownloadOnnxModels(bpy.types.Operator):
+    bl_idname = "latk_button.download_onnx_models"
+    bl_label = "Download ONNX Models"
+    
+    def execute(self, context):
+        python_exe = getPythonExe()        
+        whichPlatform = platform.system().lower()
+        root_url = findAddonPath(__name__)
+        runCmd([python_exe, "-m", "pip", "install", "-r", os.path.join(root_url, "requirements.txt")])
+
+        if (whichPlatform == "darwin"):
+            runCmd(["bash", os.path.join(root_url, "skeleton_tracing/swig/compile.command")])
+        elif (whichPlatform == "windows"):
+            runCmd([os.path.join(root_url, "skeleton_tracing/swig/compile.bat")])
+        else:
+            runCmd(["bash", os.path.join(root_url, "skeleton_tracing/swig/compile.sh")])
+
+        return {'FINISHED'}
 
 
 class Latk_Button_InstallRequirements(bpy.types.Operator):
@@ -1833,7 +1875,9 @@ classes = (
     Latk_Button_InstallRequirements,
     Latk_Button_InstallOnnxCpu,
     Latk_Button_InstallOnnxGpu,
-    Latk_Button_InstallPytorch
+    Latk_Button_InstallPytorch,
+    Latk_Button_DownloadPytorchModels,
+    Latk_Button_DownloadOnnxModels
 )
 
 # * * * * * * * * * * * * * * * * * * * * * * * * * *

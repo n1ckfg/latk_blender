@@ -660,10 +660,10 @@ def loadModel004(name):
     return returns1, returns2
 
 def modelSelector003(name, modelName):
-    latkml003 = bpy.context.scene.latk_settings
+    latk_settings = bpy.context.scene.latk_settings
 
     modelName = modelName.lower()
-    latkml003.dims = int(modelName.split("_")[0])
+    latk_settings.dims = int(modelName.split("_")[0])
     return Vox2Vox_PyTorch(name, "model/" + modelName + ".pth")
 
 def modelSelector004(name, modelName):
@@ -672,11 +672,11 @@ def modelSelector004(name, modelName):
 
     if (bpy.context.preferences.addons[name].preferences.Backend.lower() == "pytorch"):
         if (modelName == "anime"):
-            return Informative_Drawings_PyTorch(name, "checkpoints/anime_style/netG_A_latest.pth")
+            return Informative_Drawings_PyTorch(name, "checkpoints/anime_style_netG_A_latest.pth")
         elif (modelName == "contour"):
-            return Informative_Drawings_PyTorch(name, "checkpoints/contour_style/netG_A_latest.pth")
+            return Informative_Drawings_PyTorch(name, "checkpoints/contour_style_netG_A_latest.pth")
         elif (modelName == "opensketch"):
-            return Informative_Drawings_PyTorch(name, "checkpoints/opensketch_style/netG_A_latest.pth")
+            return Informative_Drawings_PyTorch(name, "checkpoints/opensketch_style_netG_A_latest.pth")
         elif (modelName == "pxp_001"):
             return Pix2Pix_PyTorch(name, "checkpoints/pix2pix002-001_60_net_G.pth")
         elif (modelName == "pxp_002"):
