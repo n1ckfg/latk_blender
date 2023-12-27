@@ -705,7 +705,7 @@ def modelSelector004(name, modelName):
         else:
             return None
 
-def doInference003(net, verts, dims=256, seqMin=0.0, seqMax=1.0):
+def doInference003(name, net, verts, dims=256, seqMin=0.0, seqMax=1.0):
     latk_settings = bpy.context.scene.latk_settings
     
     bv = vertsToBinvox(verts, dims, doFilter=latk_settings.do_filter)
@@ -728,7 +728,7 @@ def doInference003(net, verts, dims=256, seqMin=0.0, seqMax=1.0):
 
 # https://blender.stackexchange.com/questions/262742/python-bpy-2-8-render-directly-to-matrix-array
 # https://blender.stackexchange.com/questions/2170/how-to-access-render-result-pixels-from-python-script/3054#3054
-def doInference004(net1, net2=None):
+def doInference004(name, net1, net2=None):
     latk_settings = bpy.context.scene.latk_settings
 
     img_np = None
@@ -744,7 +744,13 @@ def doInference004(net1, net2=None):
     result = net1.detect(img_np)
 
     if (net2 != None):
-        result = net2.detect(result)
+        net1name = latk_settings.ModelStyle1.lower()
+        if (bpy.context.preferences.addons[name].preferences.Backend.lower() == "pytorch" and (net1name == "anime" or net1name == "contour" or net1name == "opensketch")):
+            outputUrl = os.path.join(bpy.app.tempdir, "intermediate.png")
+            cv2.imwrite(outputUrl, result)
+            result = cv2.imread(outputUrl)
+        else:
+            result = net2.detect(result)
 
     outputUrl = os.path.join(bpy.app.tempdir, "output.png")
     cv2.imwrite(outputUrl, result)
@@ -910,7 +916,7 @@ def doVoxelOpCore(name, context, allFrames=False):
                 avgPosOrig = getAveragePosition(verts)
 
             vertsOrig = np.array(verts) #.copy()
-            verts = doInference003(net1, verts, dims, seqMin, seqMax)
+            verts = doInference003(name, net1, verts, dims, seqMin, seqMax)
 
             if (latk_settings.do_recenter == True):
                 avgPosNew = getAveragePosition(verts)

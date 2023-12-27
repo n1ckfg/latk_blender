@@ -674,7 +674,7 @@ class Latk_Button_AllFrames_004(bpy.types.Operator):
         start, end = getStartEnd()
         for i in range(start, end):
             goToFrame(i)
-            laFrame = latk_ml.doInference004(net1, net2)
+            laFrame = latk_ml.doInference004(__name__, net1, net2)
             la.layers[0].frames.append(laFrame)
 
         fromLatkToGp(la, resizeTimeline=False)
@@ -695,7 +695,7 @@ class Latk_Button_SingleFrame_004(bpy.types.Operator):
 
         la = latk_ml.latk.Latk()
         la.layers.append(latk_ml.latk.LatkLayer())
-        laFrame = latk_ml.doInference004(net1, net2)
+        laFrame = latk_ml.doInference004(__name__, net1, net2)
         la.layers[0].frames.append(laFrame)
         
         fromLatkToGp(la, resizeTimeline=False)
