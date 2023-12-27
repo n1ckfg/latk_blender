@@ -28,7 +28,7 @@ along with the Lightning Artist Toolkit (Blender). If not, see
 '''
 
 bl_info = {
-    "name": "Lightning Artist Toolkit (Latk)", 
+    "name": "latk_blender", 
     "author": "Nick Fox-Gieg",
     "version": (0, 0, 4),
     "blender": (4, 0, 0),
@@ -296,7 +296,7 @@ class LatkProperties(bpy.types.PropertyGroup):
     thickness: FloatProperty(
         name="Thickness",
         description="Tube mesh thickness",
-        default=0.02
+        default=0.03
     )
 
     resolution: IntProperty(
@@ -460,10 +460,10 @@ class LatkProperties(bpy.types.PropertyGroup):
         default=0.1 #0.5
     )
 
-    thickness: FloatProperty(
+    thickness2: FloatProperty(
         name="Thickness %",
         description="...",
-        default=10.0
+        default=5.0
     )
 
     Operation1: EnumProperty(
@@ -623,20 +623,20 @@ class Latk_Button_AllFrames_004(bpy.types.Operator):
     bl_options = {'UNDO'}
     
     def execute(self, context):
-        latkml005 = context.scene.latk_settings
+        latk_settings = context.scene.latk_settings
         net1, net2 = latk_ml.loadModel004(__name__)
 
         la = latk_ml.latk.Latk()
         la.layers.append(latk_ml.latk.LatkLayer())
 
-        start, end = lb.getStartEnd()
+        start, end = getStartEnd()
         for i in range(start, end):
-            lb.goToFrame(i)
+            goToFrame(i)
             laFrame = latk_ml.doInference004(net1, net2)
             la.layers[0].frames.append(laFrame)
 
-        lb.fromLatkToGp(la, resizeTimeline=False)
-        lb.setThickness(latkml005.thickness)
+        fromLatkToGp(la, resizeTimeline=False)
+        setThickness(latk_settings.thickness2)
         return {'FINISHED'}
 
 
@@ -648,7 +648,7 @@ class Latk_Button_SingleFrame_004(bpy.types.Operator):
     bl_options = {'UNDO'}
     
     def execute(self, context):
-        latkml005 = context.scene.latk_settings
+        latk_settings = context.scene.latk_settings
         net1, net2 = latk_ml.loadModel004(__name__)
 
         la = latk_ml.latk.Latk()
@@ -656,8 +656,8 @@ class Latk_Button_SingleFrame_004(bpy.types.Operator):
         laFrame = latk_ml.doInference004(net1, net2)
         la.layers[0].frames.append(laFrame)
         
-        lb.fromLatkToGp(la, resizeTimeline=False)
-        lb.setThickness(latkml005.thickness)
+        fromLatkToGp(la, resizeTimeline=False)
+        setThickness(latk_settings.thickness2)
         return {'FINISHED'}
 
 

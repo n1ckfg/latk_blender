@@ -111,7 +111,7 @@ def strokeGen(verts, colors, matrix_world=None, radius=2, minPointsCount=5, orig
 
         stroke = frame.strokes.new()
         stroke.display_mode = '3DSPACE'
-        stroke.line_width = int(latk_settings.thickness) #10 # adjusted from 100 for 2.93
+        stroke.line_width = int(latk_settings.thickness2) #10 # adjusted from 100 for 2.93
         stroke.material_index = gp.active_material_index
 
         stroke.points.add(len(strokeGroup))
@@ -181,7 +181,7 @@ def contourGen(verts, faces, matrix_world):
             for entity in slice_mesh.entities:
                 stroke = frame.strokes.new()
                 stroke.display_mode = '3DSPACE'
-                stroke.line_width = int(latk_settings.thickness) #10 # adjusted from 100 for 2.93
+                stroke.line_width = int(latk_settings.thickness2) #10 # adjusted from 100 for 2.93
                 stroke.material_index = gp.active_material_index
                 stroke.points.add(len(entity.points))
 
@@ -232,7 +232,7 @@ def skelGen(verts, faces, matrix_world):
     for entity in skel.skeleton.entities:
         stroke = frame.strokes.new()
         stroke.display_mode = '3DSPACE'
-        stroke.line_width = int(latk_settings.thickness) #10 # adjusted from 100 for 2.93
+        stroke.line_width = int(latk_settings.thickness2) #10 # adjusted from 100 for 2.93
         stroke.material_index = gp.active_material_index
         stroke.points.add(len(entity.points))
 
