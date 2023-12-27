@@ -1177,7 +1177,7 @@ class LatkProperties_Panel(bpy.types.Panel):
             row.prop(latk, "maxIter")
 
             row = box.row()
-            row.prop(latk, "thickness")
+            row.prop(latk, "thickness2")
 
             row = box.row()
             row.prop(latk, "SourceImage")
@@ -1204,7 +1204,7 @@ class LatkProperties_Panel(bpy.types.Panel):
             row = box.row()
             row.prop(latk, "Operation3")
             row = box.row()
-            row.prop(latk, "thickness")
+            row.prop(latk, "thickness2")
             row = box.row()
             row.prop(latk, "strokegen_radius")
             row.prop(latk, "strokegen_minPointsCount")
