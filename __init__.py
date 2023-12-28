@@ -61,10 +61,13 @@ from . latk_rw import *
 from . latk_svg import *
 #from . latk_binvox import *
 
-def runCmd(cmd, shell=False):
+def runCmd(cmd, shell=False, cwd=None): # some commands require shell mode
     returns = ""
     try:
-        returns = subprocess.check_output(cmd, text=True, shell=shell)
+        if not cwd:
+            returns = subprocess.check_output(cmd, text=True, shell=shell)
+        else: # set the working directory
+            returns = subprocess.check_output(cmd, text=True, shell=shell, cwd=cwd)
     except subprocess.CalledProcessError as e:
         returns = f"Command failed with return code {e.returncode}"
     print(returns)
@@ -540,17 +543,7 @@ class Latk_Button_DownloadPytorchModels(bpy.types.Operator):
     bl_label = "Download Pytorch Models"
     
     def execute(self, context):
-        python_exe = getPythonExe()        
-        whichPlatform = platform.system().lower()
-        root_url = findAddonPath(__name__)
-        runCmd([python_exe, "-m", "pip", "install", "-r", os.path.join(root_url, "requirements.txt")])
-
-        if (whichPlatform == "darwin"):
-            runCmd(["bash", os.path.join(root_url, "skeleton_tracing/swig/compile.command")])
-        elif (whichPlatform == "windows"):
-            runCmd([os.path.join(root_url, "skeleton_tracing/swig/compile.bat")])
-        else:
-            runCmd(["bash", os.path.join(root_url, "skeleton_tracing/swig/compile.sh")])
+        pass
 
         return {'FINISHED'}
 
@@ -560,17 +553,7 @@ class Latk_Button_DownloadOnnxModels(bpy.types.Operator):
     bl_label = "Download ONNX Models"
     
     def execute(self, context):
-        python_exe = getPythonExe()        
-        whichPlatform = platform.system().lower()
-        root_url = findAddonPath(__name__)
-        runCmd([python_exe, "-m", "pip", "install", "-r", os.path.join(root_url, "requirements.txt")])
-
-        if (whichPlatform == "darwin"):
-            runCmd(["bash", os.path.join(root_url, "skeleton_tracing/swig/compile.command")])
-        elif (whichPlatform == "windows"):
-            runCmd([os.path.join(root_url, "skeleton_tracing/swig/compile.bat")])
-        else:
-            runCmd(["bash", os.path.join(root_url, "skeleton_tracing/swig/compile.sh")])
+        pass
 
         return {'FINISHED'}
 
@@ -583,14 +566,15 @@ class Latk_Button_InstallRequirements(bpy.types.Operator):
         python_exe = getPythonExe()        
         whichPlatform = platform.system().lower()
         root_url = findAddonPath(__name__)
+        swig_url = os.path.join(root_url, "skeleton_tracing", "swig")
         runCmd([python_exe, "-m", "pip", "install", "-r", os.path.join(root_url, "requirements.txt")])
 
         if (whichPlatform == "darwin"):
-            runCmd(["bash", os.path.join(root_url, "skeleton_tracing/swig/compile.command")])
+            runCmd(["bash", "compile.command"], cwd=swig_url)
         elif (whichPlatform == "windows"):
-            runCmd([os.path.join(root_url, "skeleton_tracing/swig/compile.bat")])
+            runCmd(["compile.bat"], cwd=swig_url)
         else:
-            runCmd(["bash", os.path.join(root_url, "skeleton_tracing/swig/compile.sh")])
+            runCmd(["bash", "compile.sh"], cwd=swig_url)
 
         return {'FINISHED'}
 
