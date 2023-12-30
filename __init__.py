@@ -619,72 +619,96 @@ class Latk_Button_InstallPytorch(bpy.types.Operator):
 
 
 class Latk_Button_AllFrames_003(bpy.types.Operator):
-    from . import latk_ml
+    try:
+        from . import latk_ml
+    except:
+        pass
     """Operate on all frames"""
     bl_idname = "latk_button.allframes003"
     bl_label = "003 All"
     bl_options = {'UNDO'}
     
     def execute(self, context):
-        latk_ml.doVoxelOpCore(__name__, context, allFrames=True)
+        try:
+            latk_ml.doVoxelOpCore(__name__, context, allFrames=True)
+        except:
+            pass
         return {'FINISHED'}
 
 
 class Latk_Button_SingleFrame_003(bpy.types.Operator):
-    from . import latk_ml
+    try:
+        from . import latk_ml
+    except:
+        pass
     """Operate on a single frame"""
     bl_idname = "latk_button.singleframe003"
     bl_label = "003 Frame"
     bl_options = {'UNDO'}
     
     def execute(self, context):
-        latk_ml.doVoxelOpCore(__name__, context, allFrames=False)
+        try:
+            latk_ml.doVoxelOpCore(__name__, context, allFrames=False)
+        except:
+            pass
         return {'FINISHED'}
 
 
 class Latk_Button_AllFrames_004(bpy.types.Operator):
-    from . import latk_ml
+    try:
+        from . import latk_ml
+    except:
+        pass
     """Operate on all frames"""
     bl_idname = "latk_button.allframes004"
     bl_label = "004 All"
     bl_options = {'UNDO'}
     
     def execute(self, context):
-        latk_settings = context.scene.latk_settings
-        net1, net2 = latk_ml.loadModel004(__name__)
+        try:
+            latk_settings = context.scene.latk_settings
+            net1, net2 = latk_ml.loadModel004(__name__)
 
-        la = latk_ml.latk.Latk()
-        la.layers.append(latk_ml.latk.LatkLayer())
+            la = latk_ml.latk.Latk()
+            la.layers.append(latk_ml.latk.LatkLayer())
 
-        start, end = getStartEnd()
-        for i in range(start, end):
-            goToFrame(i)
-            laFrame = latk_ml.doInference004(__name__, net1, net2)
-            la.layers[0].frames.append(laFrame)
+            start, end = getStartEnd()
+            for i in range(start, end):
+                goToFrame(i)
+                laFrame = latk_ml.doInference004(__name__, net1, net2)
+                la.layers[0].frames.append(laFrame)
 
-        fromLatkToGp(la, resizeTimeline=False)
-        setThickness(latk_settings.thickness2)
+            fromLatkToGp(la, resizeTimeline=False)
+            setThickness(latk_settings.thickness2)
+        except:
+            pass
         return {'FINISHED'}
 
 
 class Latk_Button_SingleFrame_004(bpy.types.Operator):
-    from . import latk_ml
+    try:
+        from . import latk_ml
+    except:
+        pass
     """Operate on a single frame"""
     bl_idname = "latk_button.singleframe004"
     bl_label = "004 Frame"
     bl_options = {'UNDO'}
     
     def execute(self, context):
-        latk_settings = context.scene.latk_settings
-        net1, net2 = latk_ml.loadModel004(__name__)
+        try:
+            latk_settings = context.scene.latk_settings
+            net1, net2 = latk_ml.loadModel004(__name__)
 
-        la = latk_ml.latk.Latk()
-        la.layers.append(latk_ml.latk.LatkLayer())
-        laFrame = latk_ml.doInference004(__name__, net1, net2)
-        la.layers[0].frames.append(laFrame)
-        
-        fromLatkToGp(la, resizeTimeline=False)
-        setThickness(latk_settings.thickness2)
+            la = latk_ml.latk.Latk()
+            la.layers.append(latk_ml.latk.LatkLayer())
+            laFrame = latk_ml.doInference004(__name__, net1, net2)
+            la.layers[0].frames.append(laFrame)
+            
+            fromLatkToGp(la, resizeTimeline=False)
+            setThickness(latk_settings.thickness2)
+        except:
+            pass
         return {'FINISHED'}
 
 
