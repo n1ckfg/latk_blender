@@ -101,7 +101,8 @@ class LightningArtistToolkitPreferences(bpy.types.AddonPreferences):
     bl_idname = __name__
 
     Backend: EnumProperty(
-        name="ML Backend",
+        name="ML",
+        description = "Enable ML features on the Latk panel",
         items=(
             ("NONE", "None", "...", 0),
             ("PYTORCH", "PyTorch", "...", 1),
@@ -117,7 +118,7 @@ class LightningArtistToolkitPreferences(bpy.types.AddonPreferences):
     )
 
     feature_ShortcutButtons: bpy.props.BoolProperty(
-        name = 'Shortcut Buttons',
+        name = 'Shortcuts',
         description = "Enable shortcut buttons on the Latk panel",
         default = False
     )
@@ -187,7 +188,7 @@ class LightningArtistToolkitPreferences(bpy.types.AddonPreferences):
         row.prop(self, "Backend")
         
         box = layout.box()
-        box.label(text="Dependencies")
+        box.label(text="ML Dependencies")
         row = box.row()
         row.operator("latk_button.install_requirements")
         row = box.row()
@@ -200,7 +201,7 @@ class LightningArtistToolkitPreferences(bpy.types.AddonPreferences):
         # ~ ~ ~ ~ ~ ~
 
         box = layout.box()
-        box.label(text="Extra formats to import:")
+        box.label(text="More import formats:")
         row = box.row()
         row.prop(self, "extraFormats_Painter")
         row.prop(self, "extraFormats_GML")
@@ -211,7 +212,7 @@ class LightningArtistToolkitPreferences(bpy.types.AddonPreferences):
         row.prop(self, "extraFormats_VRDoodler")
 
         box = layout.box()
-        box.label(text="Extra formats to export:")
+        box.label(text="More export formats:")
         row = box.row()
         row.prop(self, "extraFormats_Painter")
         row.prop(self, "extraFormats_GML")
@@ -560,7 +561,7 @@ class Latk_Button_DownloadOnnxModels(bpy.types.Operator):
 
 class Latk_Button_InstallRequirements(bpy.types.Operator):
     bl_idname = "latk_button.install_requirements"
-    bl_label = "Install Requirements"
+    bl_label = "Install Base Requirements"
     
     def execute(self, context):
         python_exe = getPythonExe()        
