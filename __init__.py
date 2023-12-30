@@ -61,6 +61,11 @@ from . latk_rw import *
 from . latk_svg import *
 #from . latk_binvox import *
 
+try:
+    from . import latk_ml
+except Exception as error:
+    print(error)
+        
 def runCmd(cmd, shell=False, cwd=None): # some commands require shell mode
     returns = ""
     try:
@@ -619,10 +624,6 @@ class Latk_Button_InstallPytorch(bpy.types.Operator):
 
 
 class Latk_Button_AllFrames_003(bpy.types.Operator):
-    try:
-        from . import latk_ml
-    except Exception as error:
-        print(error)
     """Operate on all frames"""
     bl_idname = "latk_button.allframes003"
     bl_label = "003 All"
@@ -637,10 +638,6 @@ class Latk_Button_AllFrames_003(bpy.types.Operator):
 
 
 class Latk_Button_SingleFrame_003(bpy.types.Operator):
-    try:
-        from . import latk_ml
-    except Exception as error:
-        print(error)
     """Operate on a single frame"""
     bl_idname = "latk_button.singleframe003"
     bl_label = "003 Frame"
@@ -655,10 +652,6 @@ class Latk_Button_SingleFrame_003(bpy.types.Operator):
 
 
 class Latk_Button_AllFrames_004(bpy.types.Operator):
-    try:
-        from . import latk_ml
-    except Exception as error:
-        print(error)
     """Operate on all frames"""
     bl_idname = "latk_button.allframes004"
     bl_label = "004 All"
@@ -686,10 +679,6 @@ class Latk_Button_AllFrames_004(bpy.types.Operator):
 
 
 class Latk_Button_SingleFrame_004(bpy.types.Operator):
-    try:
-        from . import latk_ml
-    except Exception as error:
-        print(error)
     """Operate on a single frame"""
     bl_idname = "latk_button.singleframe004"
     bl_label = "004 Frame"
