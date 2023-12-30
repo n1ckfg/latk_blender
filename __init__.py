@@ -621,8 +621,8 @@ class Latk_Button_InstallPytorch(bpy.types.Operator):
 class Latk_Button_AllFrames_003(bpy.types.Operator):
     try:
         from . import latk_ml
-    except:
-        pass
+    except Exception as error:
+        print(error)
     """Operate on all frames"""
     bl_idname = "latk_button.allframes003"
     bl_label = "003 All"
@@ -631,16 +631,16 @@ class Latk_Button_AllFrames_003(bpy.types.Operator):
     def execute(self, context):
         try:
             latk_ml.doVoxelOpCore(__name__, context, allFrames=True)
-        except:
-            pass
+        except Exception as error:
+            print(error)
         return {'FINISHED'}
 
 
 class Latk_Button_SingleFrame_003(bpy.types.Operator):
     try:
         from . import latk_ml
-    except:
-        pass
+    except Exception as error:
+        print(error)
     """Operate on a single frame"""
     bl_idname = "latk_button.singleframe003"
     bl_label = "003 Frame"
@@ -649,16 +649,16 @@ class Latk_Button_SingleFrame_003(bpy.types.Operator):
     def execute(self, context):
         try:
             latk_ml.doVoxelOpCore(__name__, context, allFrames=False)
-        except:
-            pass
+        except Exception as error:
+            print(error)
         return {'FINISHED'}
 
 
 class Latk_Button_AllFrames_004(bpy.types.Operator):
     try:
         from . import latk_ml
-    except:
-        pass
+    except Exception as error:
+        print(error)
     """Operate on all frames"""
     bl_idname = "latk_button.allframes004"
     bl_label = "004 All"
@@ -680,16 +680,16 @@ class Latk_Button_AllFrames_004(bpy.types.Operator):
 
             fromLatkToGp(la, resizeTimeline=False)
             setThickness(latk_settings.thickness2)
-        except:
-            pass
+        except Exception as error:
+            print(error)
         return {'FINISHED'}
 
 
 class Latk_Button_SingleFrame_004(bpy.types.Operator):
     try:
         from . import latk_ml
-    except:
-        pass
+    except Exception as error:
+        print(error)
     """Operate on a single frame"""
     bl_idname = "latk_button.singleframe004"
     bl_label = "004 Frame"
@@ -707,8 +707,8 @@ class Latk_Button_SingleFrame_004(bpy.types.Operator):
             
             fromLatkToGp(la, resizeTimeline=False)
             setThickness(latk_settings.thickness2)
-        except:
-            pass
+        except Exception as error:
+            print(error)
         return {'FINISHED'}
 
 
