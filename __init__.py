@@ -616,7 +616,8 @@ class Latk_Button_InstallPytorch(bpy.types.Operator):
         whichPlatform = platform.system().lower()
         
         if (whichPlatform == "darwin"):
-            runCmd([python_exe, '-m', 'pip', 'install', '--pre', 'torch', 'torchvision', 'torchaudio', '--index-url', 'https://download.pytorch.org/whl/nightly/cpu'])
+            # MPS support is still in development, and so needs a pre-release version
+            runCmd([python_exe, '-m', 'pip', 'install', '--pre', '--upgrade', 'torch', 'torchvision', 'torchaudio', '--index-url', 'https://download.pytorch.org/whl/nightly/cpu'])
         else:
             runCmd([python_exe, '-m', 'pip', 'install', '--upgrade', 'torch', 'torchvision', 'torchaudio', '-f', 'https://download.pytorch.org/whl/torch_stable.html'])
 
