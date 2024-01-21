@@ -100,7 +100,8 @@ class Pix2Pix_PyTorch():
 
 class Vox2Vox_PyTorch():
     def __init__(self, name, modelPath):
-        self.device = getPyTorchDevice(mps=False) # MPS needs to support operator aten::slow_conv3d_forward          
+        useMps = bpy.context.preferences.addons[name].preferences.enableFullMps
+        self.device = getPyTorchDevice(mps=useMps) # MPS needs to support operator aten::slow_conv3d_forward          
         generator = GeneratorUNet()
         if self.device.type == "cuda":
             generator = generator.cuda()

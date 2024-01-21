@@ -116,6 +116,12 @@ class LightningArtistToolkitPreferences(bpy.types.AddonPreferences):
         default="NONE"
     )
 
+    enableFullMps: bpy.props.BoolProperty(
+        name = 'Full MPS',
+        description = "Enable full MPS acceleration on Mac",
+        default = False
+    )
+
     feature_Meshing: bpy.props.BoolProperty(
         name = 'Meshing',
         description = "Enable meshing features on the Latk panel",
@@ -191,6 +197,7 @@ class LightningArtistToolkitPreferences(bpy.types.AddonPreferences):
         row.prop(self, "feature_Meshing")
         row.prop(self, "feature_ShortcutButtons")
         row.prop(self, "Backend")
+        row.prop(self, "enableFullMps")
         
         box = layout.box()
         box.label(text="ML Dependencies")
