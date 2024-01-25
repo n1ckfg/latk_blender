@@ -689,11 +689,11 @@ def modelSelector004(name, modelName):
             return None
     elif (bpy.context.preferences.addons[name].preferences.Backend.lower() == "onnx"):
         if (modelName == "anime"):
-            return Informative_Drawings_Onnx(name, os.path.join("onnx", "anime_style_512x512_simplified.onnx"))
+            return Informative_Drawings_Onnx(name, os.path.join("onnx", "anime_style_512x512.onnx"))
         elif (modelName == "contour"):
-            return Informative_Drawings_Onnx(name, os.path.join("onnx", "contour_style_512x512_simplified.onnx"))
+            return Informative_Drawings_Onnx(name, os.path.join("onnx", "contour_style_512x512.onnx"))
         elif (modelName == "opensketch"):
-            return Informative_Drawings_Onnx(name, os.path.join("onnx", "opensketch_style_512x512_simplified.onnx"))
+            return Informative_Drawings_Onnx(name, os.path.join("onnx", "opensketch_style_512x512.onnx"))
         elif (modelName == "pxp_001"):
             return Pix2Pix_Onnx(name, os.path.join("onnx", "pix2pix004-002_140_net_G_simplified.onnx"))
         elif (modelName == "pxp_002"):
