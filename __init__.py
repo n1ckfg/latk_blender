@@ -431,7 +431,7 @@ class LatkProperties(bpy.types.PropertyGroup):
     )
 
     ModelStyle1: EnumProperty(
-        name="Model1",
+        name="Model 1",
         items=(
             ("ANIME", "Anime", "...", 0),
             ("CONTOUR", "Contour", "...", 1),
@@ -445,7 +445,7 @@ class LatkProperties(bpy.types.PropertyGroup):
     )
 
     ModelStyle2: EnumProperty(
-        name="Model2",
+        name="Model 2",
         items=(
             ("NONE", "None", "...", 0),
             ("ANIME", "Anime", "...", 1),
@@ -537,6 +537,18 @@ class LatkProperties(bpy.types.PropertyGroup):
         name="Dims",
         description="Voxel Dimensions",
         default=256
+    )
+
+    edges_k_n: IntProperty(
+        name="Edges k_n",
+        description="...",
+        default=50
+    )
+
+    edges_thresh: FloatProperty(
+        name="Edges thresh",
+        description="...",
+        default=0.03
     )
 
     strokegen_radius: FloatProperty(
@@ -1249,6 +1261,9 @@ class LatkProperties_Panel(bpy.types.Panel):
 
             row = box.row()
             row.prop(latk, "Operation2")
+            row = box.row()
+            row.prop(latk, "edges_k_n")
+            row.prop(latk, "edges_thresh")
 
             row = box.row()
             row.prop(latk, "Operation3")

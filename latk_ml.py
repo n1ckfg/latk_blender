@@ -253,17 +253,18 @@ def skelGen(verts, faces, matrix_world):
 
     return gp
 
-def differenceEigenvalues(verts):
+def differenceEigenvalues(verts): #, k_n=50, thresh=0.03):
+    latk_settings = bpy.context.scene.latk_settings
     # MIT License Copyright (c) 2015 Dena Bazazian Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions: The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software. THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
     pdVerts = pd.DataFrame(verts, columns=["x", "y", "z"])
     pcd1 = PyntCloud(pdVerts)
         
     # define hyperparameters
-    k_n = 50 # 50
-    thresh = 0.03 # 0.03
+    k_n = latk_settings.edges_k_n # 50
+    thresh = latk_settings.edges_thresh # 0.03
 
-    pcd_np = np.zeros((len(pcd1.points),6))
+    pcd_np = np.zeros((len(pcd1.points), 6))
 
     # find neighbors
     kdtree_id = pcd1.add_structure("kdtree")
