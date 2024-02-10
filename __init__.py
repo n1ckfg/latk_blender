@@ -510,7 +510,8 @@ class LatkProperties(bpy.types.PropertyGroup):
         items=(
             ("STROKE_GEN", "Connect Strokes", "...", 0),
             ("CONTOUR_GEN", "Connect Contours", "...", 1),
-            ("SKEL_GEN", "Connect Skeleton", "...", 2)
+            ("SKEL_GEN", "Connect Skeleton", "...", 2),
+            ("NEURAL_GAS", "Growing Neural Gas", "...", 3)
         ),
         default="STROKE_GEN"
     )
@@ -1261,17 +1262,19 @@ class LatkProperties_Panel(bpy.types.Panel):
 
             row = box.row()
             row.prop(latk, "Operation2")
-            row = box.row()
-            row.prop(latk, "edges_k_n")
-            row.prop(latk, "edges_thresh")
+            if (latk.Operation2 == "GET_EDGES"):
+                row = box.row()
+                row.prop(latk, "edges_k_n")
+                row.prop(latk, "edges_thresh")
 
             row = box.row()
             row.prop(latk, "Operation3")
-            row = box.row()
-            row.prop(latk, "thickness2")
-            row = box.row()
-            row.prop(latk, "strokegen_radius")
-            row.prop(latk, "strokegen_minPointsCount")
+            if (latk.Operation3 == "STROKE_GEN"):
+                row = box.row()
+                row.prop(latk, "thickness2")
+                row = box.row()
+                row.prop(latk, "strokegen_radius")
+                row.prop(latk, "strokegen_minPointsCount")
 
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 

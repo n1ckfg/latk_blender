@@ -39,6 +39,8 @@ from pyntcloud import PyntCloud
 import pandas as pd
 import pdb
 
+from . growing_neural_gas.neuralgas import *
+
 from . skeleton_tracing.swig.trace_skeleton import *
 
 #from . import binvox_rw
@@ -76,6 +78,55 @@ def group_points_into_strokes(points, radius, minPointsCount):
 
         print("Found " + str(len(strokeGroups)) + " strokeGroups, " + str(len(unassigned_points)) + " points remaining.")
     return strokeGroups
+
+def neuralGasGen(verts):
+    latk_settings = bpy.context.scene.latk_settings
+    origCursorLocation = bpy.context.scene.cursor.location
+    bpy.context.scene.cursor.location = (0.0, 0.0, 0.0)
+
+    gp = getActiveGp()
+    layer = getActiveLayer()
+    if not layer:
+        layer = gp.data.layers.new(name="meshToGp")
+    frame = getActiveFrame()
+    if not frame or frame.frame_number != currentFrame():
+        frame = layer.frames.new(currentFrame())
+
+    gas = neuralgas.GrowingNeuralGas(points, max_neurons=100000, max_iter=100, max_age=10, eb=0.1, en=0.006, alpha=0.5, beta=0.995, l=20)
+    gas.learn()
+
+    # get edges from indices
+    edgeList = []
+
+    for edge in gas.gng.es:
+        point1 = gas.gng.vs[edge.source]["weight"]
+        point2 = gas.gng.vs[edge.target]["weight"]
+        edgeList.append((point1, point2))
+
+    # TODO merge edges that share points
+    newEdgeList = edgeList
+
+    for edge in newEdgeList: 
+        stroke = frame.strokes.new()
+        stroke.display_mode = '3DSPACE'
+        stroke.line_width = int(latk_settings.thickness2) #10 # adjusted from 100 for 2.93
+        stroke.material_index = gp.active_material_index
+
+        stroke.points.add(len(edge))
+
+        for point in edge:
+            #point = matrixWorldInverted @ Vector((point[0], point[2], point[1]))
+            #point = (point[0], point[1], point[2])
+            pressure = 1.0
+            strength = 1.0
+            createPoint(stroke, i, point, pressure, strength, strokeColors[i])
+
+    bpy.context.scene.cursor.location = origCursorLocation
+
+    bpy.data.grease_pencils[gp.name].stroke_depth_order = "3D"
+    
+    return gp
+
 
 def strokeGen(verts, colors, matrix_world=None, radius=2, minPointsCount=5, origin=None): #limitPalette=32):
     latk_settings = bpy.context.scene.latk_settings
@@ -940,6 +991,8 @@ def doVoxelOpCore(name, context, allFrames=False):
             skelGen(verts, faces, matrix_world=matrix_world)
         elif (op3 == "contour_gen" and op1 == "none"):
             contourGen(verts, faces, matrix_world=matrix_world)
+        elif (op3 == "neural_gas"):
+            neuralGasGen(verts)
         else:
             strokeGen(verts, colors, matrix_world=matrix_world, radius=seqAbs * latk_settings.strokegen_radius, minPointsCount=latk_settings.strokegen_minPointsCount, origin=obj.location) #limitPalette=context.scene.latk_settings.paletteLimit)
 
