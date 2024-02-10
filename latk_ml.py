@@ -994,8 +994,8 @@ def doVoxelOpCore(name, context, allFrames=False):
         elif (op3 == "contour_gen" and op1 == "none"):
             contourGen(verts, faces, matrix_world=matrix_world)
         elif (op3 == "neural_gas"):
-            neuralGasGen(verts, matrix_world=matrix_world)
-        else:
+            neuralGasGen(np.array(verts), colors, matrix_world=matrix_world, max_neurons=latk_settings.gas_max_neurons, max_iter=latk_settings.gas_max_iter, max_age=latk_settings.gas_max_age, l=latk_settings.gas_max_L)
+        elif (op3 == "stroke_gen"):
             strokeGen(verts, colors, matrix_world=matrix_world, radius=seqAbs * latk_settings.strokegen_radius, minPointsCount=latk_settings.strokegen_minPointsCount, origin=obj.location) #limitPalette=context.scene.latk_settings.paletteLimit)
 
     if (latk_settings.do_modifiers == True):

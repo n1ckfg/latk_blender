@@ -564,6 +564,29 @@ class LatkProperties(bpy.types.PropertyGroup):
         default=5
     )
 
+    gas_max_neurons: IntProperty(
+        name="Gas Neurons",
+        description="Maximum number of output points",
+        default=100000
+    )
+
+    gas_max_iter: IntProperty(
+        name="Gas Iter",
+        description="Global learning iterations",
+        default=100
+    )
+
+    gas_max_age: IntProperty(
+        name="Gas Age",
+        description="Age cutoff for neurons",
+        default=10
+    )
+
+    gas_max_L: IntProperty(
+        name="Gas L",
+        description="Local learning iterations",
+        default=20
+    )    
 
 class Latk_Button_DownloadPytorchModels(bpy.types.Operator):
     bl_idname = "latk_button.download_pytorch_models"
@@ -1275,7 +1298,13 @@ class LatkProperties_Panel(bpy.types.Panel):
                 row = box.row()
                 row.prop(latk, "strokegen_radius")
                 row.prop(latk, "strokegen_minPointsCount")
-
+            elif (latk.Operation3 == "NEURAL_GAS"):
+                row = box.row()
+                row.prop(latk, "gas_max_neurons")
+                row.prop(latk, "gas_max_age")
+                row = box.row()
+                row.prop(latk, "gas_max_iter")
+                row.prop(latk, "gas_max_L")
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 
 
