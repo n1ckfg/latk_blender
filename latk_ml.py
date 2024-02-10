@@ -92,7 +92,7 @@ def neuralGasGen(verts):
     if not frame or frame.frame_number != currentFrame():
         frame = layer.frames.new(currentFrame())
 
-    gas = neuralgas.GrowingNeuralGas(points, max_neurons=100000, max_iter=100, max_age=10, eb=0.1, en=0.006, alpha=0.5, beta=0.995, l=20)
+    gas = GrowingNeuralGas(verts, max_neurons=100000, max_iter=100, max_age=10, eb=0.1, en=0.006, alpha=0.5, beta=0.995, l=20)
     gas.learn()
 
     # get edges from indices
@@ -114,12 +114,12 @@ def neuralGasGen(verts):
 
         stroke.points.add(len(edge))
 
-        for point in edge:
+        for i, point in enumerate(edge):
             #point = matrixWorldInverted @ Vector((point[0], point[2], point[1]))
             #point = (point[0], point[1], point[2])
             pressure = 1.0
             strength = 1.0
-            createPoint(stroke, i, point, pressure, strength, strokeColors[i])
+            createPoint(stroke, i, point, pressure, strength, (0,0,0,1))#strokeColors[i])
 
     bpy.context.scene.cursor.location = origCursorLocation
 
