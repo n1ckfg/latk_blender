@@ -10,7 +10,7 @@ DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 
 cd $DIR
 
-wget https://fox-gieg.com/patches/github/n1ckfg/latk_ml_004/checkpoints/model.zip
+wget https://fox-gieg.com/patches/github/n1ckfg/latk_blender/checkpoints/model.zip
 unzip model.zip
 rm model.zip
 
