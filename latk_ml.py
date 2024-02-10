@@ -79,7 +79,7 @@ def group_points_into_strokes(points, radius, minPointsCount):
         print("Found " + str(len(strokeGroups)) + " strokeGroups, " + str(len(unassigned_points)) + " points remaining.")
     return strokeGroups
 
-def neuralGasGen(verts):
+def neuralGasGen(verts, colors=None, matrix_world=None, max_neurons=100000, max_iter=100, max_age=10, eb=0.1, en=0.006, alpha=0.5, beta=0.995, l=20):
     latk_settings = bpy.context.scene.latk_settings
     origCursorLocation = bpy.context.scene.cursor.location
     bpy.context.scene.cursor.location = (0.0, 0.0, 0.0)
@@ -92,7 +92,7 @@ def neuralGasGen(verts):
     if not frame or frame.frame_number != currentFrame():
         frame = layer.frames.new(currentFrame())
 
-    gas = GrowingNeuralGas(verts, max_neurons=100000, max_iter=100, max_age=10, eb=0.1, en=0.006, alpha=0.5, beta=0.995, l=20)
+    gas = GrowingNeuralGas(verts, max_neurons=max_neurons, max_iter=max_iter, max_age=max_age, eb=eb, en=en, alpha=alpha, beta=beta, l=l)
     gas.learn()
 
     # get edges from indices
@@ -117,6 +117,8 @@ def neuralGasGen(verts):
         for i, point in enumerate(edge):
             #point = matrixWorldInverted @ Vector((point[0], point[2], point[1]))
             #point = (point[0], point[1], point[2])
+            if matrix_world:
+                point = matrix_world @ Vector(point)
             pressure = 1.0
             strength = 1.0
             createPoint(stroke, i, point, pressure, strength, (0,0,0,1))#strokeColors[i])
@@ -992,7 +994,7 @@ def doVoxelOpCore(name, context, allFrames=False):
         elif (op3 == "contour_gen" and op1 == "none"):
             contourGen(verts, faces, matrix_world=matrix_world)
         elif (op3 == "neural_gas"):
-            neuralGasGen(verts)
+            neuralGasGen(verts, matrix_world=matrix_world)
         else:
             strokeGen(verts, colors, matrix_world=matrix_world, radius=seqAbs * latk_settings.strokegen_radius, minPointsCount=latk_settings.strokegen_minPointsCount, origin=obj.location) #limitPalette=context.scene.latk_settings.paletteLimit)
 
