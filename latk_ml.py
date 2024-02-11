@@ -128,8 +128,8 @@ def neuralGasGen(verts, colors=None, matrix_world=None, max_neurons=100000, max_
         for i, point in enumerate(edge):
             #point = matrixWorldInverted @ Vector((point[0], point[2], point[1]))
             #point = (point[0], point[1], point[2])
-            #if matrix_world:
-                #point = matrix_world @ Vector(point)
+            if matrix_world:
+                point = matrix_world @ Vector(point)
             pressure = 1.0
             strength = 1.0
             createPoint(stroke, i, point, pressure, strength, strokeColors[strokeColorCounter])
