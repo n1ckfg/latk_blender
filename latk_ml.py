@@ -106,6 +106,17 @@ def neuralGasGen(verts, colors=None, matrix_world=None, max_neurons=100000, max_
     # TODO merge edges that share points
     newEdgeList = edgeList
 
+    allPoints = []
+
+    for edge in newEdgeList:
+        for point in edge:
+            if matrix_world:
+                point = matrix_world @ Vector(point)
+            allPoints.append(point)
+
+    strokeColors = transferVertexColors(verts, colors, allPoints)
+    strokeColorCounter = 0
+
     for edge in newEdgeList: 
         stroke = frame.strokes.new()
         stroke.display_mode = '3DSPACE'
@@ -117,11 +128,12 @@ def neuralGasGen(verts, colors=None, matrix_world=None, max_neurons=100000, max_
         for i, point in enumerate(edge):
             #point = matrixWorldInverted @ Vector((point[0], point[2], point[1]))
             #point = (point[0], point[1], point[2])
-            if matrix_world:
-                point = matrix_world @ Vector(point)
+            #if matrix_world:
+                #point = matrix_world @ Vector(point)
             pressure = 1.0
             strength = 1.0
-            createPoint(stroke, i, point, pressure, strength, (0,0,0,1))#strokeColors[i])
+            createPoint(stroke, i, point, pressure, strength, strokeColors[strokeColorCounter])
+            strokeColorCounter += 1
 
     bpy.context.scene.cursor.location = origCursorLocation
 
