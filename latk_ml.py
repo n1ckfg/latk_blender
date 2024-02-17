@@ -185,7 +185,65 @@ def neuralGasGen(verts, colors=None, matrix_world=None, max_neurons=100000, max_
     
     return gp
 
-def strokeGen(verts, colors, matrix_world=None, radius=2, minPointsCount=5, origin=None): #limitPalette=32):
+def neuralGasGen2(verts, colors=None, matrix_world=None, max_neurons=100000, max_iter=100, max_age=10, eb=0.1, en=0.006, alpha=0.5, beta=0.995, l=20, radius=2, minPointsCount=5):
+    latk_settings = bpy.context.scene.latk_settings
+    origCursorLocation = bpy.context.scene.cursor.location
+    bpy.context.scene.cursor.location = (0.0, 0.0, 0.0)
+
+    gp = getActiveGp()
+    layer = getActiveLayer()
+    if not layer:
+        layer = gp.data.layers.new(name="meshToGp")
+    frame = getActiveFrame()
+    if not frame or frame.frame_number != currentFrame():
+        frame = layer.frames.new(currentFrame())
+
+    gas = GrowingNeuralGas(verts, max_neurons=max_neurons, max_iter=max_iter, max_age=max_age, eb=eb, en=en, alpha=alpha, beta=beta, l=l)
+    gas.learn()
+           
+    verts = []
+    for vert in gas.gng.vs:
+        verts.append(vert["weight"])
+
+    strokeGroups = group_points_into_strokes(verts, radius, minPointsCount)
+
+    lastColor = (1,1,1,1)
+    for strokeGroup in strokeGroups:
+        strokeColors = []
+        for i in range(0, len(strokeGroup)):
+            try:
+                newColor = colors[strokeGroup[i]]
+                strokeColors.append(newColor)
+                lastColor = newColor
+            except:
+                strokeColors.append((0,1,0,1)) #lastColor)
+
+        stroke = frame.strokes.new()
+        stroke.display_mode = '3DSPACE'
+        stroke.line_width = int(latk_settings.thickness2) #10 # adjusted from 100 for 2.93
+        stroke.material_index = gp.active_material_index
+
+        stroke.points.add(len(strokeGroup))
+
+        for i, strokeIndex in enumerate(strokeGroup):    
+            if not matrix_world:
+                point = verts[strokeIndex]
+            else:
+                point = matrix_world @ Vector(verts[strokeIndex])
+
+            #point = matrixWorldInverted @ Vector((point[0], point[2], point[1]))
+            #point = (point[0], point[1], point[2])
+            pressure = 1.0
+            strength = 1.0
+            createPoint(stroke, i, point, pressure, strength, strokeColors[i])
+
+    bpy.context.scene.cursor.location = origCursorLocation
+
+    bpy.data.grease_pencils[gp.name].stroke_depth_order = "3D"
+
+    return gp
+
+def strokeGen(verts, colors, matrix_world=None, radius=2, minPointsCount=5): #, origin=None): #limitPalette=32):
     latk_settings = bpy.context.scene.latk_settings
     origCursorLocation = bpy.context.scene.cursor.location
     bpy.context.scene.cursor.location = (0.0, 0.0, 0.0)
@@ -1032,14 +1090,16 @@ def doVoxelOpCore(name, context, allFrames=False):
 
         #gp = None
 
-        if (op3 == "skel_gen"): #and op1 == "none"):
-            skelGen(verts, faces, matrix_world=matrix_world)
-        elif (op3 == "contour_gen"): #and op1 == "none"):
-            contourGen(verts, faces, matrix_world=matrix_world)
+        if (op3 == "stroke_gen"):
+            strokeGen(verts, colors, matrix_world=matrix_world, radius=seqAbs * latk_settings.strokegen_radius, minPointsCount=latk_settings.strokegen_minPointsCount) #, origin=obj.location) #limitPalette=context.scene.latk_settings.paletteLimit)
         elif (op3 == "neural_gas"):
             neuralGasGen(np.array(verts), colors, matrix_world=matrix_world, max_neurons=latk_settings.gas_max_neurons, max_iter=latk_settings.gas_max_iter, max_age=latk_settings.gas_max_age, l=latk_settings.gas_max_L)
-        elif (op3 == "stroke_gen"):
-            strokeGen(verts, colors, matrix_world=matrix_world, radius=seqAbs * latk_settings.strokegen_radius, minPointsCount=latk_settings.strokegen_minPointsCount, origin=obj.location) #limitPalette=context.scene.latk_settings.paletteLimit)
+        elif (op3 == "neural_gas2"):
+            neuralGasGen2(np.array(verts), colors, matrix_world=matrix_world, max_neurons=latk_settings.gas_max_neurons, max_iter=latk_settings.gas_max_iter, max_age=latk_settings.gas_max_age, l=latk_settings.gas_max_L, radius=seqAbs * latk_settings.strokegen_radius, minPointsCount=latk_settings.strokegen_minPointsCount)
+        elif (op3 == "contour_gen"): #and op1 == "none"):
+            contourGen(verts, faces, matrix_world=matrix_world)
+        elif (op3 == "skel_gen"): #and op1 == "none"):
+            skelGen(verts, faces, matrix_world=matrix_world)
 
     if (latk_settings.do_modifiers == True):
         gp = getActiveGp()

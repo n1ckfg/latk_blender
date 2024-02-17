@@ -509,9 +509,10 @@ class LatkProperties(bpy.types.PropertyGroup):
         name="Operation 3",
         items=(
             ("STROKE_GEN", "Connect Strokes", "...", 0),
-            ("CONTOUR_GEN", "Connect Contours", "...", 1),
-            ("SKEL_GEN", "Connect Skeleton", "...", 2),
-            ("NEURAL_GAS", "Growing Neural Gas", "...", 3)
+            ("NEURAL_GAS", "Growing Neural Gas", "...", 1),
+            ("NEURAL_GAS2", "GNG + Connect", "...", 2),
+            ("CONTOUR_GEN", "Contours", "...", 3),
+            ("SKEL_GEN", "Skeleton", "...", 4)
         ),
         default="STROKE_GEN"
     )
@@ -1262,9 +1263,6 @@ class LatkProperties_Panel(bpy.types.Panel):
             row.prop(latk, "maxIter")
 
             row = box.row()
-            row.prop(latk, "thickness2")
-
-            row = box.row()
             row.prop(latk, "SourceImage")
 
             # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
@@ -1292,19 +1290,22 @@ class LatkProperties_Panel(bpy.types.Panel):
 
             row = box.row()
             row.prop(latk, "Operation3")
-            if (latk.Operation3 == "STROKE_GEN"):
-                row = box.row()
-                row.prop(latk, "thickness2")
+            if (latk.Operation3 == "STROKE_GEN" or latk.Operation3 == "NEURAL_GAS2"):
                 row = box.row()
                 row.prop(latk, "strokegen_radius")
                 row.prop(latk, "strokegen_minPointsCount")
-            elif (latk.Operation3 == "NEURAL_GAS"):
+            if (latk.Operation3 == "NEURAL_GAS" or latk.Operation3 == "NEURAL_GAS2"):
                 row = box.row()
                 row.prop(latk, "gas_max_neurons")
                 row.prop(latk, "gas_max_age")
                 row = box.row()
                 row.prop(latk, "gas_max_iter")
                 row.prop(latk, "gas_max_L")
+
+            # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
+            box = layout.box()
+            row = box.row()
+            row.prop(latk, "thickness2")
 # ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 
 
