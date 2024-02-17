@@ -74,6 +74,7 @@ def group_points_into_strokes(points, radius, minPointsCount):
                 unassigned_points.remove(i)
 
         if (len(strokeGroup) >= minPointsCount):
+            strokeGroup = list(dict.fromkeys(strokeGroup)) # remove duplicates
             strokeGroups.append(strokeGroup)
 
         print("Found " + str(len(strokeGroups)) + " strokeGroups, " + str(len(unassigned_points)) + " points remaining.")
