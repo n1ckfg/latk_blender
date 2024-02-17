@@ -80,6 +80,17 @@ def group_points_into_strokes(points, radius, minPointsCount):
         print("Found " + str(len(strokeGroups)) + " strokeGroups, " + str(len(unassigned_points)) + " points remaining.")
     return strokeGroups
 
+def checkForMesh(verts, faces):
+    mesh = None
+    
+    try: 
+        mesh = trimesh.Trimesh(verts, faces)
+    except:
+        tri = Delaunay(verts)
+        mesh = trimesh.Trimesh(tri.points, tri.simplices) 
+    
+    return mesh   
+
 def neuralGasGen(verts, colors=None, matrix_world=None, max_neurons=100000, max_iter=100, max_age=10, eb=0.1, en=0.006, alpha=0.5, beta=0.995, l=20):
     latk_settings = bpy.context.scene.latk_settings
     origCursorLocation = bpy.context.scene.cursor.location
@@ -93,23 +104,55 @@ def neuralGasGen(verts, colors=None, matrix_world=None, max_neurons=100000, max_
     if not frame or frame.frame_number != currentFrame():
         frame = layer.frames.new(currentFrame())
 
+    # 1. Generate GNG
     gas = GrowingNeuralGas(verts, max_neurons=max_neurons, max_iter=max_iter, max_age=max_age, eb=eb, en=en, alpha=alpha, beta=beta, l=l)
     gas.learn()
 
-    # get edges from indices
+    # 2. get edge indices
+    edgeIndices = []
+    for edge in gas.gng.es:
+        edgeIndices.append((edge.source, edge.target))
+
+    # 3. merge edges with matching indices
+    reps = 10
+
+    for i in range(0, reps):
+        newEdgeIndices = []
+
+        while edgeIndices:
+            edge = edgeIndices.pop(0)
+            for j, matchEdge in enumerate(edgeIndices):
+                if (edge[1] == matchEdge[0]):
+                    newEdge = edgeIndices.pop(j)
+                    edge = edge + newEdge
+                    break
+                elif (edge[0] == matchEdge[1]):
+                    newEdge = edgeIndices.pop(j)
+                    edge = newEdge + edge
+                    break        
+
+            edge = list(dict.fromkeys(edge)) # this removes repeated indices
+            #edge.sort()
+
+            newEdgeIndices.append(edge)
+
+        edgeIndices = newEdgeIndices
+
+    # 4. Get points from indices
     edgeList = []
 
-    for edge in gas.gng.es:
-        point1 = gas.gng.vs[edge.source]["weight"]
-        point2 = gas.gng.vs[edge.target]["weight"]
-        edgeList.append((point1, point2))
-
-    # TODO merge edges that share points
-    newEdgeList = edgeList
+    for edge in edgeIndices:
+        points = []
+        
+        for index in edge:
+            points.append(gas.gng.vs[index]["weight"])
+        
+            #points = sorted(points, key=lambda point: distance(point, points[0]))
+            edgeList.append(points)
 
     allPoints = []
 
-    for edge in newEdgeList:
+    for edge in edgeList:
         for point in edge:
             if matrix_world:
                 point = matrix_world @ Vector(point)
@@ -118,7 +161,7 @@ def neuralGasGen(verts, colors=None, matrix_world=None, max_neurons=100000, max_
     strokeColors = transferVertexColors(verts, colors, allPoints)
     strokeColorCounter = 0
 
-    for edge in newEdgeList: 
+    for edge in edgeList: 
         stroke = frame.strokes.new()
         stroke.display_mode = '3DSPACE'
         stroke.line_width = int(latk_settings.thickness2) #10 # adjusted from 100 for 2.93
@@ -141,7 +184,6 @@ def neuralGasGen(verts, colors=None, matrix_world=None, max_neurons=100000, max_
     bpy.data.grease_pencils[gp.name].stroke_depth_order = "3D"
     
     return gp
-
 
 def strokeGen(verts, colors, matrix_world=None, radius=2, minPointsCount=5, origin=None): #limitPalette=32):
     latk_settings = bpy.context.scene.latk_settings
@@ -215,13 +257,7 @@ def contourGen(verts, faces, matrix_world):
     if not frame or frame.frame_number != currentFrame():
         frame = layer.frames.new(currentFrame())
 
-    mesh = None
-
-    try: 
-        mesh = trimesh.Trimesh(verts, faces)
-    except:
-        tri = Delaunay(verts)
-        mesh = trimesh.Trimesh(tri.points, tri.simplices)
+    mesh = checkForMesh(verts, faces)
 
     bounds = getDistance(mesh.bounds[0], mesh.bounds[1])
 
@@ -284,13 +320,7 @@ def skelGen(verts, faces, matrix_world):
     if not frame or frame.frame_number != currentFrame():
         frame = layer.frames.new(currentFrame())
 
-    mesh = None
-
-    try: 
-        mesh = trimesh.Trimesh(verts, faces)
-    except:
-        tri = Delaunay(verts)
-        mesh = trimesh.Trimesh(tri.points, tri.simplices)
+    mesh = checkForMesh(verts, faces)
 
     fixed = sk.pre.fix_mesh(mesh, remove_disconnected=5, inplace=False)
     skel = sk.skeletonize.by_wavefront(fixed, waves=1, step_size=1)
@@ -1002,9 +1032,9 @@ def doVoxelOpCore(name, context, allFrames=False):
 
         #gp = None
 
-        if (op3 == "skel_gen" and op1 == "none"):
+        if (op3 == "skel_gen"): #and op1 == "none"):
             skelGen(verts, faces, matrix_world=matrix_world)
-        elif (op3 == "contour_gen" and op1 == "none"):
+        elif (op3 == "contour_gen"): #and op1 == "none"):
             contourGen(verts, faces, matrix_world=matrix_world)
         elif (op3 == "neural_gas"):
             neuralGasGen(np.array(verts), colors, matrix_world=matrix_world, max_neurons=latk_settings.gas_max_neurons, max_iter=latk_settings.gas_max_iter, max_age=latk_settings.gas_max_age, l=latk_settings.gas_max_L)
