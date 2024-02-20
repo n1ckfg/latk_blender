@@ -38,6 +38,9 @@ import scipy.ndimage as nd
 from pyntcloud import PyntCloud 
 import pandas as pd
 import pdb
+import networkx as nx
+import jellyfish
+from random import uniform as rnd
 
 from . growing_neural_gas.neuralgas import *
 
@@ -237,6 +240,121 @@ def neuralGasGen2(verts, colors=None, matrix_world=None, max_neurons=100000, max
             strength = 1.0
             createPoint(stroke, i, point, pressure, strength, strokeColors[i])
 
+    bpy.context.scene.cursor.location = origCursorLocation
+
+    bpy.data.grease_pencils[gp.name].stroke_depth_order = "3D"
+
+    return gp
+
+def similar2(a, b):
+    return jellyfish.jaro_distance(a, b)
+
+def neuralGasGen3(verts, colors=None, matrix_world=None, max_neurons=100000, max_iter=100, max_age=10, eb=0.1, en=0.006, alpha=0.5, beta=0.995, l=20, radius=2, minPointsCount=5):
+    latk_settings = bpy.context.scene.latk_settings
+    origCursorLocation = bpy.context.scene.cursor.location
+    bpy.context.scene.cursor.location = (0.0, 0.0, 0.0)
+
+    gp = getActiveGp()
+    layer = getActiveLayer()
+    if not layer:
+        layer = gp.data.layers.new(name="meshToGp")
+    frame = getActiveFrame()
+    if not frame or frame.frame_number != currentFrame():
+        frame = layer.frames.new(currentFrame())
+
+    gas = GrowingNeuralGas(verts, max_neurons=max_neurons, max_iter=max_iter, max_age=max_age, eb=eb, en=en, alpha=alpha, beta=beta, l=l)
+    gas.learn()
+
+    verts = []
+    for vert in gas.gng.vs:
+        verts.append(vert["weight"])
+
+    edges = []
+    for edge in gas.gng.es:
+        edges.append((edge.source, edge.target))    
+
+    lengths = []
+    for edge in edges:
+        lengths.append(getDistance(verts[edge[0]], verts[edge[1]]))
+
+    print(str(len(verts)) + ", " + str(len(edges)) + ", " + str(len(lengths)))
+
+    g = nx.Graph()
+    for edge, L in zip(edges, lengths):
+        g.add_edge(*edge, length=L)
+
+    strokeCounter = 0
+    similarityScores = []
+
+    numStrokes = 100
+    minStrokePoints = 10
+    maxStrokePoints = 9999
+    maxSimilarity = 0.8    
+
+    while strokeCounter < numStrokes:
+        points = []
+        similarity = []
+
+        start = int(rnd(0, len(verts) - 2))
+        end = start + 1
+
+        try:
+            # run the shortest path query using length for edge weight
+            path = nx.shortest_path(g, source=start, target=end, weight='length')
+
+            for index in path:
+                vert = verts[index]
+                similarity.append(str(index))
+
+                #col = mesh.visual.vertex_colors[index]
+                #col = (float(col[0])/255.0, float(col[1])/255.0, float(col[2])/255.0, float(col[3])/255.0)
+                # TODO find out why colors are too light
+                #col = (col[0] * col[0], col[1] * col[1], col[2] * col[2], col[3])
+                col = (1,1,1,1)
+
+                newVert = (-vert[0], vert[2], vert[1])
+
+                if matrix_world:
+                    newVert = matrix_world @ Vector(newVert)
+
+                pressure = 1.0
+                strength = 1.0
+                lp = latk.LatkPoint(co=newVert, pressure=pressure, strength=strength, col=col)
+
+                points.append(lp)
+                
+                if (len(points) >= maxStrokePoints):
+                    break
+        except:
+            print("Skipped stroke: No path from start to end.")
+            pass
+
+        if (len(points) >= minStrokePoints):  
+            readyToAdd = True
+
+            similarityString = ' '.join(map(str, similarity))
+
+            if (checkSimilarity == True):
+                for score in similarityScores:
+                    similarityTest = similar2(score, similarityString)
+                    if (similarityTest > maxSimilarity):
+                        readyToAdd = False
+                        print("Skipped stroke: Failed similarity test (" + str(similarityTest) + ").")
+                        break
+
+            if (readyToAdd):
+                similarityScores.append(similarityString)
+                
+                stroke = frame.strokes.new()
+                stroke.display_mode = '3DSPACE'
+                stroke.line_width = int(latk_settings.thickness2) #10 # adjusted from 100 for 2.93
+                stroke.material_index = gp.active_material_index
+
+                stroke.points = points
+                        
+                strokeCounter += 1
+                print("Added stroke " + str(strokeCounter) + " / " + str(numStrokes) + ".")
+                    
     bpy.context.scene.cursor.location = origCursorLocation
 
     bpy.data.grease_pencils[gp.name].stroke_depth_order = "3D"
@@ -1096,6 +1214,8 @@ def doVoxelOpCore(name, context, allFrames=False):
             neuralGasGen(np.array(verts), colors, matrix_world=matrix_world, max_neurons=latk_settings.gas_max_neurons, max_iter=latk_settings.gas_max_iter, max_age=latk_settings.gas_max_age, l=latk_settings.gas_max_L)
         elif (op3 == "neural_gas2"):
             neuralGasGen2(np.array(verts), colors, matrix_world=matrix_world, max_neurons=latk_settings.gas_max_neurons, max_iter=latk_settings.gas_max_iter, max_age=latk_settings.gas_max_age, l=latk_settings.gas_max_L, radius=seqAbs * latk_settings.strokegen_radius, minPointsCount=latk_settings.strokegen_minPointsCount)
+        elif (op3 == "neural_gas3"):
+            neuralGasGen3(np.array(verts), colors, matrix_world=matrix_world, max_neurons=latk_settings.gas_max_neurons, max_iter=latk_settings.gas_max_iter, max_age=latk_settings.gas_max_age, l=latk_settings.gas_max_L, radius=seqAbs * latk_settings.strokegen_radius, minPointsCount=latk_settings.strokegen_minPointsCount)
         elif (op3 == "contour_gen"): #and op1 == "none"):
             contourGen(verts, faces, matrix_world=matrix_world)
         elif (op3 == "skel_gen"): #and op1 == "none"):

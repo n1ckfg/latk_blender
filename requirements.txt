@@ -18,4 +18,5 @@ swig
 tqdm
 trimesh
 urllib3
+networkx
 
