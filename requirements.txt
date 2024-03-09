@@ -13,6 +13,7 @@ regex
 scikit-image
 scikit-learn
 scipy
+matplotlib
 skeletor
 swig
 tqdm
