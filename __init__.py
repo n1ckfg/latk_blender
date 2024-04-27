@@ -122,7 +122,7 @@ class LightningArtistToolkitPreferences(bpy.types.AddonPreferences):
     enableFullMps: bpy.props.BoolProperty(
         name = 'Full MPS',
         description = "Enable full MPS acceleration on Mac",
-        default = False
+        default = True
     )
 
     feature_Meshing: bpy.props.BoolProperty(

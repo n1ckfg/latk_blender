@@ -1,3 +1,4 @@
+import os, subprocess
 import numpy as np
 import cv2
 
@@ -20,11 +21,25 @@ from . informative_drawings.model import Generator
 
 from . pix2pix.models import pix2pix_model
 
+def runCmd(cmd, shell=False, cwd=None): # some commands require shell mode
+    returns = ""
+    try:
+        if not cwd:
+            returns = subprocess.check_output(cmd, text=True, shell=shell)
+        else: # set the working directory
+            returns = subprocess.check_output(cmd, text=True, shell=shell, cwd=cwd)
+    except subprocess.CalledProcessError as e:
+        returns = f"Command failed with return code {e.returncode}"
+    print(returns)
+    return returns  
+
 def getPyTorchDevice(mps=True):
     device = None
     if torch.cuda.is_available():
         device = torch.device("cuda")
     elif torch.backends.mps.is_available() and mps==True:
+        runCmd(["export", "PYTORCH_ENABLE_MPS_FALLBACK", "=", "1"], True)
+        os.environ["PYTORCH_ENABLE_MPS_FALLBACK"] = "1"
         device = torch.device("mps")
     else:
         device = torch.device("cpu")
