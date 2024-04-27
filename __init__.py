@@ -193,6 +193,8 @@ class LightningArtistToolkitPreferences(bpy.types.AddonPreferences):
 
     def draw(self, context):
         layout = self.layout
+        whichPlatform = platform.system().lower()
+        backend = bpy.context.preferences.addons[__name__].preferences.Backend.lower()
 
         box = layout.box()
         box.label(text="Features")
@@ -200,7 +202,7 @@ class LightningArtistToolkitPreferences(bpy.types.AddonPreferences):
         row.prop(self, "feature_Meshing")
         row.prop(self, "feature_ShortcutButtons")
         row.prop(self, "Backend")
-        if (bpy.context.preferences.addons[__name__].preferences.Backend.lower() == "pytorch"):
+        if (backend == "pytorch" and whichPlatform == "darwin"):
             row.prop(self, "enableFullMps")
         
         box = layout.box()
