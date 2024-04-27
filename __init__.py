@@ -82,12 +82,15 @@ def getPythonExe():
     returns = None
     whichPlatform = platform.system().lower()
     
+    version = sys.version_info
+    versionString = "python" + str(version.major) + "." + str(version.minor)
+
     if (whichPlatform == "darwin"):
-        returns = os.path.join(sys.prefix, "bin", "python3.10")
+        returns = os.path.join(sys.prefix, "bin", versionString) #"python3.10")
     elif (whichPlatform == "windows"):
         returns = os.path.join(sys.prefix, "bin", "python.exe")
     else:
-        returns = os.path.join(sys.prefix, "bin", "python3.10")
+        returns = os.path.join(sys.prefix, "bin", versionString) #"python3.10")
     
     return returns
 
