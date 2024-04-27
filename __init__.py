@@ -208,8 +208,8 @@ class LightningArtistToolkitPreferences(bpy.types.AddonPreferences):
         row.prop(self, "feature_Meshing")
         row.prop(self, "feature_ShortcutButtons")
         row.prop(self, "Backend")
-        if (backend == "pytorch" and whichPlatform == "darwin"):
-            row.prop(self, "enableFullMps")
+        #if (backend == "pytorch" and whichPlatform == "darwin"):
+            #row.prop(self, "enableFullMps")
         
         box = layout.box()
         box.label(text="ML Dependencies")
