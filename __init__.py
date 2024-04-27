@@ -65,7 +65,13 @@ try:
     from . import latk_ml
 except Exception as error:
     print(error)
-        
+
+whichPlatform = platform.system().lower()
+
+if (whichPlatform == "darwin"):
+    #runCmd(["export", "PYTORCH_ENABLE_MPS_FALLBACK", "=", "1"], True)
+    os.environ["PYTORCH_ENABLE_MPS_FALLBACK"] = "1"
+
 def runCmd(cmd, shell=False, cwd=None): # some commands require shell mode
     returns = ""
     try:
