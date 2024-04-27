@@ -641,6 +641,8 @@ class Latk_Button_InstallOnnxCpu(bpy.types.Operator):
     def execute(self, context):
         python_exe = getPythonExe()
         runCmd([python_exe, "-m", "pip", "uninstall", "onnxruntime-gpu"])
+        runCmd([python_exe, "-m", "pip", "uninstall", "onnxruntime-silicon"])
+        
         runCmd([python_exe, "-m", "pip", "install", "onnxruntime"])
         return {'FINISHED'}
 
@@ -652,7 +654,14 @@ class Latk_Button_InstallOnnxGpu(bpy.types.Operator):
     def execute(self, context):
         python_exe = getPythonExe()
         runCmd([python_exe, "-m", "pip", "uninstall", "onnxruntime"])
-        runCmd([python_exe, "-m", "pip", "install", "onnxruntime-gpu"])
+        
+        whichPlatform = platform.system().lower()
+        if (whichPlatform == "darwin"):
+            runCmd([python_exe, "-m", "pip", "uninstall", "onnxruntime-gpu"])
+            runCmd([python_exe, "-m", "pip", "install", "onnxruntime-silicon"])
+        else:
+            runCmd([python_exe, "-m", "pip", "uninstall", "onnxruntime-silicon"])
+            runCmd([python_exe, "-m", "pip", "install", "onnxruntime-gpu"])
         return {'FINISHED'}
 
 
