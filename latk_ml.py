@@ -44,7 +44,11 @@ from random import uniform as rnd
 
 from . growing_neural_gas.neuralgas import *
 
-from . skeleton_tracing.swig.trace_skeleton import *
+try:
+    from . skeleton_tracing.swig.trace_skeleton import *
+except Exception as error:
+    print(error)
+    from . skeleton_tracing.py.trace_skeleton import *
 
 #from . import binvox_rw
 from . vox2vox import binvox_rw
