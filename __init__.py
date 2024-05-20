@@ -547,6 +547,12 @@ class LatkProperties(bpy.types.PropertyGroup):
         default=False
     )
 
+    do_write_input: BoolProperty(
+        name="Write Input",
+        description="...",
+        default=False
+    )
+
     dims: IntProperty(
         name="Dims",
         description="Voxel Dimensions",
@@ -1306,6 +1312,7 @@ class LatkProperties_Panel(bpy.types.Panel):
             row.prop(latk, "do_filter")
             row.prop(latk, "do_modifiers")
             row.prop(latk, "do_recenter")
+            row.prop(latk, "do_write_input")
 
             row = box.row()
             row.prop(latk, "Operation2")

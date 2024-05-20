@@ -776,20 +776,20 @@ def h5ToBinvox(data, dims=256):
     axis_order = 'xzy'
     return binvox_rw.Voxels(data, shape, translate, scale, axis_order)
 
-def writeTempH5(data):
-    url = os.path.join(bpy.app.tempdir, "output.im")
+def writeTempH5(data, url="output.im"):
+    url = os.path.join(bpy.app.tempdir, url)
     f = h5py.File(url, 'w')
     # more compression options: https://docs.h5py.org/en/stable/high/dataset.html
     f.create_dataset('data', data=data, compression='gzip')
     f.flush()
     f.close()
 
-def readTempH5():
-    url = os.path.join(bpy.app.tempdir, "output.im")
+def readTempH5(url="output.im"):
+    url = os.path.join(bpy.app.tempdir, url)
     return h5py.File(url, 'r').get('data')[()]
 
-def writeTempBinvox(data, dims=256):
-    url = os.path.join(bpy.app.tempdir, "output.binvox")
+def writeTempBinvox(data, dims=256, url="output.binvox"):
+    url = os.path.join(bpy.app.tempdir, url)
     data = np.rint(data).astype(np.uint8)
     shape = (dims, dims, dims) #data.shape
     translate = [0, 0, 0]
@@ -800,8 +800,8 @@ def writeTempBinvox(data, dims=256):
     with open(url, 'bw') as f:
         voxel.write(f)
 
-def readTempBinvox(dims=256, axis='xyz'):
-    url = os.path.join(bpy.app.tempdir, "output.binvox")
+def readTempBinvox(dims=256, axis='xyz', url="output.binvox"):
+    url = os.path.join(bpy.app.tempdir, url)
     voxel = None
     print("Reading from: " + url)
     with open(url, 'rb') as f:
@@ -986,6 +986,10 @@ def doInference003(name, net, verts, dims=256, seqMin=0.0, seqMax=1.0):
     latk_settings = bpy.context.scene.latk_settings
     
     bv = vertsToBinvox(verts, dims, doFilter=latk_settings.do_filter)
+    
+    if (latk_settings.do_write_input == True):
+        writeTempBinvox(bv.data, dims, url="input.binvox")
+    
     h5 = binvoxToH5(bv, dims=dims)
     writeTempH5(h5)
 
