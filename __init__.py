@@ -1314,9 +1314,9 @@ class LatkProperties_Panel(bpy.types.Panel):
                 row.prop(latk, "Operation1")
 
             row = box.row()
-            row.prop(latk, "do_filter")
-            row.prop(latk, "do_modifiers")
             row.prop(latk, "do_recenter")
+            row.prop(latk, "do_modifiers")
+            row.prop(latk, "do_filter")
             row.prop(latk, "do_write_input")
 
             row = box.row()
