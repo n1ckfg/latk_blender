@@ -638,6 +638,7 @@ class Latk_Button_InstallRequirements(bpy.types.Operator):
         swig_url = os.path.join(root_url, "skeleton_tracing", "swig")
         runCmd([python_exe, "-m", "pip", "install", "-r", os.path.join(root_url, "requirements.txt")])
 
+        '''
         try:
             if (whichPlatform == "darwin"):
                 ver_short = str(sys.version_info.major) + "." + str(sys.version_info.minor)
@@ -652,7 +653,7 @@ class Latk_Button_InstallRequirements(bpy.types.Operator):
                 runCmd(["bash", "compile.sh"], cwd=swig_url)
         except Exception as error:
             print(error)
-    
+        '''
         return {'FINISHED'}
 
 
@@ -699,7 +700,7 @@ class Latk_Button_InstallPytorch(bpy.types.Operator):
             # MPS support is still in development, and so needs a pre-release version
             runCmd([python_exe, '-m', 'pip', 'install', '--pre', '--upgrade', 'torch', 'torchvision', 'torchaudio', '--index-url', 'https://download.pytorch.org/whl/nightly/cpu'])
         elif (whichPlatform == "windows"):
-            runCmd([python_exe, '-m', 'pip', 'install', '--upgrade', 'torch', 'torchvision', 'torchaudio', '--index-url', 'https://download.pytorch.org/whl/cu121'])
+            runCmd([python_exe, '-m', 'pip', 'install', '--upgrade', 'torch', 'torchvision', 'torchaudio', '--index-url', 'https://download.pytorch.org/whl/cu118'])
         else:
             runCmd([python_exe, '-m', 'pip', 'install', '--upgrade', 'torch', 'torchvision', 'torchaudio']) #, '--index-url', 'https://download.pytorch.org/whl/torch_stable.html'])
 

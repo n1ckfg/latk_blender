@@ -10,6 +10,7 @@ import sys
 import argparse
 import cv2
 import numpy as np
+import platform
 #import latk
 
 from . import latk
@@ -44,11 +45,23 @@ from random import uniform as rnd
 
 from . growing_neural_gas.neuralgas import *
 
+if (sys.version_info.major == 3):
+    if (sys.version_info.minor == 10):
+        if (platform.system() == "Windows" and platform.processor().startswith("Intel64")):
+            from . skeleton_tracing.swig.bin.python310.win.x64.trace_skeleton import *
+    elif (sys.version_info.minor == 11):
+        if (platform.system() == "Windows" and platform.processor().startswith("Intel64")):
+            from . skeleton_tracing.swig.bin.python311.win.x64.trace_skeleton import *
+else:
+    from . skeleton_tracing.py.trace_skeleton import *
+
+'''
 try:
     from . skeleton_tracing.swig.trace_skeleton import *
 except Exception as error:
     print(error)
     from . skeleton_tracing.py.trace_skeleton import *
+'''
 
 #from . import binvox_rw
 from . vox2vox import binvox_rw
