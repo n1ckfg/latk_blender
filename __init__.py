@@ -640,9 +640,14 @@ class Latk_Button_InstallRequirements(bpy.types.Operator):
 
         try:
             if (whichPlatform == "darwin"):
-                runCmd(["bash", "compile.command"], cwd=swig_url)
+                ver_short = str(sys.version_info.major) + "." + str(sys.version_info.minor)
+                ver_full = ver_short + "." + str(sys.version_info.micro)
+                runCmd(["bash", "compile.command", ver_short, ver_full], cwd=swig_url)
             elif (whichPlatform == "windows"):
-                runCmd(["compile.bat"], cwd=swig_url)
+                if bpy.app.version >= (4, 1, 0):
+                    runCmd(["compile311.bat"], cwd=swig_url)
+                else:
+                    runCmd(["compile310.bat"], cwd=swig_url)
             else:
                 runCmd(["bash", "compile.sh"], cwd=swig_url)
         except Exception as error:
