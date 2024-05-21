@@ -31,7 +31,7 @@ bl_info = {
     "name": "latk_blender", 
     "author": "Nick Fox-Gieg",
     "version": (0, 0, 4),
-    "blender": (4, 0, 0),
+    "blender": (4, 1, 0),
     "description": "Import and export Latk format, import Tilt format",
     "category": "Animation"
 }
