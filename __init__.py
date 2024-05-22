@@ -109,6 +109,13 @@ def findAddonPath(name=None):
             return os.path.dirname(url)
     return None
 
+def cudaCheck():
+    try:
+        subprocess.run(['nvidia-smi'], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        return True
+    except subprocess.CalledProcessError:
+        return False
+
 # UI
 
 class LightningArtistToolkitPreferences(bpy.types.AddonPreferences):
