@@ -6,4 +6,4 @@ powershell -Command "Invoke-WebRequest https://fox-gieg.com/patches/github/n1ckf
 powershell Expand-Archive model.zip -DestinationPath .
 del model.zip
 
-@pause
+rem @pause

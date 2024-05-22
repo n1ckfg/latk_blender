@@ -21,4 +21,4 @@ rem python3 -i -c "import trace_skeleton; print(trace_skeleton.from_list([0,0,0,
 
 rem python3 example.py
 
-@pause
+rem @pause
