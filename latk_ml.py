@@ -49,9 +49,15 @@ if (sys.version_info.major == 3):
     if (sys.version_info.minor == 10):
         if (platform.system() == "Windows" and platform.processor().startswith("Intel64")):
             from . skeleton_tracing.swig.bin.python310.win.x64.trace_skeleton import *
+        elif (platform.system() == "Linux" and platform.processor() == "x86_64"):
+            from . skeleton_tracing.swig.bin.python310.linux.x64.trace_skeleton import *
     elif (sys.version_info.minor == 11):
         if (platform.system() == "Windows" and platform.processor().startswith("Intel64")):
             from . skeleton_tracing.swig.bin.python311.win.x64.trace_skeleton import *
+        elif (platform.system() == "Linux" and platform.processor() == "x86_64"):
+            from . skeleton_tracing.swig.bin.python311.linux.x64.trace_skeleton import *
+	else:
+	    from . skeleton_tracing.py.trace_skeleton import *
 else:
     from . skeleton_tracing.py.trace_skeleton import *
 
