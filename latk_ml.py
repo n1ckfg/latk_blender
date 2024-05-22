@@ -45,21 +45,39 @@ from random import uniform as rnd
 
 from . growing_neural_gas.neuralgas import *
 
+platform_system = platform.system().lower()
+platform_processor = platform.processor().lower()
+platform_machine = platform.machine().lower()
+
 if (sys.version_info.major == 3):
     if (sys.version_info.minor == 10):
-        if (platform.system() == "Windows" and platform.processor().startswith("Intel64")):
-            from . skeleton_tracing.swig.bin.python310.win.x64.trace_skeleton import *
-        elif (platform.system() == "Linux" and platform.processor() == "x86_64"):
-            from . skeleton_tracing.swig.bin.python310.linux.x64.trace_skeleton import *
-        elif (platform.system() == "Darwin" and platform.processor() == "arm"):
-            from . skeleton_tracing.swig.bin.python310.mac.arm.trace_skeleton import *
+        if (platform_system == "windows"):
+            if (platform_processor.startswith("intel64")):
+                from . skeleton_tracing.swig.bin.python310.win.x64.trace_skeleton import *
+        elif (platform_system == "linux"):
+            if (platform_processor == "x86_64"):
+                from . skeleton_tracing.swig.bin.python310.linux.x64.trace_skeleton import *
+            elif (platform_processor == "aarch64"):
+                from . skeleton_tracing.swig.bin.python310.linux.arm.trace_skeleton import *               
+        elif (platform_system == "darwin"):
+            if (platform_processor == "arm"):
+                from . skeleton_tracing.swig.bin.python310.mac.arm.trace_skeleton import *
+            elif (platform_processor == "i386"):
+                from . skeleton_tracing.swig.bin.python310.mac.x64.trace_skeleton import *
     elif (sys.version_info.minor == 11):
-        if (platform.system() == "Windows" and platform.processor().startswith("Intel64")):
-            from . skeleton_tracing.swig.bin.python311.win.x64.trace_skeleton import *
-        elif (platform.system() == "Linux" and platform.processor() == "x86_64"):
-            from . skeleton_tracing.swig.bin.python311.linux.x64.trace_skeleton import *
-        elif (platform.system() == "Darwin" and platform.processor() == "arm"):
-            from . skeleton_tracing.swig.bin.python311.mac.arm.trace_skeleton import *
+        if (platform_system == "windows"):
+            if (platform_processor.startswith("intel64")):
+                from . skeleton_tracing.swig.bin.python311.win.x64.trace_skeleton import *
+        elif (platform_system == "linux"):
+            if (platform_processor == "x86_64"):
+                from . skeleton_tracing.swig.bin.python311.linux.x64.trace_skeleton import *
+            elif (platform_processor == "aarch64"):
+                from . skeleton_tracing.swig.bin.python311.linux.arm.trace_skeleton import *               
+        elif (platform_system == "darwin"):
+            if (platform_processor == "arm"):
+                from . skeleton_tracing.swig.bin.python311.mac.arm.trace_skeleton import *
+            elif (platform_processor == "i386"):
+                from . skeleton_tracing.swig.bin.python311.mac.x64.trace_skeleton import *
     else:
         from . skeleton_tracing.py.trace_skeleton import *
 else:
