@@ -68,10 +68,6 @@ except Exception as error:
 
 whichPlatform = platform.system().lower()
 
-if (whichPlatform == "darwin"):
-    #runCmd(["export", "PYTORCH_ENABLE_MPS_FALLBACK", "=", "1"], True)
-    os.environ["PYTORCH_ENABLE_MPS_FALLBACK"] = "1"
-
 def runCmd(cmd, shell=False, cwd=None): # some commands require shell mode
     returns = ""
     try:
@@ -83,6 +79,10 @@ def runCmd(cmd, shell=False, cwd=None): # some commands require shell mode
         returns = f"Command failed with return code {e.returncode}"
     print(returns)
     return returns  
+
+if (whichPlatform == "darwin"):
+    #runCmd(["export", "PYTORCH_ENABLE_MPS_FALLBACK", "=", "1"], True)
+    os.environ["PYTORCH_ENABLE_MPS_FALLBACK"] = "1"
 
 def getPythonExe():
     returns = None
@@ -129,19 +129,19 @@ class LightningArtistToolkitPreferences(bpy.types.AddonPreferences):
             ("PYTORCH", "PyTorch", "...", 1),
             ("ONNX", "ONNX", "...", 2)
         ),
-        default="NONE"
+        default="PYTORCH"
     )
 
     enableFullMps: bpy.props.BoolProperty(
         name = 'Full MPS',
         description = "Enable full MPS acceleration on Mac",
-        default = True
+        default = False
     )
 
     feature_Meshing: bpy.props.BoolProperty(
         name = 'Meshing',
         description = "Enable meshing features on the Latk panel",
-        default = True
+        default = False
     )
 
     feature_ShortcutButtons: bpy.props.BoolProperty(
@@ -215,8 +215,8 @@ class LightningArtistToolkitPreferences(bpy.types.AddonPreferences):
         row.prop(self, "feature_Meshing")
         row.prop(self, "feature_ShortcutButtons")
         row.prop(self, "Backend")
-        #if (backend == "pytorch" and whichPlatform == "darwin"):
-            #row.prop(self, "enableFullMps")
+        if (backend == "pytorch" and whichPlatform == "darwin"):
+            row.prop(self, "enableFullMps")
         
         box = layout.box()
         box.label(text="ML Dependencies")
@@ -511,7 +511,7 @@ class LatkProperties(bpy.types.PropertyGroup):
             ("128_VOXEL", "128^3 voxels", "...", 2),
             ("256_VOXEL", "256^3 voxels", "...", 3)
         ),
-        default="NONE"
+        default="256_VOXEL"
     )
 
     Operation2: EnumProperty(
