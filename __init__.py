@@ -80,10 +80,6 @@ def runCmd(cmd, shell=False, cwd=None): # some commands require shell mode
     print(returns)
     return returns  
 
-if (whichPlatform == "darwin"):
-    #runCmd(["export", "PYTORCH_ENABLE_MPS_FALLBACK", "=", "1"], True)
-    os.environ["PYTORCH_ENABLE_MPS_FALLBACK"] = "1"
-
 def getPythonExe():
     returns = None
     whichPlatform = platform.system().lower()
