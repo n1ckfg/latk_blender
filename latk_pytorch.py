@@ -1,6 +1,5 @@
 import numpy as np
 import cv2
-import os
 
 import torch
 from torch.autograd import Variable
@@ -102,9 +101,6 @@ class Pix2Pix_PyTorch():
 class Vox2Vox_PyTorch():
     def __init__(self, name, modelPath):
         useMps = bpy.context.preferences.addons[name].preferences.enableFullMps
-
-        if (useMps == True):
-            os.environ["PYTORCH_ENABLE_MPS_FALLBACK"] = "1"
 
         self.device = getPyTorchDevice(mps=useMps) # MPS needs to support operator aten::slow_conv3d_forward          
         generator = GeneratorUNet()

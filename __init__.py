@@ -46,6 +46,8 @@ from mathutils import Vector, Matrix
 import bmesh
 
 import os
+os.environ["PYTORCH_ENABLE_MPS_FALLBACK"] = "1"
+
 import sys
 import subprocess
 import platform
@@ -79,6 +81,8 @@ def runCmd(cmd, shell=False, cwd=None): # some commands require shell mode
         returns = f"Command failed with return code {e.returncode}"
     print(returns)
     return returns  
+
+runCmd(["export", "PYTORCH_ENABLE_MPS_FALLBACK", "=", "1"], True)
 
 def getPythonExe():
     returns = None
@@ -131,7 +135,7 @@ class LightningArtistToolkitPreferences(bpy.types.AddonPreferences):
     enableFullMps: bpy.props.BoolProperty(
         name = 'Full MPS',
         description = "Enable full MPS acceleration on Mac",
-        default = False
+        default = True
     )
 
     feature_Meshing: bpy.props.BoolProperty(
@@ -595,19 +599,19 @@ class LatkProperties(bpy.types.PropertyGroup):
     gas_max_iter: IntProperty(
         name="Gas Iter",
         description="Global learning iterations",
-        default=100
+        default=1000
     )
 
     gas_max_age: IntProperty(
         name="Gas Age",
         description="Age cutoff for neurons",
-        default=10
+        default=100
     )
 
     gas_max_L: IntProperty(
         name="Gas L",
         description="Local learning iterations",
-        default=20
+        default=200
     )    
 
 class Latk_Button_DownloadPytorchModels(bpy.types.Operator):
