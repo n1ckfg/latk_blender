@@ -605,13 +605,13 @@ class LatkProperties(bpy.types.PropertyGroup):
     gas_max_age: IntProperty(
         name="Gas Age",
         description="Age cutoff for neurons",
-        default=100
+        default=10
     )
 
     gas_max_L: IntProperty(
         name="Gas L",
         description="Local learning iterations",
-        default=200
+        default=100
     )    
 
 class Latk_Button_DownloadPytorchModels(bpy.types.Operator):
