@@ -732,7 +732,7 @@ class Latk_Button_InstallPytorch(bpy.types.Operator):
             # MPS support is still in development, and so needs a pre-release version
             runCmd([python_exe, '-m', 'pip', 'install', '--pre', '--upgrade', 'torch', 'torchvision', 'torchaudio', '--index-url', 'https://download.pytorch.org/whl/nightly/cpu'])
         elif (whichPlatform == "windows"):
-            runCmd([python_exe, '-m', 'pip', 'install', 'torch', 'torchvision', 'torchaudio', '--index-url', 'https://download.pytorch.org/whl/cu121'])
+            runCmd([python_exe, '-m', 'pip', 'install', '--upgrade', 'torch', 'torchvision', 'torchaudio', '--index-url', 'https://download.pytorch.org/whl/cu121'])
         else:
             runCmd([python_exe, '-m', 'pip', 'install', '--upgrade', 'torch', 'torchvision', 'torchaudio']) #, '--index-url', 'https://download.pytorch.org/whl/torch_stable.html'])
 
