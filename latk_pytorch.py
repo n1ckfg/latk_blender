@@ -130,9 +130,11 @@ class Vox2Vox_PyTorch():
         dataiter = iter(val_dataloader)
         imgs = next(dataiter) #dataiter.next()
 
+        # https://github.com/pytorch/pytorch/issues/117949#issuecomment-2764705266
         """Saves a generated sample from the validation set"""
         real_A = Variable(imgs["A"].unsqueeze_(1).type(Tensor))
         #real_B = Variable(imgs["B"].unsqueeze_(1).type(Tensor))
-        fake_B = self.net_G(real_A)
+        #fake_B = self.net_G(real_A)
+        fake_B = self.net_G(real_A.to(self.device))
 
         return fake_B.cpu().detach().numpy()
