@@ -46,7 +46,8 @@ from mathutils import Vector, Matrix
 import bmesh
 
 import os
-os.environ["PYTORCH_ENABLE_MPS_FALLBACK"] = "1"
+# May be needed where MPS instructions are missing and need to run on CPU
+#os.environ["PYTORCH_ENABLE_MPS_FALLBACK"] = "1"
 
 import sys
 import subprocess
@@ -133,8 +134,8 @@ class LightningArtistToolkitPreferences(bpy.types.AddonPreferences):
     )
 
     enableFullMps: bpy.props.BoolProperty(
-        name = 'Full MPS',
-        description = "Enable full MPS acceleration on Mac",
+        name = 'Use MPS',
+        description = "Enable MPS acceleration on Mac",
         default = True
     )
 
