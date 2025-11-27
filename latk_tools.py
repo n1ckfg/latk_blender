@@ -109,20 +109,20 @@ def breakUpStrokes():
         for frame in layer.frames:
             tempPoints = []
             tempColorNames = []
-            for stroke in frame.strokes:
+            for stroke in frame.drawing.strokes:
                 for point in stroke.points:
                     tempPoints.append(point)
                     tempColorNames.append(stroke.colorname)
             #~
-            for stroke in frame.strokes:
-                frame.strokes.remove(stroke)     
+            for stroke in frame.drawing.strokes:
+                frame.drawing.strokes.remove(stroke)     
             #~  
             for i, point in enumerate(tempPoints):
-                stroke = frame.strokes.new(tempColorNames[i])
+                stroke = frame.drawing.strokes.new(tempColorNames[i])
                 #stroke.draw_mode = "3DSPACE"
                 stroke.points.add(1)
-                coord = point.co
-                createPoint(stroke, 0, (coord[0], coord[1], coord[2]), point.pressure, point.strength)
+                coord = point.position
+                createPoint(stroke, 0, (coord[0], coord[1], coord[2]), point.radius, point.strength)
 
 def normalizePoints(minVal=0.0, maxVal=1.0):
     gp = getActiveGp()
@@ -131,9 +131,9 @@ def normalizePoints(minVal=0.0, maxVal=1.0):
     allZ = []
     for layer in gp.data.layers:
         for frame in layer.frames:
-            for stroke in frame.strokes:
+            for stroke in frame.drawing.strokes:
                 for point in stroke.points:
-                    coord = point.co
+                    coord = point.position
                     allX.append(coord[0])
                     allY.append(coord[1])
                     allZ.append(coord[2])
@@ -162,13 +162,13 @@ def normalizePoints(minVal=0.0, maxVal=1.0):
     #~
     for layer in gp.data.layers:
         for frame in layer.frames:
-            for stroke in frame.strokes:
+            for stroke in frame.drawing.strokes:
                 for point in stroke.points:  
-                    coord = point.co
+                    coord = point.position
                     x = remap(coord[0], allX[0], allX[len(allX)-1], minValX, maxValX)
                     y = remap(coord[1], allY[0], allY[len(allY)-1], minValY, maxValY)
                     z = remap(coord[2], allZ[0], allZ[len(allZ)-1], minValZ, maxValZ)
-                    point.co = (x,y,z)
+                    point.position = (x,y,z)
 
 def normalize(verts, minVal=0.0, maxVal=1.0):
     newVerts = []
@@ -216,7 +216,7 @@ def scalePoints(val=0.01):
     strokes = getAllStrokes()
     for stroke in strokes:
         for point in stroke.points:
-            point.co = (point.co[0] * val, point.co[1] * val, point.co[2] * val)
+            point.position = (point.position[0] * val, point.position[1] * val, point.position[2] * val)
 
 def loadJson(url):
     return json.load(open(url))
@@ -235,22 +235,22 @@ def pressureRange(_min=0.1, _max=1.0, _mode="clamp_p"):
     if (_mode == "clamp_p"):
         for layer in gp.data.layers:
             for frame in layer.frames:
-                for stroke in frame.strokes:
+                for stroke in frame.drawing.strokes:
                     for point in stroke.points:
-                        if (point.pressure < _min):
-                            point.pressure = _min
-                        elif (point.pressure > _max):
-                            point.pressure = _max
+                        if (point.radius < _min):
+                            point.radius = _min
+                        elif (point.radius > _max):
+                            point.radius = _max
     elif (_mode == "remap_p"):
         for layer in gp.data.layers:
             for frame in layer.frames:
-                for stroke in frame.strokes:
+                for stroke in frame.drawing.strokes:
                     for point in stroke.points:
-                        point.pressure = remap(point.pressure, 0.0, 1.0, _min, _max)
+                        point.radius = remap(point.radius, 0.0, 1.0, _min, _max)
     elif (_mode == "clamp_s"):
         for layer in gp.data.layers:
             for frame in layer.frames:
-                for stroke in frame.strokes:
+                for stroke in frame.drawing.strokes:
                     for point in stroke.points:
                         if (point.strength < _min):
                             point.strength = _min
@@ -259,7 +259,7 @@ def pressureRange(_min=0.1, _max=1.0, _mode="clamp_p"):
     elif (_mode == "remap_s"):
         for layer in gp.data.layers:
             for frame in layer.frames:
-                for stroke in frame.strokes:
+                for stroke in frame.drawing.strokes:
                     for point in stroke.points:
                         point.strength = remap(point.strength, 0.0, 1.0, _min, _max)
     
@@ -325,7 +325,7 @@ def centerPivot(target=None):
 '''
     
 def getLayerInfo(layer):
-    return layer.info.split(".")[0]
+    return layer.name.split(".")[0]
 
 def getActiveFrameNum(layer=None):
     # assumes layer can have only one active frame
@@ -333,7 +333,7 @@ def getActiveFrameNum(layer=None):
         layer = getActiveLayer()
     returns = -1
     for i in range(0, len(layer.frames)):
-        if (layer.frames[i] == layer.active_frame):
+        if (layer.frames[i] == layer.current_frame()):
             returns = i
     return returns
 
@@ -411,7 +411,7 @@ def projectAllToCamera(usePixelCoords=False, discardDepth=False):
     #~
     for stroke in strokes:
         for point in stroke.points:
-            co = bpy_extras.object_utils.world_to_camera_view(scene, camera, point.co)
+            co = bpy_extras.object_utils.world_to_camera_view(scene, camera, point.position)
             x = co[0]
             y = co[1]
             z = co[2]
@@ -425,9 +425,9 @@ def projectAllToCamera(usePixelCoords=False, discardDepth=False):
                 elif (render_size[1] > render_size[0]):
                     y *= render_size[1] / render_size[0]
             if (discardDepth == True):
-                point.co = (x, 0, y)
+                point.position = (x, 0, y)
             else:
-                point.co = (x, z, y)
+                point.position = (x, z, y)
 
 def getSceneResolution(useRenderScale=True):
     # https://blender.stackexchange.com/questions/882/how-to-find-image-coordinates-of-the-rendered-vertex
@@ -616,7 +616,7 @@ def sumPoints(stroke):
     y = 0
     z = 0
     for point in stroke.points:
-        co = point.co
+        co = point.position
         x += co[0]
         y += co[1]
         z += co[2]
@@ -739,7 +739,7 @@ def makeRoot():
 
 def makeLayerParent():
     layer = getActiveLayer()
-    empty = bpy.data.objects.new(layer.info, None)
+    empty = bpy.data.objects.new(layer.name, None)
     bpy.context.scene.objects.link(empty)
     bpy.context.scene.update()
     try:
@@ -1144,21 +1144,22 @@ def getActiveGp(_name=None):
     if not _name:
         try:
             gp = ss()
-            if (gp.type == "GPENCIL"):
+            if (gp.type == "GREASEPENCIL"):
                 return gp
         except:
             pass
     else:
         for obj in bpy.data.objects:
-            if (obj.name == _name and obj.type == "GPENCIL"):
+            if (obj.name == _name and obj.type == "GREASEPENCIL"):
                 return obj
     for obj in bpy.data.objects:
-        if (obj.type == "GPENCIL"):
+        if (obj.type == "GREASEPENCIL"):
             return obj
     return createGp()
 
 def createGp(_name=None, _newMaterial=True, _newLayer=False):
-    bpy.ops.object.gpencil_add(type="EMPTY")
+    #bpy.ops.object.gpencil_add(type="EMPTY")
+    bpy.ops.object.grease_pencil_add(type="EMPTY")
     bpy.data.grease_pencils[len(bpy.data.grease_pencils)-1].stroke_depth_order = "3D"  
     
     if (_newMaterial == True):
@@ -1226,7 +1227,7 @@ def setActiveLayer(name="Layer"):
 def deleteLayer(name=None):
     gp = getActiveGp()
     if not name:
-        name = gp.data.layers.active.info
+        name = gp.data.layers.active.name
     gp.data.layers.remove(gp.data.layers[name])
 
 def duplicateLayer():
@@ -1275,7 +1276,7 @@ def getActiveFrameNum():
     returns = -1
     layer = getActiveLayer()
     for i, frame in enumerate(layer.frames):
-        if (frame == layer.active_frame):
+        if (frame == layer.current_frame()):
             returns = i
     return returns
 '''
@@ -1296,7 +1297,7 @@ def checkLayersAboveFrameLimit(limit=20):
     for layer in gp.data.layers:
         if (len(layer.frames) > limit + 1): # accounting for extra end cap frame
             returns.append(layer)
-            print("layer " + layer.info + " is over limit " + str(limit) + " with " + str(len(layer.frames)) + " frames.")
+            print("layer " + layer.name + " is over limit " + str(limit) + " with " + str(len(layer.frames)) + " frames.")
     print(" - - - " + str(len(returns)) + " total layers over limit.")
     print("~ ~ ~ ~")
     return returns
@@ -1309,16 +1310,16 @@ def splitLayersAboveFrameLimit(limit=20):
     if (len(layers) <= 0):
         return
     for layer in layers:
-        setActiveLayer(layer.info)
+        setActiveLayer(layer.name)
         for i in range(0, int(getLayerLength()/limit)):
             currentLayer = getActiveLayer()
-            print("* " + currentLayer.info + ": pass " + str(i))
+            print("* " + currentlayer.name + ": pass " + str(i))
             if (getLayerLength() < limit or currentLayer.lock==True):
                 break
             goToFrame(currentLayer.frames[limit].frame_number)
             setActiveFrame(currentLayer.frames[limit].frame_number)
             splitLayer(currentLayer.frames[limit].frame_number)
-            print("Split layer " + currentLayer.info + " with " + str(len(currentLayer.frames)) + " frames.")
+            print("Split layer " + currentlayer.name + " with " + str(len(currentLayer.frames)) + " frames.")
 
 splf = splitLayersAboveFrameLimit
 
@@ -1448,7 +1449,7 @@ def changeColor():
     deleteSelected()
     #~
     for i, points in enumerate(pointsBackup):
-        newStroke = frame.strokes.new(getActiveColor().name)
+        newStroke = frame.drawing.strokes.new(getActiveColor().name)
         newStroke.draw_mode = "3DSPACE" # either of ("SCREEN", "3DSPACE", "2DSPACE", "2DIMAGE")
         newStroke.line_width = lineWidthBackup[i]
         newStroke.points.add(len(points))
@@ -1470,7 +1471,7 @@ def getStrokeCoords(target=None):
     if not target:
         target = getSelectedStroke()
     for point in target.points:
-        returns.append(point.co)
+        returns.append(point.position)
     return returns
 
 def getStrokePressures(target=None):
@@ -1478,7 +1479,7 @@ def getStrokePressures(target=None):
     if not target:
         target = getSelectedStroke()
     for point in target.points:
-        returns.append(point.pressure)
+        returns.append(point.radius)
     return returns
 
 def getStrokeStrengths(target=None):
@@ -1523,7 +1524,7 @@ def getStrokeCoordsPlus(target=None):
     if not target:
         target = getSelectedStroke()
     for point in target.points:
-        returns.append((point.co[0], point.co[1], point.co[2], point.pressure, point.strength))
+        returns.append((point.position[0], point.position[1], point.position[2], point.radius, point.strength))
     return returns
 
 def reprojectAllStrokes():
@@ -1556,7 +1557,7 @@ def getActiveObject():
 def deleteFromAllFrames():
     origStrokes = []
     frame = getActiveFrame()
-    for stroke in frame.strokes:
+    for stroke in frame.drawing.strokes:
         addToOrig = False
         for point in stroke.points:
             if (point.select):
@@ -1608,32 +1609,32 @@ def getAllFrames(active=False):
             for frame in layer.frames:
                 returns.append(frame)
         else:
-            returns.append(layer.active_frame)
+            returns.append(layer.current_frame())
     print("Got " + str(len(returns)) + " frames.")
     return returns
 
 def getActiveFrame():
     gp = getActiveGp()
     layer = gp.data.layers.active
-    frame = layer.active_frame
+    frame = layer.current_frame()
     return frame
 
 # gp not timeline
 def setActiveFrame(index):
     layer = getActiveLayer()
     if index < len(layer.frames):
-        layer.active_frame = layer.frames[index]
+        layer.frames.new(layer.frames[index].frame_number)
         refresh()
         print("Moved to layer frame " + str(index))
     else:
         print("Outside of layer range")
-    return layer.active_frame
+    return layer.current_frame()
 
 def getAllStrokes(active=False):
     returns = []
     frames = getAllFrames(active)
     for frame in frames:
-        for stroke in frame.strokes:
+        for stroke in frame.drawing.strokes:
             returns.append(stroke)
     print("Got " + str(len(returns)) + " strokes.")
     return returns
@@ -1641,32 +1642,32 @@ def getAllStrokes(active=False):
 def getLayerStrokes(name=None):
     gp = getActiveGp()
     if not name:
-        name = gp.data.layers.active.info
+        name = gp.data.layers.active.name
     layer = gp.data.layers[name]
     strokes = []
     for frame in layer.frames:
-        for stroke in frame.strokes:
+        for stroke in frame.drawing.strokes:
             strokes.append(stroke)
     return strokes
 
 def getFrameStrokes(num=None, name=None):
     gp = getActiveGp()
     if not name:
-        name = gp.data.layers.active.info
+        name = gp.data.layers.active.name
     layer = gp.data.layers[name]
     if not num:
-        num = layer.active_frame.frame_number
+        num = layer.current_frame().frame_number
     strokes = []
     for frame in layer.frames:
         if (frame.frame_number == num):
-            for stroke in frame.strokes:
+            for stroke in frame.drawing.strokes:
                 strokes.append(stroke)
     return strokes
 
 def getLayerStrokesAvg(name=None):
     gp = getActiveGp()
     if not name:
-        name = gp.data.layers.active.info
+        name = gp.data.layers.active.name
     layer = gp.data.layers[name]
     return float(roundVal(len(getLayerStrokes(name)) / len(layer.frames), 2))
 
@@ -1675,7 +1676,7 @@ def getAllStrokesAvg(locked=True):
     avg = 0
     for layer in gp.data.layers:
         if (layer.lock == False or locked == True):
-            avg += getLayerStrokesAvg(layer.info)
+            avg += getLayerStrokesAvg(layer.name)
     return float(roundVal(avg / len(gp.data.layers), 2))
 
 def getSelectedStrokes(active=False):
@@ -1709,7 +1710,7 @@ def getAllPoints(useCoords=False):
     for stroke in strokes:
         for point in stroke.points:
             if (useCoords==True):
-                returns.append(point.co)
+                returns.append(point.position)
             else:
                 returns.append(point)
     return returns
@@ -1721,7 +1722,7 @@ def getSelectedPoints(useCoords=False):
         for point in stroke.points:
             if (point.select):
                 if (useCoords==True):
-                    returns.append(point.co)
+                    returns.append(point.position)
                 else:
                     returns.append(point)
     return returns
@@ -1731,7 +1732,7 @@ def getSelectedPoint(useCoords=False):
     for point in stroke.points:
         if (point.select):
             if (useCoords==True):
-                return point.co
+                return point.position
             else:
                 return point
     return None

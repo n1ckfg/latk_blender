@@ -114,7 +114,7 @@ class Latk(object):
                             strength = 1.0
                             points.append(LatkPoint((x,y,z), pressure, strength))                                         
                         stroke = LatkStroke(points, color)
-                        frame.strokes.append(stroke)
+                        frame.drawing.strokes.append(stroke)
                         layer.frames.append(frame)
                     self.layers.append(layer)
                 else: # latk format v2.0, animation
@@ -145,7 +145,7 @@ class Latk(object):
                                 points.append(LatkPoint((x,y,z), pressure, strength))
                                                     
                             stroke = LatkStroke(points, color)
-                            frame.strokes.append(stroke)
+                            frame.drawing.strokes.append(stroke)
                         layer.frames.append(frame)
                     self.layers.append(layer)
             else: # latk format v2.7, Blender 2.7 Grease Pencil
@@ -199,7 +199,7 @@ class Latk(object):
                                     points.append(LatkPoint((x,y,z), pressure, strength))
                                                         
                                 stroke = LatkStroke(points, color)
-                                frame.strokes.append(stroke)
+                                frame.drawing.strokes.append(stroke)
                             layer.frames.append(frame)
                         self.layers.append(layer)
         else: # v2.8 and newer use version keys
@@ -282,7 +282,7 @@ class Latk(object):
                                     points.append(LatkPoint((x,y,z), pressure, strength, vertex_color))
                                                         
                                 stroke = LatkStroke(points, color, fill_color)
-                                frame.strokes.append(stroke)
+                                frame.drawing.strokes.append(stroke)
                             layer.frames.append(frame)
                         self.layers.append(layer)
 
@@ -301,7 +301,7 @@ class Latk(object):
                 sbbHeader.append("\t\t\t\t\t\t\t\"strokes\": [")
                 sb.append("\n".join(sbbHeader))
                 
-                for i, stroke in enumerate(frame.strokes):
+                for i, stroke in enumerate(frame.drawing.strokes):
                     sbb = []
                     sbb.append("\t\t\t\t\t\t\t\t{")
                     color = (0.0, 0.0, 0.0, 1.0)
@@ -333,7 +333,7 @@ class Latk(object):
                     if (len(stroke.points) > 0): 
                         sbb.append("\t\t\t\t\t\t\t\t\t\"points\": [")
                         for j, point in enumerate(stroke.points):
-                            x = point.co[0]
+                            x = point.position[0]
                             y = None
                             z = None
                             r = point.vertex_color[0]
@@ -341,11 +341,11 @@ class Latk(object):
                             b = point.vertex_color[2]
                             a = point.vertex_color[3]
                             if (yUp == True):
-                                y = point.co[2]
-                                z = point.co[1]
+                                y = point.position[2]
+                                z = point.position[1]
                             else:
-                                y = point.co[1]
-                                z = point.co[2]  
+                                y = point.position[1]
+                                z = point.position[2]  
                             
                             if (useScaleAndOffset == True):
                                 x = (x * globalScale[0]) + globalOffset[0]
@@ -353,11 +353,11 @@ class Latk(object):
                                 z = (z * globalScale[2]) + globalOffset[2]
                              
                             if (precision == 64):
-                                pointStr = "\t\t\t\t\t\t\t\t\t\t{\"co\": [" + str(np.float64(x)) + ", " + str(np.float64(y)) + ", " + str(np.float64(z)) + "], \"pressure\": " + str(np.float64(point.pressure)) + ", \"strength\": " + str(np.float64(point.strength)) + ", \"vertex_color\": [" + str(np.float64(r)) + ", " + str(np.float64(g)) + ", " + str(np.float64(b)) + ", " + str(np.float64(a)) + "]}"
+                                pointStr = "\t\t\t\t\t\t\t\t\t\t{\"co\": [" + str(np.float64(x)) + ", " + str(np.float64(y)) + ", " + str(np.float64(z)) + "], \"pressure\": " + str(np.float64(point.radius)) + ", \"strength\": " + str(np.float64(point.strength)) + ", \"vertex_color\": [" + str(np.float64(r)) + ", " + str(np.float64(g)) + ", " + str(np.float64(b)) + ", " + str(np.float64(a)) + "]}"
                             elif (precision == 16):
-                                pointStr = "\t\t\t\t\t\t\t\t\t\t{\"co\": [" + str(np.float16(x)) + ", " + str(np.float16(y)) + ", " + str(np.float16(z)) + "], \"pressure\": " + str(np.float16(point.pressure)) + ", \"strength\": " + str(np.float16(point.strength)) + ", \"vertex_color\": [" + str(np.float16(r)) + ", " + str(np.float16(g)) + ", " + str(np.float16(b)) + ", " + str(np.float16(a)) + "]}"
+                                pointStr = "\t\t\t\t\t\t\t\t\t\t{\"co\": [" + str(np.float16(x)) + ", " + str(np.float16(y)) + ", " + str(np.float16(z)) + "], \"pressure\": " + str(np.float16(point.radius)) + ", \"strength\": " + str(np.float16(point.strength)) + ", \"vertex_color\": [" + str(np.float16(r)) + ", " + str(np.float16(g)) + ", " + str(np.float16(b)) + ", " + str(np.float16(a)) + "]}"
                             else:
-                                pointStr = "\t\t\t\t\t\t\t\t\t\t{\"co\": [" + str(np.float32(x)) + ", " + str(np.float32(y)) + ", " + str(np.float32(z)) + "], \"pressure\": " + str(np.float32(point.pressure)) + ", \"strength\": " + str(np.float32(point.strength)) + ", \"vertex_color\": [" + str(np.float32(r)) + ", " + str(np.float32(g)) + ", " + str(np.float32(b)) + ", " + str(np.float32(a)) + "]}"
+                                pointStr = "\t\t\t\t\t\t\t\t\t\t{\"co\": [" + str(np.float32(x)) + ", " + str(np.float32(y)) + ", " + str(np.float32(z)) + "], \"pressure\": " + str(np.float32(point.radius)) + ", \"strength\": " + str(np.float32(point.strength)) + ", \"vertex_color\": [" + str(np.float32(r)) + ", " + str(np.float32(g)) + ", " + str(np.float32(b)) + ", " + str(np.float32(a)) + "]}"
                                           
                             if (j == len(stroke.points) - 1):
                                 sbb.append(pointStr)
@@ -368,7 +368,7 @@ class Latk(object):
                     else:
                         sbb.append("\t\t\t\t\t\t\t\t\t\"points\": []")
                     
-                    if (i == len(frame.strokes) - 1):
+                    if (i == len(frame.drawing.strokes) - 1):
                         sbb.append("\t\t\t\t\t\t\t\t}")
                     else:
                         sbb.append("\t\t\t\t\t\t\t\t},")
@@ -428,13 +428,13 @@ class Latk(object):
     def clean(self, epsilon=0.01):
         for layer in self.layers:
             for frame in layer.frames:
-                for stroke in frame.strokes:
+                for stroke in frame.drawing.strokes:
                     coords = []
                     pressures = []
                     strengths = []
                     for point in stroke.points:
-                        coords.append(point.co)
-                        pressures.append(point.pressure)
+                        coords.append(point.position)
+                        pressures.append(point.radius)
                         strengths.append(point.strength)
                     stroke.setCoords(rdp(coords, epsilon=epsilon))
                     for i in range(0, len(stroke.points)):
@@ -447,11 +447,11 @@ class Latk(object):
             cleanMinPoints = 2 
         for layer in self.layers:
             for frame in layer.frames: 
-                for stroke in frame.strokes:
+                for stroke in frame.drawing.strokes:
                     # 1. Remove the stroke if it has too few points.
                     if (len(stroke.points) < cleanMinPoints): 
                         try:
-                            frame.strokes.remove(stroke)
+                            frame.drawing.strokes.remove(stroke)
                         except:
                             pass
                     else:
@@ -470,14 +470,14 @@ class Latk(object):
                         # 3. Remove the stroke if its length is too small.
                         if (totalLength < cleanMinLength): 
                             try:
-                                frame.strokes.remove(stroke)
+                                frame.drawing.strokes.remove(stroke)
                             except:
                                 pass
                         else:
                             # 4. Finally, check the number of points again.
                             if (len(stroke.points) < cleanMinPoints): 
                                 try:
-                                    frame.strokes.remove(stroke)
+                                    frame.drawing.strokes.remove(stroke)
                                 except:
                                     pass
 
@@ -487,9 +487,9 @@ class Latk(object):
         allZ = []
         for layer in self.layers:
             for frame in layer.frames:
-                for stroke in frame.strokes:
+                for stroke in frame.drawing.strokes:
                     for point in stroke.points:
-                        coord = point.co
+                        coord = point.position
                         allX.append(coord[0])
                         allY.append(coord[1])
                         allZ.append(coord[2])
@@ -518,13 +518,13 @@ class Latk(object):
         
         for layer in self.layers:
             for frame in layer.frames:
-                for stroke in frame.strokes:
+                for stroke in frame.drawing.strokes:
                     for point in stroke.points:  
-                        coord = point.co
+                        coord = point.position
                         x = self.remap(coord[0], allX[0], allX[len(allX)-1], minValX, maxValX)
                         y = self.remap(coord[1], allY[0], allY[len(allY)-1], minValY, maxValY)
                         z = self.remap(coord[2], allZ[0], allZ[len(allZ)-1], minValZ, maxValZ)
-                        point.co = (x,y,z)
+                        point.position = (x,y,z)
 
     def smoothStroke(self, stroke):
         points = stroke.points
@@ -573,7 +573,7 @@ class Latk(object):
             smoothReps = splitReps
         for layer in self.layers:
             for frame in layer.frames: 
-                for stroke in frame.strokes:   
+                for stroke in frame.drawing.strokes:   
                     points = stroke.points
                     
                     for i in range(0, splitReps):
@@ -589,7 +589,7 @@ class Latk(object):
     def setStroke(self, stroke):
         lastLayer = self.layers[len(self.layers)-1]
         lastFrame = lastLayer.frames[len(lastLayer.frames)-1]
-        lastFrame.strokes.append(stroke)
+        lastframe.drawing.strokes.append(stroke)
 
     def setPoints(self, points, color=(0.0,0.0,0.0,1.0)):
         lastLayer = self.layers[len(self.layers)-1]
@@ -597,7 +597,7 @@ class Latk(object):
         stroke = LatkStroke()
         stroke.points = points
         stroke.color = color
-        lastFrame.strokes.append(stroke)
+        lastframe.drawing.strokes.append(stroke)
     
     def setCoords(self, coords, color=(0.0,0.0,0.0,1.0)):
         lastLayer = self.layers[len(self.layers)-1]
@@ -605,7 +605,7 @@ class Latk(object):
         stroke = LatkStroke()
         stroke.setCoords(coords)
         stroke.color = color
-        lastFrame.strokes.append(stroke)
+        lastframe.drawing.strokes.append(stroke)
 
     def getDistance(self, v1, v2):
         return sqrt((v1[0] - v2[0])**2 + (v1[1] - v2[1])**2 + (v1[2] - v2[2])**2)
@@ -654,14 +654,14 @@ class Latk(object):
         returns = 0
         for layer in self.layers:
             for frame in layer.frames:
-                returns += len(frame.strokes)
+                returns += len(frame.drawing.strokes)
         return returns
 
     def countAllPoints(self):
         returns = 0
         for layer in self.layers:
             for frame in layer.frames:
-                for stroke in frame.strokes:
+                for stroke in frame.drawing.strokes:
                     returns += len(stroke.points)
         return returns
 
@@ -669,10 +669,10 @@ class Latk(object):
         returns = []
         for layer in self.layers:
             for frame in layer.frames:
-                for stroke in frame.strokes:
+                for stroke in frame.drawing.strokes:
                     for point in stroke.points:
                         if (vertsOnly == True):
-                            returns.append(point.co)
+                            returns.append(point.position)
                         else:
                             returns.append(point)
         return np.array(returns)
@@ -762,7 +762,7 @@ class Latk(object):
                     points.append(point)
                 
                 stroke = LatkStroke(points, strokeColor)
-                frame.strokes.append(stroke)
+                frame.drawing.strokes.append(stroke)
             
             layer.frames.append(frame)
             self.layers.append(layer)
@@ -817,7 +817,7 @@ class Latk(object):
                         point = LatkPoint(co=(point[0], point[1], point[2]), pressure=point[3], strength=point[4])
                         stroke.points.append(point)
                 
-                frame.strokes.append(stroke)
+                frame.drawing.strokes.append(stroke)
             
             layer.frames.append(frame)
             self.layers.append(layer)
@@ -896,7 +896,7 @@ class Latk(object):
             pointsCounter += 1
             pointsTotal += 1
             if (pointsCounter > strokeLength-1):
-                frame.strokes.append(stroke)
+                frame.drawing.strokes.append(stroke)
                 pointsCounter = 0
             if (pointsTotal > len(allPoints)-1):
                 break
@@ -909,16 +909,16 @@ class Latk(object):
 
         for layer in self.layers:
             for frame in layer.frames:
-                for stroke in frame.strokes:
+                for stroke in frame.drawing.strokes:
                     color = None
                     if (vertexColor == False):
                         color = stroke.color
                     for point in stroke.points:
-                        coord = point.co
+                        coord = point.position
                         x = coord[0]
                         y = coord[2]
                         z = coord[1]
-                        pressure = point.pressure
+                        pressure = point.radius
                         if (vertexColor == True):
                             color = point.vertex_color
                         r = color[0]
@@ -971,13 +971,13 @@ class LatkStroke(object):
     def getCoords(self):
         returns = []
         for point in self.points:
-            returns.append(point.co)
+            returns.append(point.position)
         return returns
 
     def getPressures(self):
         returns = []
         for point in self.points:
-            returns.append(point.pressure)
+            returns.append(point.radius)
         return returns
 
     def getStrengths(self):

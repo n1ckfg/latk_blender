@@ -375,7 +375,7 @@ def assembleMesh(export=False, createPalette=True):
     palette = getActivePalette()
     #~
     for b, layer in enumerate(gp.data.layers):
-        url = origFileName + "_layer_" + layer.info
+        url = origFileName + "_layer_" + layer.name
         masterGroupList.append(getLayerInfo(layer))
         masterUrlList.append(url)
     #~
@@ -446,10 +446,10 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
     '''
     #~
     for b, layer in enumerate(gp.data.layers):
-        checkStrokes = getLayerStrokes(layer.info)
+        checkStrokes = getLayerStrokes(layer.name)
         if (len(checkStrokes) < 1):
             continue
-        url = origFileName + "_layer_" + layer.info
+        url = origFileName + "_layer_" + layer.name
         if (layer.lock==False):
             rangeStart = 0
             rangeEnd = len(layer.frames)
@@ -458,9 +458,9 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
                 rangeEnd = rangeStart + 1
             for c in range(rangeStart, rangeEnd):
                 frame = layer.frames[c]
-                print("\n" + "*** gp layer " + layer.info + "(" + str(b+1) + " of " + str(len(gp.data.layers)) + ") | gp frame " + str(c+1) + " of " + str(rangeEnd) + " ***")
+                print("\n" + "*** gp layer " + layer.name + "(" + str(b+1) + " of " + str(len(gp.data.layers)) + ") | gp frame " + str(c+1) + " of " + str(rangeEnd) + " ***")
                 frameList = []
-                for d, stroke in enumerate(frame.strokes):
+                for d, stroke in enumerate(frame.drawing.strokes):
                     '''
                     origParent = None
                     if (layer.parent):
@@ -776,7 +776,7 @@ def curveToStroke(target=None):
         else:
             splinePoints = spline.points
         for point in splinePoints:
-            points.append((point.co[0], point.co[2], point.co[1]))
+            points.append((point.position[0], point.position[2], point.position[1]))
         try:
             drawCoords(points)
         except:
@@ -1001,5 +1001,5 @@ def getAlembicCurves(obj=None):
         for spline in splines:
             points = []
             for point in spline.points:
-                points.append(point.co)
+                points.append(point.position)
             drawCoords(points)

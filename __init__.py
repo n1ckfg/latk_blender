@@ -142,7 +142,7 @@ class LightningArtistToolkitPreferences(bpy.types.AddonPreferences):
     feature_Meshing: bpy.props.BoolProperty(
         name = 'Meshing',
         description = "Enable meshing features on the Latk panel",
-        default = False
+        default = True
     )
 
     feature_ShortcutButtons: bpy.props.BoolProperty(

@@ -167,7 +167,7 @@ def assembleMesh(export=False, createPalette=True):
     palette = getActivePalette()
     #~
     for b, layer in enumerate(gp.layers):
-        url = origFileName + "_layer_" + layer.info
+        url = origFileName + "_layer_" + layer.name
         masterGroupList.append(getLayerInfo(layer))
         masterUrlList.append(url)
     #~
@@ -236,7 +236,7 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
         capsObj.data.resolution_u = _bevelResolution
     #~
     for b, layer in enumerate(gp.layers):
-        url = origFileName + "_layer_" + layer.info
+        url = origFileName + "_layer_" + layer.name
         if (layer.lock==False):
             rangeStart = 0
             rangeEnd = len(layer.frames)
@@ -245,9 +245,9 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
                 rangeEnd = rangeStart + 1
             for c in range(rangeStart, rangeEnd):
                 frame = layer.frames[c]
-                print("\n" + "*** gp layer " + layer.info + "(" + str(b+1) + " of " + str(len(gp.layers)) + ") | gp frame " + str(c+1) + " of " + str(rangeEnd) + " ***")
+                print("\n" + "*** gp layer " + layer.name + "(" + str(b+1) + " of " + str(len(gp.layers)) + ") | gp frame " + str(c+1) + " of " + str(rangeEnd) + " ***")
                 frameList = []
-                for d, stroke in enumerate(frame.strokes):
+                for d, stroke in enumerate(frame.drawing.strokes):
                     origParent = None
                     if (layer.parent):
                         origParent = layer.parent
@@ -566,7 +566,7 @@ def curveToStroke(target=None):
         else:
             splinePoints = spline.points
         for point in splinePoints:
-            points.append((point.co[0], point.co[2], point.co[1]))
+            points.append((point.position[0], point.position[2], point.position[1]))
         try:
             drawCoords(points)
         except:
@@ -663,7 +663,7 @@ def meshToGp(obj=None, strokeLength=1, strokeGaps=10.0, shuffleOdds=1.0, spreadP
             createColor(color)
         else:
             createAndMatchColorPalette(color, limitPalette, 5) # num places
-        stroke = frame.strokes.new(getActiveColor().name)
+        stroke = frame.drawing.strokes.new(getActiveColor().name)
         stroke.draw_mode = "3DSPACE"
         stroke.points.add(len(pointSeq))
 
@@ -841,7 +841,7 @@ def getAlembicCurves(obj=None):
         for spline in splines:
             points = []
             for point in spline.points:
-                points.append(point.co)
+                points.append(point.position)
             drawCoords(points)
 
 # * * * * * * * * * * * * * * * * * * * * * * * * * *

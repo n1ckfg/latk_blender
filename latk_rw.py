@@ -52,14 +52,14 @@ def fromGpToLatk(bake=False, skipLocked=False, useScaleAndOffset=False, globalSc
     #~
     for layer in gp.data.layers:
         if (skipLocked == False or layer.lock == False):
-            laLayer = LatkLayer(name=layer.info.replace(" ", "_"))
+            laLayer = LatkLayer(name=layer.name.replace(" ", "_"))
             if (layer.parent == True):
                 laLayer.parent = layer.parent.name
             for frame in layer.frames:
                 laFrame = LatkFrame(frame_number=frame.frame_number)
                 if (layer.parent == True):
                     laFrame.parent_location = layer.parent.location
-                for stroke in frame.strokes:
+                for stroke in frame.drawing.strokes:
                     laStroke = LatkStroke()
                     
                     color = (0,0,0,1)
@@ -72,11 +72,11 @@ def fromGpToLatk(bake=False, skipLocked=False, useScaleAndOffset=False, globalSc
                     laStroke.color = color
                     laStroke.fill_color = fill_color
                     for point in stroke.points:
-                        x = point.co[0]
-                        y = point.co[1]
-                        z = point.co[2]
+                        x = point.position[0]
+                        y = point.position[1]
+                        z = point.position[2]
                         pressure = 1.0
-                        pressure = point.pressure
+                        pressure = point.radius
                         strength = 1.0
                         strength = point.strength
                         vertex_color = (0.0,0.0,0.0,0.0)
@@ -89,7 +89,7 @@ def fromGpToLatk(bake=False, skipLocked=False, useScaleAndOffset=False, globalSc
                         #~
                         laPoint = LatkPoint((x, y, z), pressure, strength, vertex_color)
                         laStroke.points.append(laPoint)
-                    laFrame.strokes.append(laStroke)
+                    laframe.drawing.strokes.append(laStroke)
                 laLayer.frames.append(laFrame)
             la.layers.append(laLayer)
     print("...end building Latk object from Grease Pencil.")           
@@ -114,7 +114,7 @@ def fromLatkToGp(la=None, resizeTimeline=True, useScaleAndOffset=False, limitPal
                 frame = layer.frames.new(i) 
             if (frame.frame_number > longestFrameNum):
                 longestFrameNum = frame.frame_number
-            for laStroke in laFrame.strokes:
+            for laStroke in laframe.drawing.strokes:
                 strokeColor = (0,0,0)
                 try:
                     color = laStroke.color
@@ -125,7 +125,7 @@ def fromLatkToGp(la=None, resizeTimeline=True, useScaleAndOffset=False, limitPal
                     createColor(strokeColor)
                 else:
                     createAndMatchColorPalette(strokeColor, limitPalette, 5) # num places
-                stroke = frame.strokes.new()
+                stroke = frame.drawing.strokes.new()
                 stroke.display_mode = '3DSPACE'
                 #stroke.line_width = 100 # for 2.79
                 #stroke.line_width = 10 # for 2.93
@@ -134,7 +134,7 @@ def fromLatkToGp(la=None, resizeTimeline=True, useScaleAndOffset=False, limitPal
                 laPoints = laStroke.points
                 stroke.points.add(len(laPoints)) 
                 for l, laPoint in enumerate(laPoints):
-                    co = laPoint.co 
+                    co = lapoint.position 
                     x = co[0]
                     y = co[1]
                     z = co[2]
@@ -146,8 +146,8 @@ def fromLatkToGp(la=None, resizeTimeline=True, useScaleAndOffset=False, limitPal
                         y = (y * globalScale[1]) + globalOffset[1]
                         z = (z * globalScale[2]) + globalOffset[2]
                     #~
-                    if (laPoint.pressure != None):
-                        pressure = laPoint.pressure
+                    if (lapoint.radius != None):
+                        pressure = lapoint.radius
                     if (laPoint.strength != None):
                         strength = laPoint.strength
                     if (laPoint.vertex_color != None):
@@ -199,7 +199,7 @@ def readBrushStrokesAlt(filepath=None, resizeTimeline=True, useScaleAndOffset=Fa
                     createColor(strokeColor)
                 else:
                     createAndMatchColorPalette(strokeColor, limitPalette, 5) # num places
-                stroke = frame.strokes.new(getActiveColor().name)
+                stroke = frame.drawing.strokes.new(getActiveColor().name)
                 stroke.draw_mode = "3DSPACE" # either of ("SCREEN", "3DSPACE", "2DSPACE", "2DIMAGE")
                 pointsJson = strokeJson["points"]
                 stroke.points.add(len(pointsJson)) # add 4 points
@@ -259,9 +259,9 @@ def writeBrushStrokesAlt(filepath=None, bake=True, roundValues=True, numPlaces=7
             if (layer.parent == True):
                 sb.append("\t\t\t\t\t\t\t\"parent_location\": " + "[" + str(layer.parent.location[0]) + ", " + str(layer.parent.location[1]) + ", " + str(layer.parent.location[2]) + "],")
             sb.append("\t\t\t\t\t\t\t\"strokes\": [")
-            if (len(frame.strokes) > 0):
+            if (len(frame.drawing.strokes) > 0):
                 sb.append("\t\t\t\t\t\t\t\t{") # one stroke
-                for i, stroke in enumerate(frame.strokes):
+                for i, stroke in enumerate(frame.drawing.strokes):
                     color = (0,0,0)
                     alpha = 0.9
                     fill_color = (1,1,1)
@@ -280,11 +280,11 @@ def writeBrushStrokesAlt(filepath=None, bake=True, roundValues=True, numPlaces=7
                     sb.append("\t\t\t\t\t\t\t\t\t\"fill_alpha\": " + str(fill_alpha) + ",")
                     sb.append("\t\t\t\t\t\t\t\t\t\"points\": [")
                     for j, point in enumerate(stroke.points):
-                        x = point.co.x
-                        y = point.co.z
-                        z = point.co.y
+                        x = point.position.x
+                        y = point.position.z
+                        z = point.position.y
                         pressure = 1.0
-                        pressure = point.pressure
+                        pressure = point.radius
                         strength = 1.0
                         strength = point.strength
                         #~
@@ -301,14 +301,14 @@ def writeBrushStrokesAlt(filepath=None, bake=True, roundValues=True, numPlaces=7
                         if j == len(stroke.points) - 1:
                             sb[len(sb)-1] +="}"
                             sb.append("\t\t\t\t\t\t\t\t\t]")
-                            if (i == len(frame.strokes) - 1):
+                            if (i == len(frame.drawing.strokes) - 1):
                                 sb.append("\t\t\t\t\t\t\t\t}") # last stroke for this frame
                             else:
                                 sb.append("\t\t\t\t\t\t\t\t},") # end stroke
                                 sb.append("\t\t\t\t\t\t\t\t{") # begin stroke
                         else:
                             sb[len(sb)-1] += "},"
-                    if i == len(frame.strokes) - 1:
+                    if i == len(frame.drawing.strokes) - 1:
                         sb.append("\t\t\t\t\t\t\t]")
             else:
                 sb.append("\t\t\t\t\t\t\t]")
@@ -319,7 +319,7 @@ def writeBrushStrokesAlt(filepath=None, bake=True, roundValues=True, numPlaces=7
         #~
         sf = []
         sf.append("\t\t\t\t{") 
-        sf.append("\t\t\t\t\t\"name\": \"" + layer.info + "\",")
+        sf.append("\t\t\t\t\t\"name\": \"" + layer.name + "\",")
         if (layer.parent):
             sf.append("\t\t\t\t\t\"parent\": \"" + layer.parent.name + "\",")
         sf.append("\t\t\t\t\t\"frames\": [")
@@ -512,12 +512,12 @@ def writeSvg(filepath=None):
     #~
     # BODY
     for layer in gp.data.layers:
-        layerInfo = layer.info.replace(" ", "_").replace(".", "_")
+        layerInfo = layer.name.replace(" ", "_").replace(".", "_")
         svg.append("\t" + "<g id=\"" + layerInfo + "\">\r")
         for i, frame in enumerate(layer.frames):
             goToFrame(frame.frame_number)
             svg.append("\t\t" + "<g id=\"" + layerInfo + "_frame" + str(i) + "\">\r")
-            for stroke in frame.strokes:
+            for stroke in frame.drawing.strokes:
                 width = stroke.line_width
                 if (width == None or width < minLineWidth):
                     width = minLineWidth
@@ -547,7 +547,7 @@ def svgStroke(points=None, stroke=(0,0,1), fill=(1,0,0), strokeWidth=2.0, stroke
     # https://developer.mozilla.org/en-US/docs/Web/SVG/Element/path
     returns = "<path stroke=\""+ normRgbToHex(stroke) + "\" fill=\""+ normRgbToHex(fill) + "\" stroke-width=\"" + str(strokeWidth) + "\" stroke-opacity=\"" + str(strokeOpacity) + "\" fill-opacity=\"" + str(fillOpacity) + "\" d=\""
     for i, point in enumerate(points):
-        co = getWorldCoords(co=point.co, camera=camera)
+        co = getWorldCoords(co=point.position, camera=camera)
         if (i == 0):
             returns += "M" + str(co[0]) + " " + str(co[1]) + " "
         elif (i > 0 and i < len(points)-1):
@@ -592,7 +592,7 @@ def writeAeJsx(filepath=None, useNulls=False):
 
             for line in frameLines:
                 body.append(line)
-            for stroke in frame.strokes:
+            for stroke in frame.drawing.strokes:
                 # 2.7 color handling
                 #color = palette.colors[stroke.colorname]
                 color = palette[stroke.material_index].grease_pencil
@@ -628,7 +628,7 @@ def aeStroke(stroke, camera, strokeColor, fillColor, fillAlpha, useNulls):
 
     points = []
     for point in stroke.points:
-        points.append(getWorldCoords(co=point.co, camera=camera, useRenderScale=False))
+        points.append(getWorldCoords(co=point.position, camera=camera, useRenderScale=False))
 
     verts2D = "["
     for i, point in enumerate(points):
@@ -640,7 +640,7 @@ def aeStroke(stroke, camera, strokeColor, fillColor, fillAlpha, useNulls):
     verts = "["
     if (useNulls == True):
         for i, point in enumerate(stroke.points):
-            verts += "[" + str(point.co[0] * 100) + "," + str(point.co[1] * 100) + "," + str(point.co[2] * 100) + "]"
+            verts += "[" + str(point.position[0] * 100) + "," + str(point.position[1] * 100) + "," + str(point.position[2] * 100) + "]"
             if (i < len(stroke.points)-1):
                 verts += ","
         verts += "]"
@@ -692,7 +692,7 @@ def aeStroke(stroke, camera, strokeColor, fillColor, fillAlpha, useNulls):
     return returns
 
 def aeFrame(layer, inPoint, outPoint):
-    name = layer.info + "_" + str(inPoint);
+    name = layer.name + "_" + str(inPoint);
     fps = float(bpy.context.scene.render.fps)
     startTime = float(inPoint) / fps
     endTime = float(outPoint) / fps
@@ -755,17 +755,17 @@ def writePainter(filepath=None):
     palette = getActivePalette()
     for layer in gp.data.layers:
         if (layer.lock == False):
-            for stroke in layer.active_frame.strokes:
+            for stroke in layer.current_frame().drawing.strokes:
                 strokes.append(stroke)
     counter = 0
     for stroke in strokes:
         color = palette.colors[stroke.color.name].color
         points = []
         for point in stroke.points: 
-            co = getWorldCoords(co=point.co, camera=camera)
+            co = getWorldCoords(co=point.position, camera=camera)
             x = co[0] 
             y = co[1]
-            prs = point.pressure
+            prs = point.radius
             point = (x, y, prs, counter)
             counter += 1
             points.append(point)
@@ -858,7 +858,7 @@ def importVRDoodler(filepath=None):
     for vrd_stroke in vrd_strokes:
         strokeColor = (0.5,0.5,0.5)
         createColor(strokeColor)
-        stroke = frame.strokes.new(getActiveColor().name)
+        stroke = frame.drawing.strokes.new(getActiveColor().name)
         stroke.draw_mode = "3DSPACE" # either of ("SCREEN", "3DSPACE", "2DSPACE", "2DIMAGE")
         stroke.points.add(len(vrd_stroke)) # add 4 points
         for l, vrd_point in enumerate(vrd_stroke):
@@ -936,7 +936,7 @@ def importPainter(filepath=None):
             points.append((x, y, z))
             pressures.append(pressure)
         elif (line.startswith("stroke_end")):
-            stroke = frame.strokes.new(getActiveColor().name)
+            stroke = frame.drawing.strokes.new(getActiveColor().name)
             stroke.draw_mode = "3DSPACE"
             stroke.points.add(len(points))
 
@@ -980,7 +980,7 @@ def importNorman(filepath=None):
         for j in range(0, len(frames[i])):
             strokeColor = (0.5,0.5,0.5)
             createColor(strokeColor)
-            stroke = frame.strokes.new(getActiveColor().name)
+            stroke = frame.drawing.strokes.new(getActiveColor().name)
             stroke.draw_mode = "3DSPACE" # either of ("SCREEN", "3DSPACE", "2DSPACE", "2DIMAGE")
             stroke.points.add(len(frames[i][j])) # add 4 points
             for l in range(0, len(frames[i][j])):
@@ -1080,7 +1080,7 @@ def gmlParser(filepath=None, splitStrokes=False, sequenceAnim=False):
                     pass
             for frame in layer.frames:
                 goToFrame(frame.frame_number)
-                layer.active_frame = frame
+                layer.frames.new(frame.frame_number)
                 #~
                 if (splitStrokes==False):
                     for stroke in strokes:
@@ -1096,7 +1096,7 @@ def gmlParser(filepath=None, splitStrokes=False, sequenceAnim=False):
                 print("...Drawing into frame " + str(frame.frame_number) + " with " + str(len(gpPoints)) + " points.")
                 if (len(gpPoints) >= minStrokeLength):
                     if (splitStrokes==True):
-                        layer = newLayer(layer.info)
+                        layer = newLayer(layer.name)
                         masterLayerList.append(layer)
                     drawCoords(coords=gpPoints, frame=frame, layer=layer)
     # cleanup
@@ -1111,7 +1111,7 @@ def gmlParser(filepath=None, splitStrokes=False, sequenceAnim=False):
             frame = getActiveFrame()
         for i, stroke in enumerate(strokes):
             if (splitStrokes == True and i > 0):
-                layer = newLayer(layer.info)
+                layer = newLayer(layer.name)
                 masterLayerList.append(layer)
                 try:
                     frame = layer.frames.new(start)
@@ -1122,12 +1122,12 @@ def gmlParser(filepath=None, splitStrokes=False, sequenceAnim=False):
     if (splitStrokes==True):
         for layer in masterLayerList:
             if (len(layer.frames)<1):
-                deleteLayer(layer.info)
+                deleteLayer(layer.name)
         cleanCounter = 1
         for layer in masterLayerList:
             for gpLayer in gp.data.layers:
-                if (layer.info==gpLayer.info):
-                    gpLayer.info = origLayerName + "_" + str(cleanCounter)
+                if (layer.name==gplayer.name):
+                    gplayer.name = origLayerName + "_" + str(cleanCounter)
                     cleanCounter += 1
                     break
     print("* * * * * * * * * * * * * * *")
@@ -1144,13 +1144,13 @@ def writeGml(filepath=None, make2d=False):
     #roundValues = True
     #~
     frame = getActiveFrame()
-    strokes = frame.strokes
+    strokes = frame.drawing.strokes
     allX = []
     allY = []
     allZ = []
     for stroke in strokes:
         for point in stroke.points:
-            coord = point.co
+            coord = point.position
             allX.append(coord[0])
             allY.append(coord[1])
             allZ.append(coord[2])
@@ -1164,7 +1164,7 @@ def writeGml(filepath=None, make2d=False):
     for stroke in strokes:
         coords = []
         for point in stroke.points:
-            coord = point.co
+            coord = point.position
             x = remap(coord[0], minPoint[0], maxPoint[0], 0, 1)
             y = remap(coord[1], minPoint[1], maxPoint[1], 0, 1)
             z = remap(coord[2], minPoint[2], maxPoint[2], 0, 1)
@@ -1282,13 +1282,13 @@ def writePointCloud(filepath=None, strokes=None):
         strokes = getSelectedStrokes()
         if not strokes:
             frame = getActiveFrame()
-            strokes = frame.strokes
+            strokes = frame.drawing.strokes
     lines = []
     for stroke in strokes:
         for point in stroke.points:
-            x = str(point.co[0])
-            y = str(point.co[1])
-            z = str(point.co[2])
+            x = str(point.position[0])
+            y = str(point.position[1])
+            z = str(point.position[2])
             lines.append(x + ", " + y + ", " + z + "\n")
     writeTextFile(name=name, lines=lines)
 '''
@@ -1349,7 +1349,7 @@ def importAsc(filepath=None, strokeLength=1, importAsGP=False, vertexColor=True)
             if (pointsCounter == 0):
                 if (vertexColor == False and color != None):
                     createColor(color)
-                stroke = frame.strokes.new()
+                stroke = frame.drawing.strokes.new()
                 stroke.display_mode = '3DSPACE'
                 stroke.line_width = 100
                 stroke.material_index = gp.active_material_index
@@ -1401,16 +1401,16 @@ def exportAsc(filepath=None, vertexColor=True):
     palette = getActivePalette()
     for layer in gp.data.layers:
         for frame in layer.frames:
-            for stroke in frame.strokes:
+            for stroke in frame.drawing.strokes:
                 color = None
                 if (vertexColor == False):
                     color = palette[stroke.material_index].grease_pencil.color
                 for point in stroke.points:
-                    coord = point.co
+                    coord = point.position
                     x = coord[0]
                     y = coord[2]
                     z = coord[1]
-                    pressure = point.pressure
+                    pressure = point.radius
                     if (vertexColor == True):
                         color = point.vertex_color
                     r = color[0]
@@ -1454,7 +1454,7 @@ def exportXyz(filepath=None):
         x = coord[0]
         y = coord[2]
         z = coord[1]
-        pressure = 1.0 #point.pressure
+        pressure = 1.0 #point.radius
         r = color[0]
         g = color[1]
         b = color[2]
@@ -1513,7 +1513,7 @@ def importSculptrVr(filepath=None, strokeLength=1, scale=0.01, startLine=1):
         color = colors[i]
         if (color != None):
             createColor(color)
-        stroke = frame.strokes.new(getActiveColor().name)
+        stroke = frame.drawing.strokes.new(getActiveColor().name)
         stroke.draw_mode = "3DSPACE"
         stroke.points.add(strokeLength)
 
@@ -1548,7 +1548,7 @@ def exportSculptrVrCsv(filepath=None, strokes=None, sphereRadius=10, octreeSize=
         strokes = getSelectedStrokes()
         if not strokes:
             frame = getActiveFrame()
-            strokes = frame.strokes
+            strokes = frame.drawing.strokes
     #~
     csvData = []
 
@@ -1557,7 +1557,7 @@ def exportSculptrVrCsv(filepath=None, strokes=None, sphereRadius=10, octreeSize=
     allZ = []
     for stroke in strokes:
         for point in stroke.points:
-            coord = point.co
+            coord = point.position
             allX.append(coord[0])
             allY.append(coord[1])
             allZ.append(coord[2])
@@ -1600,12 +1600,12 @@ def exportSculptrVrCsv(filepath=None, strokes=None, sphereRadius=10, octreeSize=
             r = int(color[0] * 255)
             g = int(color[1] * 255)
             b = int(color[2] * 255)
-            coord = point.co
+            coord = point.position
             if (file_format == "sphere"):
                 x = remap(coord[0], allX[0], allX[len(allX)-1], minValX, maxValX)
                 y = remap(coord[1], allY[0], allY[len(allY)-1], minValY, maxValY)
                 z = remap(coord[2], allZ[0], allZ[len(allZ)-1], minValZ, maxValZ)
-                pressure = remap(point.pressure, 0.0, 1.0, sphereRadius/100.0, sphereRadius)
+                pressure = remap(point.radius, 0.0, 1.0, sphereRadius/100.0, sphereRadius)
                 if (pressure < 0.01):
                     pressure = 0.01
                 csvData.append([x, y, z, pressure, r, g, b])
@@ -1689,7 +1689,7 @@ def importTiltBrush(filepath=None, vertSkip=1):
                     pointGroup.append((x, y, z, pressure, strength))
                     #~
             createColor(strokeColor)
-            stroke = frame.strokes.new()
+            stroke = frame.drawing.strokes.new()
             stroke.display_mode = '3DSPACE'
             stroke.line_width = 100
             stroke.material_index = gp.active_material_index
@@ -1767,7 +1767,7 @@ def importTiltBrush(filepath=None, vertSkip=1):
 
             if (vertsFailed==False):
                 createColor(strokeColor)
-                stroke = frame.strokes.new(getActiveColor().name)
+                stroke = frame.drawing.strokes.new(getActiveColor().name)
                 stroke.points.add(len(pointGroup)) # add 4 points
                 stroke.draw_mode = "3DSPACE" # either of ("SCREEN", "3DSPACE", "2DSPACE", "2DIMAGE")  
                 for l, point in enumerate(pointGroup):

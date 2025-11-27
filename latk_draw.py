@@ -25,7 +25,7 @@ def drawCoords(coords=None, color=None, frame=None, layer=None):
                     frame = layer.frames.new(currentFrame())
                 except:
                     pass
-        stroke = frame.strokes.new(color.name)
+        stroke = frame.drawing.strokes.new(color.name)
         stroke.draw_mode = "3DSPACE"
         stroke.points.add(len(coords))
         for i, coord in enumerate(coords):
@@ -68,7 +68,7 @@ def createStrokes(strokes, palette=None):
             strokeColor = createColor(strokeSource.color.color)
         except:
             pass
-        strokeDest = frame.strokes.new(getActiveColor().name)        
+        strokeDest = frame.drawing.strokes.new(getActiveColor().name)        
         strokeDest.draw_mode = '3DSPACE'
         strokeDest.points.add(len(strokeSource.points))
         for l in range(0, len(strokeSource.points)):
@@ -83,7 +83,7 @@ def createStroke(points, color=(0,0,0), frame=None, palette=None):
         frame = getActiveFrame()
     #~
     strokeColor = createColor(color)
-    stroke = frame.strokes.new(getActiveColor().name)        
+    stroke = frame.drawing.strokes.new(getActiveColor().name)        
     stroke.draw_mode = '3DSPACE'
     stroke.points.add(len(points))
     for l in range(0, len(points)):
@@ -125,7 +125,7 @@ def distributeStrokesAlt(step=1):
             layer.frames.new(bpy.context.scene.frame_current)
         except:
             pass
-        layer.active_frame = layer.frames[i+1]
+        layer.frames.new(layer.frames[i+1].frame_number)
         copyFrame(0, i+1, counter)
         counter += step
         if (counter > len(strokes)-1):
@@ -145,7 +145,7 @@ def distributeStrokes(pointStep=10, step=1, minPointStep=2):
             layer.frames.new(bpy.context.scene.frame_current)
         except:
             pass
-        layer.active_frame = layer.frames[bpy.context.scene.frame_current]
+        layer.frames.new(layer.frames[bpy.context.scene.frame_current].frame_number)
         #~
         if (pointStep < minPointStep):
             try:
@@ -171,7 +171,7 @@ def distributeStrokes(pointStep=10, step=1, minPointStep=2):
                     layer.frames.new(bpy.context.scene.frame_current)
                 except:
                     pass
-                layer.active_frame = layer.frames[bpy.context.scene.frame_current]
+                layer.frames.new(layer.frames[bpy.context.scene.frame_current].frame_number)
                 #~
                 for l in range(0, strokeCounter):
                     try:
@@ -199,7 +199,7 @@ def distributeStrokes(pointStep=10, step=1, minPointStep=2):
         layer.frames.new(bpy.context.scene.frame_current)
     except:
         pass
-    layer.active_frame = layer.frames[bpy.context.scene.frame_current]
+    layer.frames.new(layer.frames[bpy.context.scene.frame_current].frame_number)
     try:
         copyFrame(0, lastLoc)
     except:

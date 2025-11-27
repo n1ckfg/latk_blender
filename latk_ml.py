@@ -210,7 +210,7 @@ def neuralGasGen(verts, colors=None, matrix_world=None, max_neurons=100000, max_
     strokeColorCounter = 0
 
     for edge in edgeList: 
-        stroke = frame.strokes.new()
+        stroke = frame.drawing.strokes.new()
         stroke.display_mode = '3DSPACE'
         stroke.line_width = int(latk_settings.thickness2) #10 # adjusted from 100 for 2.93
         stroke.material_index = gp.active_material_index
@@ -266,7 +266,7 @@ def neuralGasGen2(verts, colors=None, matrix_world=None, max_neurons=100000, max
             except:
                 strokeColors.append((0,1,0,1)) #lastColor)
 
-        stroke = frame.strokes.new()
+        stroke = frame.drawing.strokes.new()
         stroke.display_mode = '3DSPACE'
         stroke.line_width = int(latk_settings.thickness2) #10 # adjusted from 100 for 2.93
         stroke.material_index = gp.active_material_index
@@ -390,7 +390,7 @@ def neuralGasGen3(verts, colors=None, matrix_world=None, max_neurons=100000, max
             if (readyToAdd):
                 similarityScores.append(similarityString)
                 
-                stroke = frame.strokes.new()
+                stroke = frame.drawing.strokes.new()
                 stroke.display_mode = '3DSPACE'
                 stroke.line_width = int(latk_settings.thickness2) #10 # adjusted from 100 for 2.93
                 stroke.material_index = gp.active_material_index
@@ -438,7 +438,7 @@ def strokeGen(verts, colors, matrix_world=None, radius=2, minPointsCount=5): #, 
             createAndMatchColorPalette(color, limitPalette, 5) # num places
         '''
 
-        stroke = frame.strokes.new()
+        stroke = frame.drawing.strokes.new()
         stroke.display_mode = '3DSPACE'
         stroke.line_width = int(latk_settings.thickness2) #10 # adjusted from 100 for 2.93
         stroke.material_index = gp.active_material_index
@@ -502,7 +502,7 @@ def contourGen(verts, faces, matrix_world):
         
         if slice_mesh != None:
             for entity in slice_mesh.entities:
-                stroke = frame.strokes.new()
+                stroke = frame.drawing.strokes.new()
                 stroke.display_mode = '3DSPACE'
                 stroke.line_width = int(latk_settings.thickness2) #10 # adjusted from 100 for 2.93
                 stroke.material_index = gp.active_material_index
@@ -547,7 +547,7 @@ def skelGen(verts, faces, matrix_world):
     skel = sk.skeletonize.by_wavefront(fixed, waves=1, step_size=1)
 
     for entity in skel.skeleton.entities:
-        stroke = frame.strokes.new()
+        stroke = frame.drawing.strokes.new()
         stroke.display_mode = '3DSPACE'
         stroke.line_width = int(latk_settings.thickness2) #10 # adjusted from 100 for 2.93
         stroke.material_index = gp.active_material_index
@@ -691,9 +691,9 @@ def strokeGen_orig(obj=None, strokeLength=1, strokeGaps=10.0, shuffleOdds=1.0, s
             createColor(color)
         else:
             createAndMatchColorPalette(color, limitPalette, 5) # num places
-        #stroke = frame.strokes.new(getActiveColor().name)
+        #stroke = frame.drawing.strokes.new(getActiveColor().name)
         #stroke.draw_mode = "3DSPACE"
-        stroke = frame.strokes.new()
+        stroke = frame.drawing.strokes.new()
         stroke.display_mode = '3DSPACE'
         stroke.line_width = 10 # adjusted from 100 for 2.93
         stroke.material_index = gp.active_material_index
@@ -1157,7 +1157,7 @@ def doInference004(name, net1, net2=None):
                 laPoints.append(laPoint)
 
             if (len(laPoints) > 1):
-                laFrame.strokes.append(latk.LatkStroke(laPoints))
+                laframe.drawing.strokes.append(latk.LatkStroke(laPoints))
 
     bpy.context.scene.cursor.location = origCursorLocation
     return laFrame
