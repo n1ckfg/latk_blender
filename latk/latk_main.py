@@ -353,11 +353,11 @@ class Latk(object):
                                 z = (z * globalScale[2]) + globalOffset[2]
                              
                             if (precision == 64):
-                                pointStr = "\t\t\t\t\t\t\t\t\t\t{\"co\": [" + str(np.float64(x)) + ", " + str(np.float64(y)) + ", " + str(np.float64(z)) + "], \"pressure\": " + str(np.float64(point.radius)) + ", \"strength\": " + str(np.float64(point.strength)) + ", \"vertex_color\": [" + str(np.float64(r)) + ", " + str(np.float64(g)) + ", " + str(np.float64(b)) + ", " + str(np.float64(a)) + "]}"
+                                pointStr = "\t\t\t\t\t\t\t\t\t\t{\"co\": [" + str(np.float64(x)) + ", " + str(np.float64(y)) + ", " + str(np.float64(z)) + "], \"pressure\": " + str(np.float64(point.radius)) + ", \"strength\": " + str(np.float64(point.opacity)) + ", \"vertex_color\": [" + str(np.float64(r)) + ", " + str(np.float64(g)) + ", " + str(np.float64(b)) + ", " + str(np.float64(a)) + "]}"
                             elif (precision == 16):
-                                pointStr = "\t\t\t\t\t\t\t\t\t\t{\"co\": [" + str(np.float16(x)) + ", " + str(np.float16(y)) + ", " + str(np.float16(z)) + "], \"pressure\": " + str(np.float16(point.radius)) + ", \"strength\": " + str(np.float16(point.strength)) + ", \"vertex_color\": [" + str(np.float16(r)) + ", " + str(np.float16(g)) + ", " + str(np.float16(b)) + ", " + str(np.float16(a)) + "]}"
+                                pointStr = "\t\t\t\t\t\t\t\t\t\t{\"co\": [" + str(np.float16(x)) + ", " + str(np.float16(y)) + ", " + str(np.float16(z)) + "], \"pressure\": " + str(np.float16(point.radius)) + ", \"strength\": " + str(np.float16(point.opacity)) + ", \"vertex_color\": [" + str(np.float16(r)) + ", " + str(np.float16(g)) + ", " + str(np.float16(b)) + ", " + str(np.float16(a)) + "]}"
                             else:
-                                pointStr = "\t\t\t\t\t\t\t\t\t\t{\"co\": [" + str(np.float32(x)) + ", " + str(np.float32(y)) + ", " + str(np.float32(z)) + "], \"pressure\": " + str(np.float32(point.radius)) + ", \"strength\": " + str(np.float32(point.strength)) + ", \"vertex_color\": [" + str(np.float32(r)) + ", " + str(np.float32(g)) + ", " + str(np.float32(b)) + ", " + str(np.float32(a)) + "]}"
+                                pointStr = "\t\t\t\t\t\t\t\t\t\t{\"co\": [" + str(np.float32(x)) + ", " + str(np.float32(y)) + ", " + str(np.float32(z)) + "], \"pressure\": " + str(np.float32(point.radius)) + ", \"strength\": " + str(np.float32(point.opacity)) + ", \"vertex_color\": [" + str(np.float32(r)) + ", " + str(np.float32(g)) + ", " + str(np.float32(b)) + ", " + str(np.float32(a)) + "]}"
                                           
                             if (j == len(stroke.points) - 1):
                                 sbb.append(pointStr)
@@ -435,7 +435,7 @@ class Latk(object):
                     for point in stroke.points:
                         coords.append(point.position)
                         pressures.append(point.radius)
-                        strengths.append(point.strength)
+                        strengths.append(point.opacity)
                     stroke.setCoords(rdp(coords, epsilon=epsilon))
                     for i in range(0, len(stroke.points)):
                         index = self.remapInt(i, 0, len(stroke.points), 0, len(pressures))
@@ -983,7 +983,7 @@ class LatkStroke(object):
     def getStrengths(self):
         returns = []
         for point in self.points:
-            returns.append(point.strength)
+            returns.append(point.opacity)
         return returns
 
 

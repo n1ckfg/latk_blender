@@ -122,7 +122,7 @@ def breakUpStrokes():
                 #stroke.draw_mode = "3DSPACE"
                 stroke.points.add(1)
                 coord = point.position
-                createPoint(stroke, 0, (coord[0], coord[1], coord[2]), point.radius, point.strength)
+                createPoint(stroke, 0, (coord[0], coord[1], coord[2]), point.radius, point.opacity)
 
 def normalizePoints(minVal=0.0, maxVal=1.0):
     gp = getActiveGp()
@@ -252,16 +252,16 @@ def pressureRange(_min=0.1, _max=1.0, _mode="clamp_p"):
             for frame in layer.frames:
                 for stroke in frame.drawing.strokes:
                     for point in stroke.points:
-                        if (point.strength < _min):
-                            point.strength = _min
-                        elif (point.strength > _max):
-                            point.strength = _max
+                        if (point.opacity < _min):
+                            point.opacity = _min
+                        elif (point.opacity > _max):
+                            point.opacity = _max
     elif (_mode == "remap_s"):
         for layer in gp.data.layers:
             for frame in layer.frames:
                 for stroke in frame.drawing.strokes:
                     for point in stroke.points:
-                        point.strength = remap(point.strength, 0.0, 1.0, _min, _max)
+                        point.opacity = remap(point.opacity, 0.0, 1.0, _min, _max)
     
 def cameraArray(target=None, hideTarget=True, removeCameras=True, removeLayers=True): 
     if not target:
@@ -1486,7 +1486,7 @@ def getStrokeStrengths(target=None):
     if not target:
         target = getSelectedStroke()
     for point in target.points:
-        returns.append(point.strength)
+        returns.append(point.opacity)
     return returns
 
 def lookUpStrokeColor(target=None):
@@ -1523,7 +1523,7 @@ def getStrokeCoordsPlus(target=None):
     if not target:
         target = getSelectedStroke()
     for point in target.points:
-        returns.append((point.position[0], point.position[1], point.position[2], point.radius, point.strength))
+        returns.append((point.position[0], point.position[1], point.position[2], point.radius, point.opacity))
     return returns
 
 def reprojectAllStrokes():

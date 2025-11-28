@@ -78,7 +78,7 @@ def fromGpToLatk(bake=False, skipLocked=False, useScaleAndOffset=False, globalSc
                         pressure = 1.0
                         pressure = point.radius
                         strength = 1.0
-                        strength = point.strength
+                        strength = point.opacity
                         vertex_color = (0.0,0.0,0.0,0.0)
                         vertex_color = point.vertex_color
                         #~
@@ -89,7 +89,7 @@ def fromGpToLatk(bake=False, skipLocked=False, useScaleAndOffset=False, globalSc
                         #~
                         laPoint = LatkPoint((x, y, z), pressure, strength, vertex_color)
                         laStroke.points.append(laPoint)
-                    laframe.drawing.strokes.append(laStroke)
+                    laFrame.wstrokes.append(laStroke)
                 laLayer.frames.append(laFrame)
             la.layers.append(laLayer)
     print("...end building Latk object from Grease Pencil.")           
@@ -148,8 +148,8 @@ def fromLatkToGp(la=None, resizeTimeline=True, useScaleAndOffset=False, limitPal
                     #~
                     if (lapoint.radius != None):
                         pressure = lapoint.radius
-                    if (laPoint.strength != None):
-                        strength = laPoint.strength
+                    if (lapoint.opacity != None):
+                        strength = lapoint.opacity
                     if (laPoint.vertex_color != None):
                         vertex_color = laPoint.vertex_color
                     createPoint(stroke, l, (x, y, z), pressure, strength, vertex_color)
@@ -286,7 +286,7 @@ def writeBrushStrokesAlt(filepath=None, bake=True, roundValues=True, numPlaces=7
                         pressure = 1.0
                         pressure = point.radius
                         strength = 1.0
-                        strength = point.strength
+                        strength = point.opacity
                         #~
                         if useScaleAndOffset == True:
                             x = (x * globalScale.x) + globalOffset.x
