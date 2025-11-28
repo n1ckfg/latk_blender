@@ -762,7 +762,7 @@ def makeGpCurve(_type="PATH"):
     bpy.context.area.type = "VIEW_3D"
     #~
     # strokes, points, frame
-    bpy.ops.gpencil.convert(type=_type)
+    bpy.ops.grease_pencil.convert(type=_type)
     #~
     #bpy.context.area.type = "CONSOLE"
     bpy.context.area.type = original_type
