@@ -472,7 +472,7 @@ def gpMesh(_thickness=0.1, _resolution=1, _bevelResolution=0, _bakeMesh=True, _d
                     '''
                     #~
                     latk_ob = None
-                    thisIsAFill = getStrokeFillAlpha(stroke) > 0.001 or _remesh == "hull" or _remesh == "plane"
+                    thisIsAFill = False #getStrokeFillAlpha(stroke) > 0.001 or _remesh == "hull" or _remesh == "plane"
                     if (thisIsAFill == True):
                         doHull = False
                         if (_remesh == "hull"):

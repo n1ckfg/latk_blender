@@ -89,7 +89,7 @@ def fromGpToLatk(bake=False, skipLocked=False, useScaleAndOffset=False, globalSc
                         #~
                         laPoint = LatkPoint((x, y, z), pressure, strength, vertex_color)
                         laStroke.points.append(laPoint)
-                    laFrame.wstrokes.append(laStroke)
+                    laFrame.strokes.append(laStroke)
                 laLayer.frames.append(laFrame)
             la.layers.append(laLayer)
     print("...end building Latk object from Grease Pencil.")           
@@ -114,7 +114,7 @@ def fromLatkToGp(la=None, resizeTimeline=True, useScaleAndOffset=False, limitPal
                 frame = layer.frames.new(i) 
             if (frame.frame_number > longestFrameNum):
                 longestFrameNum = frame.frame_number
-            for laStroke in laframe.drawing.strokes:
+            for laStroke in laFrame.strokes:
                 strokeColor = (0,0,0)
                 try:
                     color = laStroke.color
@@ -125,16 +125,17 @@ def fromLatkToGp(la=None, resizeTimeline=True, useScaleAndOffset=False, limitPal
                     createColor(strokeColor)
                 else:
                     createAndMatchColorPalette(strokeColor, limitPalette, 5) # num places
-                stroke = frame.drawing.strokes.new()
-                stroke.display_mode = '3DSPACE'
+                frame.drawing.add_strokes(sizes=[1]) #strokes.new()
+                stroke = frame.drawing.strokes[len(frame.drawing.strokes)-1]
+                #stroke.display_mode = '3DSPACE'
                 #stroke.line_width = 100 # for 2.79
                 #stroke.line_width = 10 # for 2.93
-                stroke.line_width = 1 # for 3.5
+                #   stroke.line_width = 1 # for 3.5
                 stroke.material_index = gp.active_material_index
                 laPoints = laStroke.points
-                stroke.points.add(len(laPoints)) 
+                stroke.add_points(len(laPoints)) 
                 for l, laPoint in enumerate(laPoints):
-                    co = lapoint.position 
+                    co = laPoint.co 
                     x = co[0]
                     y = co[1]
                     z = co[2]
@@ -146,10 +147,10 @@ def fromLatkToGp(la=None, resizeTimeline=True, useScaleAndOffset=False, limitPal
                         y = (y * globalScale[1]) + globalOffset[1]
                         z = (z * globalScale[2]) + globalOffset[2]
                     #~
-                    if (lapoint.radius != None):
-                        pressure = lapoint.radius
-                    if (lapoint.opacity != None):
-                        strength = lapoint.opacity
+                    if (laPoint.pressure != None):
+                        pressure = laPoint.pressure
+                    if (laPoint.strength != None):
+                        strength = laPoint.strength
                     if (laPoint.vertex_color != None):
                         vertex_color = laPoint.vertex_color
                     createPoint(stroke, l, (x, y, z), pressure, strength, vertex_color)

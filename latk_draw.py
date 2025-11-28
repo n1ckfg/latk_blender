@@ -41,10 +41,10 @@ def drawCoords(coords=None, color=None, frame=None, layer=None):
         return None
 
 def createPoint(_stroke, _index, _point, pressure=1, strength=1, vertex_color=(0.0,0.0,0.0,0.0)):
-    _stroke.points[_index].co = _point
+    _stroke.points[_index].position = _point
     _stroke.points[_index].select = True
-    _stroke.points[_index].pressure = pressure
-    _stroke.points[_index].strength = strength
+    _stroke.points[_index].radius = pressure
+    _stroke.points[_index].opacity = strength
     _stroke.points[_index].vertex_color = vertex_color
     return _stroke.points[_index]
 
