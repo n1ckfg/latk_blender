@@ -1158,7 +1158,6 @@ def getActiveGp(_name=None):
     return createGp()
 
 def createGp(_name=None, _newMaterial=True, _newLayer=False):
-    #bpy.ops.object.gpencil_add(type="EMPTY")
     bpy.ops.object.grease_pencil_add(type="EMPTY")
     bpy.data.grease_pencils[len(bpy.data.grease_pencils)-1].stroke_depth_order = "3D"  
     
@@ -1174,7 +1173,7 @@ def createGp(_name=None, _newMaterial=True, _newLayer=False):
 def forceDrawMode():
     #https://blenderartists.org/forum/showthread.php?255425-How-to-use-quot-bpy-ops-gpencil-draw()-quot
     ctx = fixContext()
-    returns = bpy.ops.gpencil.draw(mode="DRAW")
+    returns = bpy.ops.grease_pencil.draw(mode="DRAW")
     returnContext(ctx)
     return returns
 
@@ -1192,7 +1191,7 @@ def initGp():
             'window'        : bpy.context.window,
             'active_object' : bpy.context.object
         }
-        bpy.ops.gpencil.data_add(override)
+        bpy.ops.grease_pencil.data_add(override)
     return scene.grease_pencil
 
 def getActivePalette():
@@ -1215,7 +1214,7 @@ def getActiveFillColor():
 def getActiveLayer():
     gp = getActiveGp()
     if (len(gp.data.layers) < 1):
-        bpy.ops.gpencil.layer_add()
+        bpy.ops.grease_pencil.layer_add()
     layer = gp.data.layers.active
     return layer
 
@@ -1232,7 +1231,7 @@ def deleteLayer(name=None):
 
 def duplicateLayer():
     ctx = fixContext()
-    bpy.ops.gpencil.layer_duplicate()
+    bpy.ops.grease_pencil.layer_duplicate()
     returnContext(ctx)
     return getActiveLayer()
 
@@ -1752,7 +1751,7 @@ def deleteSelected(target="strokes"):
     bpy.context.area.type = "VIEW_3D"
     #~
     # strokes, points, frame
-    bpy.ops.gpencil.delete(type=target.upper())
+    bpy.ops.grease_pencil.delete(type=target.upper())
     #~
     bpy.context.area.type = original_type
 
