@@ -334,7 +334,7 @@ class LatkProperties(bpy.types.PropertyGroup):
     thickness: FloatProperty(
         name="Thickness",
         description="Tube mesh thickness",
-        default=0.03
+        default=1.0
     )
 
     resolution: IntProperty(
