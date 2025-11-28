@@ -1158,7 +1158,7 @@ def getActiveGp(_name=None):
     return createGp()
 
 def createGp(_name=None, _newMaterial=True, _newLayer=False):
-    bpy.ops.object.grease_pencil_add(type="EMPTY")
+    bpy.ops.object.grease_pencil_add() #type="EMPTY")
     bpy.data.grease_pencils[len(bpy.data.grease_pencils)-1].stroke_depth_order = "3D"  
     
     if (_newMaterial == True):

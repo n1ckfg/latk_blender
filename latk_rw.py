@@ -133,7 +133,7 @@ def fromLatkToGp(la=None, resizeTimeline=True, useScaleAndOffset=False, limitPal
                 #   stroke.line_width = 1 # for 3.5
                 stroke.material_index = gp.active_material_index
                 laPoints = laStroke.points
-                stroke.add_points(len(laPoints)) 
+                stroke.add_points(len(laPoints)-1) # is there already a 0 point 
                 for l, laPoint in enumerate(laPoints):
                     co = laPoint.co 
                     x = co[0]
