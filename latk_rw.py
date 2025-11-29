@@ -1690,7 +1690,7 @@ def importTiltBrush(filepath=None, vertSkip=1):
                     pointGroup.append((x, y, z, pressure, strength))
                     #~
             createColor(strokeColor)
-            stroke = frame.drawing.add_strokes(sizes=[1])
+            frame.drawing.add_strokes(sizes=[1])
             stroke = frame.drawing.strokes[len(frame.drawing.strokes)-1]
             #stroke.display_mode = '3DSPACE'
             #stroke.line_width = 100
@@ -1770,9 +1770,13 @@ def importTiltBrush(filepath=None, vertSkip=1):
 
             if (vertsFailed==False):
                 createColor(strokeColor)
-                stroke = frame.drawing.strokes.new(getActiveColor().name)
-                stroke.points.add(len(pointGroup)) # add 4 points
-                stroke.draw_mode = "3DSPACE" # either of ("SCREEN", "3DSPACE", "2DSPACE", "2DIMAGE")  
+                frame.drawing.add_strokes(sizes=[1])
+                stroke = frame.drawing.strokes[len(frame.drawing.strokes)-1]
+                stroke.material_index = gp.active_material_index
+                #stroke = frame.drawing.strokes.new(getActiveColor().name)
+                #stroke.points.add(len(pointGroup)) # add 4 points
+                stroke.add_points(len(pointGroup)-1) # is there already a 0 point 
+                #stroke.draw_mode = "3DSPACE" # either of ("SCREEN", "3DSPACE", "2DSPACE", "2DIMAGE")  
                 for l, point in enumerate(pointGroup):
                     createPoint(stroke, l, (point[0], point[1], point[2]), point[3], point[4])
            
