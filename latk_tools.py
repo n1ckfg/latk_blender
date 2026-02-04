@@ -1784,9 +1784,9 @@ def multVec3(p1, p2):
 
 def setThickness(thickness):
     gp = getActiveGp()
-    bpy.ops.object.gpencil_modifier_add(type="GP_THICK")
-    gp.grease_pencil_modifiers["Thickness"].thickness_factor = thickness 
-    bpy.ops.object.gpencil_modifier_apply(apply_as="DATA", modifier="Thickness")
+    gp.modifiers.new(name="Thickness", type='GREASE_PENCIL_THICKNESS')
+    gp.modifiers["Thickness"].thickness_factor = thickness 
+    bpy.ops.object.modifier_apply(modifier="Thickness")
 
 def separatePointsByDistance(points, colors, threshold):
     if (len(points) != len(colors)):

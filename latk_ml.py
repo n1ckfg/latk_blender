@@ -1157,7 +1157,7 @@ def doInference004(name, net1, net2=None):
                 laPoints.append(laPoint)
 
             if (len(laPoints) > 1):
-                laframe.drawing.strokes.append(latk.LatkStroke(laPoints))
+                laFrame.strokes.append(latk.LatkStroke(laPoints))
 
     bpy.context.scene.cursor.location = origCursorLocation
     return laFrame
@@ -1273,11 +1273,11 @@ def doVoxelOpCore(name, context, allFrames=False):
     if (latk_settings.do_modifiers == True):
         gp = getActiveGp()
         
-        bpy.ops.object.gpencil_modifier_add(type="GP_SIMPLIFY")
-        gp.grease_pencil_modifiers["Simplify"].mode = "MERGE"
-        gp.grease_pencil_modifiers["Simplify"].distance = latk_settings.strokegen_radius
+        gp.modifiers.new(name="Simplify", type='GREASE_PENCIL_SIMPLIFY')
+        gp.modifiers["Simplify"].mode = "MERGE"
+        gp.modifiers["Simplify"].distance = latk_settings.strokegen_radius
 
-        bpy.ops.object.gpencil_modifier_add(type="GP_SUBDIV")
+        gp.modifiers.new(name="Subdivide", type='GREASE_PENCIL_SUBDIV')
 
-        bpy.ops.object.gpencil_modifier_add(type="GP_SMOOTH")
-        gp.grease_pencil_modifiers["Smooth"].use_keep_shape = True
+        gp.modifiers.new(name="Smooth", type='GREASE_PENCIL_SMOOTH')
+        gp.modifiers["Smooth"].use_keep_shape = True
