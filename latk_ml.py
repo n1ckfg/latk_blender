@@ -209,13 +209,10 @@ def neuralGasGen(verts, colors=None, matrix_world=None, max_neurons=100000, max_
     strokeColors = transferVertexColors(verts, colors, allPoints)
     strokeColorCounter = 0
 
-    for edge in edgeList: 
-        stroke = frame.drawing.strokes.new()
-        stroke.display_mode = '3DSPACE'
-        stroke.line_width = int(latk_settings.thickness2) #10 # adjusted from 100 for 2.93
+    for edge in edgeList:
+        frame.drawing.add_strokes(sizes=[len(edge)])
+        stroke = frame.drawing.strokes[-1]
         stroke.material_index = gp.active_material_index
-
-        stroke.points.add(len(edge))
 
         for i, point in enumerate(edge):
             #point = matrixWorldInverted @ Vector((point[0], point[2], point[1]))
@@ -266,21 +263,16 @@ def neuralGasGen2(verts, colors=None, matrix_world=None, max_neurons=100000, max
             except:
                 strokeColors.append((0,1,0,1)) #lastColor)
 
-        stroke = frame.drawing.strokes.new()
-        stroke.display_mode = '3DSPACE'
-        stroke.line_width = int(latk_settings.thickness2) #10 # adjusted from 100 for 2.93
+        frame.drawing.add_strokes(sizes=[len(strokeGroup)])
+        stroke = frame.drawing.strokes[-1]
         stroke.material_index = gp.active_material_index
 
-        stroke.points.add(len(strokeGroup))
-
-        for i, strokeIndex in enumerate(strokeGroup):    
+        for i, strokeIndex in enumerate(strokeGroup):
             if not matrix_world:
                 point = verts[strokeIndex]
             else:
                 point = matrix_world @ Vector(verts[strokeIndex])
 
-            #point = matrixWorldInverted @ Vector((point[0], point[2], point[1]))
-            #point = (point[0], point[1], point[2])
             pressure = 1.0
             strength = 1.0
             createPoint(stroke, i, point, pressure, strength, strokeColors[i])
@@ -389,14 +381,14 @@ def neuralGasGen3(verts, colors=None, matrix_world=None, max_neurons=100000, max
 
             if (readyToAdd):
                 similarityScores.append(similarityString)
-                
-                stroke = frame.drawing.strokes.new()
-                stroke.display_mode = '3DSPACE'
-                stroke.line_width = int(latk_settings.thickness2) #10 # adjusted from 100 for 2.93
+
+                frame.drawing.add_strokes(sizes=[len(points)])
+                stroke = frame.drawing.strokes[-1]
                 stroke.material_index = gp.active_material_index
 
-                stroke.points = points
-                        
+                for idx, lp in enumerate(points):
+                    createPoint(stroke, idx, lp.co, lp.pressure, lp.strength, lp.vertex_color)
+
                 strokeCounter += 1
                 print("Added stroke " + str(strokeCounter) + " / " + str(numStrokes) + ".")
                     
@@ -438,21 +430,16 @@ def strokeGen(verts, colors, matrix_world=None, radius=2, minPointsCount=5): #, 
             createAndMatchColorPalette(color, limitPalette, 5) # num places
         '''
 
-        stroke = frame.drawing.strokes.new()
-        stroke.display_mode = '3DSPACE'
-        stroke.line_width = int(latk_settings.thickness2) #10 # adjusted from 100 for 2.93
+        frame.drawing.add_strokes(sizes=[len(strokeGroup)])
+        stroke = frame.drawing.strokes[-1]
         stroke.material_index = gp.active_material_index
 
-        stroke.points.add(len(strokeGroup))
-
-        for i, strokeIndex in enumerate(strokeGroup):    
+        for i, strokeIndex in enumerate(strokeGroup):
             if not matrix_world:
                 point = verts[strokeIndex]
             else:
                 point = matrix_world @ Vector(verts[strokeIndex])
 
-            #point = matrixWorldInverted @ Vector((point[0], point[2], point[1]))
-            #point = (point[0], point[1], point[2])
             pressure = 1.0
             strength = 1.0
             createPoint(stroke, i, point, pressure, strength, strokeColors[i])
@@ -460,7 +447,7 @@ def strokeGen(verts, colors, matrix_world=None, radius=2, minPointsCount=5): #, 
     bpy.context.scene.cursor.location = origCursorLocation
 
     bpy.data.grease_pencils[gp.name].stroke_depth_order = "3D"
-    
+
     return gp
 
 def contourGen(verts, faces, matrix_world):
@@ -502,19 +489,16 @@ def contourGen(verts, faces, matrix_world):
         
         if slice_mesh != None:
             for entity in slice_mesh.entities:
-                stroke = frame.drawing.strokes.new()
-                stroke.display_mode = '3DSPACE'
-                stroke.line_width = int(latk_settings.thickness2) #10 # adjusted from 100 for 2.93
+                frame.drawing.add_strokes(sizes=[len(entity.points)])
+                stroke = frame.drawing.strokes[-1]
                 stroke.material_index = gp.active_material_index
-                stroke.points.add(len(entity.points))
 
                 for i, index in enumerate(entity.points):
                     vert = None
                     if not matrix_world:
-                        vert = slice_mesh.vertices[index] 
+                        vert = slice_mesh.vertices[index]
                     else:
                         vert = matrix_world @ Vector(slice_mesh.vertices[index])
-                    #vert = [vert[0], vert[1], vert[2]]
                     createPoint(stroke, i, vert, 1.0, 1.0)
 
     #fromLatkToGp(la, resizeTimeline=False)
@@ -547,11 +531,9 @@ def skelGen(verts, faces, matrix_world):
     skel = sk.skeletonize.by_wavefront(fixed, waves=1, step_size=1)
 
     for entity in skel.skeleton.entities:
-        stroke = frame.drawing.strokes.new()
-        stroke.display_mode = '3DSPACE'
-        stroke.line_width = int(latk_settings.thickness2) #10 # adjusted from 100 for 2.93
+        frame.drawing.add_strokes(sizes=[len(entity.points)])
+        stroke = frame.drawing.strokes[-1]
         stroke.material_index = gp.active_material_index
-        stroke.points.add(len(entity.points))
 
         for i, index in enumerate(entity.points):
             vert = None
@@ -691,19 +673,14 @@ def strokeGen_orig(obj=None, strokeLength=1, strokeGaps=10.0, shuffleOdds=1.0, s
             createColor(color)
         else:
             createAndMatchColorPalette(color, limitPalette, 5) # num places
-        #stroke = frame.drawing.strokes.new(getActiveColor().name)
-        #stroke.draw_mode = "3DSPACE"
-        stroke = frame.drawing.strokes.new()
-        stroke.display_mode = '3DSPACE'
-        stroke.line_width = 10 # adjusted from 100 for 2.93
-        stroke.material_index = gp.active_material_index
-
-        stroke.points.add(len(pointSeq))
-
         if (random.random() < shuffleOdds):
             random.shuffle(pointSeq)
 
-        for j, point in enumerate(pointSeq):    
+        frame.drawing.add_strokes(sizes=[len(pointSeq)])
+        stroke = frame.drawing.strokes[-1]
+        stroke.material_index = gp.active_material_index
+
+        for j, point in enumerate(pointSeq):
             x = point[0] + (random.random() * 2.0 * spreadPoints) - spreadPoints
             y = point[2] + (random.random() * 2.0 * spreadPoints) - spreadPoints
             z = point[1] + (random.random() * 2.0 * spreadPoints) - spreadPoints
