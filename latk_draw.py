@@ -25,9 +25,9 @@ def drawCoords(coords=None, color=None, frame=None, layer=None):
                     frame = layer.frames.new(currentFrame())
                 except:
                     pass
-        stroke = frame.drawing.strokes.new(color.name)
-        stroke.draw_mode = "3DSPACE"
-        stroke.points.add(len(coords))
+        frame.drawing.add_strokes(sizes=[len(coords)])
+        stroke = frame.drawing.strokes[-1]
+        stroke.material_index = getActiveMaterialIndex()
         for i, coord in enumerate(coords):
             pressure = 1.0
             strength = 1.0
@@ -49,11 +49,11 @@ def createPoint(_stroke, _index, _point, pressure=1, strength=1, vertex_color=(0
     return _stroke.points[_index]
 
 def addPoint(_stroke, _point, pressure=1, strength=1):
-    _stroke.points.add(1)
+    _stroke.add_points(1)
     createPoint(_stroke, len(_stroke.points)-1, _point, pressure, strength)
 
 def closeStroke(_stroke):
-    addPoint(_stroke, _stroke.points[0].co)
+    addPoint(_stroke, _stroke.points[0].position)
 
 def createStrokes(strokes, palette=None):
     if (palette == None):
@@ -68,13 +68,13 @@ def createStrokes(strokes, palette=None):
             strokeColor = createColor(strokeSource.color.color)
         except:
             pass
-        strokeDest = frame.drawing.strokes.new(getActiveColor().name)        
-        strokeDest.draw_mode = '3DSPACE'
-        strokeDest.points.add(len(strokeSource.points))
+        frame.drawing.add_strokes(sizes=[len(strokeSource.points)])
+        strokeDest = frame.drawing.strokes[-1]
+        strokeDest.material_index = getActiveMaterialIndex()
         for l in range(0, len(strokeSource.points)):
-            strokeDest.points[l].co = strokeSource.points[l].co 
-            strokeDest.points[l].pressure = 1
-            strokeDest.points[l].strength = 1
+            strokeDest.points[l].position = strokeSource.points[l].position
+            strokeDest.points[l].radius = 1
+            strokeDest.points[l].opacity = 1
 
 def createStroke(points, color=(0,0,0), frame=None, palette=None):
     if (palette == None):
@@ -83,13 +83,13 @@ def createStroke(points, color=(0,0,0), frame=None, palette=None):
         frame = getActiveFrame()
     #~
     strokeColor = createColor(color)
-    stroke = frame.drawing.strokes.new(getActiveColor().name)        
-    stroke.draw_mode = '3DSPACE'
-    stroke.points.add(len(points))
+    frame.drawing.add_strokes(sizes=[len(points)])
+    stroke = frame.drawing.strokes[-1]
+    stroke.material_index = getActiveMaterialIndex()
     for l in range(0, len(points)):
-        stroke.points[l].co = points[l].co 
-        stroke.points[l].pressure = 1
-        stroke.points[l].strength = 1
+        stroke.points[l].position = points[l].position
+        stroke.points[l].radius = 1
+        stroke.points[l].opacity = 1
 
 def deleteStroke(_stroke):
     bpy.ops.object.select_all(action='DESELECT')
@@ -362,24 +362,24 @@ def smoothStroke(stroke=None):
     center = 0
     #~
     for i in range(1, nPointsMinusTwo):
-        lower = points[i-1].co
-        center = points[i].co
-        upper = points[i+1].co
+        lower = points[i-1].position
+        center = points[i].position
+        upper = points[i+1].position
         #~
         center.x = (lower.x + weight * center.x + upper.x) * scale
         center.y = (lower.y + weight * center.y + upper.y) * scale
     
 def splitStroke(stroke=None):
     if not stroke:
-        stroke = getSelectedStroke()    
+        stroke = getSelectedStroke()
     points = stroke.points
     co = []
     pressure = []
     strength = []
     #~
     for i in range(1, len(points), 2):
-        center = (points[i].co.x, points[i].co.y, points[i].co.z)
-        lower = (points[i-1].co.x, points[i-1].co.y, points[i-1].co.z)
+        center = (points[i].position.x, points[i].position.y, points[i].position.z)
+        lower = (points[i-1].position.x, points[i-1].position.y, points[i-1].position.z)
         x = (center[0] + lower[0]) / 2
         y = (center[1] + lower[1]) / 2
         z = (center[2] + lower[2]) / 2
@@ -389,15 +389,15 @@ def splitStroke(stroke=None):
         co.append(p)
         co.append(center)
         #~
-        pressure.append(points[i-1].pressure)
-        pressure.append((points[i-1].pressure + points[i].pressure) / 2)
-        pressure.append(points[i].pressure)
+        pressure.append(points[i-1].radius)
+        pressure.append((points[i-1].radius + points[i].radius) / 2)
+        pressure.append(points[i].radius)
         #~
-        strength.append(points[i-1].strength)
-        strength.append((points[i-1].strength + points[i].strength) / 2)
-        strength.append(points[i].strength)
+        strength.append(points[i-1].opacity)
+        strength.append((points[i-1].opacity + points[i].opacity) / 2)
+        strength.append(points[i].opacity)
     #~
-    points.add(len(co) - len(points))
+    stroke.add_points(len(co) - len(points))
     for i in range(0, len(points)):
         createPoint(stroke, i, co[i], pressure[i], strength[i])
 

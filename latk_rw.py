@@ -268,11 +268,11 @@ def writeBrushStrokesAlt(filepath=None, bake=True, roundValues=True, numPlaces=7
                     fill_color = (1,1,1)
                     fill_alpha = 0.0
                     try:
-                        col = palette.colors[stroke.colorname]
-                        color = col.color
-                        alpha = col.alpha 
-                        fill_color = col.fill_color
-                        fill_alpha = col.fill_alpha
+                        mtl = palette[stroke.material_index].grease_pencil
+                        color = mtl.color
+                        alpha = mtl.color[3] if len(mtl.color) > 3 else 0.9
+                        fill_color = mtl.fill_color
+                        fill_alpha = mtl.fill_color[3] if len(mtl.fill_color) > 3 else 0.0
                     except:
                         pass
                     sb.append("\t\t\t\t\t\t\t\t\t\"color\": [" + str(color[0]) + ", " + str(color[1]) + ", " + str(color[2])+ "],")
@@ -856,12 +856,13 @@ def importVRDoodler(filepath=None):
     layer = gp.data.layers.new("VRDoodler_layer", set_active=True)
     start, end = getStartEnd()
     frame = layer.frames.new(start)
+    gp = getActiveGp()
     for vrd_stroke in vrd_strokes:
         strokeColor = (0.5,0.5,0.5)
         createColor(strokeColor)
-        stroke = frame.drawing.strokes.new(getActiveColor().name)
-        stroke.draw_mode = "3DSPACE" # either of ("SCREEN", "3DSPACE", "2DSPACE", "2DIMAGE")
-        stroke.points.add(len(vrd_stroke)) # add 4 points
+        frame.drawing.add_strokes(sizes=[len(vrd_stroke)])
+        stroke = frame.drawing.strokes[-1]
+        stroke.material_index = gp.active_material_index
         for l, vrd_point in enumerate(vrd_stroke):
             x = vrd_point[0]
             y = vrd_point[2]
@@ -937,9 +938,9 @@ def importPainter(filepath=None):
             points.append((x, y, z))
             pressures.append(pressure)
         elif (line.startswith("stroke_end")):
-            stroke = frame.drawing.strokes.new(getActiveColor().name)
-            stroke.draw_mode = "3DSPACE"
-            stroke.points.add(len(points))
+            frame.drawing.add_strokes(sizes=[len(points)])
+            stroke = frame.drawing.strokes[-1]
+            stroke.material_index = gp.active_material_index
 
             for i in range(0, len(points)):
                 point = points[i]
@@ -981,9 +982,9 @@ def importNorman(filepath=None):
         for j in range(0, len(frames[i])):
             strokeColor = (0.5,0.5,0.5)
             createColor(strokeColor)
-            stroke = frame.drawing.strokes.new(getActiveColor().name)
-            stroke.draw_mode = "3DSPACE" # either of ("SCREEN", "3DSPACE", "2DSPACE", "2DIMAGE")
-            stroke.points.add(len(frames[i][j])) # add 4 points
+            frame.drawing.add_strokes(sizes=[len(frames[i][j])])
+            stroke = frame.drawing.strokes[-1]
+            stroke.material_index = gp.active_material_index
             for l in range(0, len(frames[i][j])):
                 x = 0.0
                 y = 0.0
@@ -1350,15 +1351,12 @@ def importAsc(filepath=None, strokeLength=1, importAsGP=False, vertexColor=True)
             if (pointsCounter == 0):
                 if (vertexColor == False and color != None):
                     createColor(color)
-                stroke = frame.drawing.strokes.new()
-                stroke.display_mode = '3DSPACE'
-                stroke.line_width = 100
-                stroke.material_index = gp.active_material_index
-            
                 if (pointsTotal < len(allPoints) - strokeLength):
-                    stroke.points.add(strokeLength)
+                    frame.drawing.add_strokes(sizes=[strokeLength])
                 else:
-                    stroke.points.add(len(allPoints) - pointsTotal)
+                    frame.drawing.add_strokes(sizes=[len(allPoints) - pointsTotal])
+                stroke = frame.drawing.strokes[-1]
+                stroke.material_index = gp.active_material_index
 
             x = allPoints[i][0]
             y = allPoints[i][2]
@@ -1514,9 +1512,9 @@ def importSculptrVr(filepath=None, strokeLength=1, scale=0.01, startLine=1):
         color = colors[i]
         if (color != None):
             createColor(color)
-        stroke = frame.drawing.strokes.new(getActiveColor().name)
-        stroke.draw_mode = "3DSPACE"
-        stroke.points.add(strokeLength)
+        frame.drawing.add_strokes(sizes=[strokeLength])
+        stroke = frame.drawing.strokes[-1]
+        stroke.material_index = gp.active_material_index
 
         for j in range(0, strokeLength):
             x = allPoints[i+j][0]

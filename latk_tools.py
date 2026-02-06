@@ -108,19 +108,19 @@ def breakUpStrokes():
     for layer in gp.data.layers:
         for frame in layer.frames:
             tempPoints = []
-            tempColorNames = []
+            tempMaterialIndices = []
             for stroke in frame.drawing.strokes:
                 for point in stroke.points:
                     tempPoints.append(point)
-                    tempColorNames.append(stroke.colorname)
+                    tempMaterialIndices.append(stroke.material_index)
             #~
             for stroke in frame.drawing.strokes:
-                frame.drawing.strokes.remove(stroke)     
-            #~  
+                frame.drawing.strokes.remove(stroke)
+            #~
             for i, point in enumerate(tempPoints):
-                stroke = frame.drawing.strokes.new(tempColorNames[i])
-                #stroke.draw_mode = "3DSPACE"
-                stroke.points.add(1)
+                frame.drawing.add_strokes(sizes=[1])
+                stroke = frame.drawing.strokes[-1]
+                stroke.material_index = tempMaterialIndices[i]
                 coord = point.position
                 createPoint(stroke, 0, (coord[0], coord[1], coord[2]), point.radius, point.opacity)
 
@@ -884,47 +884,47 @@ def setStartEnd(start, end, pad=True):
 
 def copyFrame(source, dest, limit=None):
     scene = bpy.context.scene
-    layer = getActiveLayer()  
+    layer = getActiveLayer()
     #.
     frameSource = layer.frames[source]
     frameDest = layer.frames[dest]
     if not limit:
-        limit = len(frameSource.strokes)
+        limit = len(frameSource.drawing.strokes)
     for j in range(0, limit):
         scene.frame_set(source)
-        strokeSource = frameSource.strokes[j]
+        strokeSource = frameSource.drawing.strokes[j]
         scene.frame_set(dest)
-        strokeDest = frameDest.strokes.new(strokeSource.color.name)
-        # either of ('SCREEN', '3DSPACE', '2DSPACE', '2DIMAGE')
-        strokeDest.draw_mode = '3DSPACE'
-        strokeDest.points.add(len(strokeSource.points))
+        frameDest.drawing.add_strokes(sizes=[len(strokeSource.points)])
+        strokeDest = frameDest.drawing.strokes[-1]
+        strokeDest.material_index = strokeSource.material_index
         for l in range(0, len(strokeSource.points)):
-            strokeDest.points[l].co = strokeSource.points[l].co
+            strokeDest.points[l].position = strokeSource.points[l].position
 
 def copyFramePoints(source, dest, limit=None, pointsPercentage=1):
     scene = bpy.context.scene
-    layer = getActiveLayer()  
+    layer = getActiveLayer()
     #.
     frameSource = layer.frames[source]
     frameDest = layer.frames[dest]
     if not limit:
-        limit = len(frameSource.strokes)
+        limit = len(frameSource.drawing.strokes)
     for j in range(0, limit):
         scene.frame_set(source)
-        strokeSource = frameSource.strokes[j]
+        strokeSource = frameSource.drawing.strokes[j]
         scene.frame_set(dest)
-        strokeDest = frameDest.strokes.new(strokeSource.color.name)
-        # either of ('SCREEN', '3DSPACE', '2DSPACE', '2DIMAGE')
-        strokeDest.draw_mode = '3DSPACE'
         if (j>=limit-1):
             newVal = roundValInt(len(strokeSource.points) * pointsPercentage)
-            strokeDest.points.add(newVal)
+            frameDest.drawing.add_strokes(sizes=[newVal])
+            strokeDest = frameDest.drawing.strokes[-1]
+            strokeDest.material_index = strokeSource.material_index
             for l in range(0, newVal):
-                strokeDest.points[l].co = strokeSource.points[l].co
+                strokeDest.points[l].position = strokeSource.points[l].position
         else:
-            strokeDest.points.add(len(strokeSource.points))
+            frameDest.drawing.add_strokes(sizes=[len(strokeSource.points)])
+            strokeDest = frameDest.drawing.strokes[-1]
+            strokeDest.material_index = strokeSource.material_index
             for l in range(0, len(strokeSource.points)):
-                strokeDest.points[l].co = strokeSource.points[l].co
+                strokeDest.points[l].position = strokeSource.points[l].position
 
 def addLocator(target=None):
     if not target:
@@ -1203,6 +1203,10 @@ def getActiveGpMtl():
     palette = getActivePalette()
     return palette[gp.active_material_index].grease_pencil
 
+def getActiveMaterialIndex():
+    gp = getActiveGp()
+    return gp.active_material_index
+
 def getActiveColor():
     mtl = getActiveGpMtl()
     return mtl.color
@@ -1438,23 +1442,21 @@ def changeColor():
     frame = getActiveFrame()
     palette = getActivePalette()
     strokes = getSelectedStrokes()
+    gp = getActiveGp()
     #~
-    lineWidthBackup = []
     pointsBackup = []
     for stroke in strokes:
-        lineWidthBackup.append(stroke.line_width)
         pointsBackup.append(stroke.points)
     #~
     deleteSelected()
     #~
     for i, points in enumerate(pointsBackup):
-        newStroke = frame.drawing.strokes.new(getActiveColor().name)
-        newStroke.draw_mode = "3DSPACE" # either of ("SCREEN", "3DSPACE", "2DSPACE", "2DIMAGE")
-        newStroke.line_width = lineWidthBackup[i]
-        newStroke.points.add(len(points))
+        frame.drawing.add_strokes(sizes=[len(points)])
+        newStroke = frame.drawing.strokes[-1]
+        newStroke.material_index = gp.active_material_index
         for j in range(0, len(points)):
-            createPoint(newStroke, j, points[j].co)
-    #print(str(len(strokes)) + " changed to " + palette.colors.active.name)
+            createPoint(newStroke, j, points[j].position)
+    #print(str(len(strokes)) + " changed to active material")
 
 c = changeColor
 
@@ -1784,9 +1786,9 @@ def multVec3(p1, p2):
 
 def setThickness(thickness):
     gp = getActiveGp()
-    gp.modifiers.new(name="Thickness", type='GREASE_PENCIL_THICKNESS')
-    gp.modifiers["Thickness"].thickness_factor = thickness 
-    bpy.ops.object.modifier_apply(modifier="Thickness")
+    bpy.ops.object.gpencil_modifier_add(type="GP_THICK")
+    gp.grease_pencil_modifiers["Thickness"].thickness_factor = thickness 
+    bpy.ops.object.gpencil_modifier_apply(apply_as="DATA", modifier="Thickness")
 
 def separatePointsByDistance(points, colors, threshold):
     if (len(points) != len(colors)):
